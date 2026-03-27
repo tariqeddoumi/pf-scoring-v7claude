@@ -8,23 +8,40 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  nom       String
+  prenom    String
+  role      UserRole @default(analyste)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectsCreated Project[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
 model Project {
-  id          String        @id @default(uuid())
-  nom         String
-  description String
-  secteur     String
-  montant     Float
-  devise      String        @default("MAD")
-  status      ProjectStatus @default(brouillon)
-  scoreGlobal Float?
-  grade       String?
-  creePar     String
-  dateCreation  DateTime    @default(now())
-  dateMiseAJour DateTime    @updatedAt
+  id            String        @id @default(uuid())
+  nom           String
+  description   String
+  secteur       String
+  montant       Float
+  devise        String        @default("MAD")
+  status        ProjectStatus @default(brouillon)
+  scoreGlobal   Float?
+  grade         String?
+  creePar       String        @db.Uuid
+  dateCreation  DateTime      @default(now())
+  dateMiseAJour DateTime      @updatedAt
 
-  scorings    Scoring[]
-  auditLogs   AuditLog[]
+  user      User       @relation(fields: [creePar], references: [id], onDelete: Cascade)
+  scorings  Scoring[]
+  auditLogs AuditLog[]
 
+  @@index([creePar])
   @@map("projects")
 }
 
@@ -37,21 +54,25 @@ model Scoring {
   version     Int
   dateCalcul  DateTime @default(now())
 
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("scorings")
 }
 
 model AuditLog {
-  id          String   @id @default(uuid())
-  projectId   String?
-  action      String
-  utilisateur String
-  details     String
-  timestamp   DateTime @default(now())
+  id            String   @id @default(uuid())
+  projectId     String?
+  utilisateurId String
+  action        String
+  details       String
+  timestamp     DateTime @default(now())
 
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user    User     @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
 
+  @@index([projectId])
+  @@index([utilisateurId])
+  @@index([timestamp])
   @@map("audit_logs")
 }
 
@@ -61,4 +82,11 @@ enum ProjectStatus {
   en_revue
   approuve
   rejete
+}
+
+enum UserRole {
+  admin
+  manager
+  analyste
+  lecteur
 }
