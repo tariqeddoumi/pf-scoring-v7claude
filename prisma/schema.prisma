@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  nom         String
+  description String
+  secteur     String
+  montant     Float
+  devise      String        @default("MAD")
+  status      ProjectStatus @default(brouillon)
+  scoreGlobal Float?
+  grade       String?
+  creePar     String
+  dateCreation  DateTime    @default(now())
+  dateMiseAJour DateTime    @updatedAt
+
+  scorings    Scoring[]
+  auditLogs   AuditLog[]
+
+  @@map("projects")
+}
+
+model Scoring {
+  id          String   @id @default(uuid())
+  projectId   String
+  scoreGlobal Float
+  grade       String
+  composantes Json
+  version     Int
+  dateCalcul  DateTime @default(now())
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("scorings")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  projectId   String?
+  action      String
+  utilisateur String
+  details     String
+  timestamp   DateTime @default(now())
+
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+enum ProjectStatus {
+  brouillon
+  en_cours
+  en_revue
+  approuve
+  rejete
+}
