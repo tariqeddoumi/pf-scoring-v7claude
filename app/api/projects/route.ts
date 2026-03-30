@@ -7,19 +7,31 @@ export async function GET() {
   try {
     const projects = await prisma.project.findMany({
       orderBy: { dateCreation: "desc" },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            nom: true,
-            prenom: true,
-          },
-        },
+      select: {
+        id: true,
+        nom: true,
+        description: true,
+        secteur: true,
+        montant: true,
+        devise: true,
+        status: true,
+        scoreGlobal: true,
+        grade: true,
+        countryCode: true,
+        dateCreation: true,
+        dateMiseAJour: true,
+        creePar: true,
       },
     });
 
-    return NextResponse.json(projects);
+    // Sérialiser les dates en ISO strings
+    const serialized = projects.map((p) => ({
+      ...p,
+      dateCreation: p.dateCreation.toISOString(),
+      dateMiseAJour: p.dateMiseAJour.toISOString(),
+    }));
+
+    return NextResponse.json(serialized);
   } catch (error) {
     console.error("Erreur:", error);
     return NextResponse.json(
