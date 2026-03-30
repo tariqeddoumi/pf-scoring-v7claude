@@ -32,20 +32,22 @@ export default function NewProjectPage() {
     setLoading(true);
 
     try {
-      // TODO: Implémenter la création via API
-      console.log("Créer projet:", formData);
-      // const res = await fetch("/api/projects", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(formData),
-      // });
-      // const data = await res.json();
-      // router.push(`/projects/${data.id}`);
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-      alert("Création de projet en développement");
+      if (!res.ok) {
+        throw new Error("Erreur lors de la création");
+      }
+
+      const data = await res.json();
+      alert("Projet créé avec succès !");
+      router.push(`/projects`);
     } catch (error) {
       console.error("Erreur:", error);
-      alert("Erreur lors de la création");
+      alert("Erreur lors de la création du projet");
     } finally {
       setLoading(false);
     }
