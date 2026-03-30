@@ -48,9 +48,13 @@ export function Navigation() {
           })}
         </div>
 
-        <button className="p-2 rounded-md hover:bg-secondary text-muted-foreground">
+        <Link
+          href="/admin"
+          className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          title="Paramètres d'Administration"
+        >
           <Settings className="h-5 w-5" />
-        </button>
+        </Link>
       </div>
     </nav>
   );
