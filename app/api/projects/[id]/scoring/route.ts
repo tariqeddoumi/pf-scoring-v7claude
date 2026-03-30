@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import {
   calculateGlobalScoreV2,
   isCountryRiskActive,
@@ -8,7 +7,7 @@ import {
   convertCountryRiskToScore,
 } from "@/lib/scoring-engine-v2";
 
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma-client";
 
 interface ComposanteScore {
   domainCode: string;
@@ -78,7 +77,7 @@ export async function POST(
         projectId: id,
         scoreGlobal: result.scoreGlobal,
         grade: result.grade,
-        composantes: result.composantes as unknown as Record<string, unknown>,
+        composantes: JSON.parse(JSON.stringify(result.composantes)),
         version: 2,
       },
     });
