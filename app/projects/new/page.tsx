@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,12 +13,31 @@ import Link from "next/link";
 export default function NewProjectPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [countries, setCountries] = useState<Array<{ code: string; label: string }>>([]);
   const [formData, setFormData] = useState({
     nom: "",
     description: "",
     secteur: SECTEURS[0],
     montant: "",
+    countryCode: "MA",
   });
+
+  // Charger les pays au montage
+  const loadCountries = async () => {
+    try {
+      const res = await fetch("/api/admin/countries");
+      if (res.ok) {
+        const data = await res.json();
+        setCountries(data);
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+    }
+  };
+
+  React.useEffect(() => {
+    loadCountries();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -142,6 +162,30 @@ export default function NewProjectPage() {
                   {(parseInt(String(formData.montant)) / 1000000).toFixed(0)}M MAD
                 </p>
               )}
+            </div>
+
+            {/* Pays */}
+            <div>
+              <label htmlFor="countryCode" className="block text-sm font-medium mb-2">
+                Pays du projet *
+              </label>
+              <select
+                id="countryCode"
+                name="countryCode"
+                value={formData.countryCode}
+                onChange={handleChange}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                required
+              >
+                {countries.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.label} ({country.code})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-2">
+                Le score de risque pays sera automatiquement assigné basé sur cette sélection.
+              </p>
             </div>
 
             {/* Actions */}
