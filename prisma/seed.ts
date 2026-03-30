@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcryptjs from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -131,6 +132,9 @@ async function main() {
 
   // Create countries with risk scores
   await createCountries();
+
+  // Create default users
+  await createUsers();
 
   // Create system configuration
   await createSystemConfig();
@@ -541,6 +545,46 @@ async function createCountries() {
   }
 
   console.log(`✅ Created ${countries.length} countries`);
+}
+
+async function createUsers() {
+  const users = [
+    {
+      email: "admin@pf-scoring.ma",
+      password: "Admin123!",
+      nom: "Admin",
+      prenom: "Utilisateur",
+      role: "admin",
+    },
+    {
+      email: "analyste@pf-scoring.ma",
+      password: "Analyste123!",
+      nom: "Analyste",
+      prenom: "Test",
+      role: "analyste",
+    },
+  ];
+
+  for (const user of users) {
+    const hashedPassword = await bcryptjs.hash(user.password, 10);
+    await prisma.user.upsert({
+      where: { email: user.email },
+      update: {
+        nom: user.nom,
+        prenom: user.prenom,
+        role: user.role as any,
+      },
+      create: {
+        email: user.email,
+        password: hashedPassword,
+        nom: user.nom,
+        prenom: user.prenom,
+        role: user.role as any,
+      },
+    });
+  }
+
+  console.log(`✅ Created default users`);
 }
 
 async function createSystemConfig() {
