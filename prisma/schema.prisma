@@ -32,6 +32,7 @@ model Project {
   scoreGlobal   Float?
   grade         String?
   creePar       String        @db.Uuid
+  countryCode   String?
   dateCreation  DateTime      @default(now())
   dateMiseAJour DateTime      @updatedAt
 
@@ -52,7 +53,9 @@ model Scoring {
   version     Int
   dateCalcul  DateTime @default(now())
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project               Project                        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  evaluationDomainScores EvaluationDomainScore[]
+  evaluationAnswers     EvaluationAnswer[]
 
   @@map("pf_scoring_scorings")
 }
@@ -72,6 +75,134 @@ model AuditLog {
   @@index([utilisateurId])
   @@index([timestamp])
   @@map("pf_scoring_audit_logs")
+}
+
+model ScoreDomain {
+  id              String          @id @default(uuid())
+  code            String          @unique
+  label           String
+  description     String?
+  isActive        Boolean         @default(true)
+  weight          Float           @default(0.125)
+  orderIndex      Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  criteria        ScoreCriterion[]
+  evaluationDomainScores EvaluationDomainScore[]
+
+  @@map("pf_scoring_domains")
+}
+
+model ScoreCriterion {
+  id              String          @id @default(uuid())
+  domainId        String
+  code            String
+  label           String
+  description     String?
+  type            String          @default("OPTION")
+  isActive        Boolean         @default(true)
+  hardStopIfBelow Float?
+  orderIndex      Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  domain          ScoreDomain     @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  options         ScoreOption[]
+  ranges          ScoreRange[]
+  evaluationAnswers EvaluationAnswer[]
+
+  @@unique([domainId, code])
+  @@index([domainId])
+  @@map("pf_scoring_criteria")
+}
+
+model ScoreOption {
+  id              String          @id @default(uuid())
+  criterionId     String
+  label           String
+  score           Float
+  orderIndex      Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@map("pf_scoring_options")
+}
+
+model ScoreRange {
+  id              String          @id @default(uuid())
+  criterionId     String
+  minValue        Float
+  maxValue        Float
+  score           Float
+  label           String?
+  orderIndex      Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@map("pf_scoring_ranges")
+}
+
+model Country {
+  id              String          @id @default(uuid())
+  code            String          @unique
+  label           String
+  riskScore       Float           @default(50.0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("pf_scoring_countries")
+}
+
+model SystemConfig {
+  id              String          @id @default(uuid())
+  key             String          @unique
+  value           String
+  description     String?
+  updatedAt       DateTime        @updatedAt
+
+  @@map("pf_scoring_system_config")
+}
+
+model EvaluationDomainScore {
+  id              String          @id @default(uuid())
+  domainId        String
+  scoringId       String
+  score           Float
+  weight          Float
+  createdAt       DateTime        @default(now())
+
+  domain          ScoreDomain     @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  scoring         Scoring         @relation(fields: [scoringId], references: [id], onDelete: Cascade)
+
+  @@unique([domainId, scoringId])
+  @@index([domainId])
+  @@index([scoringId])
+  @@map("pf_scoring_evaluation_domain_scores")
+}
+
+model EvaluationAnswer {
+  id              String          @id @default(uuid())
+  criterionId     String
+  scoringId       String
+  answerType      String          @default("OPTION")
+  optionValue     String?
+  rangeValue      Float?
+  score           Float?
+  createdAt       DateTime        @default(now())
+
+  criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+  scoring         Scoring         @relation(fields: [scoringId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@index([scoringId])
+  @@map("pf_scoring_evaluation_answers")
 }
 
 enum ProjectStatus {
