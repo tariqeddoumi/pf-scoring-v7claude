@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,13 +23,34 @@ const ROLES = [
 ];
 
 export default function UsersPage() {
-  const [users] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/admin/users");
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddUser = async () => {
     if (!newUserEmail) return;
 
     try {
+      setSubmitting(true);
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,10 +60,34 @@ export default function UsersPage() {
       if (res.ok) {
         setNewUserEmail("");
         alert("Utilisateur ajouté avec succès");
+        await fetchUsers();
+      } else {
+        alert("Erreur lors de l'ajout de l'utilisateur");
       }
     } catch (error) {
       console.error("Erreur:", error);
       alert("Erreur lors de l'ajout de l'utilisateur");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      if (res.ok) {
+        await fetchUsers();
+      } else {
+        alert("Erreur lors de la mise à jour du rôle");
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      alert("Erreur lors de la mise à jour du rôle");
     }
   };
 
@@ -76,7 +121,9 @@ export default function UsersPage() {
               onChange={(e) => setNewUserEmail(e.target.value)}
               className="flex-1"
             />
-            <Button onClick={handleAddUser}>Ajouter</Button>
+            <Button onClick={handleAddUser} disabled={submitting}>
+              {submitting ? "Ajout..." : "Ajouter"}
+            </Button>
           </div>
         </Card>
 
@@ -84,7 +131,11 @@ export default function UsersPage() {
         <Card className="p-6">
           <h2 className="font-semibold mb-4 text-lg">Utilisateurs Existants</h2>
 
-          {users.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            </div>
+          ) : users.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Aucun utilisateur configuré</p>
             </div>
@@ -103,9 +154,7 @@ export default function UsersPage() {
                   </div>
                   <select
                     value={user.role}
-                    onChange={(e) => {
-                      // Update role
-                    }}
+                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
                     className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     {ROLES.map((role) => (

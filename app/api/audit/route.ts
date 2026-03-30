@@ -1,57 +1,56 @@
 import { NextResponse } from "next/server";
 
-interface AuditLogEntry {
-  id: string;
-  projectId?: string;
-  utilisateurId: string;
-  action: string;
-  details: string;
-  timestamp: Date;
-}
+import prisma from "@/lib/prisma-client";
 
-// Mock data pour l'audit
-const mockAuditLogs: AuditLogEntry[] = [
-  {
-    id: "1",
-    projectId: "1",
-    utilisateurId: "user-1",
-    action: "création",
-    details: "Projet créé",
-    timestamp: new Date("2024-01-15"),
-  },
-  {
-    id: "2",
-    projectId: "1",
-    utilisateurId: "user-1",
-    action: "modification",
-    details: "Score mis à jour: 78.5",
-    timestamp: new Date("2024-03-27"),
-  },
-  {
-    id: "3",
-    projectId: "2",
-    utilisateurId: "user-1",
-    action: "création",
-    details: "Projet créé",
-    timestamp: new Date("2024-02-01"),
-  },
-];
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get("projectId");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const offset = parseInt(searchParams.get("offset") || "0");
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const projectId = searchParams.get("projectId");
+    let where = {};
+    if (projectId) {
+      where = { projectId };
+    }
 
-  // TODO: Implémenter avec Prisma
-  if (projectId) {
+    const auditLogs = await prisma.auditLog.findMany({
+      where,
+      orderBy: { dateAction: "desc" },
+      take: limit,
+      skip: offset,
+    });
+
+    return NextResponse.json(auditLogs);
+  } catch (error) {
+    console.error("Erreur:", error);
     return NextResponse.json(
-      mockAuditLogs.filter((log) => log.projectId === projectId)
+      { error: "Erreur lors de la récupération des logs" },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json(mockAuditLogs);
 }
 
-export async function POST() {
-  // TODO: Implémenter la création de log audit
-  return NextResponse.json({ error: "Not implemented" }, { status: 501 });
+export async function POST(request: Request) {
+  try {
+    const { action, details, utilisateurId, projectId } = await request.json();
+
+    const auditLog = await prisma.auditLog.create({
+      data: {
+        action,
+        details,
+        utilisateurId: utilisateurId || "system",
+        projectId: projectId || null,
+        dateAction: new Date(),
+      },
+    });
+
+    return NextResponse.json(auditLog, { status: 201 });
+  } catch (error) {
+    console.error("Erreur:", error);
+    return NextResponse.json(
+      { error: "Erreur lors de la création du log" },
+      { status: 500 }
+    );
+  }
 }

@@ -8,22 +8,21 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { riskScore } = await request.json();
+    const { role } = await request.json();
 
-    // Validate risk score
-    if (riskScore < 0 || riskScore > 100) {
+    if (!["admin", "manager", "analyste", "lecteur"].includes(role)) {
       return NextResponse.json(
-        { error: "Le score doit être entre 0 et 100" },
+        { error: "Rôle invalide" },
         { status: 400 }
       );
     }
 
-    const country = await prisma.country.update({
+    const user = await prisma.user.update({
       where: { id },
-      data: { riskScore },
+      data: { role },
     });
 
-    return NextResponse.json(country);
+    return NextResponse.json(user);
   } catch (error) {
     console.error("Erreur:", error);
     return NextResponse.json(
