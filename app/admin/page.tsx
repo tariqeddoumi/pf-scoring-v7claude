@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface AdminSection {
   id: string;
@@ -12,6 +13,7 @@ interface AdminSection {
   description: string;
   href: string;
   icon: string;
+  requiredRole?: string;
 }
 
 const ADMIN_SECTIONS: AdminSection[] = [
@@ -21,6 +23,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Gérez les domaines, critères et échelles de notation",
     href: "/admin/scoring-config",
     icon: "⚙️",
+    requiredRole: "admin",
   },
   {
     id: "country-risk",
@@ -28,6 +31,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Configurez les scores de risque par pays",
     href: "/admin/country-risk",
     icon: "🌍",
+    requiredRole: "admin",
   },
   {
     id: "auth",
@@ -35,6 +39,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Paramétrez les méthodes d'authentification et les politiques",
     href: "/admin/auth-settings",
     icon: "🔐",
+    requiredRole: "admin",
   },
   {
     id: "system",
@@ -42,6 +47,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Configurez les paramètres généraux de l'application",
     href: "/admin/system-settings",
     icon: "🛠️",
+    requiredRole: "admin",
   },
   {
     id: "users",
@@ -49,6 +55,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Gérez les utilisateurs et leurs rôles",
     href: "/admin/users",
     icon: "👥",
+    requiredRole: "admin",
   },
   {
     id: "audit",
@@ -56,16 +63,51 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Consultez l'historique complet des modifications",
     href: "/admin/audit-logs",
     icon: "📋",
+    requiredRole: "manager",
   },
 ];
 
 export default function AdminPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<{ role: string } | null>(null);
 
   useEffect(() => {
-    // Check admin access
-    setLoading(false);
-  }, []);
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
+        const userData = await res.json();
+
+        // Vérifier que c'est admin ou manager
+        if (userData.role !== "admin" && userData.role !== "manager") {
+          router.push("/dashboard");
+          return;
+        }
+
+        setUser(userData);
+      } catch (error) {
+        console.error("Erreur:", error);
+        router.push("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+    } catch (error) {
+      console.error("Erreur:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -75,23 +117,36 @@ export default function AdminPage() {
     );
   }
 
+  if (!user) {
+    return null;
+  }
+
+  const visibleSections = ADMIN_SECTIONS.filter(
+    (s) => !s.requiredRole || s.requiredRole === user.role || user.role === "admin"
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-8">
         {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
-          <Link
-            href="/dashboard"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Panneau d'Administration</h1>
-            <p className="mt-2 text-muted-foreground">
-              Paramétrez tous les aspects de l'application
-            </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold">Panneau d'Administration</h1>
+              <p className="mt-2 text-muted-foreground">
+                Paramétrez tous les aspects de l'application
+              </p>
+            </div>
           </div>
+          <Button onClick={handleLogout} variant="outline">
+            Déconnexion
+          </Button>
         </div>
 
         {/* Security Warning */}
@@ -104,7 +159,7 @@ export default function AdminPage() {
 
         {/* Admin Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {ADMIN_SECTIONS.map((section) => (
+          {visibleSections.map((section) => (
             <Link key={section.id} href={section.href}>
               <Card className="p-6 h-full hover:border-primary transition-colors cursor-pointer">
                 <div className="flex items-start gap-4">
@@ -140,24 +195,23 @@ export default function AdminPage() {
           <h2 className="font-semibold mb-4">Résumé du Système</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
+              <p className="text-sm text-muted-foreground">Rôle Actuel</p>
+              <p className="text-2xl font-bold capitalize">{user.role}</p>
+            </div>
+            <div>
               <p className="text-sm text-muted-foreground">Domaines Actifs</p>
               <p className="text-2xl font-bold">8</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Utilisateurs</p>
-              <p className="text-2xl font-bold">-</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Projets</p>
-              <p className="text-2xl font-bold">-</p>
-            </div>
-            <div>
               <p className="text-sm text-muted-foreground">Pays Configurés</p>
               <p className="text-2xl font-bold">13</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Statut</p>
+              <p className="text-2xl font-bold text-green-400">✓ Actif</p>
             </div>
           </div>
         </Card>
       </div>
     </div>
   );
-}
