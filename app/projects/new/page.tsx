@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { SECTEURS } from "@/lib/constants";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
