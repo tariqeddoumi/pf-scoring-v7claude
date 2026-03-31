@@ -7,10 +7,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   output: "standalone",
-  // Skip static generation for API routes
-  experimental: {
-    isrMemoryCacheSize: 0,
-  },
 };
 
 module.exports = nextConfig;

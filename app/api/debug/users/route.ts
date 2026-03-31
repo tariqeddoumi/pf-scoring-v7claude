@@ -3,17 +3,18 @@ import prisma from "@/lib/prisma-client";
 
 export async function GET() {
   try {
-    // Test database connection
-    const userCount = await prisma.user.count();
-    return NextResponse.json({
-      status: "ok",
-      database: "connected",
-      userCount,
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        nom: true,
+        prenom: true,
+        role: true,
+      },
     });
+    return NextResponse.json({ users });
   } catch (error: any) {
     return NextResponse.json({
-      status: "error",
-      database: "disconnected",
       error: error.message,
     }, { status: 500 });
   }
