@@ -214,7 +214,7 @@ function LoginPageContent() {
                 className="w-4 h-4 bg-slate-700 border border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <span className="text-sm text-slate-400">
-                Mode test (contourner l'authentification)
+                Mode test (contourner l&apos;authentification)
               </span>
             </label>
 
