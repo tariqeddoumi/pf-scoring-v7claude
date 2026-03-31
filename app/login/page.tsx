@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 
 function LoginPageContent() {
   const router = useRouter();
@@ -39,7 +38,7 @@ function LoginPageContent() {
       } else {
         setError(data.error || "Erreur lors de la connexion");
       }
-    } catch (err: any) {
+    } catch {
       setError("Erreur de connexion au serveur");
     } finally {
       setLoading(false);
@@ -61,7 +60,7 @@ function LoginPageContent() {
       } else {
         setError("Erreur lors de l'authentification");
       }
-    } catch (err: any) {
+    } catch {
       setError("Erreur lors de la redirection");
     } finally {
       setLoading(false);
@@ -85,8 +84,9 @@ function LoginPageContent() {
           : data.error?.message || "Erreur lors de l'accès au tableau de bord";
         setError(errorMessage);
       }
-    } catch (err: any) {
-      setError(`Erreur de connexion: ${err.message || "Impossible de rejoindre le serveur"}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Impossible de rejoindre le serveur";
+      setError(`Erreur de connexion: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

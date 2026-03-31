@@ -57,7 +57,7 @@ export function createErrorResponse(
 export function logError(
   errorCode: string,
   error: Error | unknown,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): void {
   const errorInfo = ERROR_CODES[errorCode];
   const timestamp = new Date().toISOString();
@@ -78,16 +78,18 @@ export function logError(
 /**
  * Traiter les erreurs Prisma et les mapper aux codes d'erreur
  */
-export function handlePrismaError(error: any): string {
-  if (error?.code === "P2002") {
+export function handlePrismaError(error: Record<string, unknown>): string {
+  const code = error.code as string | undefined;
+
+  if (code === "P2002") {
     // Unique constraint failed
     return "ERR_DB_004";
   }
-  if (error?.code === "P2025") {
+  if (code === "P2025") {
     // Record not found
     return "ERR_DB_003";
   }
-  if (error?.code === "P2003") {
+  if (code === "P2003") {
     // Foreign key constraint failed
     return "ERR_DB_005";
   }
@@ -98,11 +100,13 @@ export function handlePrismaError(error: any): string {
 /**
  * Traiter les erreurs JWT
  */
-export function handleJWTError(error: any): string {
-  if (error?.name === "TokenExpiredError") {
+export function handleJWTError(error: Record<string, unknown>): string {
+  const name = error.name as string | undefined;
+
+  if (name === "TokenExpiredError") {
     return "ERR_AUTH_003";
   }
-  if (error?.name === "JsonWebTokenError") {
+  if (name === "JsonWebTokenError") {
     return "ERR_AUTH_002";
   }
 
@@ -112,8 +116,10 @@ export function handleJWTError(error: any): string {
 /**
  * Traiter les erreurs de validation
  */
-export function handleValidationError(error: any): string {
-  if (error?.name === "ValidationError") {
+export function handleValidationError(error: Record<string, unknown>): string {
+  const name = error.name as string | undefined;
+
+  if (name === "ValidationError") {
     return "ERR_VAL_001";
   }
 
@@ -123,28 +129,30 @@ export function handleValidationError(error: any): string {
 /**
  * Créer une réponse d'erreur à partir d'une exception connue
  */
-export function handleError(error: unknown, context?: string): string {
+export function handleError(error: unknown): string {
   if (!error) {
     return "ERR_SRV_001";
   }
 
+  const err = error as Record<string, unknown>;
+
   // Erreur Prisma
-  if ((error as any)?.constructor?.name === "PrismaClientKnownRequestError") {
-    return handlePrismaError(error);
+  if ((err.constructor as { name?: string })?.name === "PrismaClientKnownRequestError") {
+    return handlePrismaError(err);
   }
 
   // Erreur JWT
-  if ((error as any)?.name === "TokenExpiredError" || (error as any)?.name === "JsonWebTokenError") {
-    return handleJWTError(error);
+  if (err.name === "TokenExpiredError" || err.name === "JsonWebTokenError") {
+    return handleJWTError(err);
   }
 
   // Erreur de validation
-  if ((error as any)?.name === "ValidationError") {
-    return handleValidationError(error);
+  if (err.name === "ValidationError") {
+    return handleValidationError(err);
   }
 
   // Erreur de connexion réseau
-  if ((error as any)?.code === "ECONNREFUSED" || (error as any)?.code === "ENOTFOUND") {
+  if (err.code === "ECONNREFUSED" || err.code === "ENOTFOUND") {
     return "ERR_NET_001";
   }
 
@@ -158,7 +166,7 @@ export function handleError(error: unknown, context?: string): string {
 export function captureError(
   error: unknown,
   operation: string,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): void {
   const errorCode = handleError(error);
   logError(errorCode, error, {

@@ -63,8 +63,8 @@ export async function POST(request: Request) {
         secteur,
         montant: parseFloat(montant.toString()),
         countryCode: countryCode || "MA",
-        userId: user.id,
-        status: "draft",
+        creePar: user.id,
+        status: "brouillon",
       },
     });
 
@@ -79,19 +79,17 @@ export async function POST(request: Request) {
           montant: project.montant,
           countryCode: project.countryCode,
           status: project.status,
-          createdAt: project.createdAt,
+          dateCreation: project.dateCreation,
         },
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    captureError(error, "POST /api/projects-bypass", { body: request.body });
+  } catch (error: unknown) {
+    captureError(error, "POST /api/projects-bypass");
 
     const errorCode = handleError(error);
-    const { response } = createErrorResponse(
-      errorCode,
-      error?.message || "Erreur lors de la création du projet"
-    );
+    const errorMessage = error instanceof Error ? error.message : "Erreur lors de la création du projet";
+    const { response } = createErrorResponse(errorCode, errorMessage);
     return response;
   }
 }
@@ -103,8 +101,8 @@ export async function GET() {
 
     // Récupérer tous les projets de cet utilisateur
     const projects = await prisma.project.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
+      where: { creePar: user.id },
+      orderBy: { dateCreation: "desc" },
     });
 
     return NextResponse.json({
@@ -117,17 +115,15 @@ export async function GET() {
         montant: p.montant,
         countryCode: p.countryCode,
         status: p.status,
-        createdAt: p.createdAt,
+        dateCreation: p.dateCreation,
       })),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     captureError(error, "GET /api/projects-bypass");
 
     const errorCode = handleError(error);
-    const { response } = createErrorResponse(
-      errorCode,
-      error?.message || "Erreur lors de la récupération des projets"
-    );
+    const errorMessage = error instanceof Error ? error.message : "Erreur lors de la récupération des projets";
+    const { response } = createErrorResponse(errorCode, errorMessage);
     return response;
   }
 }
