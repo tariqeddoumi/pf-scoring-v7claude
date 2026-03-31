@@ -74,14 +74,19 @@ function LoginPageContent() {
 
     try {
       const response = await fetch("/api/projects-bypass");
+      const data = await response.json();
 
       if (response.ok) {
         router.push("/dashboard");
       } else {
-        setError("Erreur lors de l'accès au tableau de bord");
+        // Afficher le code d'erreur s'il existe
+        const errorMessage = data.error?.code
+          ? `${data.error.message} (${data.error.code})`
+          : data.error?.message || "Erreur lors de l'accès au tableau de bord";
+        setError(errorMessage);
       }
     } catch (err: any) {
-      setError("Erreur de connexion");
+      setError(`Erreur de connexion: ${err.message || "Impossible de rejoindre le serveur"}`);
     } finally {
       setLoading(false);
     }

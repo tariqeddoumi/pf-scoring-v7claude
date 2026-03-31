@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
+import { createErrorResponse, handleError, captureError } from "@/lib/error-handler";
 
 /**
  * Endpoint de contournement temporaire pour tester la création de projets
@@ -9,19 +10,11 @@ import prisma from "@/lib/prisma-client";
 // Utilisateur par défaut pour les tests
 const DEFAULT_USER_EMAIL = "admin@pf-scoring.ma";
 
-export async function POST(request: Request) {
+/**
+ * Obtenir ou créer l'utilisateur par défaut pour les tests
+ */
+async function getOrCreateDefaultUser() {
   try {
-    const body = await request.json();
-    const { nom, description, secteur, montant, countryCode } = body;
-
-    if (!nom || !secteur || !montant) {
-      return NextResponse.json(
-        { error: "nom, secteur et montant sont requis" },
-        { status: 400 }
-      );
-    }
-
-    // Trouver ou créer l'utilisateur par défaut
     let user = await prisma.user.findUnique({
       where: { email: DEFAULT_USER_EMAIL },
     });
@@ -37,6 +30,30 @@ export async function POST(request: Request) {
         },
       });
     }
+
+    return user;
+  } catch (error) {
+    captureError(error, "getOrCreateDefaultUser");
+    throw error;
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { nom, description, secteur, montant, countryCode } = body;
+
+    // Validation des champs obligatoires
+    if (!nom || !secteur || !montant) {
+      const { response } = createErrorResponse(
+        "ERR_VAL_004",
+        "Les champs nom, secteur et montant sont obligatoires"
+      );
+      return response;
+    }
+
+    // Obtenir ou créer l'utilisateur par défaut
+    const user = await getOrCreateDefaultUser();
 
     // Créer le projet
     const project = await prisma.project.create({
@@ -68,22 +85,25 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Erreur création projet bypass:", error?.message, error);
-    return NextResponse.json(
-      { error: "Erreur lors de la création du projet", details: error?.message },
-      { status: 500 }
+    captureError(error, "POST /api/projects-bypass", { body: request.body });
+
+    const errorCode = handleError(error);
+    const { response } = createErrorResponse(
+      errorCode,
+      error?.message || "Erreur lors de la création du projet"
     );
+    return response;
   }
 }
 
 export async function GET() {
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: DEFAULT_USER_EMAIL },
-    });
+    // Obtenir ou créer l'utilisateur par défaut
+    const user = await getOrCreateDefaultUser();
 
+    // Récupérer tous les projets de cet utilisateur
     const projects = await prisma.project.findMany({
-      where: { userId: user?.id },
+      where: { userId: user.id },
       orderBy: { createdAt: "desc" },
     });
 
@@ -101,10 +121,13 @@ export async function GET() {
       })),
     });
   } catch (error: any) {
-    console.error("Erreur récupération projets:", error?.message);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des projets" },
-      { status: 500 }
+    captureError(error, "GET /api/projects-bypass");
+
+    const errorCode = handleError(error);
+    const { response } = createErrorResponse(
+      errorCode,
+      error?.message || "Erreur lors de la récupération des projets"
     );
+    return response;
   }
 }
