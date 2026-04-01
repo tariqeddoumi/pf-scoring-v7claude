@@ -167,7 +167,7 @@ export default function CountryRiskPage() {
                 <p className="font-medium">Assignation Manuelle</p>
                 <p className="text-sm text-muted-foreground">
                   Les évaluateurs doivent manuellement assigner le score de risque
-                  pays pendant l'évaluation
+                  pays pendant l&apos;évaluation
                 </p>
               </div>
             </label>

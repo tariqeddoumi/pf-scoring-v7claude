@@ -12,12 +12,12 @@ export async function GET() {
     });
 
     // Sérialiser les dates en ISO strings
-    const serialized = projects.map((p: any) => ({
+    const serialized = projects.map((p) => ({
       id: p.id,
       nom: p.nom,
       description: p.description,
       secteur: p.secteur,
-      montant: parseFloat(p.montant),
+      montant: p.montant,
       devise: p.devise,
       status: p.status,
       scoreGlobal: p.scoreGlobal,
@@ -52,6 +52,12 @@ export async function POST(request: Request) {
     let userId: string;
     try {
       const decoded = await verifyToken(token);
+      if (!decoded) {
+        return NextResponse.json(
+          { error: "Token invalide" },
+          { status: 401 }
+        );
+      }
       userId = decoded.userId;
     } catch (error) {
       return NextResponse.json(

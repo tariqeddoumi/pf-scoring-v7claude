@@ -138,9 +138,9 @@ export default function AdminPage() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold">Panneau d'Administration</h1>
+              <h1 className="text-3xl font-bold">Panneau d&apos;Administration</h1>
               <p className="mt-2 text-muted-foreground">
-                Paramétrez tous les aspects de l'application
+                Paramétrez tous les aspects de l&apos;application
               </p>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function AdminPage() {
         <Card className="mb-8 p-6 bg-amber-950/30 border-amber-700">
           <p className="text-amber-200 text-sm font-medium">
             ⚠️ Seuls les administrateurs peuvent accéder à cette section. Toutes
-            les modifications sont enregistrées dans le journal d'audit.
+            les modifications sont enregistrées dans le journal d&apos;audit.
           </p>
         </Card>
 

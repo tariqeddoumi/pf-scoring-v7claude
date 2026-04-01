@@ -44,9 +44,9 @@ export default function AuthSettingsPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">Paramètres d'Authentification</h1>
+            <h1 className="text-3xl font-bold">Paramètres d&apos;Authentification</h1>
             <p className="mt-2 text-muted-foreground">
-              Configurez les méthodes et politiques d'authentification
+              Configurez les méthodes et politiques d&apos;authentification
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function AuthSettingsPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                Délai d'expiration de la session (minutes)
+                Délai d&apos;expiration de la session (minutes)
               </label>
               <input
                 type="number"

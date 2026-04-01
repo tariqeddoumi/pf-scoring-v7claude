@@ -52,6 +52,16 @@ export function createErrorResponse(
 }
 
 /**
+ * Extraire le message d'une erreur de manière sûre
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+/**
  * Journaliser une erreur avec contexte
  */
 export function logError(

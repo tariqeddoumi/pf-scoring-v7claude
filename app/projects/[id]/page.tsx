@@ -195,7 +195,7 @@ export default function ProjectDetailPage({
         {/* Evaluations History */}
         {scorings.length > 0 && (
           <Card className="mb-8 p-6">
-            <h2 className="text-xl font-semibold mb-4">Historique d'Évaluation</h2>
+            <h2 className="text-xl font-semibold mb-4">Historique d&apos;Évaluation</h2>
             <div className="space-y-3">
               {scorings.map((scoring) => (
                 <div

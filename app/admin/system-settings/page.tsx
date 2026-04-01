@@ -20,14 +20,14 @@ export default function SystemSettingsPage() {
           <div>
             <h1 className="text-3xl font-bold">Paramètres Système</h1>
             <p className="mt-2 text-muted-foreground">
-              Configurez les paramètres généraux de l'application
+              Configurez les paramètres généraux de l&apos;application
             </p>
           </div>
         </div>
 
         {/* Application Info */}
         <Card className="p-6 mb-6">
-          <h2 className="font-semibold mb-4 text-lg">Informations de l'Application</h2>
+          <h2 className="font-semibold mb-4 text-lg">Informations de l&apos;Application</h2>
           <div className="space-y-2">
             <div>
               <p className="text-sm text-muted-foreground">Version</p>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTokenFromCookie, verifyToken, hashPassword } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 
 export async function GET(request: NextRequest) {
@@ -62,8 +63,9 @@ export async function GET(request: NextRequest) {
       success: true,
       users,
     });
-  } catch (error: any) {
-    console.error("Erreur récupération utilisateurs:", error?.message);
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Erreur récupération utilisateurs:", errorMsg);
     return NextResponse.json(
       { error: "Erreur lors de la récupération des utilisateurs" },
       { status: 500 }
@@ -114,7 +116,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Préparer les données de mise à jour
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (nom) updateData.nom = nom;
     if (prenom) updateData.prenom = prenom;
     if (password) updateData.password = await hashPassword(password);
@@ -138,8 +140,9 @@ export async function PUT(request: NextRequest) {
       success: true,
       user: updatedUser,
     });
-  } catch (error: any) {
-    console.error("Erreur mise à jour profil:", error?.message);
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Erreur mise à jour profil:", errorMsg);
     return NextResponse.json(
       { error: "Erreur lors de la mise à jour du profil" },
       { status: 500 }

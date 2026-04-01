@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hashPassword } from "@/lib/auth";
-import { getTokenFromCookie, verifyToken } from "@/lib/auth";
+import { hashPassword, getTokenFromCookie, verifyToken } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 
 export async function POST(request: NextRequest) {
@@ -72,8 +72,9 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    console.error("Erreur création compte:", error?.message);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Erreur création compte:", errorMessage);
     return NextResponse.json(
       { error: "Erreur lors de la création du compte" },
       { status: 500 }

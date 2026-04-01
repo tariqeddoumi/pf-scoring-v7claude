@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getErrorMessage } from "@/lib/error-handler";
 import { createToken } from "@/lib/auth";
 import prisma from "@/lib/prisma-client";
 
@@ -174,11 +175,11 @@ export async function GET(
     });
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("OAuth error:", error);
     const errorUrl = new URL(process.env.NEXT_PUBLIC_BASE_URL!);
     errorUrl.pathname = "/login";
-    errorUrl.searchParams.set("error", error.message);
+    errorUrl.searchParams.set("error", getErrorMessage(error));
     return NextResponse.redirect(errorUrl);
   }
 }
