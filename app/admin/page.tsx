@@ -50,6 +50,14 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "admin",
   },
   {
+    id: "diagnostic",
+    title: "Diagnostic Système",
+    description: "Tests de santé et vérification de la configuration",
+    href: "/admin/diagnostic",
+    icon: "🔍",
+    requiredRole: "admin",
+  },
+  {
     id: "users",
     title: "Gestion des Utilisateurs",
     description: "Gérez les utilisateurs et leurs rôles",
