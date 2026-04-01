@@ -15,7 +15,7 @@ export async function GET() {
       SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET ? "✅ Défini" : "❌ Manquant",
       JWT_SECRET: process.env.JWT_SECRET ? "✅ Défini" : "❌ Manquant",
     },
-    tests: {} as Record<string, any>,
+    tests: {} as Record<string, unknown>,
   };
 
   // Test 1: Vérifier les variables d'environnement critiques
