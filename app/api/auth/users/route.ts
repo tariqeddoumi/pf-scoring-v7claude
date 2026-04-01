@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       success: true,
       users,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erreur récupération utilisateurs:", error?.message);
     return NextResponse.json(
       { error: "Erreur lors de la récupération des utilisateurs" },
@@ -114,7 +114,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Préparer les données de mise à jour
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (nom) updateData.nom = nom;
     if (prenom) updateData.prenom = prenom;
     if (password) updateData.password = await hashPassword(password);
@@ -138,7 +138,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       user: updatedUser,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erreur mise à jour profil:", error?.message);
     return NextResponse.json(
       { error: "Erreur lors de la mise à jour du profil" },

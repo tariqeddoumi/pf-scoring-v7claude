@@ -12,7 +12,7 @@ export async function GET() {
     });
 
     // Sérialiser les dates en ISO strings
-    const serialized = projects.map((p: any) => ({
+    const serialized = projects.map((p: Record<string, unknown>) => ({
       id: p.id,
       nom: p.nom,
       description: p.description,

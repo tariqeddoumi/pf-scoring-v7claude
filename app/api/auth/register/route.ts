@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erreur création compte:", error?.message);
     return NextResponse.json(
       { error: "Erreur lors de la création du compte" },

@@ -174,7 +174,7 @@ export async function GET(
     });
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("OAuth error:", error);
     const errorUrl = new URL(process.env.NEXT_PUBLIC_BASE_URL!);
     errorUrl.pathname = "/login";

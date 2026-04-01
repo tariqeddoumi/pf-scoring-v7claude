@@ -41,7 +41,7 @@ export async function GET(request: Request) {
         role: user.role,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       status: "error",
       message: error.message,
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
         role: user.role,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       status: "error",
       message: error.message,

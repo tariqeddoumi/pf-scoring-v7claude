@@ -10,7 +10,7 @@ export async function GET() {
       database: "connected",
       userCount,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       status: "error",
       database: "disconnected",

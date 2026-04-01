@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       { error: "Unknown error" },
       { status: 500 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("OAuth init error:", error);
     return NextResponse.json(
       { error: error.message },

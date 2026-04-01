@@ -66,7 +66,7 @@ export async function DELETE(
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erreur suppression compte:", error?.message);
     return NextResponse.json(
       { error: "Erreur lors de la suppression du compte" },
@@ -118,7 +118,7 @@ export async function GET(
       success: true,
       user,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erreur récupération utilisateur:", error?.message);
     return NextResponse.json(
       { error: "Erreur lors de la récupération de l'utilisateur" },

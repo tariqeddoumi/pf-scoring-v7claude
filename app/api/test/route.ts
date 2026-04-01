@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       received: body,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       status: "error",
       message: error.message,

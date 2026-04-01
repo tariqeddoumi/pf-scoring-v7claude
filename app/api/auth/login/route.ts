@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     });
 
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Erreur login:", error?.message, error);
     return NextResponse.json(
       { error: "Erreur lors de la connexion", details: error?.message },
