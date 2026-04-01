@@ -42,6 +42,7 @@ export async function POST() {
           password: hashedPassword,
           nom: user.nom,
           prenom: user.prenom,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           role: user.role as any,
         },
       });
