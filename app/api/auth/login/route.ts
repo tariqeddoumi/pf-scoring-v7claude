@@ -27,7 +27,16 @@ export async function POST(request: Request) {
     }
 
     // Vérifier le mot de passe
-    const passwordValid = await verifyPassword(password, user.password || "");
+    const hashedPassword = user.password || "";
+    if (!hashedPassword) {
+      console.error(`User ${email} has no password set`);
+      return NextResponse.json(
+        { error: "Email ou mot de passe incorrect" },
+        { status: 401 }
+      );
+    }
+
+    const passwordValid = await verifyPassword(password, hashedPassword);
 
     if (!passwordValid) {
       return NextResponse.json(
@@ -68,10 +77,10 @@ export async function POST(request: Request) {
     });
 
     return response;
-  } catch (error) {
-    console.error("Erreur:", error);
+  } catch (error: any) {
+    console.error("Erreur login:", error?.message, error);
     return NextResponse.json(
-      { error: "Erreur lors de la connexion" },
+      { error: "Erreur lors de la connexion", details: error?.message },
       { status: 500 }
     );
   }

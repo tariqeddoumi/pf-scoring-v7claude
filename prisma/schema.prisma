@@ -8,14 +8,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String?
-  nom       String
-  prenom    String
-  role      UserRole @default(analyste)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String?
+  nom             String
+  prenom          String
+  role            UserRole @default(analyste)
+  oauthProvider   String?
+  oauthId         String?
+  avatar          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   projectsCreated Project[]
   auditLogs       AuditLog[]
