@@ -62,9 +62,9 @@ export default function AuditLogsPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">Journal d'Audit</h1>
+            <h1 className="text-3xl font-bold">Journal d&apos;Audit</h1>
             <p className="mt-2 text-muted-foreground">
-              Consultez l'historique complet des modifications système
+              Consultez l&apos;historique complet des modifications système
             </p>
           </div>
         </div>
