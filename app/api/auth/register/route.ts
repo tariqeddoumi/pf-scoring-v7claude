@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hashPassword } from "@/lib/auth";
-import { getTokenFromCookie, verifyToken } from "@/lib/auth";
+import { hashPassword, getTokenFromCookie, verifyToken } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 
 export async function POST(request: NextRequest) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
-import { createErrorResponse, handleError, captureError } from "@/lib/error-handler";
+import { createErrorResponse, handleError, captureError, getErrorMessage } from "@/lib/error-handler";
 
 /**
  * Endpoint de contournement temporaire pour tester la création de projets
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     captureError(error, "POST /api/projects-bypass");
 
     const errorCode = handleError(error);
-    const errorMessage = error instanceof Error ? error.message : "Erreur lors de la création du projet";
+    const errorMessage = getErrorMessage(error) || "Erreur lors de la création du projet";
     const { response } = createErrorResponse(errorCode, errorMessage);
     return response;
   }
@@ -122,7 +122,7 @@ export async function GET() {
     captureError(error, "GET /api/projects-bypass");
 
     const errorCode = handleError(error);
-    const errorMessage = error instanceof Error ? error.message : "Erreur lors de la récupération des projets";
+    const errorMessage = getErrorMessage(error) || "Erreur lors de la récupération des projets";
     const { response } = createErrorResponse(errorCode, errorMessage);
     return response;
   }

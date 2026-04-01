@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 import { verifyPassword } from "@/lib/auth";
 
@@ -44,7 +45,7 @@ export async function GET(request: Request) {
   } catch (error: unknown) {
     return NextResponse.json({
       status: "error",
-      message: error.message,
+      message: getErrorMessage(error),
     }, { status: 500 });
   }
 }
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     return NextResponse.json({
       status: "error",
-      message: error.message,
+      message: getErrorMessage(error),
     }, { status: 500 });
   }
 }

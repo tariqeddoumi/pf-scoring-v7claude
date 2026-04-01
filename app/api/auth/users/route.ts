@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTokenFromCookie, verifyToken, hashPassword } from "@/lib/auth";
+import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 
 export async function GET(request: NextRequest) {

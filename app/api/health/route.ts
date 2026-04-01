@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 
 export async function GET() {
@@ -14,7 +15,7 @@ export async function GET() {
     return NextResponse.json({
       status: "error",
       database: "disconnected",
-      error: error.message,
+      error: getErrorMessage(error),
     }, { status: 500 });
   }
 }

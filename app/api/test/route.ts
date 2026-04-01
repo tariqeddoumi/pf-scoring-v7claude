@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getErrorMessage } from "@/lib/error-handler";
 
 export async function GET() {
   return NextResponse.json({
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     return NextResponse.json({
       status: "error",
-      message: error.message,
+      message: getErrorMessage(error),
     }, { status: 400 });
   }
 }

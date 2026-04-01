@@ -78,9 +78,10 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error: unknown) {
-    console.error("Erreur login:", error?.message, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Erreur login:", errorMessage, error);
     return NextResponse.json(
-      { error: "Erreur lors de la connexion", details: error?.message },
+      { error: "Erreur lors de la connexion", details: errorMessage },
       { status: 500 }
     );
   }
