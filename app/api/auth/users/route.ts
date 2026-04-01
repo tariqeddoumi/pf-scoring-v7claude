@@ -64,7 +64,8 @@ export async function GET(request: NextRequest) {
       users,
     });
   } catch (error: unknown) {
-    console.error("Erreur récupération utilisateurs:", error?.message);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Erreur récupération utilisateurs:", errorMsg);
     return NextResponse.json(
       { error: "Erreur lors de la récupération des utilisateurs" },
       { status: 500 }
@@ -140,7 +141,8 @@ export async function PUT(request: NextRequest) {
       user: updatedUser,
     });
   } catch (error: unknown) {
-    console.error("Erreur mise à jour profil:", error?.message);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Erreur mise à jour profil:", errorMsg);
     return NextResponse.json(
       { error: "Erreur lors de la mise à jour du profil" },
       { status: 500 }

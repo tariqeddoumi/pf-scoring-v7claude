@@ -42,7 +42,7 @@ export async function POST() {
           password: hashedPassword,
           nom: user.nom,
           prenom: user.prenom,
-          role: user.role as string,
+          role: user.role as any,
         },
       });
     }

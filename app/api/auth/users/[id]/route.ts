@@ -67,7 +67,8 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error: unknown) {
-    console.error("Erreur suppression compte:", error?.message);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Erreur suppression compte:", errorMsg);
     return NextResponse.json(
       { error: "Erreur lors de la suppression du compte" },
       { status: 500 }
@@ -119,7 +120,8 @@ export async function GET(
       user,
     });
   } catch (error: unknown) {
-    console.error("Erreur récupération utilisateur:", error?.message);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Erreur récupération utilisateur:", errorMsg);
     return NextResponse.json(
       { error: "Erreur lors de la récupération de l'utilisateur" },
       { status: 500 }
