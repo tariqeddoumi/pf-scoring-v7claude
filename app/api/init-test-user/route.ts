@@ -20,30 +20,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // Créer l'utilisateur admin de test
-    const user = await prisma.user.upsert({
-      where: { email: "admin@pf-scoring.ma" },
-      update: {
-        role: "admin",
-      },
-      create: {
-        email: "admin@pf-scoring.ma",
-        nom: "Admin",
-        prenom: "Test",
-        role: "admin",
-        password: "", // Sans mot de passe pour les tests
-      },
-    });
+    // Créer l'utilisateur admin de test avec un INSERT/UPDATE plutôt que upsert
+    const user = await prisma.$executeRawUnsafe(`
+      INSERT INTO pf_scoring_users (id, email, nom, prenom, role, password, "createdAt", "updatedAt")
+      VALUES (
+        gen_random_uuid(),
+        'admin@pf-scoring.ma',
+        'Admin',
+        'Test',
+        'admin'::\"UserRole\",
+        '',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      )
+      ON CONFLICT (email) DO UPDATE SET
+        role = 'admin'::\"UserRole\",
+        "updatedAt" = CURRENT_TIMESTAMP
+      RETURNING id, email, nom, prenom, role;
+    `);
 
     return NextResponse.json({
       success: true,
       message: "Utilisateur admin créé/mis à jour avec succès",
       user: {
-        id: user.id,
-        email: user.email,
-        nom: user.nom,
-        prenom: user.prenom,
-        role: user.role,
+        email: "admin@pf-scoring.ma",
+        nom: "Admin",
+        prenom: "Test",
+        role: "admin",
       },
     });
   } catch (error: unknown) {
