@@ -26,6 +26,10 @@ interface DiagnosticResponse {
 }
 
 export default function DiagnosticPage() {
+  // Password from environment variable (can be disabled by setting DIAGNOSTIC_ENABLED=false)
+  const DIAGNOSTIC_PASSWORD = process.env.NEXT_PUBLIC_DIAGNOSTIC_PASSWORD || "diagnostic2024";
+  const DIAGNOSTIC_ENABLED = process.env.NEXT_PUBLIC_DIAGNOSTIC_ENABLED !== "false";
+
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -34,8 +38,21 @@ export default function DiagnosticPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Simple password authentication (can be disabled later)
-  const DIAGNOSTIC_PASSWORD = "diagnostic2024";
+  // If diagnostic is disabled, show a disabled message
+  if (!DIAGNOSTIC_ENABLED) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-slate-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md border-slate-700 bg-slate-800 p-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Diagnostic Désactivé</h1>
+            <p className="text-slate-300">
+              L'outil de diagnostic est actuellement désactivé. Contactez l'administrateur pour plus d'informations.
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   const handlePasswordSubmit = () => {
     if (password === DIAGNOSTIC_PASSWORD) {
