@@ -36,7 +36,11 @@ function LoginPageContent() {
       if (response.ok) {
         router.push("/dashboard");
       } else {
-        setError(data.error || "Erreur lors de la connexion");
+        // Afficher le code d'erreur s'il existe pour plus de détails
+        const errorMessage = data.errorCode
+          ? `${data.error || "Erreur"} (${data.errorCode})`
+          : data.error || "Erreur lors de la connexion";
+        setError(errorMessage);
       }
     } catch {
       setError("Erreur de connexion au serveur");
