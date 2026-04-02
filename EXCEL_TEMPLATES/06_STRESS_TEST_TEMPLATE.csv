@@ -1,0 +1,116 @@
+STRESS TEST TEMPLATE - PROJECT FINANCE V7++,,,,,
+Project Name,[INSERT PROJECT NAME],,Analyst,[INSERT NAME],Date,[INSERT DATE]
+Base Case Assumption,Value,Unit,Source,Notes,
+Annual Revenue (CFADS),€[INSERT],EUR/year,Financial Model,Gross cash available for debt service
+Annual Debt Service,€[INSERT],EUR/year,Term Sheet,Interest + Principal repayment
+Base DSCR,=[Revenue / Debt Service],x,Calculated,=Benchmark for comparison
+Base LLCR,=[PV CF over life / Debt],"x (PV)",Model,Long-term coverage ratio
+,,,,,
+SCENARIO 1: REVENUE DECLINE (-10%),,,,,
+Assumption,-10% revenue (market downturn / demand reduction / offtaker issues),,,
+Revenue_stress,=[Revenue × 0.9],EUR/year,Calculated,Stressed revenue
+Debt Service_stress,=[Base debt service],EUR/year,No change,Debt obligations unchanged
+DSCR_stress,=[Revenue_stress / Debt Service_stress],x,Calculated,Stressed debt coverage
+PASS Threshold (>1.25x),>,1.25,x,YES / NO,Mark result
+Margin to minimum (>1.10x),[DSCR_stress - 1.10],x,Calculated,How much buffer remains
+Impact on Score,IF PASS: No penalty; IF CAUTION: MALUS -2 to -4 pts,,,
+Notes,[INSERT NOTES],,,
+,,,,,
+SCENARIO 2: COST INFLATION (+5%),,,,,
+Assumption,+5% operating costs (OPEX increase),,,
+Annual Opex_base,€[INSERT],EUR/year,Budget,Current operating costs
+Opex_stress,=[Opex × 1.05],EUR/year,Calculated,Stressed operating costs
+Additional Cost,=[Opex_stress - Opex_base],EUR/year,Calculated,Cost increase impact
+Revenue_stress,=[Base revenue - Additional Cost],EUR/year,Calculated,Net impact on CFADS
+DSCR_stress,=[Revenue_stress / Debt Service],x,Calculated,Stressed coverage
+PASS Threshold (>1.20x),>,1.20,x,YES / NO,Mark result
+Impact on Score,IF PASS: No penalty; IF CAUTION: MALUS -2 to -3 pts,,,
+Notes,[INSERT NOTES],,,
+,,,,,
+SCENARIO 3: CONSTRUCTION DELAY (+6 MONTHS),,,,,
+Assumption,Project commissioning delayed 6 months,,,
+COD_base,Year [X],month,Plan,Original commercial operation date
+COD_stress,Year [X + 0.5],month,Stressed,Delayed COD
+Revenue_Year_1_base,€[INSERT],EUR,Assumed,Full year revenue
+Revenue_Year_1_stress,€[INSERT × 0.5],EUR,Stressed,Half-year (6 month) revenue
+Additional Interest (6 months),=[Debt × Rate × 6/12],EUR,Calculated,Extra financing cost
+DSCR_Year_1_stress,=[Revenue_Year_1_stress / Debt Service_adjusted],x,Calculated,Year 1 coverage (weak expected)
+DSCR_Year_2_stress,=[Full Revenue / Debt Service],x,Calculated,Year 2 recovery (must be >1.15x)
+PASS Threshold Year 2 (>1.15x),>,1.15,x,YES / NO,Must pass by Year 2
+Impact on Score,IF PASS: No penalty; IF FAIL: MALUS -3 to -5 pts,,,
+Notes,[INSERT NOTES],,,
+,,,,,
+SCENARIO 4: INTEREST RATE INCREASE (+200 BPS),,,,,
+Assumption,Floating debt increases 2% (or refinance at +200bps fixed),,,
+Debt Outstanding,€[INSERT],EUR,Financing,Total debt amount
+Base Interest Rate,%[INSERT],Annual,Term sheet,Current rate or refinance rate
+Stress Interest Rate,=%[Base + 2%],Annual,Stressed,Rate + 200 basis points
+Base Annual Interest,=[Debt × Base Rate],EUR/year,Calculated,Current interest expense
+Stress Annual Interest,=[Debt × Stress Rate],EUR/year,Calculated,Stressed interest expense
+Additional Interest,=[Stress Interest - Base Interest],EUR/year,Calculated,Impact on debt service
+New Debt Service,=[Base Debt Service + Additional Interest],EUR/year,Calculated,Total annual obligation
+DSCR_stress,=[Revenue / New Debt Service],x,Calculated,Stressed coverage
+Hedging Coverage,%,[INSERT],Assumption,"If >80% hedged, impact reduced"
+PASS Threshold,>,1.20-1.30,x,Depends on hedge,YES / NO (higher if unhedged)
+Impact on Score,IF PASS: No penalty; IF CAUTION: MALUS -2 to -4 pts,,,
+Notes,[INSERT NOTES],,,
+,,,,,
+SCENARIO 5: FX DEPRECIATION (-10%),,,,,
+Assumption,Local currency depreciates 10% vs financing currency,,,
+Financing Currency,USD / EUR / Other,[SELECT],Term sheet,Currency of debt
+Revenue Currency,Local / USD / Other,[SELECT],PPA,Currency of revenues
+Current FX Rate,[INSERT] (e.g. 11 MAD/EUR),units,Market,Spot rate
+Stressed FX Rate,=[Current FX × 1.10],units,Stressed,-10% (weakened local currency)
+Annual Revenue_Local,€[INSERT],Local currency,PPA,Revenue in local terms
+Revenue in Financing Curr_base,=[Revenue_Local / Base FX],Financing Curr,Calculated,Current conversion
+Revenue in Financing Curr_stress,=[Revenue_Local / Stress FX],Financing Curr,Calculated,Stressed conversion
+FX Impact on Revenue,=[Revenue_base - Revenue_stress],Financing Curr,Calculated,Loss from depreciation
+DSCR_stress,=[Revenue_stress / Debt Service],x,Calculated,Stressed coverage
+FX Hedging Coverage,%,[INSERT],Assumption,% of exposure hedged
+PASS Threshold,>,1.20-1.30,x,If unhedged >50%,YES / NO
+Impact on Score,IF PASS: No penalty; IF FAIL: MALUS -3 pts,,,
+Notes,[INSERT NOTES],,,
+,,,,,
+SCENARIO 6: MARKET DECAY (-2% CAGR),,,,,
+Assumption,Underlying market demand declines 2% CAGR (vs growth of +2% assumed),,,
+Base Case Growth Assumption,+2%,CAGR,Business plan,Original market growth forecast
+Stress Growth Assumption,-2%,CAGR,Stressed,Structural market decline
+Time Horizon,20,years,Project,Full financing term
+Revenue_Year_1_base,€[INSERT],EUR/year,Calculated,Year 1 base case
+Revenue_Year_10_base,=[Year_1 × (1.02^9)],EUR/year,Calculated,Year 10 with +2% growth
+Revenue_Year_20_base,=[Year_1 × (1.02^19)],EUR/year,Calculated,Year 20 with +2% growth
+Revenue_Year_10_stress,=[Year_1 × (0.98^9)],EUR/year,Calculated,Year 10 with -2% decay
+Revenue_Year_20_stress,=[Year_1 × (0.98^19)],EUR/year,Calculated,Year 20 with -2% decay
+DSCR_Year_10_stress,=[Revenue_Year_10_stress / Debt Service_Year_10],x,Calculated,Coverage in year 10
+DSCR_Year_20_stress,=[Revenue_Year_20_stress / Debt Service_Year_20],x,Calculated,Coverage in year 20
+LLCR_stress,=[PV(CF_stress over 20yr) / Debt_Outstanding],x,Calculated,Lifetime coverage
+PASS Threshold LLCR (>1.25x),>,1.25,x,YES / NO,Long-term viability
+Refinancing Risk,YES / NO,[SELECT],Assessment,If LLCR low: refinancing critical
+Impact on Score,IF PASS: No penalty; IF FAIL: MALUS -3 pts + refinancing flag,,,
+Notes,[INSERT NOTES],,,
+,,,,,
+COMBINED STRESS TEST,,,,,
+Assumption,"Revenue -8% + Cost +3% + Delay 3m + Rate +150bps, combined impact",,,
+Combined Revenue Impact,=[Base × 0.92 - Cost_increase],EUR/year,Calculated,Compound stress
+Combined Debt Service,=[Base + Interest + Delay impact],EUR/year,Calculated,All stresses applied
+DSCR_combined_stress,=[Combined Revenue / Combined Debt Service],x,Calculated,Perfect storm scenario
+Status,IF >1.10x: CAUTION; IF <1.10x: CRITICAL,,,Mark result
+Result,PASS / MARGINAL / FAIL,,[SELECT],Recommend actions
+Recommendations,IF FAIL: Increase DSRA / Reduce leverage / Increase equity,,,Actions needed
+,,,,,
+SUMMARY & RECOMMENDATION,,,,,
+Scenario,DSCR_stress,Threshold,Status,Margin,Notes
+Revenue -10%,[INSERT],>1.25x,PASS / FAIL,[DSCR - Threshold],"Demand risk, market downturn"
+Cost Inflation +5%,[INSERT],>1.20x,PASS / FAIL,[DSCR - Threshold],"OPEX increase, inflation"
+Construction Delay 6m,[INSERT],>1.15x Yr2,PASS / FAIL,[DSCR - Threshold],"Schedule risk, financing"
+Interest Rate +200bps,[INSERT],>1.20-1.30x,PASS / FAIL,[DSCR - Threshold],"Rate risk, partial hedge"
+FX Depreciation -10%,[INSERT],>1.20-1.30x,PASS / FAIL,[DSCR - Threshold],"FX exposure, unhedged"
+Market Decay -2% CAGR,[INSERT] LLCR,>1.25x,PASS / FAIL,[LLCR - Threshold],"Long-term demand decline"
+Combined Perfect Storm,[INSERT],>1.10x,CAUTION / FAIL,[DSCR - 1.10x],"Extreme scenario"
+,,,,,
+OVERALL ASSESSMENT,,,
+Most Vulnerable Scenario,[SELECT from above],,Highest risk factor,
+Key Mitigation,[Recommend actions],,,
+MALUS Applied,=[Count failing scenarios × penalty],-[X] pts,Adjusted score,
+Final Recommendation,APPROVE / APPROVE WITH CONDITIONS / REJECT,,,Decision
+Credit Committee Notes,[INSERT SUMMARY FOR COMMITTEE],,,,

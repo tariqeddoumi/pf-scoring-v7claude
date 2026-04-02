@@ -1,0 +1,23 @@
+Rule ID,Category,Condition,Severity,Description,Workaround,Notes
+NOGO_1A,Sponsor,Rating < CCC,CRITICAL,Sponsor insolvent or below-CCC rated,Sponsor replacement or capital injection,Automatic rejection
+NOGO_1B,Sponsor,Insolvency/Restructuring,CRITICAL,Sponsor in bankruptcy proceedings,Sponsor replacement,Automatic rejection
+NOGO_1C,Sponsor,Liquidity ratio < 0.1,CRITICAL,Sponsor cash/debt < 0.1 = immediate risk,Capital injection by sponsor,Automatic rejection
+NOGO_2A,Country,War/Extreme Political Instability,CRITICAL,Country in active conflict or coup,Geographic alternative,Automatic rejection
+NOGO_2B,Country,Repeated Expropriation,CRITICAL,Historique of asset seizure,Sovereign guarantee or insurance,Automatic rejection
+NOGO_3A,Construction,EPC Insolvency,CRITICAL,EPC contractor bankrupt or insolvent,New EPC selection,Automatic rejection
+NOGO_3B,Construction,EPC Failed History,CRITICAL,EPC has multiple failed projects,New EPC selection,Automatic rejection
+NOGO_3C,Construction,No Cost Guarantee,CRITICAL,Reimbursable contract (no fixed price),Negotiate fixed-price EPC,Automatic rejection
+NOGO_5A,Revenue,No PPA Signed,CRITICAL,Agreement verbal or Letter of Intent only,Finalize PPA signature,Automatic rejection
+NOGO_5B,Revenue,Offtaker Insolvency,CRITICAL,Offtaker in default or CCC- rating,New offtaker or guarantee,Automatic rejection
+NOGO_5C,Revenue,Mono-client >85%,CRITICAL,Single offtaker represents >85% revenue,Diversify offtakers,Automatic rejection
+NOGO_5D,Revenue,Market Decline >3%,CRITICAL,Underlying market shrinking >3% CAGR,Geographic/sector alternative,Automatic rejection
+NOGO_5E,Revenue,Tariff Incompetitive +20%,CRITICAL,PPA price 20%+ above market,Renegotiate tariff or market analysis,Automatic rejection
+NOGO_6A,Financial,DSCR < 1.10x,CRITICAL,Debt service coverage below minimum,Reduce leverage or increase equity,Automatic rejection
+NOGO_6B,Financial,No DSRA/Reserves,CRITICAL,Absence of debt service reserve account,Establish DSRA (min 3-6 months),Automatic rejection
+NOGO_6C,Financial,Leverage > 85/15,CRITICAL,Debt >85% of total funding,Increase equity contribution,Automatic rejection
+NOGO_8A,Legal,Missing Key Contracts,CRITICAL,EPC/O&M/PPA/Concession not signed,Finalize all contracts,Automatic rejection
+NOGO_8B,Legal,Non-Enforceable Security,CRITICAL,Guarantees cannot be executed locally,Legal restructuring required,Automatic rejection
+NOGO_8C,Legal,Major Active Litigation,CRITICAL,Ongoing major lawsuits,Resolve before financing,Automatic rejection
+NOGO_9A,ESG,Social Conflict MAJOR,CRITICAL,Significant community opposition/violence,Resolve via stakeholder engagement,Automatic rejection
+NOGO_9B,ESG,Environmental Non-Compliance,CRITICAL,Breach of national/international env. law,Remediation + permits required,Automatic rejection
+NOGO_9C,ESG,Climate Risk CRITICAL,CRITICAL,High physical/transition risk + vulnerability,Geographic/sector alternative,Automatic rejection

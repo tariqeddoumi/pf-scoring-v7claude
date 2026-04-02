@@ -1,0 +1,58 @@
+CASE STUDY: Solar Farm 100 MW - Ouarzazate Region,,,,,
+Project Details,Value,Unit,Source,Notes,
+Project Name,Solar Farm 100 MW,MW,RFP,Capacity,
+Location,Ouarzazate,Region,RFP,Morocco,
+Sponsor,Moroccan Energy Dev. Corp,Company,RFP,State-owned enterprise,
+Offtaker,ONEE,Utility,PPA,National utility,
+Financing,€90M debt + €30M equity,EUR,Term sheet,75% debt / 25% equity,
+PPA Term,25 years,years,Contract,Signed,
+PPA Tariff,€70/MWh,EUR/MWh,Contract,Indexed CPI,
+Total Capex,€120M,EUR,CAPEX estimate,All-in project cost,
+Annual Opex,€4M,EUR/year,Business plan,Year 1-25,
+Annual Debt Service,€7.0M,EUR/year,Financial model,Principal + Interest,
+,,,,,
+DOMAIN SCORING,Score,Weight,Weighted Score,Rating Inputs,Notes
+D1 - Project Fundamentals,8.4,20%,1.68,AA,Strong sponsor + clear structure + permits obtained
+D2 - Host Country,8.0,10%,0.80,AA,Morocco BB+ = acceptable + regulatory framework stable
+D3 - Construction,8.5,15%,1.28,AA,Siemens EPC = proven track record + cost guaranteed
+D4 - Operation,8.2,15%,1.23,AA,Acciona O&M = 15 year experience + proven technology
+D5 - Revenue & Market,8.6,15%,1.29,AA,ONEE investment grade + 25yr PPA + take-or-pay 95%
+D6 - Financial Structure,8.3,15%,1.25,AA,Leverage 75/25 good + hedging strong + covenants solid
+D7 - Financial Structure & Cash Flow,9.0,15%,1.35,AA,DSCR 1.45x (base) + 1.30x (stress -10% revenue)
+D8 - Legal,8.5,10%,0.85,AA,All contracts signed + direct agreements + security package 110%
+D9 - ESG & Climate,8.8,10%,0.88,AA,Green energy + minimal social impact + climate resilient
+,,,,,
+GLOBAL SCORE,=(SUM of Weighted Scores) / 1.35,,,
+Global Score,8.08,/10,100%,A,After normalization
+Rating,A,,,1.5% PD,Investment Grade Equivalent
+Decision,APPROVE,,,With monitoring,Standard covenants + quarterly reporting
+,,,,,
+STRESS TESTING,Base Case,Stress Case,Impact,DSCR Stress,Status
+Scenario 1: Revenue -10%,€100M,€90M,-10%,1.31x,PASS (>1.25x threshold)
+Scenario 2: Cost Inflation +5%,€4M,€4.2M,+5%,1.35x,PASS (>1.20x threshold)
+Scenario 3: Construction Delay 6m,Year 1 COD,Year 1.5 COD,+6 months,Year 2: 1.25x,PASS (>1.15x threshold Year 2)
+Scenario 4: Interest Rate +200bps,5%,7%,+2%,1.35x (hedged),PASS (>1.20x threshold)
+Scenario 5: FX Depreciation -10%,11 MAD/EUR,12.1 MAD/EUR,-10%,1.29x (unhedged),PASS (>1.20x threshold)
+Scenario 6: Market Decay -2% CAGR,+2% growth,-2% decline,-4% CAGR gap,LLCR 1.35x,PASS (>1.25x threshold)
+,,,,,
+Red Flags & MALUS,Triggered?,Penalty,Adjusted Score,Status,Mitigation Required
+NOGO_5A: No PPA signed,NO,0,8.08,PASS,N/A - PPA signed 25yr
+NOGO_6A: DSCR < 1.10x,NO,0,8.08,PASS,N/A - DSCR 1.45x base
+MALUS_5A: DSCR < 1.25x without indexation,NO,0,8.08,PASS,N/A - has CPI indexation
+MALUS_2A: FX mismatch unhedged,PARTIAL,"-1",7.98,CAUTION,30% of debt FX-unhedged - monitor
+MALUS_9A: Climate risk elevated,NO,0,8.08,PASS,N/A - solar = low climate risk
+,,,,,
+KEY METRICS,Value,Benchmark,Status,Notes,
+DSCR (average),1.45x,>1.30x,✓ EXCELLENT,Strong debt coverage
+DSCR (minimum),1.35x,>1.25x,✓ STRONG,Safe margin to minimum
+LLCR (lifetime),1.55x,>1.50x,✓ STRONG,Good long-term coverage
+Leverage,75% debt,<80%,✓ GOOD,Conservative leverage
+Equity cushion,€30M,>25%,✓ GOOD,Sponsor well-capitalized
+PPA Take-or-Pay,95%,>80%,✓ EXCELLENT,Revenue protection strong
+Tariff vs Market,€70/MWh,Market competitive,✓ GOOD,Fair market price
+Reserve Account,6 months DSRA,>3 months,✓ EXCELLENT,Robust reserves
+,,,,,
+RECOMMENDATION,APPROVE,Contingent on,Monitoring,Governance,
+Approval,WITH CONDITIONS,- Standard covenants (DSCR >1.25x annual),"- Quarterly financial reporting, - Semi-annual audit",- Lender monitoring committee (annual)"
+Expected Rating,A,Probability of Default,~1.5%,Equivalent to,Investment Grade
+Final Score,8.08 / 10,Normalized Score,100%,Interpretation,Strong Project Quality
