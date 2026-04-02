@@ -21,14 +21,17 @@ export async function POST(request: Request) {
 
     const results: { [key: string]: string } = {};
 
-    // Ajouter les colonnes manquantes à la table pf_scoring_users
+    // Ajouter TOUTES les colonnes manquantes à la table pf_scoring_users
     try {
       await prisma.$executeRawUnsafe(`
         ALTER TABLE pf_scoring_users
         ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS "oauthProvider" VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS "oauthId" VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS "avatar" TEXT;
       `);
-      results.users_columns = "Colonnes createdAt et updatedAt ajoutées/vérifiées";
+      results.users_columns = "✓ Toutes les colonnes ajoutées/vérifiées";
     } catch (error) {
       results.users_columns_error = (error as Error).message;
     }
@@ -39,33 +42,28 @@ export async function POST(request: Request) {
         ALTER TABLE pf_scoring_projects
         ADD COLUMN IF NOT EXISTS "dateMiseAJour" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
       `);
-      results.projects_columns = "Colonne dateMiseAJour ajoutée/vérifiée";
+      results.projects_columns = "✓ Colonne dateMiseAJour ajoutée/vérifiée";
     } catch (error) {
       results.projects_columns_error = (error as Error).message;
     }
 
-    // Ajouter les colonnes manquantes à d'autres tables si nécessaire
+    // Ajouter les colonnes manquantes aux autres tables
     const tables = [
-      { name: "pf_scoring_domains", columns: ["createdAt", "updatedAt"] },
-      { name: "pf_scoring_criteria", columns: ["createdAt", "updatedAt"] },
-      { name: "pf_scoring_options", columns: ["createdAt", "updatedAt"] },
-      { name: "pf_scoring_ranges", columns: ["createdAt", "updatedAt"] },
-      { name: "pf_scoring_countries", columns: ["createdAt", "updatedAt"] },
-      { name: "pf_scoring_evaluation_domain_scores", columns: ["createdAt"] },
-      { name: "pf_scoring_evaluation_answers", columns: ["createdAt"] },
-      { name: "pf_scoring_scorings", columns: ["dateCalcul"] },
+      { name: "pf_scoring_domains", columns: "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      { name: "pf_scoring_criteria", columns: "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      { name: "pf_scoring_options", columns: "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      { name: "pf_scoring_ranges", columns: "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      { name: "pf_scoring_countries", columns: "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      { name: "pf_scoring_evaluation_domain_scores", columns: "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      { name: "pf_scoring_evaluation_answers", columns: "createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
+      { name: "pf_scoring_scorings", columns: "dateCalcul TIMESTAMP DEFAULT CURRENT_TIMESTAMP" },
     ];
 
     for (const table of tables) {
       try {
-        const columnDefs = table.columns
-          .map((col) => `ADD COLUMN IF NOT EXISTS "${col}" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`)
-          .join(",");
-
-        await prisma.$executeRawUnsafe(
-          `ALTER TABLE ${table.name} ${columnDefs};`
-        );
-        results[`${table.name}_columns`] = `Colonnes ajoutées/vérifiées`;
+        const sql = `ALTER TABLE ${table.name} ADD COLUMN IF NOT EXISTS ${table.columns};`;
+        await prisma.$executeRawUnsafe(sql);
+        results[`${table.name}`] = "✓ Colonnes ajoutées/vérifiées";
       } catch (error) {
         results[`${table.name}_error`] = (error as Error).message;
       }
