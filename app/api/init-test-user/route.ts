@@ -21,28 +21,38 @@ export async function POST(request: Request) {
     }
 
     // Créer l'utilisateur admin de test avec un INSERT/UPDATE plutôt que upsert
-    const user = await prisma.$executeRawUnsafe(`
+    await prisma.$executeRawUnsafe(`
       INSERT INTO pf_scoring_users (id, email, nom, prenom, role, password, "createdAt", "updatedAt")
       VALUES (
         gen_random_uuid(),
         'admin@pf-scoring.ma',
         'Admin',
         'Test',
-        'admin'::\"UserRole\",
+        'admin'::user_role,
         '',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
       )
       ON CONFLICT (email) DO UPDATE SET
-        role = 'admin'::\"UserRole\",
-        "updatedAt" = CURRENT_TIMESTAMP
-      RETURNING id, email, nom, prenom, role;
+        role = 'admin'::user_role,
+        "updatedAt" = CURRENT_TIMESTAMP;
     `);
+
+    // Récupérer l'utilisateur créé
+    const user = await prisma.user.findUnique({
+      where: { email: "admin@pf-scoring.ma" },
+    });
 
     return NextResponse.json({
       success: true,
       message: "Utilisateur admin créé/mis à jour avec succès",
-      user: {
+      user: user ? {
+        id: user.id,
+        email: user.email,
+        nom: user.nom,
+        prenom: user.prenom,
+        role: user.role,
+      } : {
         email: "admin@pf-scoring.ma",
         nom: "Admin",
         prenom: "Test",
