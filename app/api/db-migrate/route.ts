@@ -21,6 +21,37 @@ export async function POST(request: Request) {
 
     const results: { [key: string]: string } = {};
 
+    // Créer les enums PostgreSQL s'ils n'existent pas
+    try {
+      // Créer l'enum UserRole
+      await prisma.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
+            CREATE TYPE "UserRole" AS ENUM ('admin', 'manager', 'analyste', 'lecteur');
+          END IF;
+        END $$;
+      `);
+      results.enum_userrole = "✓ Enum UserRole créé/vérifié";
+    } catch (error) {
+      results.enum_userrole_error = (error as Error).message;
+    }
+
+    // Créer l'enum ProjectStatus
+    try {
+      await prisma.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'ProjectStatus') THEN
+            CREATE TYPE "ProjectStatus" AS ENUM ('brouillon', 'en_cours', 'en_revue', 'approuve', 'rejete');
+          END IF;
+        END $$;
+      `);
+      results.enum_projectstatus = "✓ Enum ProjectStatus créé/vérifié";
+    } catch (error) {
+      results.enum_projectstatus_error = (error as Error).message;
+    }
+
     // Ajouter TOUTES les colonnes manquantes à la table pf_scoring_users
     try {
       await prisma.$executeRawUnsafe(`
