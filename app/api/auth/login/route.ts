@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyPassword, createToken } from "@/lib/auth";
+import { createErrorResponse, handleError, getErrorMessage } from "@/lib/error-handler";
 
 import prisma from "@/lib/prisma-client";
 
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "Email et mot de passe requis" },
+        { error: "Email et mot de passe requis", errorCode: "ERR_VAL_001" },
         { status: 400 }
       );
     }
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "Email ou mot de passe incorrect" },
+        { error: "Email ou mot de passe incorrect", errorCode: "ERR_AUTH_001" },
         { status: 401 }
       );
     }
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
     if (!hashedPassword) {
       console.error(`User ${email} has no password set`);
       return NextResponse.json(
-        { error: "Email ou mot de passe incorrect" },
+        { error: "Email ou mot de passe incorrect", errorCode: "ERR_AUTH_001" },
         { status: 401 }
       );
     }
@@ -40,7 +41,7 @@ export async function POST(request: Request) {
 
     if (!passwordValid) {
       return NextResponse.json(
-        { error: "Email ou mot de passe incorrect" },
+        { error: "Email ou mot de passe incorrect", errorCode: "ERR_AUTH_001" },
         { status: 401 }
       );
     }
@@ -78,10 +79,12 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Erreur login:", errorMessage, error);
+    console.error("Erreur login:", error);
+    const errorCode = handleError(error);
+    const errorMessage = getErrorMessage(error) || "Erreur lors de la connexion";
+
     return NextResponse.json(
-      { error: "Erreur lors de la connexion", details: errorMessage },
+      { error: errorMessage, errorCode },
       { status: 500 }
     );
   }

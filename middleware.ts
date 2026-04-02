@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, getTokenFromCookie } from "@/lib/auth";
 
-const publicPaths = ["/login", "/api/auth", "/api/health", "/api/projects-bypass", "/api/test", "/diagnostic", "/api/diagnostic", "/api/init-test-user"];
+const publicPaths = ["/login", "/api/auth", "/api/health", "/api/projects-bypass", "/api/test", "/diagnostic", "/api/diagnostic", "/api/init-test-user", "/api/db-migrate"];
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
