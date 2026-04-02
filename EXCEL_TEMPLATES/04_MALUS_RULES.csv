@@ -1,0 +1,20 @@
+Rule ID,Domain,Condition,Penalty (pts),Trigger Level,Mitigation,Rationale
+MALUS_1A,D1,Sponsor equity < 20%,"-3",Equity < 20% of total funding,Increase sponsor capital injection,Under-capitalization = higher default risk
+MALUS_2A,D2,FX mismatch not hedged,"-2",Unhedged FX exposure >50%,Implement FX forward/swap,Currency depreciation erodes revenues
+MALUS_3A,D3,EPC no performance bond,"-2",Performance bond absent,Require PB from EPC,Cost overrun risk unmitigated
+MALUS_5A,D5,DSCR < 1.25x without indexation,"-5",DSCR 1.25x + no tariff indexation,Add indexation clause or increase tariff,Inflation erodes real debt capacity
+MALUS_5B,D5,Take-or-Pay < 40%,"-4",Take-or-pay below 40%,Renegotiate PPA for higher TP,Volume risk unmitigated
+MALUS_5C,D5,No indexation with inflation >2%,"-4",Fixed tariff + inflation forecast >2%,Add CPI indexation,Real revenue decline over time
+MALUS_5D,D5,Offtaker concentration >75%,"-3",Single offtaker >75% of revenue,Diversify customer base,Concentration risk critical
+MALUS_5E,D5,Unilateral volume reduction possible,"-4",PPA allows offtaker to reduce without penalty,Add penalty clauses,Cash flow volatility risk
+MALUS_5F,D5,Market study >5 years old + context changed,"-2",Study vintage >5 years + major market shifts,Commission updated study,Demand forecast unreliable
+MALUS_6A,D6,FX hedging < 80%,"-2",FX hedge covers <80% of exposure,Increase hedging coverage,Residual FX risk
+MALUS_6B,D6,Interest rate floating >50%,"-2",Floating rate debt >50% unhedged,Increase interest rate hedging,Rate risk exposure
+MALUS_6C,D6,No DSRA or DSRA under-funded,"-3",DSRA absent or < 3 months,Establish/increase DSRA,Debt service payment risk
+MALUS_7A,D7,LLCR < 1.3x,"-3",Loan Life Coverage Ratio < 1.3x,Extend tenor or reduce leverage,Long-term refinancing risk
+MALUS_7B,D7,Stress DSCR 1.10-1.20x,"-2",Stress-tested DSCR in danger zone,Improve base case or increase buffer,Limited resilience to shocks
+MALUS_8A,D8,Security package < 100% coverage,"-2",Collateral covers <100% of debt,Increase guarantee package,Lender recovery risk
+MALUS_8B,D8,Enforceability uncertain,"-2",Legal enforceability not confirmed,Obtain local legal opinion,Guarantee execution risk
+MALUS_9A,D9,Climate risk elevated,"-2",Physical or transition risk moderate,Implement climate mitigation plan,Future regulatory/physical risk
+MALUS_9B,D9,ESG policies partial or absent,"-1",Limited ESG documentation,Develop comprehensive ESG policy,Regulatory/reputational risk
+MALUS_9C,D9,Carbon intensity high,"-2",High emission project profile,Transition plan required,Climate transition risk

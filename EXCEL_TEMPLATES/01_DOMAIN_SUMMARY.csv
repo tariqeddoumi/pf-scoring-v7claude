@@ -1,0 +1,11 @@
+Domain,Code,Weight %,Focus Area,Sub-Criteria Count,Key Risk,Red Flag Threshold,Priority
+Project Fundamentals,D1,20%,Sponsor & Structure,3,Sponsor weakness,Sponsor rating < CCC,Critical
+Host Country,D2,10%,Regulatory & FX,3,Political instability,War or extreme instability,High
+Construction Phase,D3,15%,EPC & Execution,3,Cost/Schedule overrun,EPC insolvency,Critical
+Operation Phase,D4,15%,O&M & Technology,3,Tech reliability,No track record,Critical
+Revenue & Market,D5,15%,Offtaker & Demand,3,Revenue security,No PPA signed,Critical
+Financial Structure,D6,15%,Leverage & Hedging,4,Over-leverage,DSCR < 1.10x,Critical
+Financial Structure & Cash Flow,D7,15%,Debt Service,3,Cash flow decline,DSCR < 1.10x,Critical
+Legal & Documentation,D8,10%,Contracts & Security,3,Legal risk,No contracts signed,High
+ESG & Climate,D9,10%,Environmental & Social,4,Climate risk,Fossil fuel + high risk zone,High
+,TOTAL,135%,,,,,
