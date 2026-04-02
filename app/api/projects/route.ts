@@ -40,7 +40,8 @@ export async function POST(request: Request) {
   try {
     // Vérifier l'authentification
     const cookieStore = await cookies();
-    const token = getTokenFromCookie(cookieStore.get("auth_token")?.value || "");
+    const authCookie = cookieStore.get("auth_token")?.value;
+    const token = authCookie ? authCookie : null;
 
     if (!token) {
       return NextResponse.json(
