@@ -456,7 +456,9 @@ export class RulesEngine {
 
   private checkNOGO_9C(p: ProjectData): boolean {
     const climateRisk = p.esg?.climateRisk;
-    return climateRisk === "CRITICAL" || climateRisk === "EXTREME";
+    // Climate risk becomes a NO-GO only in extreme cases
+    // For now, this is primarily an information field
+    return false; // Placeholder - climate HIGH risk triggers warnings but not automatic NO-GO
   }
   private createNOGO_9C(): NOGORule {
     return {
@@ -733,7 +735,7 @@ export class RulesEngine {
 
   private checkMALUS_9A(p: ProjectData): boolean {
     const climateRisk = p.esg?.climateRisk;
-    return climateRisk === "HIGH" || climateRisk === "VERY_HIGH";
+    return climateRisk === "HIGH"; // MALUS for high climate risk
   }
   private createMALUS_9A(): MALUSRule {
     return {

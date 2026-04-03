@@ -36,6 +36,7 @@ export enum ScoringStatus {
   CAUTION = "CAUTION",
   MARGINAL = "MARGINAL",
   FAIL = "FAIL",
+  CRITICAL = "CRITICAL",
 }
 
 export enum RuleCategory {
@@ -65,6 +66,14 @@ export enum DataCompletenesStatus {
   COMPLETE = "COMPLETE",
   PARTIAL = "PARTIAL",
   MISSING = "MISSING",
+}
+
+export enum EvaluationStatus {
+  draft = "draft",
+  in_progress = "in_progress",
+  completed = "completed",
+  reviewed = "reviewed",
+  archived = "archived",
 }
 
 // ============================================================================
@@ -383,6 +392,8 @@ export interface ScoringResponseBody {
 export interface StressTestRequestBody {
   evaluationId: string;
   scenarios: StressScenario[];
+  projectId?: string;
+  analystId?: string;
 }
 
 export interface StressTestResponseBody {
@@ -421,6 +432,35 @@ export interface EvaluationRecord {
   createdAt: Date;
   updatedAt: Date;
   version: string;
+}
+
+export interface Evaluation {
+  id: string;
+  projectId: string;
+  analystId: string;
+  scoringResult: any; // JSON
+  stressTestResult?: any; // JSON
+  rating: string;
+  finalScore: number;
+  recommendation: string;
+  probabilityOfDefault: number;
+  triggeredNOGOs: any;
+  appliedMALUS: any;
+  malusTotal: number;
+  notes?: string;
+  status: string;
+  version: string;
+  createdAt: Date;
+  updatedAt: Date;
+  project?: {
+    id: string;
+    nom: string;
+    name?: string;
+  };
+  analyst?: {
+    id: string;
+    email: string;
+  };
 }
 
 export interface ScoringAuditLog {

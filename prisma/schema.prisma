@@ -22,6 +22,8 @@ model User {
 
   projectsCreated Project[]
   auditLogs       AuditLog[]
+  evaluations     Evaluation[]        @relation("AnalystEvaluations")
+  scoringAudits   ScoringAuditLog[]   @relation("ScoringAuditLogs")
 
   @@map("pf_scoring_users")
 }
@@ -44,6 +46,7 @@ model Project {
   user      User       @relation(fields: [creePar], references: [id], onDelete: Cascade)
   scorings  Scoring[]
   auditLogs AuditLog[]
+  evaluations Evaluation[]  @relation("ProjectEvaluations")
 
   @@index([creePar])
   @@map("pf_scoring_projects")
@@ -210,6 +213,79 @@ model EvaluationAnswer {
   @@map("pf_scoring_evaluation_answers")
 }
 
+model Evaluation {
+  id                String              @id @default(uuid())
+  projectId         String
+  analystId         String
+  scoringResult     Json                // ScoringResult object
+  stressTestResult  Json?               // StressTestResult object (optional)
+  rating            String              // AAA, AA, A, BBB, BB, B, CCC, D
+  finalScore        Float
+  recommendation    String              // APPROVE, APPROVE_WITH_CONDITIONS, REJECT
+  probabilityOfDefault Float
+  triggeredNOGOs    Json                // Array of NO-GO rule IDs
+  appliedMALUS      Json                // Array of MALUS penalties
+  malusTotal        Float
+  notes             String?
+  status            EvaluationStatus    @default(draft)
+  version           String              @default("7.0")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  project           Project             @relation("ProjectEvaluations", fields: [projectId], references: [id], onDelete: Cascade)
+  analyst           User                @relation("AnalystEvaluations", fields: [analystId], references: [id], onDelete: SetNull)
+  stressTestResults StressTestScenarioResult[]
+  auditLogs         ScoringAuditLog[]
+
+  @@index([projectId])
+  @@index([analystId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("pf_scoring_v7pp_evaluations")
+}
+
+model StressTestScenarioResult {
+  id                String              @id @default(uuid())
+  evaluationId      String
+  scenarioId        String              // REVENUE_DECLINE_10, etc.
+  scenarioName      String
+  dscrBase          Float
+  dscrStress        Float
+  llcrStress        Float?
+  status            String              // PASS, MARGINAL, FAIL
+  margin            Float
+  notes             String?
+  createdAt         DateTime            @default(now())
+
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationId])
+  @@map("pf_scoring_v7pp_stress_results")
+}
+
+model ScoringAuditLog {
+  id                String              @id @default(uuid())
+  evaluationId      String
+  userId            String
+  action            String              // CALCULATE, STRESS_TEST, RECALCULATE
+  changes           Json?               // What changed
+  previousScore     Float?
+  newScore          Float?
+  timestamp         DateTime            @default(now())
+
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  user              User                @relation("ScoringAuditLogs", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("pf_scoring_v7pp_audit_logs")
+}
+
+// Add relations to existing models
+// Extend Project model
+// Extend User model
+
 enum ProjectStatus {
   brouillon
   en_cours
@@ -223,4 +299,12 @@ enum UserRole {
   manager
   analyste
   lecteur
+}
+
+enum EvaluationStatus {
+  draft
+  in_progress
+  completed
+  reviewed
+  archived
 }

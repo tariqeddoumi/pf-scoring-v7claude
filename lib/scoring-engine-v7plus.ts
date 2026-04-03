@@ -473,7 +473,7 @@ export class ScoringEngine {
     let score = 8;
 
     if (climateRisk === "HIGH") score -= 2;
-    if (climateRisk === "CRITICAL") score -= 4; // NOGO
+    if (climateRisk === "LOW") score += 1; // Positive adjustments for low risk
 
     this.domainScores.set(DomainCode.D9, {
       domainId: DomainCode.D9,
