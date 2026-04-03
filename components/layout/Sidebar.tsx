@@ -11,6 +11,11 @@ import {
   LogBook,
   Settings,
   LogOut,
+  Search,
+  Bell,
+  GitCompare,
+  TrendingUp,
+  Download,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -40,6 +45,36 @@ export function Sidebar() {
       label: 'Évaluations',
       href: '/evaluations',
       description: 'Scorings',
+    },
+    {
+      icon: Search,
+      label: 'Recherche Avancée',
+      href: '/search',
+      description: 'Multi-critères',
+    },
+    {
+      icon: Bell,
+      label: 'Alertes',
+      href: '/alerts',
+      description: 'Centre d\'alertes',
+    },
+    {
+      icon: GitCompare,
+      label: 'Comparaison',
+      href: '/compare',
+      description: 'Projets côte à côte',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Monitoring',
+      href: '/monitoring',
+      description: 'Performance post-clôture',
+    },
+    {
+      icon: Download,
+      label: 'Exportations',
+      href: '/exports',
+      description: 'PDF, Excel, Word',
     },
     {
       icon: BookOpen,
