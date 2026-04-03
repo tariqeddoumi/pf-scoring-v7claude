@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Plus, Eye, Edit2, Download } from 'lucide-react';
+import { useEvaluationWorkflow } from '@/lib/evaluation-context';
 
 const MOCK_EVALUATIONS = [
   {
@@ -46,8 +47,18 @@ const MOCK_EVALUATIONS = [
 export default function EvaluationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const workflow = useEvaluationWorkflow();
+  const [evaluations, setEvaluations] = useState(MOCK_EVALUATIONS);
 
-  const filtered = MOCK_EVALUATIONS.filter(
+  // Note: In real app, would fetch all evaluations from context
+  // For now, using mock data + any stored evaluations
+  useEffect(() => {
+    // Could integrate with workflow context here
+    // For now, just set mock data
+    setEvaluations(MOCK_EVALUATIONS);
+  }, [workflow]);
+
+  const filtered = evaluations.filter(
     (ev) =>
       ev.projectName.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (!selectedStatus || ev.status === selectedStatus)
@@ -61,16 +72,34 @@ export default function EvaluationsPage() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Validé':
+    const normalized = status?.toLowerCase() || 'brouillon';
+    switch (normalized) {
+      case 'valide':
+      case 'validé':
         return 'bg-green-500/20 text-green-400';
-      case 'Soumis':
+      case 'soumis':
         return 'bg-yellow-500/20 text-yellow-400';
-      case 'Brouillon':
+      case 'brouillon':
         return 'bg-slate-600 text-slate-300';
-      default:
+      case 'rejete':
+      case 'rejeté':
         return 'bg-red-500/20 text-red-400';
+      default:
+        return 'bg-slate-600 text-slate-300';
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const normalized = status?.toLowerCase() || 'brouillon';
+    const labels: Record<string, string> = {
+      brouillon: 'Brouillon',
+      soumis: 'Soumis',
+      valide: 'Validé',
+      validé: 'Validé',
+      rejete: 'Rejeté',
+      rejeté: 'Rejeté',
+    };
+    return labels[normalized] || status;
   };
 
   return (
@@ -142,7 +171,7 @@ export default function EvaluationsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(ev.status)}`}>
-                      {ev.status}
+                      {getStatusLabel(ev.status)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-slate-400 text-sm">{ev.date}</td>
@@ -177,9 +206,17 @@ export default function EvaluationsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card label="Total" value={MOCK_EVALUATIONS.length.toString()} />
-        <Card label="Validées" value={MOCK_EVALUATIONS.filter((e) => e.status === 'Validé').length.toString()} />
-        <Card label="Score moyen" value="7.82" />
+        <Card label="Total" value={evaluations.length.toString()} />
+        <Card
+          label="Validées"
+          value={evaluations.filter((e) => e.status === 'Validé').length.toString()}
+        />
+        <Card
+          label="Score moyen"
+          value={(
+            evaluations.reduce((sum, e) => sum + e.score, 0) / Math.max(1, evaluations.length)
+          ).toFixed(2)}
+        />
         <Card label="Rating moyen" value="A" />
       </div>
     </div>
