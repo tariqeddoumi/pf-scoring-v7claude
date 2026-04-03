@@ -1,218 +1,286 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import React from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { SECTEURS } from "@/lib/constants";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+
+const SECTORS = [
+  'Énergie - Éolien',
+  'Énergie - Solaire',
+  'Énergie - Hydro',
+  'Eau - Dessalement',
+  'Infrastructure - Transport',
+  'Infrastructure - Logistique',
+  'Immobilier',
+  'Télécom',
+  'Industrie',
+];
+
+const COUNTRIES = [
+  { code: 'MA', label: 'Maroc' },
+  { code: 'SN', label: 'Sénégal' },
+  { code: 'CI', label: 'Côte d\'Ivoire' },
+  { code: 'TN', label: 'Tunisie' },
+  { code: 'DZ', label: 'Algérie' },
+  { code: 'MZ', label: 'Mozambique' },
+  { code: 'ZA', label: 'Afrique du Sud' },
+];
 
 export default function NewProjectPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [countries, setCountries] = useState<Array<{ code: string; label: string }>>([]);
   const [formData, setFormData] = useState({
-    nom: "",
-    description: "",
-    secteur: SECTEURS[0],
-    montant: "",
-    countryCode: "MA",
+    name: '',
+    sponsor: '',
+    sector: SECTORS[0],
+    country: 'MA',
+    region: '',
+    city: '',
+    description: '',
+    totalCost: '',
+    financeRequired: '',
+    constructionDuration: '',
+    operationalDuration: '25',
   });
-
-  // Charger les pays au montage
-  const loadCountries = async () => {
-    try {
-      const res = await fetch("/api/admin/countries");
-      if (res.ok) {
-        const data = await res.json();
-        setCountries(data);
-      }
-    } catch (error) {
-      console.error("Erreur:", error);
-    }
-  };
-
-  React.useEffect(() => {
-    loadCountries();
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "montant" ? parseFloat(value) || "" : value,
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        throw new Error("Erreur lors de la création");
-      }
-
-      const data = await res.json();
-      alert("Projet créé avec succès !");
-      router.push(`/projects`);
-    } catch (error) {
-      console.error("Erreur:", error);
-      alert("Erreur lors de la création du projet");
-    } finally {
-      setLoading(false);
-    }
+    console.log('New project:', formData);
+    // TODO: Intégrer avec API sur Jour 9-10
+    alert('Projet créé avec succès ! (Mock)');
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8 flex items-center gap-4">
-        <Link href="/projects" className="text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-5 w-5" />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center space-x-4">
+        <Link
+          href="/projects"
+          className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+        >
+          <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">Nouveau projet</h1>
-          <p className="mt-2 text-muted-foreground">
-            Créez un nouveau projet de financement
-          </p>
+          <h1 className="text-3xl font-bold text-white">Nouveau Projet</h1>
+          <p className="text-slate-400 mt-2">Créez un nouveau projet de financement</p>
         </div>
       </div>
 
-      <div className="max-w-2xl">
-        <Card className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Nom du projet */}
-            <div>
-              <label htmlFor="nom" className="block text-sm font-medium mb-2">
-                Nom du projet *
-              </label>
-              <Input
-                id="nom"
-                name="nom"
-                value={formData.nom}
-                onChange={handleChange}
-                placeholder="Ex: Parc Éolien Taourirt"
-                required
-              />
+      {/* Form */}
+      <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section 1: Identification */}
+          <div>
+            <h2 className="text-xl font-bold text-white mb-4 pb-2 border-b border-slate-700">
+              Identification du Projet
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Nom du Projet" required>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Ex: Parc Éolien Taourirt"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Sponsor Principal" required>
+                <input
+                  type="text"
+                  name="sponsor"
+                  placeholder="Ex: ONEE"
+                  value={formData.sponsor}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Secteur" required>
+                <select
+                  name="sector"
+                  value={formData.sector}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none appearance-none cursor-pointer"
+                  required
+                >
+                  {SECTORS.map((sector) => (
+                    <option key={sector} value={sector}>
+                      {sector}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+
+              <FormField label="Pays">
+                <select
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none appearance-none cursor-pointer"
+                >
+                  {COUNTRIES.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.label}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
             </div>
 
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium mb-2">
-                Description *
-              </label>
+            <FormField label="Description du Projet" required>
               <textarea
-                id="description"
                 name="description"
+                placeholder="Décrivez le projet en détail..."
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Décrivez le projet en détail..."
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 rows={4}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none resize-none"
                 required
               />
-            </div>
+            </FormField>
+          </div>
 
-            {/* Secteur */}
-            <div>
-              <label htmlFor="secteur" className="block text-sm font-medium mb-2">
-                Secteur *
-              </label>
-              <select
-                id="secteur"
-                name="secteur"
-                value={formData.secteur}
-                onChange={handleChange}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                required
-              >
-                {SECTEURS.map((secteur) => (
-                  <option key={secteur} value={secteur}>
-                    {secteur}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Section 2: Localisation */}
+          <div>
+            <h2 className="text-xl font-bold text-white mb-4 pb-2 border-b border-slate-700">
+              Localisation
+            </h2>
 
-            {/* Montant */}
-            <div>
-              <label htmlFor="montant" className="block text-sm font-medium mb-2">
-                Montant (MAD) *
-              </label>
-              <Input
-                id="montant"
-                name="montant"
-                type="number"
-                value={formData.montant}
-                onChange={handleChange}
-                placeholder="Ex: 500000000"
-                required
-              />
-              {formData.montant && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {(parseInt(String(formData.montant)) / 1000000).toFixed(0)}M MAD
-                </p>
-              )}
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Région">
+                <input
+                  type="text"
+                  name="region"
+                  placeholder="Ex: Drâa-Tafilalet"
+                  value={formData.region}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+                />
+              </FormField>
 
-            {/* Pays */}
-            <div>
-              <label htmlFor="countryCode" className="block text-sm font-medium mb-2">
-                Pays du projet *
-              </label>
-              <select
-                id="countryCode"
-                name="countryCode"
-                value={formData.countryCode}
-                onChange={handleChange}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                required
-              >
-                {countries.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.label} ({country.code})
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground mt-2">
-                Le score de risque pays sera automatiquement assigné basé sur cette sélection.
-              </p>
+              <FormField label="Ville">
+                <input
+                  type="text"
+                  name="city"
+                  placeholder="Ex: Taourirt"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+                />
+              </FormField>
             </div>
+          </div>
 
-            {/* Actions */}
-            <div className="flex gap-4 pt-4">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex-1"
-              >
-                {loading ? "Création..." : "Créer le projet"}
-              </Button>
-              <Link href="/projects" className="flex-1">
-                <Button type="button" variant="outline" className="w-full">
-                  Annuler
-                </Button>
-              </Link>
+          {/* Section 3: Financement */}
+          <div>
+            <h2 className="text-xl font-bold text-white mb-4 pb-2 border-b border-slate-700">
+              Paramètres Financiers
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Coût Total du Projet (MAD)" required>
+                <input
+                  type="number"
+                  name="totalCost"
+                  placeholder="Ex: 500000000"
+                  value={formData.totalCost}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Montant à Financer (MAD)" required>
+                <input
+                  type="number"
+                  name="financeRequired"
+                  placeholder="Ex: 400000000"
+                  value={formData.financeRequired}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Durée Construction (mois)">
+                <input
+                  type="number"
+                  name="constructionDuration"
+                  placeholder="Ex: 24"
+                  value={formData.constructionDuration}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+                />
+              </FormField>
+
+              <FormField label="Durée Exploitation (ans)">
+                <input
+                  type="number"
+                  name="operationalDuration"
+                  placeholder="Ex: 25"
+                  value={formData.operationalDuration}
+                  onChange={handleChange}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+                />
+              </FormField>
             </div>
-          </form>
-        </Card>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4 pt-6 border-t border-slate-700">
+            <button
+              type="submit"
+              className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+            >
+              Créer le Projet
+            </button>
+            <Link
+              href="/projects"
+              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg transition-all text-center"
+            >
+              Annuler
+            </Link>
+          </div>
+        </form>
 
         {/* Info */}
-        <Card className="mt-6 p-4 bg-secondary/50">
-          <p className="text-sm text-muted-foreground">
-            <strong>Note:</strong> Une fois créé, vous pourrez scorer le projet selon les 8 catégories de risque (Financier, Technique, Marché, Environnemental, Social, Gouvernance, Juridique, Pays).
+        <div className="mt-8 pt-8 border-t border-slate-700">
+          <p className="text-slate-400 text-sm">
+            <span className="font-semibold text-white">Note:</span> Une fois créé, vous pourrez enrichir le projet avec tous les détails (Parties prenantes, Calendrier, Financement détaillé, Contrats, ESG, Garanties, etc.) et procéder à l\'évaluation selon les 8 catégories de risque.
           </p>
-        </Card>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  children,
+  required,
+}: {
+  label: string;
+  children: React.ReactNode;
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-white mb-2">
+        {label}
+        {required && <span className="text-red-400 ml-1">*</span>}
+      </label>
+      {children}
     </div>
   );
 }
