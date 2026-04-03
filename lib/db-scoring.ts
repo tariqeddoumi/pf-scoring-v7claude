@@ -46,12 +46,7 @@ export async function saveEvaluation(
       },
     });
 
-    // Log audit trail
-    await logScoringAction(
-      analystId,
-      "CALCULATE",
-      `Evaluation created with score ${scoringResult.finalScore}`
-    );
+    console.log(`[DB] Evaluation created: ${evaluation.id}`);
 
     return evaluation as any;
   } catch (error) {
@@ -69,6 +64,10 @@ export async function getEvaluation(
   try {
     return await prisma.evaluation.findUnique({
       where: { id: evaluationId },
+      include: {
+        project: true,
+        analyst: true,
+      },
     }) as any;
   } catch (error) {
     console.error("[DB ERROR] Failed to retrieve evaluation:", error);
@@ -191,18 +190,20 @@ export async function logScoringAction(
   userId: string,
   action: "CALCULATE" | "RECALCULATE" | "STRESS_TEST",
   details?: string,
-  changes?: any
+  changes?: any,
+  evaluationId?: string
 ): Promise<void> {
   try {
     await prisma.scoringAuditLog.create({
       data: {
+        evaluationId: evaluationId || "",
         userId,
         action,
         changes: changes as any,
       },
     });
 
-    console.log(`[AUDIT] ${action} by user ${userId}`);
+    console.log(`[AUDIT] ${action} by user ${userId}${details ? ": " + details : ""}`);
   } catch (error) {
     console.error("[DB ERROR] Failed to log scoring action:", error);
     // Don't throw - logging failure shouldn't break the flow

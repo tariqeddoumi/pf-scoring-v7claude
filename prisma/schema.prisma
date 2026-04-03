@@ -234,6 +234,8 @@ model Evaluation {
 
   project           Project             @relation("ProjectEvaluations", fields: [projectId], references: [id], onDelete: Cascade)
   analyst           User                @relation("AnalystEvaluations", fields: [analystId], references: [id], onDelete: SetNull)
+  stressTestResults StressTestScenarioResult[]
+  auditLogs         ScoringAuditLog[]
 
   @@index([projectId])
   @@index([analystId])
@@ -271,6 +273,7 @@ model ScoringAuditLog {
   newScore          Float?
   timestamp         DateTime            @default(now())
 
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   user              User                @relation("ScoringAuditLogs", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([evaluationId])

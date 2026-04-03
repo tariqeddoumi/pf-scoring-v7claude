@@ -8,6 +8,7 @@ import { ScoringEngine } from "@/lib/scoring-engine-v7plus";
 import { RulesEngine } from "@/lib/scoring-rules-v7plus";
 import { DataValidator, ComplexIndicatorsCalculator } from "@/lib/scoring-validators-v7plus";
 import { ScoringRequestBody, ScoringResponseBody } from "@/types/scoring-v7plus";
+import { saveEvaluation, logScoringAction } from "@/lib/db-scoring";
 
 export async function POST(
   request: NextRequest,
@@ -72,6 +73,27 @@ export async function POST(
     // Add analyst info if provided
     if (analystName) {
       result.analystName = analystName;
+    }
+
+    // Save evaluation to database
+    try {
+      const savedEvaluation = await saveEvaluation(
+        projectData.projectId,
+        analystName || "unknown",
+        result
+      );
+
+      // Log scoring action
+      await logScoringAction(
+        analystName || "unknown",
+        "CALCULATE",
+        `Evaluation ${evaluationId} calculated: ${result.rating} (${result.finalScore.toFixed(2)})`,
+        undefined,
+        evaluationId
+      );
+    } catch (dbError) {
+      console.error("[DB ERROR] Failed to save evaluation:", dbError);
+      // Continue anyway - return the calculated result
     }
 
     // Prepare response

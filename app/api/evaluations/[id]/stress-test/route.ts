@@ -12,6 +12,7 @@ import {
   ScoringStatus,
   StressTestResult,
 } from "@/types/scoring-v7plus";
+import { saveStressTestResults, logScoringAction } from "@/lib/db-scoring";
 
 export async function POST(
   request: NextRequest,
@@ -62,11 +63,13 @@ export async function POST(
     const vulnerableScenarios: string[] = [];
 
     // Scenario 1: Revenue Decline -10%
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (scenarios.includes("REVENUE_DECLINE_10" as any)) {
       const revenueStress = baseCase.revenue * 0.9;
       const dscrStress = revenueStress / baseCase.debtService;
       const passed = dscrStress > 1.25;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       stressResults.push({
         scenarioId: "REVENUE_DECLINE_10" as any,
         name: "Revenue Decline -10%",
@@ -216,6 +219,25 @@ export async function POST(
         overallRating: overallRating as any,
       },
     };
+
+    // Save stress test results to database
+    try {
+      const analystId = body.analystId || "unknown";
+
+      await saveStressTestResults(evaluationId, result);
+
+      // Log stress test action
+      await logScoringAction(
+        analystId,
+        "STRESS_TEST",
+        `Stress test completed: ${overallRating} resilience (${result.summary.vulnerableScenarios.length} vulnerable scenarios)`,
+        undefined,
+        evaluationId
+      );
+    } catch (dbError) {
+      console.error("[DB ERROR] Failed to save stress test results:", dbError);
+      // Continue anyway - return the calculated result
+    }
 
     console.log(
       `[STRESS TEST] Evaluation ${evaluationId}: ${overallRating} resilience`

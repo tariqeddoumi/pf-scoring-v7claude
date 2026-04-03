@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { ScoringReport } from "@/types/scoring-v7plus";
+import { getEvaluation, getAuditLogs } from "@/lib/db-scoring";
 
 export async function GET(
   request: NextRequest,
@@ -13,37 +14,57 @@ export async function GET(
   try {
     const evaluationId = context.params.id;
 
-    // In production: Fetch from database using evaluationId
-    // For now: Return template with guidance
+    // Fetch evaluation from database
+    const evaluation = await getEvaluation(evaluationId);
 
+    if (!evaluation) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Evaluation not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    // Fetch audit logs for this evaluation
+    const auditLogs = await getAuditLogs(evaluationId);
+
+    // Build report from database evaluation
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const scoringResult = evaluation.scoringResult as any;
     const report: ScoringReport = {
       evaluationId,
-      projectName: "[Project Name from Database]",
-      analyst: "[Analyst Name from Database]",
-      reportDate: new Date(),
+      projectName: evaluation.project?.name || "[Unknown Project]",
+      analyst: evaluation.analystId || "[Unknown Analyst]",
+      reportDate: new Date(evaluation.createdAt),
       scoring: {
         evaluationId,
-        projectId: "[project-id]",
-        projectName: "[project-name]",
-        domains: {},
-        globalScore: 0,
-        normalizedScore: 0,
-        rating: "D" as any,
-        probabilityOfDefault: 0,
-        triggeredNOGOs: [],
-        appliedMALUS: [],
-        malusTotal: 0,
-        finalScore: 0,
-        recommendation: "REJECT",
-        calculatedAt: new Date(),
-        version: "7.0",
+        projectId: evaluation.projectId,
+        projectName: evaluation.project?.name || "[Unknown Project]",
+        domains: scoringResult.domains || {},
+        globalScore: scoringResult.globalScore || 0,
+        normalizedScore: scoringResult.normalizedScore || 0,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        rating: evaluation.rating as any,
+        probabilityOfDefault: evaluation.probabilityOfDefault,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        triggeredNOGOs: evaluation.triggeredNOGOs as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        appliedMALUS: evaluation.appliedMALUS as any,
+        malusTotal: evaluation.malusTotal,
+        finalScore: evaluation.finalScore,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        recommendation: evaluation.recommendation as any,
+        calculatedAt: new Date(evaluation.createdAt),
+        version: `${evaluation.version}`,
       },
       recommendations: [
-        "Implement proper scoring calculation first",
-        "Retrieve evaluation from database",
-        "Populate with real project data",
+        evaluation.recommendation === "APPROVE" ? "Project approved for financing" : "Additional due diligence required",
+        ...(evaluation.notes ? [evaluation.notes] : []),
       ],
-      conditions: [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      conditions: (evaluation.triggeredNOGOs as any)?.length > 0 ? ["NO-GO rules triggered"] : [],
     };
 
     // Generate response based on format query parameter
@@ -74,10 +95,11 @@ export async function GET(
       {
         success: true,
         report,
+        auditTrail: auditLogs,
         metadata: {
           evaluationId,
           generatedAt: new Date().toISOString(),
-          version: "7.0",
+          version: evaluation.version,
           availableFormats: ["json"],
           documentationUrl: "/api/docs/evaluations",
         },
@@ -111,11 +133,23 @@ export async function POST(
     const body = await request.json();
     const { format = "json", includeStressTests = true } = body;
 
+    // Verify evaluation exists
+    const evaluation = await getEvaluation(evaluationId);
+    if (!evaluation) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Evaluation not found",
+        },
+        { status: 404 }
+      );
+    }
+
     // In production:
-    // 1. Fetch evaluation from database
-    // 2. Generate report with formatting
+    // 1. Fetch evaluation from database ✓
+    // 2. Generate report with formatting (queued async)
     // 3. Save to database if requested
-    // 4. Return generated report
+    // 4. Return generated report reference
 
     const response = {
       success: true,
@@ -127,7 +161,7 @@ export async function POST(
       retrieveAt: `/api/evaluations/${evaluationId}/report?format=${format}`,
     };
 
-    console.log(`[REPORT] Generation started for ${evaluationId}`);
+    console.log(`[REPORT] Generation started for ${evaluationId} (format: ${format})`);
 
     return NextResponse.json(response, { status: 202 }); // 202 Accepted
   } catch (error) {
