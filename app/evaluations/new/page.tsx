@@ -2,21 +2,28 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { SCORING_MODEL } from '@/lib/scoring-model';
 import { calculateEvaluation } from '@/lib/scoring-engine';
+import { useEvaluationWorkflow } from '@/lib/evaluation-context';
 
 interface Responses {
   [criteriaId: string]: string | number;
 }
 
 export default function NewEvaluationPage() {
+  const router = useRouter();
+  const { createEvaluation } = useEvaluationWorkflow();
+
   const [projectId, setProjectId] = useState('p1');
   const [evaluationType, setEvaluationType] = useState('Initiale');
   const [analyst, setAnalyst] = useState('');
   const [expandedDomains, setExpandedDomains] = useState<string[]>(['D1']);
   const [responses, setResponses] = useState<Responses>({});
   const [financialData] = useState({ dscr: 1.35, equity: 20, hasGuarantees: true, contractsSigned: true });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const toggleDomain = (domainId: string) => {
     setExpandedDomains((prev) =>
@@ -30,16 +37,42 @@ export default function NewEvaluationPage() {
     setResponses((prev) => ({ ...prev, [criteriaId]: value }));
   };
 
-  const handleSubmit = () => {
-    const allResponses = Object.entries(responses).map(([criteriaId, value]) => ({
-      criteriaId,
-      value: typeof value === 'string' ? parseFloat(value) || value : value,
-      comment: '',
-    }));
+  const handleSubmit = async () => {
+    setError('');
+    setLoading(true);
 
-    const result = calculateEvaluation(projectId, allResponses, financialData);
-    console.log('Évaluation:', result);
-    alert(`✅ Score: ${result.globalScore} | Rating: ${result.rating}`);
+    try {
+      // Validation
+      if (!analyst.trim()) {
+        setError('Veuillez indiquer le nom de l\'analyste');
+        setLoading(false);
+        return;
+      }
+
+      // Calculate score
+      const allResponses = Object.entries(responses).map(([criteriaId, value]) => ({
+        criteriaId,
+        value: typeof value === 'string' ? parseFloat(value) || value : value,
+        comment: '',
+      }));
+
+      const result = calculateEvaluation(projectId, allResponses, financialData);
+      console.log('Évaluation calculée:', result);
+
+      // Create workflow
+      const workflow = createEvaluation(projectId, analyst);
+      console.log('Workflow créé:', workflow.id);
+
+      // Redirect to detail page
+      setTimeout(() => {
+        router.push(`/evaluations/${workflow.id}`);
+      }, 500);
+    } catch (err) {
+      setError('Erreur lors de la création de l\'évaluation');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,6 +86,13 @@ export default function NewEvaluationPage() {
           <p className="text-slate-400 mt-2">9 domaines • 27 sous-critères • Modèle V7++</p>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 flex items-start space-x-3">
+          <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
+          <p className="text-red-400">{error}</p>
+        </div>
+      )}
 
       <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 space-y-4">
         <h2 className="text-xl font-bold text-white">Paramètres</h2>
@@ -136,9 +176,10 @@ export default function NewEvaluationPage() {
       <div className="flex gap-4">
         <button
           onClick={handleSubmit}
-          className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-6 py-3 rounded-lg transition-all"
+          disabled={loading}
+          className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all"
         >
-          Calculer le Score
+          {loading ? '⏳ Création en cours...' : '✓ Calculer & Créer'}
         </button>
         <Link href="/evaluations" className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-6 py-3 rounded-lg transition-all text-center">
           Annuler
