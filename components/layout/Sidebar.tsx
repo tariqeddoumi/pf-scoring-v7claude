@@ -18,6 +18,8 @@ import {
   Download,
   FileText,
   Shield,
+  LineChart,
+  Target,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -89,6 +91,18 @@ export function Sidebar() {
       label: 'Conformité',
       href: '/compliance',
       description: 'GDPR & Confidentialité',
+    },
+    {
+      icon: LineChart,
+      label: 'Analytique',
+      href: '/analytics',
+      description: 'Tendances & Insights',
+    },
+    {
+      icon: Target,
+      label: 'Benchmarking',
+      href: '/benchmarking',
+      description: 'Comparaison secteur',
     },
     {
       icon: BookOpen,
