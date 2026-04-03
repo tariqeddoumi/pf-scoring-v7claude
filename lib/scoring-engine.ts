@@ -1,65 +1,144 @@
-import type { ScoreComponent, ScoreGrade, ScoringResult } from "@/types";
-import { GRADE_THRESHOLDS } from "./constants";
+/**
+ * Moteur de calcul de scoring PF V7++
+ * Formule: Score Global = Σ (Poids Domaine × Score Domaine)
+ */
 
-export function calculateGlobalScore(composantes: ScoreComponent[]): number {
-  const totalPonderation = composantes.reduce(
-    (sum, c) => sum + c.ponderation,
-    0
-  );
-  if (totalPonderation === 0) return 0;
+import { SCORING_MODEL, SCORE_TO_RATING, RATING_TO_PD } from './scoring-model';
 
-  const scoreTotal = composantes.reduce(
-    (sum, c) => sum + c.score * c.ponderation,
-    0
-  );
-
-  return Math.round((scoreTotal / totalPonderation) * 100) / 100;
+export interface ScoringResponse {
+  criteriaId: string;
+  value: number | string;
+  comment?: string;
 }
 
-export function determineGrade(score: number): ScoreGrade {
-  for (const [grade, { min, max }] of Object.entries(GRADE_THRESHOLDS)) {
-    if (score >= min && score <= max) {
-      return grade as ScoreGrade;
+export interface EvaluationResult {
+  projectId: string;
+  evaluationDate: string;
+  modelVersion: string;
+  globalScore: number;
+  rating: string;
+  pdRange: { min: number; max: number };
+  riskClass: string;
+  noGo: boolean;
+  noGoReasons: string[];
+  redFlags: string[];
+  strengths: string[];
+  weaknesses: string[];
+  recommendation: string;
+  domainScores: any[];
+}
+
+export function calculateCriteriaScore(criteriaId: string, value: number | string): number {
+  const allCriteria = SCORING_MODEL.flatMap(d => d.subCriteria.flatMap(s => s.criteria));
+  const criteria = allCriteria.find(c => c.id === criteriaId);
+  
+  if (!criteria) return 0;
+  
+  if (criteria.scale === 'numeric') {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(num)) return 0;
+    if (criteria.minValue !== undefined && criteria.maxValue !== undefined) {
+      if (num <= criteria.minValue) return 0;
+      if (num >= criteria.maxValue) return 10;
+      return ((num - criteria.minValue) / (criteria.maxValue - criteria.minValue)) * 10;
     }
+    return Math.min(Math.max(num, 0), 10);
   }
-  return "D";
+  
+  if (criteria.scale === 'qualitative' && criteria.options) {
+    const option = criteria.options.find(o => o.label === value);
+    return option ? option.score : 0;
+  }
+  
+  return 0;
 }
 
-export function calculateScoringResult(
+export function calculateDomainScore(responses: ScoringResponse[], domainId: string): number {
+  const domain = SCORING_MODEL.find(d => d.id === domainId);
+  if (!domain) return 0;
+  
+  const subScores = domain.subCriteria.map(sub => {
+    const subCriteriaResponses = sub.criteria.map(crit => {
+      const resp = responses.find(r => r.criteriaId === crit.id);
+      const score = calculateCriteriaScore(crit.id, resp?.value ?? 0);
+      return { weight: crit.weight, score };
+    });
+    
+    const totalWeight = subCriteriaResponses.reduce((s, r) => s + r.weight, 0);
+    const weighted = subCriteriaResponses.reduce((s, r) => s + r.score * r.weight, 0);
+    return { weight: sub.weight, score: totalWeight > 0 ? weighted / totalWeight : 0 };
+  });
+  
+  const totalWeight = subScores.reduce((s, r) => s + r.weight, 0);
+  const weighted = subScores.reduce((s, r) => s + r.score * r.weight, 0);
+  return totalWeight > 0 ? weighted / totalWeight : 0;
+}
+
+export function calculateGlobalScore(domainScores: Map<string, number>): number {
+  let total = 0;
+  SCORING_MODEL.forEach(d => {
+    const score = domainScores.get(d.id) || 0;
+    total += (score * d.weight) / 100;
+  });
+  return Math.round(total * 100) / 100;
+}
+
+export function scoreToRating(score: number): string {
+  const entry = SCORE_TO_RATING.find(r => score >= r.minScore);
+  return entry?.rating || 'D';
+}
+
+export function checkNoGoRules(financialData: any): string[] {
+  const reasons: string[] = [];
+  if (financialData?.dscr && financialData.dscr < 1.1) reasons.push('DSCR < 1.1x');
+  if (financialData?.equity && financialData.equity < 20) reasons.push('Equity < 20%');
+  if (!financialData?.hasGuarantees) reasons.push('Absence de garanties');
+  if (!financialData?.contractsSigned) reasons.push('Contrats non signés');
+  if (financialData?.esgScore && financialData.esgScore < 4) reasons.push('Non-conformité ESG');
+  return reasons;
+}
+
+export function calculateEvaluation(
   projectId: string,
-  composantes: ScoreComponent[],
-  version: number
-): ScoringResult {
-  const enriched = composantes.map((c) => ({
-    ...c,
-    scorePondere: Math.round(c.score * c.ponderation * 100) / 100,
-  }));
+  responses: ScoringResponse[],
+  financialData: any
+): EvaluationResult {
+  const domainScores = new Map<string, number>();
+  SCORING_MODEL.forEach(d => {
+    domainScores.set(d.id, calculateDomainScore(responses, d.id));
+  });
+  
+  const globalScore = calculateGlobalScore(domainScores);
+  const rating = scoreToRating(globalScore);
+  const pdRange = RATING_TO_PD[rating as keyof typeof RATING_TO_PD] || { min: 20, max: 100 };
+  const noGoReasons = checkNoGoRules(financialData);
+  
+  const riskClass = rating.includes('AAA') || rating.includes('AA') ? 'Faible'
+    : rating.includes('A') ? 'Modéré'
+    : rating.includes('BBB') ? 'Élevé' : 'Très élevé';
 
-  const scoreGlobal = calculateGlobalScore(enriched);
-  const grade = determineGrade(scoreGlobal);
-
+  let recommendation = '❌ Très Défavorable';
+  if (noGoReasons.length > 0) recommendation = '🔴 NO-GO';
+  else if (globalScore >= 8.5) recommendation = '✅ Très Favorable';
+  else if (globalScore >= 7.5) recommendation = '✅ Favorable';
+  else if (globalScore >= 6.5) recommendation = '⚠️ Favorable sous conditions';
+  else if (globalScore >= 5.5) recommendation = '⚠️ À revoir';
+  else if (globalScore >= 4.5) recommendation = '❌ Défavorable';
+  
   return {
     projectId,
-    scoreGlobal,
-    grade,
-    composantes: enriched,
-    dateCalcul: new Date(),
-    version,
+    evaluationDate: new Date().toISOString().split('T')[0],
+    modelVersion: 'V7++',
+    globalScore,
+    rating,
+    pdRange,
+    riskClass,
+    noGo: noGoReasons.length > 0,
+    noGoReasons,
+    redFlags: [],
+    strengths: [],
+    weaknesses: [],
+    recommendation,
+    domainScores: Array.from(domainScores.entries()).map(([id, score]) => ({ id, score })),
   };
-}
-
-export function getGradeColor(grade: ScoreGrade): string {
-  const colors: Record<ScoreGrade, string> = {
-    AAA: "text-emerald-400",
-    AA: "text-emerald-500",
-    A: "text-green-500",
-    BBB: "text-lime-500",
-    BB: "text-yellow-500",
-    B: "text-orange-400",
-    CCC: "text-orange-500",
-    CC: "text-red-400",
-    C: "text-red-500",
-    D: "text-red-600",
-  };
-  return colors[grade];
 }
