@@ -3,6 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Footer } from "@/components/layout/Footer";
 import { EvaluationProvider } from "@/lib/evaluation-context";
+import { UserProvider } from "@/lib/user-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +20,8 @@ export default function RootLayout({
   return (
     <html lang="fr" className="dark">
       <body className="font-sans antialiased bg-slate-950 text-slate-100">
-        <EvaluationProvider>
+        <UserProvider>
+          <EvaluationProvider>
           {/* Navbar */}
           <Navbar />
 
@@ -38,7 +40,8 @@ export default function RootLayout({
               <Footer />
             </main>
           </div>
-        </EvaluationProvider>
+          </EvaluationProvider>
+        </UserProvider>
       </body>
     </html>
   );
