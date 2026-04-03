@@ -74,6 +74,25 @@ const MOCK_CLIENT = {
       status: 'Complétée',
     },
   ],
+  // Business Group & Shareholding
+  businessGroup: {
+    name: 'Groupe Énergie Maroc',
+    parentCompany: 'N/A - Société mère du groupe',
+    subsidiaries: [
+      'ONEE - Distribution Maroc',
+      'ONEE - Production Énergie',
+      'ONEE - Services Techniques',
+    ],
+  },
+  shareholding: {
+    structure: 'Société Publique',
+    shareholders: [
+      { name: 'État du Maroc', percentage: 100, type: 'Public', status: 'Propriétaire' },
+    ],
+  },
+  shareholderBankStatus: [
+    { name: 'État du Maroc', isBankClient: true, clientSince: '1963', relationshipType: 'Client Principal' },
+  ],
 };
 
 export default function ClientDetailPage({ params }: { params: { id: string } }) {
@@ -197,6 +216,75 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
               <div key={i} className="bg-slate-700 rounded-lg p-4">
                 <p className="font-semibold text-white">{member.name}</p>
                 <p className="text-sm text-slate-400">{member.position}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Business Group */}
+        <div className="mt-8 pt-8 border-t border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">Groupe d'Affaires</h3>
+          <div className="space-y-4">
+            <InfoRow label="Nom du groupe" value={MOCK_CLIENT.businessGroup.name} />
+            <InfoRow label="Société mère" value={MOCK_CLIENT.businessGroup.parentCompany} />
+            <div>
+              <label className="text-sm text-slate-400">Filiales</label>
+              <div className="mt-2 space-y-2">
+                {MOCK_CLIENT.businessGroup.subsidiaries.map((subsidiary, i) => (
+                  <div key={i} className="text-white font-semibold bg-slate-700 rounded-lg p-3">
+                    {subsidiary}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Shareholding Structure */}
+        <div className="mt-8 pt-8 border-t border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">Structure Actionnariale</h3>
+          <div className="space-y-4">
+            <InfoRow label="Type de structure" value={MOCK_CLIENT.shareholding.structure} />
+            <div>
+              <label className="text-sm text-slate-400 block mb-3">Actionnaires</label>
+              <div className="space-y-2">
+                {MOCK_CLIENT.shareholding.shareholders.map((shareholder, i) => (
+                  <div key={i} className="bg-slate-700 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="font-semibold text-white">{shareholder.name}</p>
+                      <span className="text-cyan-400 font-bold text-lg">{shareholder.percentage}%</span>
+                    </div>
+                    <div className="flex gap-2 text-sm">
+                      <span className="bg-blue-500/20 text-blue-400 rounded-full px-2 py-1">{shareholder.type}</span>
+                      <span className="bg-green-500/20 text-green-400 rounded-full px-2 py-1">{shareholder.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Shareholder Bank Status */}
+        <div className="mt-8 pt-8 border-t border-slate-700">
+          <h3 className="text-lg font-semibold text-white mb-4">Statut des Actionnaires à la Banque</h3>
+          <div className="space-y-3">
+            {MOCK_CLIENT.shareholderBankStatus.map((shareholder, i) => (
+              <div key={i} className="bg-slate-700 rounded-lg p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <p className="font-semibold text-white">{shareholder.name}</p>
+                  {shareholder.isBankClient && (
+                    <span className="bg-green-500/20 text-green-400 rounded-full px-3 py-1 text-sm font-semibold">
+                      Client de la banque
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1 text-slate-300 text-sm">
+                  <p>Type de relation: <span className="text-white font-semibold">{shareholder.relationshipType}</span></p>
+                  {shareholder.isBankClient && (
+                    <p>Client depuis: <span className="text-white font-semibold">{shareholder.clientSince}</span></p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
