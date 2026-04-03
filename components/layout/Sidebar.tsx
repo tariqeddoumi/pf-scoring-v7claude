@@ -16,6 +16,8 @@ import {
   GitCompare,
   TrendingUp,
   Download,
+  FileText,
+  Shield,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -75,6 +77,18 @@ export function Sidebar() {
       label: 'Exportations',
       href: '/exports',
       description: 'PDF, Excel, Word',
+    },
+    {
+      icon: FileText,
+      label: 'Documents',
+      href: '/documents',
+      description: 'Gestion centralisée',
+    },
+    {
+      icon: Shield,
+      label: 'Conformité',
+      href: '/compliance',
+      description: 'GDPR & Confidentialité',
     },
     {
       icon: BookOpen,

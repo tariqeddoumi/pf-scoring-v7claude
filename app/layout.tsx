@@ -6,6 +6,7 @@ import { EvaluationProvider } from "@/lib/evaluation-context";
 import { UserProvider } from "@/lib/user-context";
 import { AlertProvider } from "@/lib/alert-context";
 import { CommentProvider } from "@/lib/comments-context";
+import { DocumentProvider } from "@/lib/documents-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,8 +25,9 @@ export default function RootLayout({
       <body className="font-sans antialiased bg-slate-950 text-slate-100">
         <AlertProvider>
           <CommentProvider>
-            <UserProvider>
-              <EvaluationProvider>
+            <DocumentProvider>
+              <UserProvider>
+                <EvaluationProvider>
           {/* Navbar */}
           <Navbar />
 
@@ -44,8 +46,9 @@ export default function RootLayout({
               <Footer />
             </main>
           </div>
-              </EvaluationProvider>
-            </UserProvider>
+                </EvaluationProvider>
+              </UserProvider>
+            </DocumentProvider>
           </CommentProvider>
         </AlertProvider>
       </body>
