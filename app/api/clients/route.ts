@@ -6,5 +6,5 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const data = await req.json();
-  return NextResponse.json({ id: `proj_${Date.now()}`, ...data }, { status: 201 });
+  return NextResponse.json({ id: `client_${Date.now()}`, ...data }, { status: 201 });
 }
