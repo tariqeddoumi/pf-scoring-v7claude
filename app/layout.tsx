@@ -8,6 +8,7 @@ import { AlertProvider } from "@/lib/alert-context";
 import { CommentProvider } from "@/lib/comments-context";
 import { DocumentProvider } from "@/lib/documents-context";
 import { DashboardConfigProvider } from "@/lib/dashboard-config-context";
+import { ReactQueryProvider } from "@/lib/react-query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,12 +25,13 @@ export default function RootLayout({
   return (
     <html lang="fr" className="dark">
       <body className="font-sans antialiased bg-slate-950 text-slate-100">
-        <AlertProvider>
-          <CommentProvider>
-            <DocumentProvider>
-              <DashboardConfigProvider>
-                <UserProvider>
-                  <EvaluationProvider>
+        <ReactQueryProvider>
+          <AlertProvider>
+            <CommentProvider>
+              <DocumentProvider>
+                <DashboardConfigProvider>
+                  <UserProvider>
+                    <EvaluationProvider>
           {/* Navbar */}
           <Navbar />
 
@@ -48,12 +50,13 @@ export default function RootLayout({
               <Footer />
             </main>
           </div>
-                  </EvaluationProvider>
-                </UserProvider>
-              </DashboardConfigProvider>
-            </DocumentProvider>
-          </CommentProvider>
-        </AlertProvider>
+                    </EvaluationProvider>
+                  </UserProvider>
+                </DashboardConfigProvider>
+              </DocumentProvider>
+            </CommentProvider>
+          </AlertProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );
