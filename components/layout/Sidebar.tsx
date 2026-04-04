@@ -20,6 +20,7 @@ import {
   Shield,
   LineChart,
   Target,
+  Sliders,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -31,6 +32,12 @@ export function Sidebar() {
       label: 'Tableau de bord',
       href: '/dashboard',
       description: 'Vue d\'ensemble',
+    },
+    {
+      icon: Sliders,
+      label: 'Configurer Tableau',
+      href: '/dashboard-config',
+      description: 'Personnalisation',
     },
     {
       icon: Users,
