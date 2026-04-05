@@ -302,9 +302,8 @@ enum UserRole {
 }
 
 enum EvaluationStatus {
-  draft
-  in_progress
-  completed
-  reviewed
-  archived
+  brouillon  // Draft - Initial state
+  soumis     // Submitted - Awaiting validation
+  valide     // Validated - Approved
+  rejete     // Rejected - Needs revision
 }
