@@ -244,7 +244,7 @@ export class ComplexIndicatorsCalculator {
   ): OfftakerHealthIndex {
     if (!projectData.offtaker) {
       return {
-        score: 3,
+        score: 4,
         rating: RatingScale.CCC,
         components: {
           financialRating: 0,
@@ -272,7 +272,7 @@ export class ComplexIndicatorsCalculator {
       projectData.financial.debtAmount /
       (projectData.financial.debtAmount +
         projectData.financial.equityAmount);
-    const leverageInverse = Math.max(1, 12 - debtRatio * 14);
+    const leverageInverse = Math.max(2, 12 - debtRatio * 14);
 
     // Component 4: Sector Stability (placeholder, 0-10)
     const sectorStability = 6; // Would analyze sector data
@@ -284,7 +284,7 @@ export class ComplexIndicatorsCalculator {
       sectorStability * 0.1;
 
     return {
-      score: Math.min(10, Math.max(1, score)),
+      score: Math.min(10, Math.max(2, score)),
       rating: this.numericToRating(score),
       components: {
         financialRating,
@@ -304,32 +304,32 @@ export class ComplexIndicatorsCalculator {
   ): PPARobustnessScore {
     if (!projectData.ppaData) {
       return {
-        score: 1,
+        score: 2,
         components: {
-          duration: 1,
-          takeOrPayStrength: 1,
-          indexationCoverage: 1,
-          penaltyEnforceability: 1,
+          duration: 2,
+          takeOrPayStrength: 2,
+          indexationCoverage: 2,
+          penaltyEnforceability: 2,
         },
       };
     }
 
-    // Component 1: Duration Score (0-10)
-    // Target: 25+ years = 10, <12 years = 1
+    // Component 1: Duration Score (2-10)
+    // Target: 25+ years = 10, <12 years = 2
     const durationScore = Math.min(
       10,
-      Math.max(1, (projectData.ppaData.duration / 25) * 10)
+      Math.max(2, (projectData.ppaData.duration / 25) * 10)
     );
 
-    // Component 2: Take-or-Pay Strength (0-10)
-    // Target: 100% = 10, 0% = 1
+    // Component 2: Take-or-Pay Strength (2-10)
+    // Target: 100% = 10, 0% = 2
     const takeOrPayScore = Math.min(
       10,
       (projectData.ppaData.takeOrPayPercent ?? 0.5) * 10
     );
 
-    // Component 3: Indexation Coverage (0-10)
-    // CPI = 10, Hybrid = 7, Fixed = 1
+    // Component 3: Indexation Coverage (2-10)
+    // CPI = 10, Hybrid = 7, Fixed = 2
     const indexationType = projectData.ppaData.indexation?.type;
     const indexationScore =
       indexationType === "CPI" ? 10 : indexationType === "HYBRID" ? 7 : 2;
@@ -344,7 +344,7 @@ export class ComplexIndicatorsCalculator {
       penaltyScore * 0.15;
 
     return {
-      score: Math.min(10, Math.max(1, score)),
+      score: Math.min(10, Math.max(2, score)),
       components: {
         duration: durationScore,
         takeOrPayStrength: takeOrPayScore,
@@ -374,8 +374,8 @@ export class ComplexIndicatorsCalculator {
     // Target: Stable 15+ years = 10, volatile = 5
     const regulatoryScore = 7; // Placeholder
 
-    // Component 4: Technology Maturity (0-10)
-    // Target: Proven technology TRL 8-9 = 10, emerging TRL <6 = 3
+    // Component 4: Technology Maturity (2-10)
+    // Target: Proven technology TRL 8-9 = 10, emerging TRL <6 = 4
     const techMaturitScore = projectData.technology?.trl
       ? Math.min(10, projectData.technology.trl)
       : 6;
@@ -387,7 +387,7 @@ export class ComplexIndicatorsCalculator {
       techMaturitScore * 0.2;
 
     return {
-      score: Math.min(10, Math.max(1, score)),
+      score: Math.min(10, Math.max(2, score)),
       components: {
         growthTrajectory: growthScore,
         diversificationScore: diversityScore,
