@@ -73,7 +73,7 @@ export async function GET() {
         email: "test-diagnostic@pf-scoring.ma",
         nom: "Test",
         prenom: "Diagnostic",
-        role: "analyste",
+        role: "analyst",
       },
     });
     diagnostics.tests.user_creation = {

@@ -142,3 +142,22 @@ export function calculateEvaluation(
     domainScores: Array.from(domainScores.entries()).map(([id, score]) => ({ id, score })),
   };
 }
+
+/**
+ * Get Tailwind CSS color class for a grade
+ */
+export function getGradeColor(grade: string): string {
+  const gradeColorMap: Record<string, string> = {
+    'AAA': 'text-green-600',
+    'AA': 'text-green-500',
+    'A': 'text-emerald-500',
+    'BBB': 'text-yellow-600',
+    'BB': 'text-yellow-500',
+    'B': 'text-amber-500',
+    'CCC': 'text-orange-600',
+    'CC': 'text-orange-500',
+    'C': 'text-red-500',
+    'D': 'text-red-700',
+  };
+  return gradeColorMap[grade] || 'text-slate-500';
+}

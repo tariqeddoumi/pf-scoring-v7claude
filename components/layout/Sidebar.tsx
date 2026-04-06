@@ -8,7 +8,6 @@ import {
   Briefcase,
   CheckCircle,
   BookOpen,
-  LogBook,
   Settings,
   LogOut,
   Search,
@@ -118,7 +117,7 @@ export function Sidebar() {
       description: 'Guides',
     },
     {
-      icon: LogBook,
+      icon: BookOpen,
       label: 'Journal d\'audit',
       href: '/audit',
       description: 'Logs',

@@ -107,7 +107,10 @@ export function DashboardConfigProvider({ children }: { children: React.ReactNod
 
   const loadTemplate = (template: DashboardTemplate) => {
     setActiveTemplate(template);
-    setWidgets(JSON.parse(JSON.stringify(TEMPLATES[template])));
+    const templateWidgets = TEMPLATES[template as keyof typeof TEMPLATES];
+    if (templateWidgets) {
+      setWidgets(JSON.parse(JSON.stringify(templateWidgets)));
+    }
   };
 
   const saveAsTemplate = (name: string) => {

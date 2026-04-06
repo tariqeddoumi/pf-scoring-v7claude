@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         email,
         nom: nom || email.split("@")[0],
         prenom: prenom || "",
-        role: role || "analyste",
+        role: role || "analyst",
       },
     });
 

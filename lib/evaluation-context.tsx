@@ -27,6 +27,7 @@ export interface WorkflowEvent {
 
 interface EvaluationContextType {
   workflow: EvaluationWorkflow | null;
+  evaluations?: Record<string, EvaluationWorkflow>;
   createEvaluation: (projectId: string, user: string) => EvaluationWorkflow;
   submitEvaluation: (evaluationId: string, user: string) => Promise<boolean>;
   validateEvaluation: (evaluationId: string, user: string) => Promise<boolean>;
@@ -267,6 +268,7 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
     <EvaluationContext.Provider
       value={{
         workflow: currentWorkflow,
+        evaluations,
         createEvaluation,
         submitEvaluation,
         validateEvaluation,
@@ -289,3 +291,6 @@ export function useEvaluationWorkflow() {
   }
   return context;
 }
+
+// Alias for backward compatibility
+export const useEvaluation = useEvaluationWorkflow;

@@ -25,7 +25,7 @@ model User {
   evaluations     Evaluation[]        @relation("AnalystEvaluations")
   scoringAudits   ScoringAuditLog[]   @relation("ScoringAuditLogs")
 
-  @@map("pf_scoring_users")
+  @@map("BP_PF_users")
 }
 
 model Project {
@@ -49,7 +49,7 @@ model Project {
   evaluations Evaluation[]  @relation("ProjectEvaluations")
 
   @@index([creePar])
-  @@map("pf_scoring_projects")
+  @@map("BP_PF_projects")
 }
 
 model Scoring {
@@ -65,7 +65,7 @@ model Scoring {
   evaluationDomainScores EvaluationDomainScore[]
   evaluationAnswers     EvaluationAnswer[]
 
-  @@map("pf_scoring_scorings")
+  @@map("BP_PF_scorings")
 }
 
 model AuditLog {
@@ -82,7 +82,7 @@ model AuditLog {
   @@index([projectId])
   @@index([utilisateurId])
   @@index([dateAction])
-  @@map("pf_scoring_audit_logs")
+  @@map("BP_PF_audit_logs")
 }
 
 model ScoreDomain {
@@ -99,7 +99,7 @@ model ScoreDomain {
   criteria        ScoreCriterion[]
   evaluationDomainScores EvaluationDomainScore[]
 
-  @@map("pf_scoring_domains")
+  @@map("BP_PF_domains")
 }
 
 model ScoreCriterion {
@@ -122,7 +122,7 @@ model ScoreCriterion {
 
   @@unique([domainId, code])
   @@index([domainId])
-  @@map("pf_scoring_criteria")
+  @@map("BP_PF_criteria")
 }
 
 model ScoreOption {
@@ -137,7 +137,7 @@ model ScoreOption {
   criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
 
   @@index([criterionId])
-  @@map("pf_scoring_options")
+  @@map("BP_PF_options")
 }
 
 model ScoreRange {
@@ -154,7 +154,7 @@ model ScoreRange {
   criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
 
   @@index([criterionId])
-  @@map("pf_scoring_ranges")
+  @@map("BP_PF_ranges")
 }
 
 model Country {
@@ -165,7 +165,7 @@ model Country {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  @@map("pf_scoring_countries")
+  @@map("BP_PF_countries")
 }
 
 model SystemConfig {
@@ -175,7 +175,7 @@ model SystemConfig {
   description     String?
   updatedAt       DateTime        @updatedAt
 
-  @@map("pf_scoring_system_config")
+  @@map("BP_PF_system_config")
 }
 
 model EvaluationDomainScore {
@@ -192,7 +192,7 @@ model EvaluationDomainScore {
   @@unique([domainId, scoringId])
   @@index([domainId])
   @@index([scoringId])
-  @@map("pf_scoring_evaluation_domain_scores")
+  @@map("BP_PF_evaluation_domain_scores")
 }
 
 model EvaluationAnswer {
@@ -210,7 +210,7 @@ model EvaluationAnswer {
 
   @@index([criterionId])
   @@index([scoringId])
-  @@map("pf_scoring_evaluation_answers")
+  @@map("BP_PF_evaluation_answers")
 }
 
 model Evaluation {
@@ -227,7 +227,7 @@ model Evaluation {
   appliedMALUS      Json                // Array of MALUS penalties
   malusTotal        Float
   notes             String?
-  status            EvaluationStatus    @default(draft)
+  status            EvaluationStatus    @default(brouillon)
   version           String              @default("7.0")
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
@@ -241,7 +241,7 @@ model Evaluation {
   @@index([analystId])
   @@index([rating])
   @@index([createdAt])
-  @@map("pf_scoring_v7pp_evaluations")
+  @@map("BP_PF_v7pp_evaluations")
 }
 
 model StressTestScenarioResult {
@@ -260,7 +260,7 @@ model StressTestScenarioResult {
   evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
 
   @@index([evaluationId])
-  @@map("pf_scoring_v7pp_stress_results")
+  @@map("BP_PF_v7pp_stress_results")
 }
 
 model ScoringAuditLog {
@@ -279,7 +279,7 @@ model ScoringAuditLog {
   @@index([evaluationId])
   @@index([userId])
   @@index([timestamp])
-  @@map("pf_scoring_v7pp_audit_logs")
+  @@map("BP_PF_v7pp_audit_logs")
 }
 
 // Add relations to existing models

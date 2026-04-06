@@ -3,17 +3,23 @@
  * Connects Claude to Notion for automatic tracking updates
  */
 
-import { Client } from "@notionhq/client";
+let notion: any = null;
 
-const notionApiKey = process.env.NOTION_API_KEY;
+try {
+  // @ts-ignore - @notionhq/client is an optional dependency
+  const { Client } = require("@notionhq/client") as any;
+  const notionApiKey = process.env.NOTION_API_KEY;
 
-if (!notionApiKey) {
-  throw new Error("NOTION_API_KEY not configured in environment variables");
+  if (notionApiKey) {
+    notion = new Client({
+      auth: notionApiKey,
+    });
+  }
+} catch (error) {
+  console.warn("Notion client not available - @notionhq/client module not installed");
 }
 
-export const notion = new Client({
-  auth: notionApiKey,
-});
+export { notion };
 
 /**
  * Database structure for PMO Tracking
@@ -264,17 +270,17 @@ export async function getTrackingStats() {
 
   const stats = {
     total: items.length,
-    integrated: items.filter((i) => i.statut === "INTÉGRÉ").length,
-    inProgress: items.filter((i) => i.statut === "EN COURS").length,
-    planned: items.filter((i) => i.statut === "PLANIFIÉ").length,
-    blocked: items.filter((i) => i.statut === "BLOQUÉ").length,
+    integrated: items.filter((i: any) => i.statut === "INTÉGRÉ").length,
+    inProgress: items.filter((i: any) => i.statut === "EN COURS").length,
+    planned: items.filter((i: any) => i.statut === "PLANIFIÉ").length,
+    blocked: items.filter((i: any) => i.statut === "BLOQUÉ").length,
     averageCompletion:
-      items.reduce((sum, i) => sum + i.completion, 0) / items.length || 0,
+      items.reduce((sum: number, i: any) => sum + i.completion, 0) / items.length || 0,
     byBloc: {} as Record<string, any>,
   };
 
   // Group by bloc
-  items.forEach((item) => {
+  items.forEach((item: any) => {
     if (!stats.byBloc[item.bloc]) {
       stats.byBloc[item.bloc] = {
         total: 0,

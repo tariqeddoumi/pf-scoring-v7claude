@@ -24,7 +24,7 @@ export class WebhookService {
 
   private registerDefaultHandlers() {
     // Evaluation workflows
-    this.on('evaluation.submitted', async (data) => {
+    this.on('evaluation.submitted', async (data: any) => {
       console.log('📤 Evaluation submitted:', data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationSubmitted(
@@ -35,7 +35,7 @@ export class WebhookService {
       }
     });
 
-    this.on('evaluation.validated', async (data) => {
+    this.on('evaluation.validated', async (data: any) => {
       console.log('✅ Evaluation validated:', data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationValidated(
@@ -45,7 +45,7 @@ export class WebhookService {
       }
     });
 
-    this.on('evaluation.rejected', async (data) => {
+    this.on('evaluation.rejected', async (data: any) => {
       console.log('❌ Evaluation rejected:', data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationRejected(
@@ -57,7 +57,7 @@ export class WebhookService {
     });
 
     // Alerts
-    this.on('alert.created', async (data) => {
+    this.on('alert.created', async (data: any) => {
       if (data.severity === 'critical') {
         console.log('🚨 Critical alert:', data.type);
         // Send to manager email

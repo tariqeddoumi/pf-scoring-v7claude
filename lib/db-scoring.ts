@@ -41,7 +41,7 @@ export async function saveEvaluation(
         triggeredNOGOs: scoringResult.triggeredNOGOs as any,
         appliedMALUS: scoringResult.appliedMALUS as any,
         malusTotal: scoringResult.malusTotal,
-        status: "completed",
+        status: "valide",
         version: "7.0",
       },
     });
@@ -108,7 +108,7 @@ export async function updateEvaluationStatus(
     return (await prisma.evaluation.update({
       where: { id: evaluationId },
       data: {
-        status,
+        status: status as any,
         notes,
         updatedAt: new Date(),
       },

@@ -47,30 +47,32 @@ export default function ExportsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const evaluationsList = evaluations ? Object.values(evaluations) : [];
+
   const handleExport = async (format: string) => {
     setLoading(true);
     setMessage(null);
 
     try {
       if (selectedExport === 'evaluation' && selectedEvaluation) {
-        const evaluation = evaluations.find(e => e.id === selectedEvaluation);
+        const evaluation = evaluationsList.find((e: any) => e.id === selectedEvaluation);
         if (!evaluation) throw new Error('Évaluation non trouvée');
 
         if (format === 'pdf') {
-          const blob = ExportService.generateEvaluationPDF(evaluation);
-          const filename = `evaluation-${evaluation.evaluationId}-${new Date().getTime()}.html`;
+          const blob = ExportService.generateEvaluationPDF(evaluation as any);
+          const filename = `evaluation-${(evaluation as any).id || (evaluation as any).evaluationId}-${new Date().getTime()}.html`;
           downloadFile(blob, filename);
         } else if (format === 'word') {
-          const blob = ExportService.generateEvaluationWord(evaluation);
-          const filename = `evaluation-${evaluation.evaluationId}-${new Date().getTime()}.html`;
+          const blob = ExportService.generateEvaluationWord(evaluation as any);
+          const filename = `evaluation-${(evaluation as any).id || (evaluation as any).evaluationId}-${new Date().getTime()}.html`;
           downloadFile(blob, filename);
         }
       } else if (selectedExport === 'portfolio') {
         if (format === 'excel') {
-          const blob = ExportService.generatePortfolioExcel(evaluations);
+          const blob = ExportService.generatePortfolioExcel(evaluationsList as any);
           downloadFile(blob, `portfolio-${new Date().getTime()}.csv`);
         } else if (format === 'csv') {
-          const blob = ExportService.generatePortfolioExcel(evaluations);
+          const blob = ExportService.generatePortfolioExcel(evaluationsList as any);
           downloadFile(blob, `portfolio-${new Date().getTime()}.csv`);
         }
       } else if (selectedExport === 'audit') {
@@ -158,9 +160,9 @@ export default function ExportsPage() {
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:border-cyan-600 focus:outline-none"
                 >
                   <option value="">-- Choisir une évaluation --</option>
-                  {evaluations.map(e => (
+                  {evaluationsList?.map((e: any) => (
                     <option key={e.id} value={e.id}>
-                      {e.evaluationId} ({e.projectId}) - {e.status}
+                      {e.id} ({e.projectId}) - {e.status}
                     </option>
                   ))}
                 </select>

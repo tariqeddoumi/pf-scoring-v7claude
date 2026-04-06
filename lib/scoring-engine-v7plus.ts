@@ -178,8 +178,8 @@ export class ScoringEngine {
   }
 
   private scoreSponsorFinancial(): number {
-    const rating = this.projectData.sponsor.rating;
-    const liquidityRatio = this.projectData.sponsor.liquidityRatio ?? 0;
+    const rating = this.projectData.sponsor?.rating;
+    const liquidityRatio = this.projectData.sponsor?.liquidityRatio ?? 0;
 
     if (rating === RatingScale.AAA || rating === RatingScale.AA)
       return 10;
@@ -192,9 +192,9 @@ export class ScoringEngine {
   }
 
   private scoreSponsorExperience(): number {
-    const projects = this.projectData.sponsor.track_record_projects ?? 0;
+    const projects = this.projectData.sponsor?.track_record_projects ?? 0;
     const successRate =
-      this.projectData.sponsor.track_record_success_rate ?? 0;
+      this.projectData.sponsor?.track_record_success_rate ?? 0;
 
     if (projects >= 10 && successRate >= 0.95) return 10;
     if (projects >= 5 && successRate >= 0.9) return 9;
@@ -404,7 +404,7 @@ export class ScoringEngine {
     // D7.2 - Cash Flow Predictability (30%)
     // D7.3 - Debt Service Capacity (35%) ← DSCR ANALYSIS
 
-    const dscr = this.projectData.financial.dscr ?? 1.0;
+    const dscr = this.projectData.financial?.dscr ?? 1.0;
     const dscrScore = this.scoreDSCR(dscr);
 
     const score = 8.5; // Simplified

@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         DO $$
         BEGIN
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
-            CREATE TYPE "UserRole" AS ENUM ('admin', 'manager', 'analyste', 'lecteur');
+            CREATE TYPE "UserRole" AS ENUM ('admin', 'manager', 'analyst', 'viewer');
           END IF;
         END $$;
       `);

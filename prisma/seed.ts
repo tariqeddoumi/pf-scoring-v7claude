@@ -557,11 +557,11 @@ async function createUsers() {
       role: "admin",
     },
     {
-      email: "analyste@pf-scoring.ma",
-      password: "Analyste123!",
-      nom: "Analyste",
+      email: "analyst@pf-scoring.ma",
+      password: "Analyst123!",
+      nom: "Analyst",
       prenom: "Test",
-      role: "analyste",
+      role: "analyst",
     },
   ];
 

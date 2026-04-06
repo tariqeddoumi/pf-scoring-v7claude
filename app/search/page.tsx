@@ -77,10 +77,10 @@ export default function SearchPage() {
   const filtered = MOCK_SEARCH_RESULTS.filter(result => {
     if (filters.query && !result.title.toLowerCase().includes(filters.query.toLowerCase())) return false;
     if (filters.type && result.type !== filters.type) return false;
-    if ('score' in result && (result.score < filters.scoreMin || result.score > filters.scoreMax)) return false;
+    if ('score' in result && result.score !== undefined && (result.score < filters.scoreMin || result.score > filters.scoreMax)) return false;
     if (filters.ratingFilter && result.rating !== filters.ratingFilter) return false;
     if (filters.statusFilter && result.status !== filters.statusFilter) return false;
-    if (filters.sectorFilter && 'sector' in result && !result.sector.includes(filters.sectorFilter)) return false;
+    if (filters.sectorFilter && 'sector' in result && result.sector !== undefined && result.sector.includes(filters.sectorFilter)) return false;
     return true;
   });
 

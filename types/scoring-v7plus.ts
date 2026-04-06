@@ -240,15 +240,26 @@ export interface StressTestResult {
 export interface ProjectData {
   projectId: string;
   projectName: string;
-  location: string;
+  description?: string;
+  location?: string;
   sector: string; // "Energy", "Water", "Transport", "Telecom", etc.
-  startDate: Date;
-  projectLife: number; // years
+  startDate?: Date;
+  projectLife?: number; // years
 
-  // Sponsor data
-  sponsor: {
-    name: string;
-    countryOfIncorporation: string;
+  // Project fundamentals (Domain 1)
+  projectFundamentals?: {
+    projectCost?: number;
+    projectCostStatus?: string;
+    technologyMaturity?: number;
+    projectCertifications?: string[];
+    hasDetailedEngineering?: boolean;
+    engineeringCompleteness?: number;
+  };
+
+  // Sponsor data (optional for flexibility)
+  sponsor?: {
+    name?: string;
+    countryOfIncorporation?: string;
     rating?: RatingScale;
     liquidityRatio?: number;
     equityPercent?: number;
@@ -278,11 +289,11 @@ export interface ProjectData {
     };
   };
 
-  // Financial data
-  financial: {
-    totalCapex: number;
-    debtAmount: number;
-    equityAmount: number;
+  // Financial data (optional for flexibility)
+  financial?: {
+    totalCapex?: number;
+    debtAmount?: number;
+    equityAmount?: number;
     annualOpex?: number;
     annualRevenue?: number;
     debtService?: number;
@@ -298,20 +309,116 @@ export interface ProjectData {
     proven?: boolean;
   };
 
-  // Country/Regulatory
-  hostCountry: {
-    countryCode: string; // "MA" for Morocco
+  // Country/Regulatory (optional for flexibility)
+  hostCountry?: {
+    countryCode?: string; // "MA" for Morocco
     regulatoryFramework?: string;
     politicalRiskRating?: string;
     fxRisk?: string;
+    country?: string; // Alternative name
+    countryRating?: string;
+    politicalRisk?: string;
+    currencyRisk?: string;
+    transferRisk?: string;
+    naturalDisasterRisk?: string;
+    conflictRisk?: string;
   };
 
-  // ESG data
+  // Extended construction phase data
+  construction?: {
+    epcContractorName?: string;
+    epcContractorRating?: string;
+    constructionPeriod?: number;
+    completionDate?: Date;
+    epcInsolvencyRisk?: string;
+    epcGuarantees?: boolean;
+    guaranteeType?: string;
+    guaranteeAmount?: number;
+    constructionInsuranceInPlace?: boolean;
+    contractorQuality?: string;
+  };
+
+  // Extended operation phase data
+  operation?: {
+    expectedProjectLife?: number;
+    operatorName?: string;
+    operatorExperience?: number;
+    operatorFiability?: number;
+    operationCost?: number;
+    maintenanceModel?: string;
+    performanceGarantee?: boolean;
+    performanceGuaranteeLevel?: number;
+  };
+
+  // Extended revenue data
+  revenue?: {
+    hasPublicPPA?: boolean;
+    ppaType?: string;
+    ppaTermYears?: number;
+    ppaTakeOrPay?: boolean;
+    takeOrPayPercentage?: number;
+    ppaCounterparty?: string;
+    counterpartyRating?: string;
+    ppaIndexation?: boolean;
+    indexationType?: string;
+    ppaEscalation?: number;
+    offtakerName?: string;
+    offtakerRating?: string;
+    offtakerLiquidityRatio?: number;
+    offtakerLeverage?: number;
+    electricityDemandGrowth?: number;
+    marketStability?: string;
+    regulatoryStability?: boolean;
+    technologicalRisk?: string;
+  };
+
+  // Extended financial structure data
+  financialStructure?: {
+    projectEquity?: number;
+    projectDebt?: number;
+    equityToDebtRatio?: number;
+    debtStructure?: string;
+    seniorDebtAmount?: number;
+    seniorDebtRate?: number;
+    seniorDebtTerm?: number;
+    subordinatedDebtAmount?: number;
+    subordinatedDebtRate?: number;
+    subordinatedDebtTerm?: number;
+    estimatedAnnualRevenue?: number;
+    estimatedAnnualDebtService?: number;
+    dscr?: number;
+    dscrStressed?: number;
+    reserveFunds?: boolean;
+    dscaPercentage?: number;
+    sponsorName?: string;
+    sponsorRating?: string;
+    sponsorEquityContribution?: boolean;
+    sponsorGuarantees?: boolean;
+  };
+
+  // Extended legal data
+  legal?: {
+    projectAgreementQuality?: number;
+    hasEnforcableContracts?: boolean;
+    contractsQuality?: string;
+    jurisdiction?: string;
+    riskOfLitigation?: string;
+    insuranceStructure?: string;
+    insuranceCoverage?: string;
+    insuranceCarrier?: string;
+    insuranceRating?: string;
+  };
+
+  // ESG data (consolidated with extensions)
   esg?: {
     environmentalImpact?: "POSITIVE" | "NEUTRAL" | "NEGATIVE";
     carbonIntensity?: number; // tCO2e/year
     socialRisk?: "LOW" | "MEDIUM" | "HIGH";
     climateRisk?: "LOW" | "MEDIUM" | "HIGH";
+    environmentalRating?: string; // Alternative name
+    socialImpactScore?: number;
+    governanceScore?: number;
+    carbonEmissionAvoidance?: number;
   };
 }
 

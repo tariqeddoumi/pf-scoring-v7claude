@@ -1,6 +1,6 @@
 'use client';
 
-import { Github, Linkedin, Mail } from 'lucide-react';
+import { Code, Users, Mail } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -41,14 +41,14 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Contact</h4>
             <div className="flex space-x-4">
-              <a href="#" className="text-slate-400 hover:text-white transition">
+              <a href="#" className="text-slate-400 hover:text-white transition" title="Email">
                 <Mail size={20} />
               </a>
-              <a href="#" className="text-slate-400 hover:text-white transition">
-                <Github size={20} />
+              <a href="#" className="text-slate-400 hover:text-white transition" title="GitHub">
+                <Code size={20} />
               </a>
-              <a href="#" className="text-slate-400 hover:text-white transition">
-                <Linkedin size={20} />
+              <a href="#" className="text-slate-400 hover:text-white transition" title="LinkedIn">
+                <Users size={20} />
               </a>
             </div>
           </div>
