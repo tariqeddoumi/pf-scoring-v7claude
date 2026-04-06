@@ -45,3 +45,4 @@ prisma/migrations/dev
 # IDE
 .vscode/
 .idea/
+.env.notion
