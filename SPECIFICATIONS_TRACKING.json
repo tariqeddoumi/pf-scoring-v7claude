@@ -1,0 +1,452 @@
+{
+  "project": {
+    "name": "PF Scoring V7++",
+    "description": "Project Finance Scoring Application - Banque Marocaine",
+    "version": "7.0",
+    "status": "Phase 8 Complete - Phase 9 Ready",
+    "lastUpdated": "2026-04-06",
+    "overallCompletion": 85,
+    "totalItems": 85,
+    "statistics": {
+      "integrated": 65,
+      "inProgress": 15,
+      "planned": 5,
+      "blocked": 0
+    }
+  },
+  "blocs": [
+    {
+      "blocId": "SYSTEM",
+      "name": "Système & Architecture",
+      "items": 6,
+      "completion": 100,
+      "status": "INTEGRE",
+      "elements": [
+        {
+          "id": "SYS_001",
+          "category": "Framework",
+          "name": "Next.js 15",
+          "description": "Framework web avec App Router",
+          "specification": "Next.js 15 + App Router",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Déploiement Vercel configuré"
+        },
+        {
+          "id": "SYS_002",
+          "category": "Framework",
+          "name": "TypeScript Strict",
+          "description": "Mode strict enforced",
+          "specification": "TypeScript strict mode",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Configuration ESLint validée"
+        },
+        {
+          "id": "SYS_003",
+          "category": "Styling",
+          "name": "TailwindCSS + shadcn/ui",
+          "description": "Thème sombre avec composants UI",
+          "specification": "TailwindCSS + shadcn/ui avec slate-950/cyan-600",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Thème sombre complètement implémenté"
+        },
+        {
+          "id": "SYS_004",
+          "category": "ORM",
+          "name": "Prisma",
+          "description": "ORM pour PostgreSQL",
+          "specification": "Prisma client avec migrations",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Schema aligné avec DB"
+        },
+        {
+          "id": "SYS_005",
+          "category": "Database",
+          "name": "Supabase PostgreSQL",
+          "description": "PostgreSQL avec Auth",
+          "specification": "Supabase + RLS policies",
+          "status": "INTEGRE",
+          "completion": 85,
+          "changeType": "",
+          "notes": "RLS policies en place (à renforcer)"
+        },
+        {
+          "id": "SYS_006",
+          "category": "Deployment",
+          "name": "Vercel",
+          "description": "Déploiement CI/CD",
+          "specification": "Vercel configuré avec GitHub",
+          "status": "INTEGRE",
+          "completion": 95,
+          "changeType": "",
+          "notes": "Prêt pour déploiement"
+        }
+      ]
+    },
+    {
+      "blocId": "SCORING_DOMAINS",
+      "name": "Domaines Scoring (D1-D9)",
+      "items": 11,
+      "completion": 91,
+      "status": "EN_COURS",
+      "elements": [
+        {
+          "id": "D1",
+          "category": "Domaine",
+          "name": "D1 - Project Fundamentals",
+          "description": "Solidité du sponsor + structure du projet + permis/terres",
+          "specification": "Poids: 10%. 3 sous-domaines: Sponsor (35%), Structure (35%), Permis (30%)",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Tous les critères définis dans scoring-model-v7-config.ts"
+        },
+        {
+          "id": "D1.1",
+          "category": "Sub-domaine",
+          "name": "D1.1 - Sponsor Strength",
+          "description": "Solidité financière + expérience + engagement",
+          "specification": "3 critères × 4 niveaux (2,4,6,8,10)",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Financial Solidity (10/8/6/4), Sector Experience, Engagement"
+        },
+        {
+          "id": "D1.2",
+          "category": "Sub-domaine",
+          "name": "D1.2 - Project Structure",
+          "description": "SPV + contrats clés + allocation des risques",
+          "specification": "3 critères: SPV (10/8/6/4), Key Contracts, Risk Allocation",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Seuils NO-GO: 2, RedFlag: 4"
+        },
+        {
+          "id": "D1.3",
+          "category": "Sub-domaine",
+          "name": "D1.3 - Permits & Land",
+          "description": "Permis + sécurité terrains + risques socio-env",
+          "specification": "3 critères: Permits (10/8/6/4), Land Security, Social&Env Risk",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Thresholds: NOGO=2, RedFlag=4"
+        },
+        {
+          "id": "D2",
+          "category": "Domaine",
+          "name": "D2 - Host Country",
+          "description": "Risque pays + réglementation + FX + support souverain",
+          "specification": "Poids: 10%. Sous-domaines à compléter",
+          "status": "EN_COURS",
+          "completion": 30,
+          "changeType": "",
+          "notes": "Configuration minimale en place"
+        },
+        {
+          "id": "D3",
+          "category": "Domaine",
+          "name": "D3 - Construction Phase",
+          "description": "Risque construction + EPC + assurance",
+          "specification": "Poids: 15%. Critères définis",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "NO-GO rules: insolvency EPC, pas de garanties"
+        },
+        {
+          "id": "D4",
+          "category": "Domaine",
+          "name": "D4 - Market Risk",
+          "description": "Stabilité des revenus + offtake + exposition marché",
+          "specification": "Poids: 10%. Critères définis",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "NO-GO: pas de contrat offtake, PPA < 15 ans"
+        },
+        {
+          "id": "D5",
+          "category": "Domaine",
+          "name": "D5 - Operational Risk",
+          "description": "O&M + fiabilité technologie + maintenance",
+          "specification": "Poids: 10%. Critères définis",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Thresholds adaptés à la technologie"
+        },
+        {
+          "id": "D6",
+          "category": "Domaine",
+          "name": "D6 - Counterparty Risk",
+          "description": "EPC contractor + O&M operator + offtaker quality",
+          "specification": "Poids: 10%. 3 catégories NPOs",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Qualité des contreparties = clé"
+        },
+        {
+          "id": "D7",
+          "category": "Domaine",
+          "name": "D7 - Financial Structure",
+          "description": "DSCR + LLCR + leverage + hedging",
+          "specification": "Poids: 15%. Critères financiers",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "DSCR >1.2, LLCR >1.4 (seuils standards)"
+        },
+        {
+          "id": "D8",
+          "category": "Domaine",
+          "name": "D8 - Legal & Documentation",
+          "description": "Package légal + covenants + step-in rights",
+          "specification": "Poids: 10%. Critères définissant la solidité légale",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "NO-GO: Step-in rights < 15 jours, Missing covenants"
+        },
+        {
+          "id": "D9",
+          "category": "Domaine",
+          "name": "D9 - ESG & Climate",
+          "description": "Environnemental + social + gouvernance + climate risk",
+          "specification": "Poids: 10%. 4 critères ESG",
+          "status": "INTEGRE",
+          "completion": 115,
+          "changeType": "ADDITION",
+          "notes": "AJOUT: Climate risk & carbon reduction tracking"
+        }
+      ]
+    },
+    {
+      "blocId": "RULES",
+      "name": "Règles Métier (NO-GO/MALUS)",
+      "items": 9,
+      "completion": 100,
+      "status": "INTEGRE",
+      "elements": [
+        {
+          "id": "RULE_001",
+          "category": "NO-GO Rules",
+          "name": "NO-GO Sponsor",
+          "description": "Sponsor rating D/CCC/B = automatic rejection",
+          "specification": "3 rules: Rating (NOGO_1A), Insolvency (NOGO_1B), Liquidity <0.1 (NOGO_1C)",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Implemented in RulesEngine class"
+        },
+        {
+          "id": "RULE_002",
+          "category": "NO-GO Rules",
+          "name": "NO-GO Country",
+          "description": "Political instability / expropriation = rejection",
+          "specification": "2 rules: War/Instability (NOGO_2A), Expropriation (NOGO_2B)",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Placeholders pour données externes"
+        },
+        {
+          "id": "RULE_003",
+          "category": "NO-GO Rules",
+          "name": "NO-GO Construction",
+          "description": "EPC insolvency / missing guarantees",
+          "specification": "3 rules: EPC insolvency, Completion guarantee missing, Liquidated damages <2%",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "NOGO_3A, NOGO_3B, NOGO_3C"
+        },
+        {
+          "id": "RULE_004",
+          "category": "NO-GO Rules",
+          "name": "NO-GO Market",
+          "description": "No offtake contract / PPA < 15 years",
+          "specification": "5 rules: No PPA, PPA<15yrs, Revenue decline>30%, Missing CPI escalation, Offtaker insolvency",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "NOGO_5A-5E linked to market stability"
+        },
+        {
+          "id": "RULE_005",
+          "category": "NO-GO Rules",
+          "name": "NO-GO Financial",
+          "description": "DSCR <1.05 / LLCR <1.25 / Leverage >80%",
+          "specification": "3 rules: DSCR threshold, LLCR threshold, Leverage ratio",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "RulesEngine.checkNOGOs() comprehensive"
+        },
+        {
+          "id": "RULE_006",
+          "category": "NO-GO Rules",
+          "name": "NO-GO Legal",
+          "description": "Missing security / No step-in rights",
+          "specification": "3 rules: Security package, Step-in rights timing, Covenants completeness",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "NOGO_8A/8B/8C"
+        },
+        {
+          "id": "RULE_007",
+          "category": "NO-GO Rules",
+          "name": "NO-GO ESG",
+          "description": "Environmental red flags / Social opposition",
+          "specification": "2 rules: Environmental impact (NOGO_9A), Social opposition (NOGO_9B)",
+          "status": "INTEGRE",
+          "completion": 115,
+          "changeType": "ADDITION",
+          "notes": "AJOUT: ESG tracking integrated"
+        },
+        {
+          "id": "RULE_008",
+          "category": "MALUS Rules",
+          "name": "MALUS Scoring",
+          "description": "Score reductions for weaknesses",
+          "specification": "18 MALUS rules: 1A, 2A, 3A, 5A-5F, 6A-6C, 7A-7B, 8A-8B, 9A-9C",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "checkMALUS() returns triggered penalties"
+        },
+        {
+          "id": "RULE_009",
+          "category": "MALUS Rules",
+          "name": "MALUS Calculation",
+          "description": "Cumulative MALUS max 30 points",
+          "specification": "malusTotal = sum(applied MALUS)",
+          "status": "INTEGRE",
+          "completion": 100,
+          "changeType": "",
+          "notes": "Final score = scoring - malusTotal"
+        }
+      ]
+    }
+  ],
+  "phases": {
+    "completed": [
+      {
+        "phase": 1,
+        "name": "Deployments & Configuration",
+        "status": "COMPLETE",
+        "completionDate": "2026-03-20"
+      },
+      {
+        "phase": 2,
+        "name": "Authentication & RBAC",
+        "status": "COMPLETE",
+        "completionDate": "2026-03-25"
+      },
+      {
+        "phase": 3,
+        "name": "Database Schema & ORM",
+        "status": "COMPLETE",
+        "completionDate": "2026-03-28"
+      },
+      {
+        "phase": 4,
+        "name": "Scoring Engine V7++",
+        "status": "COMPLETE",
+        "completionDate": "2026-04-01"
+      },
+      {
+        "phase": 5,
+        "name": "Dashboard & Reporting",
+        "status": "COMPLETE",
+        "completionDate": "2026-04-02"
+      },
+      {
+        "phase": 6,
+        "name": "Stress Testing & Scenarios",
+        "status": "COMPLETE",
+        "completionDate": "2026-04-02"
+      },
+      {
+        "phase": 7,
+        "name": "Performance & Optimization",
+        "status": "COMPLETE",
+        "completionDate": "2026-04-02"
+      },
+      {
+        "phase": 8,
+        "name": "Webhooks, Email & PDF",
+        "status": "COMPLETE",
+        "completionDate": "2026-04-04"
+      },
+      {
+        "phase": "0",
+        "name": "Critical Fixes & Phase 0 Audit",
+        "status": "COMPLETE",
+        "completionDate": "2026-04-06"
+      }
+    ],
+    "inProgress": [
+      {
+        "phase": 9,
+        "name": "Mobile Responsive Design",
+        "status": "READY_TO_START",
+        "estimatedDuration": "3-5 jours",
+        "startDate": "2026-04-06",
+        "priority": "HIGH"
+      }
+    ],
+    "planned": [
+      {
+        "phase": 10,
+        "name": "E2E Tests (Cypress)",
+        "status": "PLANNED",
+        "estimatedDuration": "5-7 jours",
+        "priority": "HIGH",
+        "dependencies": ["Phase 9"]
+      },
+      {
+        "phase": 11,
+        "name": "Email & Webhooks Setup",
+        "status": "PLANNED",
+        "estimatedDuration": "2-3 jours",
+        "priority": "MEDIUM"
+      },
+      {
+        "phase": 12,
+        "name": "Deployment & Go-Live",
+        "status": "PLANNED",
+        "estimatedDuration": "2-3 jours",
+        "priority": "CRITICAL"
+      }
+    ]
+  },
+  "nextSteps": {
+    "immediate": [
+      "Start Phase 9: Mobile Responsive Design",
+      "Setup Google Sheets PMO Tracking",
+      "Finalize email provider (SendGrid/Mailgun)"
+    ],
+    "shortTerm": [
+      "Complete Phase 9 tests",
+      "Begin Phase 10 E2E test suite",
+      "Strengthen RLS policies (security audit)"
+    ],
+    "mediumTerm": [
+      "Setup Supabase migrations",
+      "Configure Vercel production environment",
+      "User training & documentation"
+    ]
+  }
+}

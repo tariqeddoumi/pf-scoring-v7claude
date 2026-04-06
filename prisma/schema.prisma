@@ -13,7 +13,7 @@ model User {
   password        String?
   nom             String
   prenom          String
-  role            UserRole @default(analyste)
+  role            UserRole @default(analyst)
   oauthProvider   String?
   oauthId         String?
   avatar          String?
@@ -297,14 +297,13 @@ enum ProjectStatus {
 enum UserRole {
   admin
   manager
-  analyste
-  lecteur
+  analyst
+  viewer
 }
 
 enum EvaluationStatus {
-  draft
-  in_progress
-  completed
-  reviewed
-  archived
+  brouillon  // Draft - Initial state
+  soumis     // Submitted - Awaiting validation
+  valide     // Validated - Approved
+  rejete     // Rejected - Needs revision
 }

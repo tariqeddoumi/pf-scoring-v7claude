@@ -11,6 +11,16 @@ import {
   LogBook,
   Settings,
   LogOut,
+  Search,
+  Bell,
+  GitCompare,
+  TrendingUp,
+  Download,
+  FileText,
+  Shield,
+  LineChart,
+  Target,
+  Sliders,
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -22,6 +32,12 @@ export function Sidebar() {
       label: 'Tableau de bord',
       href: '/dashboard',
       description: 'Vue d\'ensemble',
+    },
+    {
+      icon: Sliders,
+      label: 'Configurer Tableau',
+      href: '/dashboard-config',
+      description: 'Personnalisation',
     },
     {
       icon: Users,
@@ -40,6 +56,60 @@ export function Sidebar() {
       label: 'Évaluations',
       href: '/evaluations',
       description: 'Scorings',
+    },
+    {
+      icon: Search,
+      label: 'Recherche Avancée',
+      href: '/search',
+      description: 'Multi-critères',
+    },
+    {
+      icon: Bell,
+      label: 'Alertes',
+      href: '/alerts',
+      description: 'Centre d\'alertes',
+    },
+    {
+      icon: GitCompare,
+      label: 'Comparaison',
+      href: '/compare',
+      description: 'Projets côte à côte',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Monitoring',
+      href: '/monitoring',
+      description: 'Performance post-clôture',
+    },
+    {
+      icon: Download,
+      label: 'Exportations',
+      href: '/exports',
+      description: 'PDF, Excel, Word',
+    },
+    {
+      icon: FileText,
+      label: 'Documents',
+      href: '/documents',
+      description: 'Gestion centralisée',
+    },
+    {
+      icon: Shield,
+      label: 'Conformité',
+      href: '/compliance',
+      description: 'GDPR & Confidentialité',
+    },
+    {
+      icon: LineChart,
+      label: 'Analytique',
+      href: '/analytics',
+      description: 'Tendances & Insights',
+    },
+    {
+      icon: Target,
+      label: 'Benchmarking',
+      href: '/benchmarking',
+      description: 'Comparaison secteur',
     },
     {
       icon: BookOpen,

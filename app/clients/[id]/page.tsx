@@ -697,20 +697,20 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
-              {MOCK_CLIENT.evaluations.map((eval) => (
-                <tr key={eval.id} className="hover:bg-slate-700 transition-colors">
-                  <td className="px-4 py-3 text-white font-semibold">{eval.projectName}</td>
-                  <td className="px-4 py-3 text-slate-400">{eval.date}</td>
-                  <td className="px-4 py-3 text-cyan-400 font-bold">{eval.rating}</td>
-                  <td className="px-4 py-3 text-white font-semibold">{eval.score}</td>
+              {MOCK_CLIENT.evaluations.map((evalItem) => (
+                <tr key={evalItem.id} className="hover:bg-slate-700 transition-colors">
+                  <td className="px-4 py-3 text-white font-semibold">{evalItem.projectName}</td>
+                  <td className="px-4 py-3 text-slate-400">{evalItem.date}</td>
+                  <td className="px-4 py-3 text-cyan-400 font-bold">{evalItem.rating}</td>
+                  <td className="px-4 py-3 text-white font-semibold">{evalItem.score}</td>
                   <td className="px-4 py-3">
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
-                      {eval.status}
+                      {evalItem.status}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/evaluations/${eval.id}`}
+                      href={`/evaluations/${evalItem.id}`}
                       className="text-cyan-400 hover:text-cyan-300 text-sm font-semibold"
                     >
                       Voir

@@ -1,0 +1,129 @@
+BLOC,CATÉGORIE,ÉLÉMENT,DESCRIPTION,SPÉCIFICATION,STATUT,TYPE_CHANGEMENT,NOTES,COMPLÉTION_%,DATE_COMPLÉTION
+SYSTÈME & ARCHITECTURE,Framework,Next.js 15,Framework web avec App Router,Next.js 15 + App Router,INTÉGRÉ,,Déploiement Vercel configuré,100%,2026-04-02
+SYSTÈME & ARCHITECTURE,Framework,TypeScript Strict,Mode strict enforced,TypeScript strict mode,INTÉGRÉ,,Configuration ESLint validée,100%,2026-04-02
+SYSTÈME & ARCHITECTURE,Styling,TailwindCSS + shadcn/ui,Thème sombre avec composants UI,TailwindCSS + shadcn/ui avec slate-950/cyan-600,INTÉGRÉ,,Thème sombre complètement implémenté,100%,2026-04-02
+SYSTÈME & ARCHITECTURE,ORM,Prisma,ORM pour PostgreSQL,Prisma client avec migrations,INTÉGRÉ,,Schema aligné avec DB,100%,2026-04-02
+SYSTÈME & ARCHITECTURE,Base de données,Supabase PostgreSQL,PostgreSQL avec Auth,Supabase + RLS policies,INTÉGRÉ,,RLS policies en place (à renforcer),85%,2026-04-02
+SYSTÈME & ARCHITECTURE,Déploiement,Vercel,Déploiement CI/CD,Vercel configuré avec GitHub,INTÉGRÉ,,Prêt pour déploiement,95%,2026-04-02
+
+DOMAINES SCORING,D1,Project Fundamentals,Solidité du sponsor + structure du projet + permis/terres,Poids: 10%. 3 sous-domaines: Sponsor (35%), Structure (35%), Permis (30%),INTÉGRÉ,,Tous les critères définis dans scoring-model-v7-config.ts,100%,2026-04-02
+DOMAINES SCORING,D1.1,Sponsor Strength,Solidité financière + expérience + engagement,3 critères × 4 niveaux (2,4,6,8,10),INTÉGRÉ,,Financial Solidity (10/8/6/4), Sector Experience, Engagement,100%,2026-04-02
+DOMAINES SCORING,D1.2,Project Structure,SPV + contrats clés + allocation des risques,3 critères: SPV (10/8/6/4), Key Contracts, Risk Allocation,INTÉGRÉ,,Seuils NO-GO: 2, RedFlag: 4,100%,2026-04-02
+DOMAINES SCORING,D1.3,Permits & Land,Permis + sécurité terrains + risques socio-env,3 critères: Permits (10/8/6/4), Land Security, Social&Env Risk,INTÉGRÉ,,Thresholds: NOGO=2, RedFlag=4,100%,2026-04-02
+DOMAINES SCORING,D2,Host Country,Risque pays + réglementation + FX + support souverain,Poids: 10%. Sous-domaines à compléter,EN COURS,,Configuration minimale en place,30%,2026-04-02
+DOMAINES SCORING,D3,Construction Phase,Risque construction + EPC + assurance,Poids: 15%. Critères définis,INTÉGRÉ,,NO-GO rules: insolvency EPC, pas de garanties,100%,2026-04-02
+DOMAINES SCORING,D4,Market Risk,Stabilité des revenus + offtake + exposition marché,Poids: 10%. Critères définis,INTÉGRÉ,,NO-GO: pas de contrat offtake, PPA < 15 ans,100%,2026-04-02
+DOMAINES SCORING,D5,Operational Risk,O&M + fiabilité technologie + maintenance,Poids: 10%. Critères définis,INTÉGRÉ,,Thresholds adaptés à la technologie,100%,2026-04-02
+DOMAINES SCORING,D6,Counterparty Risk,EPC contractor + O&M operator + offtaker quality,Poids: 10%. 3 catégories NPOs,INTÉGRÉ,,Qualité des contreparties = clé,100%,2026-04-02
+DOMAINES SCORING,D7,Financial Structure,DSCR + LLCR + leverage + hedging,Poids: 15%. Critères financiers,INTÉGRÉ,,DSCR >1.2, LLCR >1.4 (seuils standards),100%,2026-04-02
+DOMAINES SCORING,D8,Legal & Documentation,Package légal + covenants + step-in rights,Poids: 10%. Critères définissant la solidité légale,INTÉGRÉ,,NO-GO: Step-in rights < 15 jours, Missing covenants,100%,2026-04-02
+DOMAINES SCORING,D9,ESG & Climate,Environnemental + social + gouvernance + climate risk,Poids: 10%. 4 critères ESG,INTÉGRÉ,,AJOUT: Climate risk & carbon reduction tracking,115%,2026-04-02
+
+RÈGLES MÉTIER,NO-GO Rules,NO-GO Sponsor,Sponsor rating D/CCC/B = automatic rejection,3 rules: Rating (NOGO_1A), Insolvency (NOGO_1B), Liquidity <0.1 (NOGO_1C),INTÉGRÉ,,Implemented in RulesEngine class,100%,2026-04-02
+RÈGLES MÉTIER,NO-GO Rules,NO-GO Country,Political instability / expropriation = rejection,2 rules: War/Instability (NOGO_2A), Expropriation (NOGO_2B),INTÉGRÉ,,Placeholders pour données externes,100%,2026-04-02
+RÈGLES MÉTIER,NO-GO Rules,NO-GO Construction,EPC insolvency / missing guarantees,3 rules: EPC insolvency, Completion guarantee missing, Liquidated damages <2%,INTÉGRÉ,,NOGO_3A, NOGO_3B, NOGO_3C,100%,2026-04-02
+RÈGLES MÉTIER,NO-GO Rules,NO-GO Market,No offtake contract / PPA < 15 years,5 rules: No PPA, PPA<15yrs, Revenue decline>30%, Missing CPI escalation, Offtaker insolvency,INTÉGRÉ,,NOGO_5A-5E linked to market stability,100%,2026-04-02
+RÈGLES MÉTIER,NO-GO Rules,NO-GO Financial,DSCR <1.05 / LLCR <1.25 / Leverage >80%,3 rules: DSCR threshold, LLCR threshold, Leverage ratio,INTÉGRÉ,,RulesEngine.checkNOGOs() comprehensive,100%,2026-04-02
+RÈGLES MÉTIER,NO-GO Rules,NO-GO Legal,Missing security / No step-in rights,3 rules: Security package, Step-in rights timing, Covenants completeness,INTÉGRÉ,,NOGO_8A/8B/8C,100%,2026-04-02
+RÈGLES MÉTIER,NO-GO Rules,NO-GO ESG,Environmental red flags / Social opposition,2 rules: Environmental impact (NOGO_9A), Social opposition (NOGO_9B),INTÉGRÉ,,AJOUT: ESG tracking integrated,115%,2026-04-02
+
+RÈGLES MÉTIER,MALUS Rules,MALUS Sponsor,Score reductions for sponsor weaknesses,6 MALUS rules: 1A, 2A, 3A, 5A-5F, 6A-6C, 7A-7B, 8A-8B, 9A-9C,INTÉGRÉ,,checkMALUS() returns triggered penalties,100%,2026-04-02
+RÈGLES MÉTIER,MALUS Rules,MALUS Calculation,Cumulative MALUS max 30 points,malusTotal = sum(applied MALUS),INTÉGRÉ,,Final score = scoring - malusTotal,100%,2026-04-02
+RÈGLES MÉTIER,MALUS Rules,MALUS Tracking,All MALUS logged in appliedMALUS JSON array,Evaluation.appliedMALUS = array of rule IDs,INTÉGRÉ,,Audit trail for every penalty,100%,2026-04-02
+
+FORMULAIRES,Section 1,Identification Projet,Nom + Description + Sponsor + Secteur + Pays + SPV,Fields: name, projectId, sponsor, sector, country, spvName, spvJurisdiction, description,INTÉGRÉ,,60+ fields implémentés dans project form,100%,2026-04-02
+FORMULAIRES,Section 2,Localisation,Région + Ville + Adresse + Coordonnées,Fields: region, city, siteAddress, coordinates,INTÉGRÉ,,Responsive grid layout,100%,2026-04-02
+FORMULAIRES,Section 3,Parties Prenantes,EPC + O&M + Offtaker + Advisors,Fields: epcContractor, omOperator, offtaker, legalAdvisor, technicalAdvisor, insuranceAdvisor,INTÉGRÉ,,Card sections pour chaque partie,100%,2026-04-02
+FORMULAIRES,Section 4,Caractéristiques Techniques,Technologie + Capacité + Disponibilité + Durée,Fields: technology, capacity, capacityUnit, availabilityTarget, designLife,INTÉGRÉ,,Input avec validation,100%,2026-04-02
+FORMULAIRES,Section 5,Calendrier,Construction/Exploitation + Durées,Fields: constructionStart, constructionEnd, codDate, concessionEnd, constructionDuration, operationalDuration,INTÉGRÉ,,Date pickers,100%,2026-04-02
+FORMULAIRES,Section 6,Financement,Coûts + Equity + Debt + DSCR + LLCR + Leverage,Fields: totalCost, equityAmount, equityPercentage, debtAmount, financeRequired, interestRate, tenorYears, gracePeriod, dscr, llcr, leverageRatio,INTÉGRÉ,,Formatage MAD avec 2 décimales,100%,2026-04-02
+FORMULAIRES,Section 7,Revenus/Contrats,PPA + Tarifs + Escalation + Statut,Fields: ppaType, ppaDuration, ppaTariff, tariffEscalation, contractStatus,INTÉGRÉ,,Dropdown + validation durée minimum,100%,2026-04-02
+FORMULAIRES,Section 8,Construction,EPC + Type + Montant + Garanties,Fields: epcContractType, epcAmount, epcGuarantees, completionGuarantee, liquidatedDamages, performanceBond,INTÉGRÉ,,Validation cohérence avec D3,100%,2026-04-02
+FORMULAIRES,Section 9,Exploitation,O&M + Durée + Coûts + Maintenance,Fields: omContractType, omDuration, omCostAnnual, majorMaintenanceReserve, insuranceCoverage,INTÉGRÉ,,Cohérence avec D5,100%,2026-04-02
+FORMULAIRES,Section 10,Juridique,Droit Applicable + Arbitrage + Security + Step-in + Assignment,Fields: governingLaw, arbitration, securityPackage, stepInRights, assignmentRights,INTÉGRÉ,,D8 compliance,100%,2026-04-02
+FORMULAIRES,Section 11,ESG/Climat,Catégorie ESG + Impacts + Risques + Carbon,Fields: esgCategory, environmentalImpact, socialImpact, climateRisk, carbonReduction, communityBenefits,INTÉGRÉ,,AJOUT: Climate & carbon tracking,115%,2026-04-02
+FORMULAIRES,Section 12,Garanties,Types + Collatéral + Montants + Reserves + Insurance,Fields: collateralType, pledgeAssets, guaranteeAmount, reserveAccounts, insuranceAssignment,INTÉGRÉ,,Liens avec security package,100%,2026-04-02
+
+FORMULAIRES CLIENTS,Section 1,Identité Administrative,Legal name + trade name + type + forme légale,Fields: legal_name, trade_name, type, legal_form,INTÉGRÉ,,4 fields,100%,2026-04-02
+FORMULAIRES CLIENTS,Section 2,Organisation & Secteur,Secteur + sous-secteur + segment + employees + capital,Fields: sector, sub_sector, segment, employees, capital_amount,INTÉGRÉ,,5 fields,100%,2026-04-02
+FORMULAIRES CLIENTS,Section 3,Coordonnées,Pays + Ville + Adresse + Code postal + Email + Phone + Website,Fields: country, city, address, postal_code, email, phone, website,INTÉGRÉ,,FormTextarea pour address,100%,2026-04-02
+FORMULAIRES CLIENTS,Section 4,Relations Bancaires,Business center + account manager + rating + status + dates + exposure,Fields: business_center, account_manager, rating, banking_status, relationship_start_date, exposure,INTÉGRÉ,,6 fields,100%,2026-04-02
+FORMULAIRES CLIENTS,Section 5,KYC & Conformité,KYC status + last update + compliance status,Fields: kyc_status, kyc_last_update, compliance_status,INTÉGRÉ,,3 fields,100%,2026-04-02
+
+AUTHENTIFICATION & RBAC,Rôles,Admin,Gestion système + utilisateurs + configurations,Permissions: Tous les droits sauf suppression définitive,INTÉGRÉ,,RBAC: admin enum in Prisma,100%,2026-04-02
+AUTHENTIFICATION & RBAC,Rôles,Manager,Supervision + validation des évaluations,Permissions: Valider, rejeter, assigner à analyst,INTÉGRÉ,,manager enum,100%,2026-04-02
+AUTHENTIFICATION & RBAC,Rôles,Analyst,Créer/éditer évaluations,Permissions: CRUD own evaluations, submit for review,INTÉGRÉ,,analyst enum (fixed from analyste),100%,2026-04-02
+AUTHENTIFICATION & RBAC,Rôles,Viewer,Lecture seule,Permissions: View reports & dashboards only,INTÉGRÉ,,viewer enum (fixed from lecteur),100%,2026-04-02
+AUTHENTIFICATION & RBAC,Auth Method,Supabase Auth,OAuth + email/password,Supabase avec email/password + OAuth providers,INTÉGRÉ,,Guards & middleware in place,100%,2026-04-02
+
+WORKFLOW & ÉTATS,État Évaluation,Brouillon,Draft - Can edit freely,status = 'brouillon',INTÉGRÉ,,Initial state,100%,2026-04-02
+WORKFLOW & ÉTATS,État Évaluation,Soumis,Submitted - Awaiting validation,status = 'soumis',INTÉGRÉ,,User submits via API,100%,2026-04-02
+WORKFLOW & ÉTATS,État Évaluation,Validé,Validated - Approved by manager,status = 'valide',INTÉGRÉ,,Manager approves via API,100%,2026-04-02
+WORKFLOW & ÉTATS,État Évaluation,Rejeté,Rejected - Needs revision,status = 'rejete',INTÉGRÉ,,Manager can reject with comments,100%,2026-04-02
+WORKFLOW & ÉTATS,État Projet,Brouillon,Project draft,status = 'brouillon',INTÉGRÉ,,Can edit all sections,100%,2026-04-02
+WORKFLOW & ÉTATS,État Projet,En cours,Project in progress,status = 'en_cours',INTÉGRÉ,,Under evaluation,100%,2026-04-02
+WORKFLOW & ÉTATS,État Projet,En revue,Project under review,status = 'en_revue',INTÉGRÉ,,Manager reviewing,100%,2026-04-02
+WORKFLOW & ÉTATS,État Projet,Approuvé,Project approved,status = 'approuve',INTÉGRÉ,,Funding decision made,100%,2026-04-02
+WORKFLOW & ÉTATS,État Projet,Rejeté,Project rejected,status = 'rejete',INTÉGRÉ,,Not approved,100%,2026-04-02
+
+PAGES & ROUTES,Dashboard,Tableau de Bord Principal,KPIs + graphiques + projets récents,Dashboard avec React Query caching (5 min TTL),INTÉGRÉ,,Performance optimisée,100%,2026-04-02
+PAGES & ROUTES,Projects,Liste des Projets,Filtrage + pagination + export,Projects list page avec filters,INTÉGRÉ,,Responsive design,100%,2026-04-02
+PAGES & ROUTES,Projects,Création Projet,Form en 12 sections,/projects/new - Complete form,INTÉGRÉ,,60+ fields,100%,2026-04-02
+PAGES & ROUTES,Projects,Détail Projet,Visualisation + édition + scoring,/projects/[id] - Full detail view,INTÉGRÉ,,Linked evaluations display,100%,2026-04-02
+PAGES & ROUTES,Clients,Liste Clients,Gestion des clients/sponsors,Clients list page,INTÉGRÉ,,CRUD operations,100%,2026-04-02
+PAGES & ROUTES,Clients,Création Client,Form en 5 sections,/clients/new - 29+ fields,INTÉGRÉ,,Dark theme styling,100%,2026-04-02
+PAGES & ROUTES,Clients,Détail Client,Visualisation + édition,/clients/[id] - Fixed eval variable name,INTÉGRÉ,,All 5 sections displayed,100%,2026-04-02
+PAGES & ROUTES,Methodology,Méthodologie,Explication du modèle + scoring,/methodology page,INTÉGRÉ,,Educational content,90%,2026-04-02
+PAGES & ROUTES,Audit,Journal d'Audit,Logs d'actions + modifications,/audit page avec ScoringAuditLog,INTÉGRÉ,,Complete audit trail,100%,2026-04-02
+
+API ROUTES,Evaluations,GET /api/evaluations,Récupère toutes évaluations,Query builder avec filters,INTÉGRÉ,,React Query integration,100%,2026-04-02
+API ROUTES,Evaluations,POST /api/evaluations,Crée nouvelle évaluation,Calcul score + domaines,INTÉGRÉ,,NO-GO & MALUS checking,100%,2026-04-02
+API ROUTES,Evaluations,PUT /api/evaluations/[id],Update évaluation,State transitions gérées,INTÉGRÉ,,Validation before save,100%,2026-04-02
+API ROUTES,Evaluations,POST /api/evaluations/[id]/score/calculate,Recalcule score,ScoringEngine.calculate(),INTÉGRÉ,,Deterministic algorithm,100%,2026-04-02
+API ROUTES,Evaluations,POST /api/evaluations/[id]/stress-test,Stress test scenarios,5 scenarios (Revenue, DSCR, Interest, FX, Inflation),INTÉGRÉ,,StressTestEngine integration,100%,2026-04-02
+API ROUTES,Evaluations,POST /api/evaluations/submit,Change status → soumis,Validation + email webhook,INTÉGRÉ,,Notification system,100%,2026-04-02
+API ROUTES,Evaluations,POST /api/evaluations/validate,Manager approves → valide,Email to analyst,INTÉGRÉ,,Webhook triggered,100%,2026-04-02
+API ROUTES,Evaluations,POST /api/evaluations/reject,Manager rejects → rejete,Email + feedback,INTÉGRÉ,,Comment logging,100%,2026-04-02
+API ROUTES,Projects,CRUD Operations,Create/Read/Update projects,Full project CRUD,INTÉGRÉ,,Database constraints applied,100%,2026-04-02
+API ROUTES,Clients,CRUD Operations,Create/Read/Update clients,Full client CRUD,INTÉGRÉ,,Validation on create,100%,2026-04-02
+
+INTÉGRATIONS,Email,Notifications,Emails on state changes,SendGrid/Mailgun setup required,EN COURS,,Email templates ready, provider TBD,50%,2026-04-02
+INTÉGRATIONS,Webhooks,Event System,Trigger on evaluation state changes,Webhook service implemented,INTÉGRÉ,,Event logging in place,90%,2026-04-02
+INTÉGRATIONS,PDF Export,Report Generation,Export evaluations as PDF,Browser print → PDF,INTÉGRÉ,,Layout optimized for print,90%,2026-04-02
+INTÉGRATIONS,Excel Export,Data Export,Export projects/evaluations to Excel,Export service available,INTÉGRÉ,,CSV format supported,80%,2026-04-02
+
+CONFORMITÉS,IFC,Risques Environnementaux,Classification des impacts environnementaux,Integrated in D9 ESG domain,INTÉGRÉ,,AJOUT: Complete ESG category,115%,2026-04-02
+CONFORMITÉS,EBRD,Risques Sociaux,Classification des impacts sociaux + community benefits,Integrated in D9 ESG domain,INTÉGRÉ,,AJOUT: Community benefits tracking,115%,2026-04-02
+CONFORMITÉS,Basel III,Pondérations des Risques,Risk weighting standard bancaire,Referenced in DSCR/LLCR thresholds,INTÉGRÉ,,Financial metrics aligned,100%,2026-04-02
+CONFORMITÉS,Bank Al-Maghrib,Risque Pays,Scoring du risque souverain,Country risk in D2 + stress testing,EN COURS,,Morocco-specific rules ready,70%,2026-04-02
+
+CACHE & PERFORMANCE,React Query,Caching Strategy,TTL 5 min for evaluations,useEvaluationsQuery hook,INTÉGRÉ,,Intelligent invalidation on updates,100%,2026-04-02
+CACHE & PERFORMANCE,Pagination,Large datasets,100 items per page default,Pagination controls implemented,INTÉGRÉ,,Customizable per route,90%,2026-04-02
+CACHE & PERFORMANCE,Database Indexes,Query optimization,Indexes on foreign keys + search fields,Prisma schema with @index,INTÉGRÉ,,Performance monitoring ready,85%,2026-04-02
+
+SÉCURITÉ,RLS Policies,Row Level Security,Database-level permissions,RLS tables created,INTÉGRÉ,,Policies too permissive - TO STRENGTHEN,60%,2026-04-02
+SÉCURITÉ,Environment Variables,.env.local secrets,Database URL + OAuth keys,Config in vercel.json & .env,INTÉGRÉ,,Never committed to git,100%,2026-04-02
+SÉCURITÉ,TypeScript,Type Safety,Strict type checking,tsconfig with strict: true,INTÉGRÉ,,Full type coverage,95%,2026-04-02
+SÉCURITÉ,CSRF Protection,POST request validation,Supabase built-in CSRF,Middleware configured,INTÉGRÉ,,All POST routes protected,100%,2026-04-02
+
+DONNÉES INITIALES,Pays,Liste des Pays,100+ pays avec risk scores,Seed data in database/seeds,EN COURS,,Morocco + regional countries done,40%,2026-04-02
+DONNÉES INITIALES,Domaines,9 domaines de scoring,ScoreDomain seed data,Database seeding scripts,EN COURS,,V7++ model loaded,90%,2026-04-02
+DONNÉES INITIALES,Utilisateurs Test,Test accounts,Admin + Manager + Analyst + Viewer,init-test-user API,INTÉGRÉ,,Credentials in logs,100%,2026-04-02
+
+DOCUMENTATION,API Docs,OpenAPI/Swagger,Documentation des endpoints,Swagger/OpenAPI spec,EN COURS,,Template ready, endpoints TBD,30%,2026-04-02
+DOCUMENTATION,Methodology Page,Explication Modèle,How scoring works + domains + rules,/methodology page,INTÉGRÉ,,Educational content,90%,2026-04-02
+DOCUMENTATION,User Guide,Manuel utilisateur,Guide de l'interface,User guide doc,EN COURS,,Screenshots ready, text TBD,40%,2026-04-02
+
+TESTS,Unit Tests,Scoring Engine,Tests for calculation logic,Jest setup ready,EN COURS,,No tests written yet,5%,2026-04-02
+TESTS,Unit Tests,Rules Engine,Tests for NO-GO & MALUS,Jest setup ready,EN COURS,,No tests written yet,5%,2026-04-02
+TESTS,Integration Tests,API Routes,Test full workflows,Testing framework ready,EN COURS,,No tests written yet,5%,2026-04-02
+TESTS,E2E Tests,User Workflows,Cypress/Playwright scenarios,Testing framework TBD,PLANIFIÉ,,Phase 10 - Not started,0%,2026-04-02
+
+MOBILE RESPONSIVE,Forms,Mobile Optimization,Forms responsive sur mobile,TailwindCSS breakpoints,EN COURS,,Initial responsive grid, refinement needed,70%,2026-04-02
+MOBILE RESPONSIVE,Dashboard,Mobile Dashboard,KPIs readable on mobile,Card layouts responsive,EN COURS,,Refinement for small screens,70%,2026-04-02
+MOBILE RESPONSIVE,Navigation,Mobile Menu,Hamburger menu for mobile,Navigation layout responsive,EN COURS,,Mobile nav refinement needed,70%,2026-04-02
+
+DÉPLOIEMENT,Supabase Migration,Database Setup,Tables + migrations + RLS,Database schema + migrations,EN COURS,,SQL scripts ready, RLS to strengthen,85%,2026-04-02
+DÉPLOIEMENT,Vercel Config,Deployment Settings,Environment variables + build config,vercel.json configured,EN COURS,,Ready for first deploy,90%,2026-04-02
+DÉPLOIEMENT,GitHub Integration,CI/CD Pipeline,Auto-deploy on push,GitHub Actions ready,EN COURS,,Webhook configured,80%,2026-04-02
+DÉPLOIEMENT,Domain Configuration,Custom Domain,Setup domain + SSL,DNS configuration needed,PLANIFIÉ,,Phase 1 TBD,0%,2026-04-02

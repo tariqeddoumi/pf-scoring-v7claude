@@ -23,15 +23,16 @@ import {
 // ============================================================================
 
 const DOMAIN_WEIGHTS: Record<DomainCode, number> = {
-  [DomainCode.D1]: 0.20, // Project Fundamentals
-  [DomainCode.D2]: 0.10, // Host Country
-  [DomainCode.D3]: 0.15, // Construction Phase
-  [DomainCode.D4]: 0.15, // Operation Phase
-  [DomainCode.D5]: 0.15, // Revenue & Market
-  [DomainCode.D6]: 0.15, // Financial Structure
-  [DomainCode.D7]: 0.15, // Financial Structure & Cash Flow
-  [DomainCode.D8]: 0.10, // Legal & Documentation
-  [DomainCode.D9]: 0.10, // ESG & Climate
+  [DomainCode.D1]: 0.10, // Project Fundamentals (10%)
+  [DomainCode.D2]: 0.10, // Host Country (10%)
+  [DomainCode.D3]: 0.15, // Construction Phase (15%)
+  [DomainCode.D4]: 0.10, // Operation Phase (10%)
+  [DomainCode.D5]: 0.10, // Revenue & Market (10%)
+  [DomainCode.D6]: 0.10, // Financial Structure (10%)
+  [DomainCode.D7]: 0.15, // Financial Structure & Cash Flow (15%)
+  [DomainCode.D8]: 0.10, // Legal & Documentation (10%)
+  [DomainCode.D9]: 0.10, // ESG & Climate (10%)
+  // TOTAL: 100%
 };
 
 const TOTAL_WEIGHTS = Object.values(DOMAIN_WEIGHTS).reduce((a, b) => a + b, 0);
