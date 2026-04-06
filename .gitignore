@@ -46,3 +46,4 @@ prisma/migrations/dev
 .vscode/
 .idea/
 .env.notion
+*.pptx
