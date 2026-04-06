@@ -289,3 +289,6 @@ export function useEvaluationWorkflow() {
   }
   return context;
 }
+
+// Alias for backward compatibility
+export const useEvaluation = useEvaluationWorkflow;
