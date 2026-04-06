@@ -35,8 +35,7 @@ def create_notion_database():
         # Create database in user's workspace
         database = notion.databases.create(
             parent={"type": "workspace", "workspace": True},
-            title="PF Scoring PMO Tracking",
-            description="Suivi complet des spécifications et phases du projet PF Scoring V7++",
+            title=[{"type": "text", "text": {"content": "PF Scoring PMO Tracking"}}],
             icon={"type": "emoji", "emoji": "📊"},
             properties={
                 "Name": {"title": {}},
