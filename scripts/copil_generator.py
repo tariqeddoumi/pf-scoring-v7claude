@@ -25,7 +25,7 @@ Author: Claude Code
 License: Internal Use Only
 """
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __author__ = "Claude Code"
 __date__ = "2026-04-06"
 
@@ -166,35 +166,61 @@ def calculate_statistics(items: list) -> dict:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def add_title_slide(prs: Presentation, stats: dict) -> None:
-    """Create title slide."""
+    """Create professional title slide."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     bg = slide.background.fill
     bg.solid()
     bg.fore_color.rgb = PRIMARY_BLUE
 
+    # Accent bar at top
+    accent_bar = slide.shapes.add_shape(1, Inches(0), Inches(0), Inches(10), Inches(0.15))
+    accent_bar.fill.solid()
+    accent_bar.fill.fore_color.rgb = ACCENT_ORANGE
+    accent_bar.line.color.rgb = ACCENT_ORANGE
+
     # Main title
-    title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(9), Inches(1.5))
+    title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.2), Inches(9), Inches(1.5))
     p = title_box.text_frame.paragraphs[0]
     p.text = "PF SCORING"
-    p.font.size = Pt(66)
+    p.font.size = Pt(80)
     p.font.bold = True
     p.font.color.rgb = WHITE
     p.alignment = PP_ALIGN.CENTER
 
     # Subtitle
-    subtitle_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.2), Inches(9), Inches(1))
+    subtitle_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.8), Inches(9), Inches(1.2))
     p = subtitle_box.text_frame.paragraphs[0]
-    p.text = "COMITÉ DE PILOTAGE - COPIL"
-    p.font.size = Pt(32)
+    p.text = "COMITÉ DE PILOTAGE"
+    p.font.size = Pt(44)
     p.font.color.rgb = ACCENT_ORANGE
     p.alignment = PP_ALIGN.CENTER
 
-    # Status line
-    status_box = slide.shapes.add_textbox(Inches(0.5), Inches(6.5), Inches(9), Inches(0.5))
-    p = status_box.text_frame.paragraphs[0]
-    p.text = f"Statut Global: {stats['average_completion']:.0f}% Complété"
+    # Sub-subtitle
+    sub_box = slide.shapes.add_textbox(Inches(0.5), Inches(4.95), Inches(9), Inches(0.6))
+    p = sub_box.text_frame.paragraphs[0]
+    p.text = "Présentation COPIL"
     p.font.size = Pt(18)
-    p.font.color.rgb = LIGHT_GRAY
+    p.font.color.rgb = WHITE
+    p.alignment = PP_ALIGN.CENTER
+
+    # Decorative line
+    line = slide.shapes.add_shape(1, Inches(3.5), Inches(5.8), Inches(3), Inches(0.02))
+    line.fill.solid()
+    line.fill.fore_color.rgb = ACCENT_ORANGE
+    line.line.color.rgb = ACCENT_ORANGE
+
+    # Status badge
+    badge = slide.shapes.add_shape(1, Inches(3), Inches(6.2), Inches(4), Inches(0.6))
+    badge.fill.solid()
+    badge.fill.fore_color.rgb = ACCENT_ORANGE
+    badge.line.color.rgb = ACCENT_ORANGE
+
+    status_box = slide.shapes.add_textbox(Inches(3), Inches(6.25), Inches(4), Inches(0.5))
+    p = status_box.text_frame.paragraphs[0]
+    p.text = f"Avancement: {stats['average_completion']:.0f}%"
+    p.font.size = Pt(20)
+    p.font.bold = True
+    p.font.color.rgb = PRIMARY_BLUE
     p.alignment = PP_ALIGN.CENTER
 
 
@@ -205,47 +231,79 @@ def add_kpi_slide(prs: Presentation, stats: dict) -> None:
     bg.solid()
     bg.fore_color.rgb = WHITE
 
+    # Title bar
+    title_shape = slide.shapes.add_shape(1, Inches(0), Inches(0), Inches(10), Inches(0.8))
+    title_shape.fill.solid()
+    title_shape.fill.fore_color.rgb = PRIMARY_BLUE
+    title_shape.line.color.rgb = PRIMARY_BLUE
+
     # Title
-    title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(9), Inches(0.5))
+    title = slide.shapes.add_textbox(Inches(0.5), Inches(0.15), Inches(9), Inches(0.5))
     p = title.text_frame.paragraphs[0]
     p.text = "RÉSUMÉ EXÉCUTIF - KPIs"
-    p.font.size = Pt(40)
+    p.font.size = Pt(36)
     p.font.bold = True
-    p.font.color.rgb = PRIMARY_BLUE
+    p.font.color.rgb = WHITE
 
-    # KPI cards
+    # KPI cards with better spacing
     kpis = [
-        ("INTÉGRÉ", stats['integrated'], GREEN),
-        ("EN COURS", stats['in_progress'], ORANGE),
-        ("PLANIFIÉ", stats['planned'], RGBColor(33, 150, 243)),
-        ("BLOQUÉ", stats['blocked'], RED)
+        ("INTÉGRÉ", stats['integrated'], GREEN, f"{stats['integrated']} items"),
+        ("EN COURS", stats['in_progress'], ORANGE, f"{stats['in_progress']} items"),
+        ("PLANIFIÉ", stats['planned'], RGBColor(33, 150, 243), f"{stats['planned']} items"),
+        ("BLOQUÉ", stats['blocked'], RED, f"{stats['blocked']} items")
     ]
 
-    for idx, (label, count, color) in enumerate(kpis):
-        x = 0.8 + (idx * 2.1)
+    for idx, (label, count, color, desc) in enumerate(kpis):
+        x = 0.7 + (idx * 2.2)
+        y = 1.3
 
-        # Card shape
-        shape = slide.shapes.add_shape(1, Inches(x), Inches(1.3), Inches(1.8), Inches(1.5))
+        # Card shape with shadow effect
+        shape = slide.shapes.add_shape(1, Inches(x), Inches(y), Inches(2), Inches(2))
         shape.fill.solid()
         shape.fill.fore_color.rgb = color
         shape.line.color.rgb = color
+        shape.line.width = Pt(2)
 
-        # Count
-        count_box = slide.shapes.add_textbox(Inches(x), Inches(1.5), Inches(1.8), Inches(0.7))
+        # Count - Large
+        count_box = slide.shapes.add_textbox(Inches(x + 0.1), Inches(y + 0.4), Inches(1.8), Inches(0.8))
         p = count_box.text_frame.paragraphs[0]
         p.text = str(count)
-        p.font.size = Pt(48)
+        p.font.size = Pt(56)
         p.font.bold = True
         p.font.color.rgb = WHITE
         p.alignment = PP_ALIGN.CENTER
 
         # Label
-        label_box = slide.shapes.add_textbox(Inches(x), Inches(2.2), Inches(1.8), Inches(0.4))
+        label_box = slide.shapes.add_textbox(Inches(x + 0.1), Inches(y + 1.3), Inches(1.8), Inches(0.35))
         p = label_box.text_frame.paragraphs[0]
         p.text = label
-        p.font.size = Pt(14)
+        p.font.size = Pt(13)
+        p.font.bold = True
         p.font.color.rgb = WHITE
         p.alignment = PP_ALIGN.CENTER
+
+        # Description
+        desc_box = slide.shapes.add_textbox(Inches(x + 0.1), Inches(y + 1.7), Inches(1.8), Inches(0.2))
+        p = desc_box.text_frame.paragraphs[0]
+        p.text = desc
+        p.font.size = Pt(10)
+        p.font.color.rgb = WHITE
+        p.alignment = PP_ALIGN.CENTER
+
+    # Summary bar
+    summary_shape = slide.shapes.add_shape(1, Inches(0.5), Inches(5.5), Inches(9), Inches(1.5))
+    summary_shape.fill.solid()
+    summary_shape.fill.fore_color.rgb = LIGHT_GRAY
+    summary_shape.line.color.rgb = LIGHT_GRAY
+
+    summary_box = slide.shapes.add_textbox(Inches(0.7), Inches(5.65), Inches(8.6), Inches(1.2))
+    p = summary_box.text_frame.paragraphs[0]
+    p.text = f"Total des éléments: {stats['total']} | Complétude moyenne: {stats['average_completion']:.1f}% | Intégrés: {stats['integrated']}"
+    p.font.size = Pt(14)
+    p.font.bold = True
+    p.font.color.rgb = PRIMARY_BLUE
+    p.alignment = PP_ALIGN.CENTER
+    summary_box.text_frame.word_wrap = True
 
 
 def add_completion_chart_slide(prs: Presentation, stats: dict) -> None:
@@ -293,30 +351,73 @@ def add_completion_chart_slide(prs: Presentation, stats: dict) -> None:
 
 
 def add_gauge_slide(prs: Presentation, stats: dict) -> None:
-    """Create global completion gauge."""
+    """Create global completion gauge with progress bar."""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     bg = slide.background.fill
     bg.solid()
     bg.fore_color.rgb = WHITE
 
+    # Title bar
+    title_shape = slide.shapes.add_shape(1, Inches(0), Inches(0), Inches(10), Inches(0.8))
+    title_shape.fill.solid()
+    title_shape.fill.fore_color.rgb = PRIMARY_BLUE
+    title_shape.line.color.rgb = PRIMARY_BLUE
+
     # Title
-    title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(9), Inches(0.5))
+    title = slide.shapes.add_textbox(Inches(0.5), Inches(0.15), Inches(9), Inches(0.5))
     p = title.text_frame.paragraphs[0]
     p.text = "COMPLÉTUDE GLOBALE"
-    p.font.size = Pt(40)
+    p.font.size = Pt(36)
     p.font.bold = True
-    p.font.color.rgb = PRIMARY_BLUE
+    p.font.color.rgb = WHITE
 
     completion = stats['average_completion']
 
-    # Percentage display
-    pct_box = slide.shapes.add_textbox(Inches(3), Inches(2), Inches(4), Inches(2))
+    # Main percentage display
+    pct_box = slide.shapes.add_textbox(Inches(2), Inches(1.8), Inches(6), Inches(1.5))
     p = pct_box.text_frame.paragraphs[0]
     p.text = f"{completion:.0f}%"
-    p.font.size = Pt(120)
+    p.font.size = Pt(140)
     p.font.bold = True
     p.font.color.rgb = GREEN if completion >= 80 else ORANGE if completion >= 50 else RED
     p.alignment = PP_ALIGN.CENTER
+
+    # Status text
+    status_text = "✅ EXCELLENT" if completion >= 80 else "⚠️  ACCEPTABLE" if completion >= 50 else "❌ À AMÉLIORER"
+    status_box = slide.shapes.add_textbox(Inches(2), Inches(3.4), Inches(6), Inches(0.4))
+    p = status_box.text_frame.paragraphs[0]
+    p.text = status_text
+    p.font.size = Pt(24)
+    p.font.bold = True
+    p.font.color.rgb = GREEN if completion >= 80 else ORANGE if completion >= 50 else RED
+    p.alignment = PP_ALIGN.CENTER
+
+    # Progress bar background
+    bar_bg = slide.shapes.add_shape(1, Inches(1.5), Inches(4.2), Inches(7), Inches(0.5))
+    bar_bg.fill.solid()
+    bar_bg.fill.fore_color.rgb = LIGHT_GRAY
+    bar_bg.line.color.rgb = RGBColor(180, 180, 180)
+
+    # Progress bar fill
+    bar_fill = slide.shapes.add_shape(1, Inches(1.5), Inches(4.2), Inches(7 * (completion / 100)), Inches(0.5))
+    bar_fill.fill.solid()
+    bar_fill.fill.fore_color.rgb = GREEN if completion >= 80 else ORANGE if completion >= 50 else RED
+    bar_fill.line.color.rgb = GREEN if completion >= 80 else ORANGE if completion >= 50 else RED
+
+    # Stats below
+    stats_box = slide.shapes.add_textbox(Inches(0.5), Inches(5.2), Inches(9), Inches(1.8))
+    stats_box.text_frame.word_wrap = True
+    p = stats_box.text_frame.paragraphs[0]
+    p.text = f"Éléments INTÉGRÉS: {stats['integrated']} | EN COURS: {stats['in_progress']} | PLANIFIÉS: {stats['planned']} | BLOQUÉS: {stats['blocked']}"
+    p.font.size = Pt(13)
+    p.font.color.rgb = DARK_TEXT
+    p.alignment = PP_ALIGN.CENTER
+
+    p2 = stats_box.text_frame.add_paragraph()
+    p2.text = f"Total: {stats['total']} éléments"
+    p2.font.size = Pt(12)
+    p2.font.color.rgb = RGBColor(100, 100, 100)
+    p2.alignment = PP_ALIGN.CENTER
 
 
 def add_risks_slide(prs: Presentation, stats: dict) -> None:
