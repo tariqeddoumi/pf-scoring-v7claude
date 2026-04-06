@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "manager" | "analyste" | "lecteur";
+  requiredRole?: "admin" | "manager" | "analyst" | "viewer";
 }
 
 export function ProtectedRoute({
   children,
-  requiredRole = "analyste",
+  requiredRole = "analyst",
 }: ProtectedRouteProps) {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -31,8 +31,8 @@ export function ProtectedRoute({
         const roleHierarchy: Record<string, number> = {
           admin: 4,
           manager: 3,
-          analyste: 2,
-          lecteur: 1,
+          analyst: 2,
+          viewer: 1,
         };
 
         if (

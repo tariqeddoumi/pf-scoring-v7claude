@@ -227,7 +227,7 @@ model Evaluation {
   appliedMALUS      Json                // Array of MALUS penalties
   malusTotal        Float
   notes             String?
-  status            EvaluationStatus    @default(draft)
+  status            EvaluationStatus    @default(brouillon)
   version           String              @default("7.0")
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt

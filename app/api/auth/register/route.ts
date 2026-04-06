@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         nom,
         prenom,
         password: hashedPassword,
-        role: role || "analyste",
+        role: role || "analyst",
       },
     });
 

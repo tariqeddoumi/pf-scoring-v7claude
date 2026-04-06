@@ -56,7 +56,7 @@ async function testUserCount(): Promise<DiagnosticTest> {
   try {
     const count = await prisma.user.count();
     const admins = await prisma.user.count({ where: { role: "admin" } });
-    const analysts = await prisma.user.count({ where: { role: "analyste" } });
+    const analysts = await prisma.user.count({ where: { role: "analyst" } });
 
     return {
       name: "Statistiques Utilisateurs",
