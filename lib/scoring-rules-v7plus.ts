@@ -69,7 +69,7 @@ export class RulesEngine {
    */
   public checkMALUS(
     projectData: ProjectData,
-    domainScores: Map<DomainCode, DomainScore>
+    domainScores?: Map<DomainCode, DomainScore>
   ): MALUSRule[] {
     const triggered: MALUSRule[] = [];
 
@@ -102,7 +102,7 @@ export class RulesEngine {
 
   // CATEGORY A: SPONSOR RISK
   private checkNOGO_1A(p: ProjectData): boolean {
-    const rating = p.sponsor.rating;
+    const rating = p.sponsor!.rating;
     return (
       rating === RatingScale.CCC ||
       rating === RatingScale.D ||
@@ -139,7 +139,7 @@ export class RulesEngine {
   }
 
   private checkNOGO_1C(p: ProjectData): boolean {
-    const liquidity = p.sponsor.liquidityRatio ?? 1;
+    const liquidity = p.sponsor!.liquidityRatio ?? 1;
     return liquidity < 0.1;
   }
   private createNOGO_1C(): NOGORule {
@@ -324,7 +324,7 @@ export class RulesEngine {
 
   // CATEGORY E: FINANCIAL RISK
   private checkNOGO_6A(p: ProjectData): boolean {
-    const dscr = p.financial.dscr ?? 1.2;
+    const dscr = p.financial!.dscr ?? 1.2;
     return dscr < 1.1;
   }
   private createNOGO_6A(): NOGORule {
@@ -356,7 +356,7 @@ export class RulesEngine {
   }
 
   private checkNOGO_6C(p: ProjectData): boolean {
-    const equity = p.sponsor.equityPercent ?? 0.3;
+    const equity = p.sponsor!.equityPercent ?? 0.3;
     const debt = 1 - equity;
     return debt > 0.85;
   }
@@ -477,7 +477,7 @@ export class RulesEngine {
   // ========================================================================
 
   private checkMALUS_1A(p: ProjectData): boolean {
-    const equity = p.sponsor.equityPercent ?? 0.3;
+    const equity = p.sponsor!.equityPercent ?? 0.3;
     return equity < 0.2;
   }
   private createMALUS_1A(): MALUSRule {
@@ -525,7 +525,7 @@ export class RulesEngine {
   }
 
   private checkMALUS_5A(p: ProjectData): boolean {
-    const dscr = p.financial.dscr ?? 1.3;
+    const dscr = p.financial!.dscr ?? 1.3;
     const hasIndexation = p.ppaData?.indexation?.type !== "FIXED";
     return dscr < 1.25 && !hasIndexation;
   }
@@ -686,7 +686,7 @@ export class RulesEngine {
   }
 
   private checkMALUS_7B(p: ProjectData): boolean {
-    const dscr = p.financial.dscr ?? 1.3;
+    const dscr = p.financial!.dscr ?? 1.3;
     return dscr >= 1.1 && dscr < 1.2;
   }
   private createMALUS_7B(): MALUSRule {

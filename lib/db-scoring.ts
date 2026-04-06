@@ -108,7 +108,7 @@ export async function updateEvaluationStatus(
     return (await prisma.evaluation.update({
       where: { id: evaluationId },
       data: {
-        status,
+        status: status as any,
         notes,
         updatedAt: new Date(),
       },

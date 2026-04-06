@@ -264,17 +264,19 @@ export default function AnalyticsPage() {
     { rating: 'D', count: 0, percentage: 0 },
   ];
 
-  const heatMapData = evaluations.map(e => ({
-    name: e.evaluationId,
+  const evaluationsList = evaluations ? Object.values(evaluations) : [];
+
+  const heatMapData = evaluationsList.map((e: any) => ({
+    name: e.id || e.evaluationId,
     scores: [7.2, 6.8, 7.5, 6.5, 7.1, 7.3, 6.9, 7.0, 6.2], // Mock domain scores
   }));
 
-  const avgScore = evaluations.length > 0
-    ? (evaluations.reduce((sum, e) => sum + (e.score || 0), 0) / evaluations.length).toFixed(2)
+  const avgScore = evaluationsList.length > 0
+    ? (evaluationsList.reduce((sum: number, e: any) => sum + (e.score || 0), 0) / evaluationsList.length).toFixed(2)
     : '0.00';
 
-  const totalEvals = evaluations.length;
-  const validatedEvals = evaluations.filter(e => e.status === 'valide').length;
+  const totalEvals = evaluationsList.length;
+  const validatedEvals = evaluationsList.filter((e: any) => e.status === 'valide').length;
   const avgImprovement = '+0.4 pts';
 
   return (

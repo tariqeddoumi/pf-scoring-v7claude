@@ -136,7 +136,7 @@ function QuickAccessCard({
   title: string;
   description: string;
   href: string;
-  icon: React.ComponentType<{ size: number }>;
+  icon: React.ComponentType<{ size: number; className?: string }>;
 }) {
   return (
     <Link

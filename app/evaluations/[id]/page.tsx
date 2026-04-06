@@ -168,8 +168,8 @@ function WorkflowSection({ evaluationId }: { evaluationId: string }) {
   const [workflow, setWorkflow] = useState<any>(null);
 
   useEffect(() => {
-    const eval = getEvaluation(evaluationId);
-    setWorkflow(eval);
+    const evaluation = getEvaluation(evaluationId);
+    setWorkflow(evaluation);
   }, [evaluationId, getEvaluation]);
 
   if (!workflow) {
@@ -246,13 +246,15 @@ function WorkflowSection({ evaluationId }: { evaluationId: string }) {
       {/* History */}
       <div className="space-y-3">
         <h3 className="font-semibold text-white mb-4">Historique des Transitions</h3>
-        {workflow.history.map((event: any, idx: number) => (
+        {workflow.history.map((event: any, idx: number) => {
+          const status = (event.status as EvaluationStatus) || 'brouillon';
+          return (
           <div key={idx} className="bg-slate-700 rounded-lg p-4">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${statusColors[event.status]}`}>
-                    {statusLabels[event.status]}
+                  <span className={`px-2 py-1 rounded text-xs font-semibold ${statusColors[status]}`}>
+                    {statusLabels[status]}
                   </span>
                   <span className="text-slate-400 text-sm">
                     {new Date(event.timestamp).toLocaleString('fr-FR')}
@@ -266,7 +268,9 @@ function WorkflowSection({ evaluationId }: { evaluationId: string }) {
               </div>
             </div>
           </div>
-        ))}
+        );
+        }
+        )}
       </div>
     </div>
   );
@@ -283,8 +287,8 @@ function ActionButtons({ evaluationId }: { evaluationId: string }) {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const eval = getEvaluation(evaluationId);
-    setWorkflow(eval);
+    const evaluation = getEvaluation(evaluationId);
+    setWorkflow(evaluation);
   }, [evaluationId, getEvaluation]);
 
   if (!workflow) return null;

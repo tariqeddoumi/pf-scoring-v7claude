@@ -74,9 +74,9 @@ export class DataValidator {
 
   private checkD1Completeness(p: ProjectData): DataCompletenesStatus {
     if (
-      !p.sponsor.name ||
-      !p.sponsor.rating ||
-      p.sponsor.equityPercent === undefined
+      !p.sponsor?.name ||
+      !p.sponsor?.rating ||
+      p.sponsor?.equityPercent === undefined
     ) {
       return DataCompletenesStatus.PARTIAL;
     }
@@ -84,7 +84,7 @@ export class DataValidator {
   }
 
   private checkD2Completeness(p: ProjectData): DataCompletenesStatus {
-    if (!p.hostCountry.countryCode) {
+    if (!p.hostCountry?.countryCode) {
       return DataCompletenesStatus.PARTIAL;
     }
     return DataCompletenesStatus.COMPLETE;
@@ -104,9 +104,9 @@ export class DataValidator {
 
   private checkD7Completeness(p: ProjectData): DataCompletenesStatus {
     if (
-      p.financial.dscr === undefined ||
-      p.financial.debtAmount === undefined ||
-      p.financial.equityAmount === undefined
+      p.financial?.dscr === undefined ||
+      p.financial?.debtAmount === undefined ||
+      p.financial?.equityAmount === undefined
     ) {
       return DataCompletenesStatus.MISSING;
     }
@@ -130,11 +130,11 @@ export class DataValidator {
     }
 
     // Rating validation
-    if (projectData.sponsor.rating) {
-      if (!Object.values(RatingScale).includes(projectData.sponsor.rating)) {
+    if (projectData.sponsor!.rating) {
+      if (!Object.values(RatingScale).includes(projectData.sponsor!.rating)) {
         errors.push({
           field: "sponsor.rating",
-          value: projectData.sponsor.rating,
+          value: projectData.sponsor!.rating,
           message: "Invalid rating scale",
           severity: "ERROR",
         });
@@ -143,13 +143,13 @@ export class DataValidator {
 
     // Equity percentage validation
     if (
-      projectData.sponsor.equityPercent !== undefined &&
-      (projectData.sponsor.equityPercent < 0 ||
-        projectData.sponsor.equityPercent > 1)
+      projectData.sponsor!.equityPercent !== undefined &&
+      (projectData.sponsor!.equityPercent < 0 ||
+        projectData.sponsor!.equityPercent > 1)
     ) {
       errors.push({
         field: "sponsor.equityPercent",
-        value: projectData.sponsor.equityPercent,
+        value: projectData.sponsor!.equityPercent,
         message: "Equity percentage must be between 0 and 1",
         severity: "ERROR",
       });
@@ -157,19 +157,19 @@ export class DataValidator {
 
     // DSCR validation (must be > 0.8 at minimum)
     if (
-      projectData.financial.dscr !== undefined &&
-      projectData.financial.dscr < 0.5
+      projectData.financial!.dscr !== undefined &&
+      projectData.financial!.dscr < 0.5
     ) {
       errors.push({
         field: "financial.dscr",
-        value: projectData.financial.dscr,
+        value: projectData.financial!.dscr,
         message: "DSCR below survival threshold (0.5x)",
         severity: "ERROR",
       });
     }
 
     // Negative amount validation
-    if (projectData.financial.debtAmount < 0) {
+    if (projectData.financial && projectData.financial.debtAmount && projectData.financial.debtAmount < 0) {
       errors.push({
         field: "financial.debtAmount",
         value: projectData.financial.debtAmount,
@@ -187,10 +187,14 @@ export class DataValidator {
   public validateBusinessLogic(projectData: ProjectData): ValidationError[] {
     const errors: ValidationError[] = [];
 
+    if (!projectData.financial) {
+      return errors;
+    }
+
     // Debt + Equity should sum to total funding
     const totalFunding =
-      projectData.financial.debtAmount +
-      projectData.financial.equityAmount;
+      (projectData.financial.debtAmount ?? 0) +
+      (projectData.financial.equityAmount ?? 0);
     if (totalFunding <= 0) {
       errors.push({
         field: "financial",
@@ -202,7 +206,7 @@ export class DataValidator {
 
     // Equity should be 15-50% of funding
     const equityPercent =
-      projectData.financial.equityAmount / totalFunding;
+      (projectData.financial.equityAmount ?? 0) / totalFunding;
     if (equityPercent < 0.15 || equityPercent > 0.5) {
       errors.push({
         field: "financial.equityAmount",
@@ -263,15 +267,14 @@ export class ComplexIndicatorsCalculator {
     // Target: >0.2 = 10, <0.1 = 1
     const liquidityNormalized = Math.min(
       10,
-      (projectData.sponsor.liquidityRatio ?? 0.15) * 50
+      (projectData.sponsor!.liquidityRatio ?? 0.15) * 50
     );
 
     // Component 3: Leverage Inverse (normalized to 0-10)
     // Target: <30% debt = 10, >80% debt = 1
-    const debtRatio =
-      projectData.financial.debtAmount /
-      (projectData.financial.debtAmount +
-        projectData.financial.equityAmount);
+    const debtAmount = projectData.financial?.debtAmount ?? 0;
+    const equityAmount = projectData.financial?.equityAmount ?? 0;
+    const debtRatio = (debtAmount + equityAmount > 0) ? debtAmount / (debtAmount + equityAmount) : 0;
     const leverageInverse = Math.max(2, 12 - debtRatio * 14);
 
     // Component 4: Sector Stability (placeholder, 0-10)
