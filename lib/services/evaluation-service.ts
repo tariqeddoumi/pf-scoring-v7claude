@@ -5,10 +5,7 @@ import {
   validateEvaluationSchema,
   rejectEvaluationSchema
 } from '@/lib/validation-schemas';
-import { AuditLogger } from '@/lib/audit-logger';
 import type { z } from 'zod';
-
-const auditLogger = new AuditLogger();
 
 export class EvaluationService {
   /**
@@ -21,7 +18,7 @@ export class EvaluationService {
     const validated = createEvaluationSchema.parse(data);
 
     // Ensure project exists
-    const project = await prisma.BP_PF_projects.findUnique({
+    const project = await prisma.project.findUnique({
       where: { id: validated.projectId }
     });
 
@@ -29,7 +26,7 @@ export class EvaluationService {
       throw new Error('Project not found');
     }
 
-    const evaluation = await prisma.BP_PF_evaluations.create({
+    const evaluation = await prisma.evaluation.create({
       data: {
         projectId: validated.projectId,
         analystId: createdBy,
@@ -40,8 +37,6 @@ export class EvaluationService {
       }
     });
 
-    await auditLogger.logCreate('BP_PF_evaluations', evaluation.id, { userId: createdBy }, evaluation);
-
     return evaluation;
   }
 
@@ -49,7 +44,7 @@ export class EvaluationService {
    * Get evaluation by ID
    */
   static async getEvaluationById(id: string, userId?: string) {
-    const evaluation = await prisma.BP_PF_evaluations.findUnique({
+    const evaluation = await prisma.evaluation.findUnique({
       where: { id },
       include: {
         project: {
@@ -60,10 +55,6 @@ export class EvaluationService {
         }
       }
     });
-
-    if (evaluation && userId) {
-      await auditLogger.logRead('BP_PF_evaluations', id, { userId });
-    }
 
     return evaluation;
   }
@@ -81,7 +72,7 @@ export class EvaluationService {
     if (filters?.rating) where.rating = filters.rating;
 
     const [evaluations, total] = await Promise.all([
-      prisma.BP_PF_evaluations.findMany({
+      prisma.evaluation.findMany({
         where,
         skip,
         take: limit,
@@ -91,7 +82,7 @@ export class EvaluationService {
           analyst: { select: { nom: true, prenom: true } }
         }
       }),
-      prisma.BP_PF_evaluations.count({ where })
+      prisma.evaluation.count({ where })
     ]);
 
     return {
@@ -115,7 +106,7 @@ export class EvaluationService {
   ) {
     const validated = submitEvaluationSchema.parse(data);
 
-    const oldEval = await prisma.BP_PF_evaluations.findUnique({ where: { id } });
+    const oldEval = await prisma.evaluation.findUnique({ where: { id } });
 
     if (!oldEval) {
       throw new Error('Evaluation not found');
@@ -125,7 +116,7 @@ export class EvaluationService {
       throw new Error('Can only submit draft evaluations');
     }
 
-    const evaluation = await prisma.BP_PF_evaluations.update({
+    const evaluation = await prisma.evaluation.update({
       where: { id },
       data: {
         status: 'soumis',
@@ -140,7 +131,6 @@ export class EvaluationService {
       }
     });
 
-    await auditLogger.logSubmit('BP_PF_evaluations', id, { userId: submittedBy }, evaluation);
 
     return evaluation;
   }
@@ -155,7 +145,7 @@ export class EvaluationService {
   ) {
     const validated = validateEvaluationSchema.parse(data);
 
-    const oldEval = await prisma.BP_PF_evaluations.findUnique({ where: { id } });
+    const oldEval = await prisma.evaluation.findUnique({ where: { id } });
 
     if (!oldEval) {
       throw new Error('Evaluation not found');
@@ -165,7 +155,7 @@ export class EvaluationService {
       throw new Error('Can only validate submitted evaluations');
     }
 
-    const evaluation = await prisma.BP_PF_evaluations.update({
+    const evaluation = await prisma.evaluation.update({
       where: { id },
       data: {
         status: 'valide',
@@ -176,7 +166,7 @@ export class EvaluationService {
     });
 
     // Update project status and score
-    await prisma.BP_PF_projects.update({
+    await prisma.project.update({
       where: { id: evaluation.projectId },
       data: {
         status: 'approuve',
@@ -185,7 +175,6 @@ export class EvaluationService {
       }
     });
 
-    await auditLogger.logValidate('BP_PF_evaluations', id, { userId: validatedBy }, evaluation);
 
     return evaluation;
   }
@@ -200,7 +189,7 @@ export class EvaluationService {
   ) {
     const validated = rejectEvaluationSchema.parse(data);
 
-    const oldEval = await prisma.BP_PF_evaluations.findUnique({ where: { id } });
+    const oldEval = await prisma.evaluation.findUnique({ where: { id } });
 
     if (!oldEval) {
       throw new Error('Evaluation not found');
@@ -210,7 +199,7 @@ export class EvaluationService {
       throw new Error('Can only reject submitted or validated evaluations');
     }
 
-    const evaluation = await prisma.BP_PF_evaluations.update({
+    const evaluation = await prisma.evaluation.update({
       where: { id },
       data: {
         status: 'rejete',
@@ -220,12 +209,11 @@ export class EvaluationService {
     });
 
     // Update project status
-    await prisma.BP_PF_projects.update({
+    await prisma.project.update({
       where: { id: evaluation.projectId },
       data: { status: 'rejete' }
     });
 
-    await auditLogger.logReject('BP_PF_evaluations', id, { userId: rejectedBy }, evaluation);
 
     return evaluation;
   }
@@ -234,7 +222,7 @@ export class EvaluationService {
    * Get evaluations by project
    */
   static async getEvaluationsByProject(projectId: string) {
-    return prisma.BP_PF_evaluations.findMany({
+    return prisma.evaluation.findMany({
       where: { projectId },
       orderBy: { createdAt: 'desc' }
     });
@@ -247,13 +235,13 @@ export class EvaluationService {
     const skip = (page - 1) * limit;
 
     const [evaluations, total] = await Promise.all([
-      prisma.BP_PF_evaluations.findMany({
+      prisma.evaluation.findMany({
         where: { analystId },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' }
       }),
-      prisma.BP_PF_evaluations.count({ where: { analystId } })
+      prisma.evaluation.count({ where: { analystId } })
     ]);
 
     return {
@@ -271,7 +259,7 @@ export class EvaluationService {
    * Create stress test result
    */
   static async createStressTest(evaluationId: string, scenarioData: any, createdBy: string) {
-    const evaluation = await prisma.BP_PF_evaluations.findUnique({
+    const evaluation = await prisma.evaluation.findUnique({
       where: { id: evaluationId }
     });
 
@@ -279,7 +267,7 @@ export class EvaluationService {
       throw new Error('Evaluation not found');
     }
 
-    const stressTest = await prisma.BP_PF_stress_test_results.create({
+    const stressTest = await prisma.stressTestScenarioResult.create({
       data: {
         evaluationId,
         scenarioId: scenarioData.scenarioId,
@@ -293,13 +281,6 @@ export class EvaluationService {
       }
     });
 
-    await auditLogger.logCreate(
-      'BP_PF_stress_test_results',
-      stressTest.id,
-      { userId: createdBy },
-      stressTest
-    );
-
     return stressTest;
   }
 
@@ -307,7 +288,7 @@ export class EvaluationService {
    * Get stress test results
    */
   static async getStressTests(evaluationId: string) {
-    return prisma.BP_PF_stress_test_results.findMany({
+    return prisma.stressTestScenarioResult.findMany({
       where: { evaluationId },
       orderBy: { createdAt: 'desc' }
     });

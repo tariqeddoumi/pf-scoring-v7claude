@@ -1,9 +1,6 @@
 import prisma from '@/lib/prisma';
 import { createUserSchema, updateUserSchema, changeUserRoleSchema } from '@/lib/validation-schemas';
-import { AuditLogger } from '@/lib/audit-logger';
 import type { z } from 'zod';
-
-const auditLogger = new AuditLogger();
 
 export class UserService {
   /**
@@ -12,14 +9,21 @@ export class UserService {
   static async createUser(data: z.infer<typeof createUserSchema>, createdBy: string) {
     const validated = createUserSchema.parse(data);
 
-    const user = await prisma.BP_PF_users.create({
+    const user = await prisma.user.create({
       data: {
         ...validated,
         role: validated.role || 'analyst'
       }
     });
 
-    await auditLogger.logCreate('BP_PF_users', user.id, { userId: createdBy }, user);
+    // Log in BP_PF_audit_logs
+    await prisma.auditLog.create({
+      data: {
+        utilisateurId: createdBy,
+        action: 'CREATE_USER',
+        details: JSON.stringify({ userId: user.id, email: user.email })
+      }
+    });
 
     return user;
   }
@@ -28,22 +32,16 @@ export class UserService {
    * Get user by ID
    */
   static async getUserById(id: string) {
-    const user = await prisma.BP_PF_users.findUnique({
+    return prisma.user.findUnique({
       where: { id }
     });
-
-    if (user) {
-      await auditLogger.logRead('BP_PF_users', id, { userId: id });
-    }
-
-    return user;
   }
 
   /**
    * Get user by email
    */
   static async getUserByEmail(email: string) {
-    return prisma.BP_PF_users.findUnique({
+    return prisma.user.findUnique({
       where: { email }
     });
   }
@@ -55,7 +53,7 @@ export class UserService {
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
-      prisma.BP_PF_users.findMany({
+      prisma.user.findMany({
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -69,7 +67,7 @@ export class UserService {
           createdAt: true
         }
       }),
-      prisma.BP_PF_users.count()
+      prisma.user.count()
     ]);
 
     return {
@@ -89,20 +87,18 @@ export class UserService {
   static async updateUser(id: string, data: z.infer<typeof updateUserSchema>, updatedBy: string) {
     const validated = updateUserSchema.parse(data);
 
-    const oldUser = await prisma.BP_PF_users.findUnique({ where: { id } });
-
-    const user = await prisma.BP_PF_users.update({
+    const user = await prisma.user.update({
       where: { id },
       data: validated
     });
 
-    await auditLogger.logUpdate(
-      'BP_PF_users',
-      id,
-      { userId: updatedBy },
-      oldUser || {},
-      user
-    );
+    await prisma.auditLog.create({
+      data: {
+        utilisateurId: updatedBy,
+        action: 'UPDATE_USER',
+        details: JSON.stringify({ userId: id })
+      }
+    });
 
     return user;
   }
@@ -117,20 +113,18 @@ export class UserService {
   ) {
     const validated = changeUserRoleSchema.parse(data);
 
-    const oldUser = await prisma.BP_PF_users.findUnique({ where: { id } });
-
-    const user = await prisma.BP_PF_users.update({
+    const user = await prisma.user.update({
       where: { id },
       data: { role: validated.role }
     });
 
-    await auditLogger.logUpdate(
-      'BP_PF_users',
-      id,
-      { userId: changedBy },
-      { role: oldUser?.role },
-      { role: user.role }
-    );
+    await prisma.auditLog.create({
+      data: {
+        utilisateurId: changedBy,
+        action: 'CHANGE_USER_ROLE',
+        details: JSON.stringify({ userId: id, newRole: validated.role })
+      }
+    });
 
     return user;
   }
@@ -139,15 +133,21 @@ export class UserService {
    * Delete user
    */
   static async deleteUser(id: string, deletedBy: string) {
-    const user = await prisma.BP_PF_users.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({ where: { id } });
 
     if (!user) {
       throw new Error('User not found');
     }
 
-    await prisma.BP_PF_users.delete({ where: { id } });
+    await prisma.user.delete({ where: { id } });
 
-    await auditLogger.logDelete('BP_PF_users', id, { userId: deletedBy }, user);
+    await prisma.auditLog.create({
+      data: {
+        utilisateurId: deletedBy,
+        action: 'DELETE_USER',
+        details: JSON.stringify({ userId: id, email: user.email })
+      }
+    });
 
     return user;
   }
@@ -156,7 +156,7 @@ export class UserService {
    * Get users by role
    */
   static async getUsersByRole(role: string) {
-    return prisma.BP_PF_users.findMany({
+    return prisma.user.findMany({
       where: { role: role as any },
       select: {
         id: true,

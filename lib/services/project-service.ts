@@ -1,9 +1,6 @@
 import prisma from '@/lib/prisma';
 import { createProjectSchema, updateProjectSchema } from '@/lib/validation-schemas';
-import { AuditLogger } from '@/lib/audit-logger';
 import type { z } from 'zod';
-
-const auditLogger = new AuditLogger();
 
 export class ProjectService {
   /**
@@ -12,7 +9,7 @@ export class ProjectService {
   static async createProject(data: z.infer<typeof createProjectSchema>, createdBy: string) {
     const validated = createProjectSchema.parse(data);
 
-    const project = await prisma.BP_PF_projects.create({
+    const project = await prisma.project.create({
       data: {
         ...validated,
         creePar: createdBy,
@@ -20,7 +17,14 @@ export class ProjectService {
       }
     });
 
-    await auditLogger.logCreate('BP_PF_projects', project.id, { userId: createdBy }, project);
+    await prisma.auditLog.create({
+      data: {
+        projectId: project.id,
+        utilisateurId: createdBy,
+        action: 'CREATE_PROJECT',
+        details: JSON.stringify({ projectName: project.nom })
+      }
+    });
 
     return project;
   }
@@ -29,18 +33,16 @@ export class ProjectService {
    * Get project by ID
    */
   static async getProjectById(id: string, userId?: string) {
-    const project = await prisma.BP_PF_projects.findUnique({
+    const project = await prisma.project.findUnique({
       where: { id },
       include: {
-        creePar_user: {
+        user: {
           select: { id: true, email: true, nom: true, prenom: true }
         }
       }
     });
 
-    if (project && userId) {
-      await auditLogger.logRead('BP_PF_projects', id, { userId });
-    }
+    // No need to log reads for performance
 
     return project;
   }
@@ -57,7 +59,7 @@ export class ProjectService {
     if (filters?.creePar) where.creePar = filters.creePar;
 
     const [projects, total] = await Promise.all([
-      prisma.BP_PF_projects.findMany({
+      prisma.project.findMany({
         where,
         skip,
         take: limit,
@@ -73,12 +75,12 @@ export class ProjectService {
           scoreGlobal: true,
           grade: true,
           dateCreation: true,
-          creePar_user: {
+          user: {
             select: { nom: true, prenom: true, email: true }
           }
         }
       }),
-      prisma.BP_PF_projects.count({ where })
+      prisma.project.count({ where })
     ]);
 
     return {
@@ -98,9 +100,7 @@ export class ProjectService {
   static async updateProject(id: string, data: z.infer<typeof updateProjectSchema>, updatedBy: string) {
     const validated = updateProjectSchema.parse(data);
 
-    const oldProject = await prisma.BP_PF_projects.findUnique({ where: { id } });
-
-    const project = await prisma.BP_PF_projects.update({
+    const project = await prisma.project.update({
       where: { id },
       data: {
         ...validated,
@@ -108,13 +108,14 @@ export class ProjectService {
       }
     });
 
-    await auditLogger.logUpdate(
-      'BP_PF_projects',
-      id,
-      { userId: updatedBy },
-      oldProject || {},
-      project
-    );
+    await prisma.auditLog.create({
+      data: {
+        projectId: id,
+        utilisateurId: updatedBy,
+        action: 'UPDATE_PROJECT',
+        details: JSON.stringify({ projectName: project.nom })
+      }
+    });
 
     return project;
   }
@@ -127,9 +128,7 @@ export class ProjectService {
     status: 'brouillon' | 'en_cours' | 'en_revue' | 'approuve' | 'rejete',
     updatedBy: string
   ) {
-    const oldProject = await prisma.BP_PF_projects.findUnique({ where: { id } });
-
-    const project = await prisma.BP_PF_projects.update({
+    const project = await prisma.project.update({
       where: { id },
       data: {
         status,
@@ -137,13 +136,14 @@ export class ProjectService {
       }
     });
 
-    await auditLogger.logUpdate(
-      'BP_PF_projects',
-      id,
-      { userId: updatedBy },
-      { status: oldProject?.status },
-      { status: project.status }
-    );
+    await prisma.auditLog.create({
+      data: {
+        projectId: id,
+        utilisateurId: updatedBy,
+        action: 'UPDATE_PROJECT_STATUS',
+        details: JSON.stringify({ status })
+      }
+    });
 
     return project;
   }
@@ -152,15 +152,22 @@ export class ProjectService {
    * Delete project
    */
   static async deleteProject(id: string, deletedBy: string) {
-    const project = await prisma.BP_PF_projects.findUnique({ where: { id } });
+    const project = await prisma.project.findUnique({ where: { id } });
 
     if (!project) {
       throw new Error('Project not found');
     }
 
-    await prisma.BP_PF_projects.delete({ where: { id } });
+    await prisma.project.delete({ where: { id } });
 
-    await auditLogger.logDelete('BP_PF_projects', id, { userId: deletedBy }, project);
+    await prisma.auditLog.create({
+      data: {
+        projectId: id,
+        utilisateurId: deletedBy,
+        action: 'DELETE_PROJECT',
+        details: JSON.stringify({ projectName: project.nom })
+      }
+    });
 
     return project;
   }
@@ -172,13 +179,13 @@ export class ProjectService {
     const skip = (page - 1) * limit;
 
     const [projects, total] = await Promise.all([
-      prisma.BP_PF_projects.findMany({
+      prisma.project.findMany({
         where: { creePar: userId },
         skip,
         take: limit,
         orderBy: { dateCreation: 'desc' }
       }),
-      prisma.BP_PF_projects.count({ where: { creePar: userId } })
+      prisma.project.count({ where: { creePar: userId } })
     ]);
 
     return {

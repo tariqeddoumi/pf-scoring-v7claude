@@ -21,7 +21,7 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthPay
     const token = authHeader.substring(7);
     const secret = new TextEncoder().encode(JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
-    return payload as AuthPayload;
+    return payload as unknown as AuthPayload;
   } catch {
     return null;
   }

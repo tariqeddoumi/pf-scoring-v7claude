@@ -89,12 +89,8 @@ export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 
 export const createEvaluationSchema = z.object({
   projectId: z.string().uuid('Invalid project ID'),
-  analystId: z.string().uuid('Invalid analyst ID'),
-  scoringResult: z.object({
-    finalScore: z.number().min(0).max(10, 'Score must be between 0 and 10'),
-    rating: z.enum(['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'D']),
-    recommendation: z.enum(['APPROVE', 'APPROVE_WITH_CONDITIONS', 'REJECT']),
-  }),
+  scoringResult: z.record(z.any()).optional(),
+  finalScore: z.number().min(0).max(10).optional(),
   stressTestResult: z.object({
     scenarios: z.array(z.any()),
     summary: z.object({
@@ -112,16 +108,26 @@ export const updateEvaluationSchema = z.object({
 });
 
 export const submitEvaluationSchema = z.object({
-  evaluationId: z.string().uuid(),
+  id: z.string().uuid().optional(),
+  finalScore: z.number().min(0).max(10),
+  rating: z.enum(['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'D']).optional(),
+  probabilityOfDefault: z.number().min(0).max(1).optional(),
+  triggeredNOGOs: z.array(z.any()).optional(),
+  appliedMALUS: z.record(z.any()).optional(),
+  malusTotal: z.number().optional(),
+  notes: z.string().max(5000).optional(),
 });
 
 export const validateEvaluationSchema = z.object({
-  evaluationId: z.string().uuid(),
+  id: z.string().uuid().optional(),
+  recommendation: z.enum(['APPROVE', 'APPROVE_WITH_CONDITIONS', 'REJECT']).optional(),
+  notes: z.string().max(5000).optional(),
 });
 
 export const rejectEvaluationSchema = z.object({
-  evaluationId: z.string().uuid(),
-  reason: z.string().min(10, 'Rejection reason must be at least 10 characters').max(1000),
+  id: z.string().uuid().optional(),
+  reason: z.string().optional(),
+  notes: z.string().max(5000).optional(),
 });
 
 export const evaluationListQuerySchema = paginationSchema.extend({
