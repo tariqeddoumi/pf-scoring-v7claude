@@ -61,14 +61,11 @@ WHERE tablename LIKE 'BP_PF_%';
 SELECT
   'FOREIGN_KEYS' as check_type,
   constraint_name,
-  table_name,
-  column_name,
-  referenced_table_name,
-  referenced_column_name
-FROM information_schema.key_column_usage
+  table_name
+FROM information_schema.table_constraints
 WHERE table_name LIKE 'BP_PF_%'
-AND referenced_table_name IS NOT NULL
-ORDER BY table_name, column_name;
+AND constraint_type = 'FOREIGN KEY'
+ORDER BY table_name, constraint_name;
 
 -- ============================================================================
 -- 5. VERIFY KEY COLUMNS IN EACH TABLE

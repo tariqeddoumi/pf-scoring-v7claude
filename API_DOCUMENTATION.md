@@ -462,3 +462,85 @@ Future versions will support:
 - CSV export
 - Advanced filtering and querying
 - Comparative analysis across projects
+
+---
+
+## Phase 6 - CRUD API Endpoints
+
+Complete REST API for managing users, projects, and evaluations.
+
+### Users Management
+
+#### GET /api/users
+List all users (manager+)
+- **Pagination**: page, limit
+- **Response**: Array of users with pagination
+
+#### POST /api/users
+Create new user (admin only)
+- **Body**: email, password, nom, prenom, role
+
+#### GET /api/users/[id]
+Get user by ID (manager+)
+
+#### PUT /api/users/[id]
+Update user (self or admin)
+
+#### DELETE /api/users/[id]
+Delete user (admin only, cannot delete self)
+
+### Projects Management
+
+#### GET /api/projects
+List all projects
+- **Filters**: status, secteur
+- **Pagination**: page, limit
+
+#### POST /api/projects
+Create new project (analyst+)
+- **Body**: nom, description, secteur, montant, devise, countryCode
+
+#### GET /api/projects/[id]
+Get project by ID
+
+#### PUT /api/projects/[id]
+Update project (owner or admin)
+
+#### DELETE /api/projects/[id]
+Delete project (owner or admin)
+
+### Evaluations Management
+
+#### GET /api/evaluations
+List all evaluations (analyst+)
+- **Filters**: status, projectId
+- **Pagination**: page, limit
+
+#### POST /api/evaluations
+Create evaluation (analyst+)
+- **Body**: projectId, scoringResult, finalScore
+
+#### GET /api/evaluations/[id]
+Get evaluation by ID
+
+#### POST /api/evaluations/submit
+Submit for validation (analyst+)
+- **Body**: id, finalScore, rating, probabilityOfDefault, triggeredNOGOs, appliedMALUS, malusTotal, notes
+
+#### POST /api/evaluations/validate
+Validate evaluation (manager+)
+- **Body**: id, recommendation, notes
+- **Side effect**: Updates project to "approuve" status
+
+#### POST /api/evaluations/reject
+Reject evaluation (manager+)
+- **Body**: id, notes
+- **Side effect**: Updates project to "rejete" status
+
+### Evaluation Workflow
+
+```
+Create (brouillon) → Submit (soumis) → Validate (valide) → Project approuve
+                  ↓
+                  └─ Reject (rejete) → Project rejete
+```
