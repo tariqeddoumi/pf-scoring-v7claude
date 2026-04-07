@@ -46,7 +46,6 @@ export default function NewClientPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Appel API POST /api/clients
-    console.log('Créer client:', formData);
   };
 
   return (

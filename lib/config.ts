@@ -11,7 +11,6 @@ export const config = {
 
 export function validateConfig() {
   if (!config.supabase.url || !config.supabase.anonKey) {
-    console.warn('⚠️ Supabase config missing. Using mock data.');
     return false;
   }
   return true;
