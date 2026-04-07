@@ -16,9 +16,23 @@ export async function POST(request: Request) {
     }
 
     // Trouver l'utilisateur
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    let user;
+    try {
+      user = await prisma.user.findUnique({
+        where: { email },
+      });
+    } catch (dbError: unknown) {
+      const dbErrorMsg = dbError instanceof Error ? dbError.message : String(dbError);
+      console.error(`[LOGIN] Database error for ${email}:`, dbErrorMsg);
+      return NextResponse.json(
+        {
+          error: "Impossible de se connecter à la base de données",
+          errorCode: "ERR_DB_001",
+          details: process.env.NODE_ENV === "development" ? dbErrorMsg : undefined
+        },
+        { status: 503 }
+      );
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -30,14 +44,23 @@ export async function POST(request: Request) {
     // Vérifier le mot de passe
     const hashedPassword = user.password || "";
     if (!hashedPassword) {
-      console.error(`User ${email} has no password set`);
+      console.error(`[LOGIN] User ${email} has no password set`);
       return NextResponse.json(
         { error: "Email ou mot de passe incorrect", errorCode: "ERR_AUTH_001" },
         { status: 401 }
       );
     }
 
-    const passwordValid = await verifyPassword(password, hashedPassword);
+    let passwordValid = false;
+    try {
+      passwordValid = await verifyPassword(password, hashedPassword);
+    } catch (pwError: unknown) {
+      console.error(`[LOGIN] Password verification error for ${email}:`, pwError);
+      return NextResponse.json(
+        { error: "Erreur lors de la vérification du mot de passe", errorCode: "ERR_AUTH_002" },
+        { status: 500 }
+      );
+    }
 
     if (!passwordValid) {
       return NextResponse.json(
@@ -77,14 +100,15 @@ export async function POST(request: Request) {
       path: "/",
     });
 
+    console.log(`[LOGIN] Successful login for ${email}`);
     return response;
   } catch (error: unknown) {
-    console.error("Erreur login:", error);
+    console.error("[LOGIN] Unexpected error:", error);
     const errorCode = handleError(error);
     const errorMessage = getErrorMessage(error) || "Erreur lors de la connexion";
 
     return NextResponse.json(
-      { error: errorMessage, errorCode },
+      { error: errorMessage, errorCode, timestamp: new Date().toISOString() },
       { status: 500 }
     );
   }
