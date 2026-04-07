@@ -37,7 +37,8 @@ const MOCK_EVALUATION = {
   ],
 };
 
-export default function EvaluationDetailPage({ params }: { params: { id: string } }) {
+export default async function EvaluationDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const colors = {
     AAA: 'from-green-600 to-green-700',
     AA: 'from-green-500 to-green-600',
@@ -154,10 +155,10 @@ export default function EvaluationDetailPage({ params }: { params: { id: string 
       </div>
 
       {/* WORKFLOW - DYNAMIC */}
-      <WorkflowSection evaluationId={params.id} />
+      <WorkflowSection evaluationId={id} />
 
       {/* ACTIONS - DYNAMIC */}
-      <ActionButtons evaluationId={params.id} />
+      <ActionButtons evaluationId={id} />
     </div>
   );
 }

@@ -219,7 +219,7 @@ const MOCK_CLIENT = {
   ],
 };
 
-export default function ClientDetailPage({ params }: { params: { id: string } }) {
+export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="space-y-8">
       {/* === HEADER === */}

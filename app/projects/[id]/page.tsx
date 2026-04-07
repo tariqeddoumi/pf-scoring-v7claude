@@ -224,7 +224,7 @@ const MOCK_PROJECT = {
   updatedAt: '2026-04-03',
 };
 
-export default function ProjectDetailPage({ params }: { params: { id: string } }) {
+export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="space-y-8">
       {/* === HEADER === */}
