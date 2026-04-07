@@ -17,6 +17,7 @@ import { FormBuilder } from '@/components/crud/FormBuilder';
 import { createUserSchema } from '@/lib/validation-schemas';
 
 interface User {
+  id: string;
   email: string;
   nom: string;
   prenom: string;
