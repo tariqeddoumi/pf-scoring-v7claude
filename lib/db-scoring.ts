@@ -46,11 +46,8 @@ export async function saveEvaluation(
       },
     });
 
-    console.log(`[DB] Evaluation created: ${evaluation.id}`);
-
     return evaluation as any;
   } catch (error) {
-    console.error("[DB ERROR] Failed to save evaluation:", error);
     throw error;
   }
 }
@@ -70,7 +67,6 @@ export async function getEvaluation(
       },
     }) as any;
   } catch (error) {
-    console.error("[DB ERROR] Failed to retrieve evaluation:", error);
     throw error;
   }
 }
@@ -91,7 +87,6 @@ export async function getProjectEvaluations(
       skip: offset,
     })) as any;
   } catch (error) {
-    console.error("[DB ERROR] Failed to retrieve project evaluations:", error);
     throw error;
   }
 }
@@ -114,7 +109,6 @@ export async function updateEvaluationStatus(
       },
     })) as any;
   } catch (error) {
-    console.error("[DB ERROR] Failed to update evaluation status:", error);
     throw error;
   }
 }
@@ -131,7 +125,6 @@ export async function getLatestEvaluation(
       orderBy: { createdAt: "desc" },
     })) as any;
   } catch (error) {
-    console.error("[DB ERROR] Failed to retrieve latest evaluation:", error);
     throw error;
   }
 }
@@ -170,11 +163,8 @@ export async function saveStressTestResults(
       }
     }
 
-    console.log(`[DB] Stress test results saved for evaluation ${evaluationId}`);
-
     return evaluation;
   } catch (error) {
-    console.error("[DB ERROR] Failed to save stress test results:", error);
     throw error;
   }
 }
@@ -203,9 +193,7 @@ export async function logScoringAction(
       },
     });
 
-    console.log(`[AUDIT] ${action} by user ${userId}${details ? ": " + details : ""}`);
   } catch (error) {
-    console.error("[DB ERROR] Failed to log scoring action:", error);
     // Don't throw - logging failure shouldn't break the flow
   }
 }
@@ -224,7 +212,6 @@ export async function getAuditLogs(
       take: 50,
     })) as any;
   } catch (error) {
-    console.error("[DB ERROR] Failed to retrieve audit logs:", error);
     throw error;
   }
 }
@@ -276,7 +263,6 @@ export async function getProjectEvaluationStats(
       lastEvaluation: evaluations[0],
     };
   } catch (error) {
-    console.error("[DB ERROR] Failed to get evaluation stats:", error);
     throw error;
   }
 }
@@ -329,7 +315,6 @@ export async function exportEvaluationsToCSV(
 
     return csv;
   } catch (error) {
-    console.error("[DB ERROR] Failed to export evaluations:", error);
     throw error;
   }
 }
@@ -356,11 +341,8 @@ export async function deleteOldEvaluations(
       },
     });
 
-    console.log(`[DB] Deleted ${result.count} old evaluations`);
-
     return result.count;
   } catch (error) {
-    console.error("[DB ERROR] Failed to delete old evaluations:", error);
     throw error;
   }
 }
