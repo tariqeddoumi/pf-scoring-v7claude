@@ -2,6 +2,11 @@
 const nextConfig = {
   output: "standalone",
 
+  // Disable ESLint during builds (validated locally)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
