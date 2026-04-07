@@ -43,7 +43,6 @@ export function ProtectedRoute({
           router.push("/dashboard");
         }
       } catch (error) {
-        console.error("Erreur auth:", error);
         router.push("/login");
       } finally {
         setLoading(false);

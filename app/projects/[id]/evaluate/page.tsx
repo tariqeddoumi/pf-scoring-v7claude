@@ -80,7 +80,6 @@ export default function EvaluationFormPage({
         setProject(data);
       }
     } catch (error) {
-      console.error("Erreur:", error);
     }
   };
 
@@ -106,7 +105,6 @@ export default function EvaluationFormPage({
         setDomains(domainsWithCriteria);
       }
     } catch (error) {
-      console.error("Erreur:", error);
     } finally {
       setLoading(false);
     }
@@ -174,7 +172,6 @@ export default function EvaluationFormPage({
       // Retourner à la page du projet
       window.location.href = `/projects/${projectId}`;
     } catch (error) {
-      console.error("Erreur:", error);
       alert("Erreur lors de la soumission");
     } finally {
       setSubmitting(false);

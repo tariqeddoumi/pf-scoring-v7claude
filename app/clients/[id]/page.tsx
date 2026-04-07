@@ -219,7 +219,8 @@ const MOCK_CLIENT = {
   ],
 };
 
-export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <div className="space-y-8">
       {/* === HEADER === */}

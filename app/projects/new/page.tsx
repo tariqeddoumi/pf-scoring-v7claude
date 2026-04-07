@@ -125,7 +125,6 @@ export default function NewProjectPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('New project:', formData);
     // TODO: Intégrer avec API sur Jour 9-10
     alert('Projet créé avec succès ! (Mock)');
   };

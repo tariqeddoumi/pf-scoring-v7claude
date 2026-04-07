@@ -66,7 +66,6 @@ export function FormBuilder({
       await onSubmit(data);
       form.reset();
     } catch (err) {
-      console.error('Form submission error:', err);
     }
   };
 

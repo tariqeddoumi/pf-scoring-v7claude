@@ -31,7 +31,7 @@ export default function EvaluationsPage() {
       await createEval(formData);
       setOpen(false);
       await execute();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to create evaluation:', err);
     }
   };
@@ -83,10 +83,10 @@ export default function EvaluationsPage() {
   ];
 
   const statusCounts = {
-    brouillon: evaluations.filter(e => e.status === 'brouillon').length,
-    soumis: evaluations.filter(e => e.status === 'soumis').length,
-    valide: evaluations.filter(e => e.status === 'valide').length,
-    rejete: evaluations.filter(e => e.status === 'rejete').length,
+    brouillon: evaluations.filter((e: any) => e.status === 'brouillon').length,
+    soumis: evaluations.filter((e: any) => e.status === 'soumis').length,
+    valide: evaluations.filter((e: any) => e.status === 'valide').length,
+    rejete: evaluations.filter((e: any) => e.status === 'rejete').length,
   };
 
   return (
