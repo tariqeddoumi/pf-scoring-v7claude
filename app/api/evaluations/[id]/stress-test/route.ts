@@ -16,10 +16,10 @@ import { saveStressTestResults, logScoringAction } from "@/lib/db-scoring";
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<StressTestResponseBody>> {
   try {
-    const evaluationId = context.params.id;
+    const { id: evaluationId } = await context.params;
 
     // Parse request
     let body: StressTestRequestBody;

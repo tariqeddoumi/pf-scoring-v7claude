@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma-client";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Vérifier que l'utilisateur est admin
@@ -26,7 +26,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Vérifier que l'utilisateur existe
     const user = await prisma.user.findUnique({
@@ -79,7 +79,7 @@ export async function DELETE(
 // Récupérer les infos d'un utilisateur
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieHeader = request.headers.get("cookie");
@@ -92,7 +92,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const user = await prisma.user.findUnique({
       where: { id },

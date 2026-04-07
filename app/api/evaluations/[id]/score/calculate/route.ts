@@ -12,10 +12,10 @@ import { saveEvaluation, logScoringAction } from "@/lib/db-scoring";
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ScoringResponseBody>> {
   try {
-    const evaluationId = context.params.id;
+    const { id: evaluationId } = await context.params;
 
     // Parse request body
     let body: ScoringRequestBody;
@@ -127,10 +127,10 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const evaluationId = context.params.id;
+    const { id: evaluationId } = await context.params;
 
     // In a real app, fetch from database
     // For now, return not implemented

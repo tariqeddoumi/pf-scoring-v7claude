@@ -3,7 +3,7 @@ import { withAuth } from '@/lib/auth-middleware';
 import { ProjectService } from '@/lib/services/project-service';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -71,13 +71,16 @@ async function handleDELETE(request: NextRequest, user: any, params: any) {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  return withAuth(request, (req, user) => handleGET(req, user, params));
+  const resolvedParams = await params;
+  return withAuth(request, (req, user) => handleGET(req, user, resolvedParams));
 }
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  return withAuth(request, (req, user) => handlePUT(req, user, params));
+  const resolvedParams = await params;
+  return withAuth(request, (req, user) => handlePUT(req, user, resolvedParams));
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  return withAuth(request, (req, user) => handleDELETE(req, user, params));
+  const resolvedParams = await params;
+  return withAuth(request, (req, user) => handleDELETE(req, user, resolvedParams));
 }

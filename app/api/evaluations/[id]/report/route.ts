@@ -9,10 +9,10 @@ import { getEvaluation, getAuditLogs } from "@/lib/db-scoring";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const evaluationId = context.params.id;
+    const { id: evaluationId } = await context.params;
 
     // Fetch evaluation from database
     const evaluation = await getEvaluation(evaluationId);
@@ -124,10 +124,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const evaluationId = context.params.id;
+    const { id: evaluationId } = await context.params;
 
     // Parse request options
     const body = await request.json();
