@@ -36,12 +36,21 @@ export default function UsersPage() {
     }
   };
 
-  const columns = [
-    { key: 'email' as const, label: 'Email' },
-    { key: 'nom' as const, label: 'Last Name' },
-    { key: 'prenom' as const, label: 'First Name' },
+  interface User {
+    id: string;
+    email: string;
+    nom: string;
+    prenom: string;
+    role: string;
+    createdAt: string;
+  }
+
+  const columns: Array<{ key: keyof User; label: string; render?: (value: any) => React.ReactNode }> = [
+    { key: 'email', label: 'Email' },
+    { key: 'nom', label: 'Last Name' },
+    { key: 'prenom', label: 'First Name' },
     {
-      key: 'role' as const,
+      key: 'role',
       label: 'Role',
       render: (value: string) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">
@@ -50,7 +59,7 @@ export default function UsersPage() {
       ),
     },
     {
-      key: 'createdAt' as const,
+      key: 'createdAt',
       label: 'Created',
       render: (value: string) => new Date(value).toLocaleDateString(),
     },
@@ -106,7 +115,7 @@ export default function UsersPage() {
               onSubmit={handleCreateUser}
               submitLabel="Create User"
               loading={creatingUser}
-              error={createError}
+              error={createError || undefined}
             />
           </DialogContent>
         </Dialog>

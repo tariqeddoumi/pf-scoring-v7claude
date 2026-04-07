@@ -81,8 +81,8 @@ export function FormBuilder({
         {fields.map((field) => (
           <FormField
             key={field.name}
-            control={form.control}
-            name={field.name}
+            control={form.control as any}
+            name={field.name as any}
             render={({ field: fieldProps }) => (
               <FormItem>
                 <FormLabel className="text-gray-700 font-medium">{field.label}</FormLabel>

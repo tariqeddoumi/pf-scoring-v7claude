@@ -36,11 +36,20 @@ export default function ProjectsPage() {
     }
   };
 
-  const columns = [
-    { key: 'nom' as const, label: 'Project Name' },
-    { key: 'secteur' as const, label: 'Sector' },
+  interface Project {
+    id: string;
+    nom: string;
+    secteur: string;
+    montant: number;
+    status: string;
+    scoreGlobal: number | null;
+  }
+
+  const columns: Array<{ key: keyof Project; label: string; render?: (value: any) => React.ReactNode }> = [
+    { key: 'nom', label: 'Project Name' },
+    { key: 'secteur', label: 'Sector' },
     {
-      key: 'montant' as const,
+      key: 'montant',
       label: 'Amount (MAD)',
       render: (value: number) => new Intl.NumberFormat('fr-MA', {
         style: 'currency',
@@ -48,7 +57,7 @@ export default function ProjectsPage() {
       }).format(value),
     },
     {
-      key: 'status' as const,
+      key: 'status',
       label: 'Status',
       render: (value: string) => {
         const colors: Record<string, string> = {
@@ -66,7 +75,7 @@ export default function ProjectsPage() {
       },
     },
     {
-      key: 'scoreGlobal' as const,
+      key: 'scoreGlobal',
       label: 'Score',
       render: (value: number | null) => value ? `${value.toFixed(1)}/10` : '-',
     },
@@ -116,7 +125,7 @@ export default function ProjectsPage() {
               onSubmit={handleCreateProject}
               submitLabel="Create Project"
               loading={creatingProject}
-              error={createError}
+              error={createError || undefined}
             />
           </DialogContent>
         </Dialog>
@@ -137,19 +146,19 @@ export default function ProjectsPage() {
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <p className="text-gray-600 text-sm">In Review</p>
           <p className="text-2xl font-bold text-yellow-600">
-            {projects.filter(p => p.status === 'en_revue').length}
+            {projects.filter((p: any) => p.status === 'en_revue').length}
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <p className="text-gray-600 text-sm">Approved</p>
           <p className="text-2xl font-bold text-green-600">
-            {projects.filter(p => p.status === 'approuve').length}
+            {projects.filter((p: any) => p.status === 'approuve').length}
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <p className="text-gray-600 text-sm">Rejected</p>
           <p className="text-2xl font-bold text-red-600">
-            {projects.filter(p => p.status === 'rejete').length}
+            {projects.filter((p: any) => p.status === 'rejete').length}
           </p>
         </div>
       </div>
