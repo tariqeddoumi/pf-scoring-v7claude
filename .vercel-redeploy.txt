@@ -1,0 +1,3 @@
+# Vercel Redeploy Trigger
+# This file triggers a new deployment when changes are detected
+Last updated: $(date)
