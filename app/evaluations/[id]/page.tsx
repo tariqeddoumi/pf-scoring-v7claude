@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Download, Check, AlertCircle, TrendingUp, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, Download, Check, AlertCircle, X } from 'lucide-react';
 import { useEvaluationWorkflow, type EvaluationStatus } from '@/lib/evaluation-context';
 
 const MOCK_EVALUATION = {

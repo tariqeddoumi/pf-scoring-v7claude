@@ -9,16 +9,33 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
 
 export function withAuth(handler: Function) {
   return async (req: NextRequest, context: any) => {
-    // TODO: Verify JWT from Supabase
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Extract user role from JWT
-    const userRole = 'analyst'; // TODO: Decode JWT
+    try {
+      // Extract Bearer token from Authorization header
+      const token = authHeader.startsWith('Bearer ')
+        ? authHeader.substring(7)
+        : authHeader;
 
-    return handler(req, context, userRole);
+      // Decode JWT payload (without verification for now - should use Supabase JWT secret)
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return NextResponse.json({ error: 'Invalid token format' }, { status: 401 });
+      }
+
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+
+      // Extract user role from JWT payload - use 'analyst' as default if not specified
+      const userRole = payload.role || payload.user_role || 'analyst';
+
+      return handler(req, context, userRole);
+    } catch (error) {
+      console.error('JWT verification error:', error);
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
   };
 }
 

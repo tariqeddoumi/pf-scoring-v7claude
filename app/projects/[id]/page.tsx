@@ -224,7 +224,8 @@ const MOCK_PROJECT = {
   updatedAt: '2026-04-03',
 };
 
-export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <div className="space-y-8">
       {/* === HEADER === */}
