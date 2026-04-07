@@ -86,7 +86,6 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
         setEvaluations(parsed);
       }
     } catch (error) {
-      console.error('Failed to load evaluations:', error);
     }
   }, []);
 
@@ -95,7 +94,6 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(evaluations));
     } catch (error) {
-      console.error('Failed to save evaluations:', error);
     }
   }, [evaluations]);
 
@@ -141,12 +139,10 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
   const submitEvaluation = async (evaluationId: string, user: string): Promise<boolean> => {
     const evaluation = evaluations[evaluationId];
     if (!evaluation) {
-      console.error('Evaluation not found');
       return false;
     }
 
     if (!canTransition(evaluation.status, 'soumis')) {
-      console.error('Cannot transition from', evaluation.status, 'to soumis');
       return false;
     }
 
@@ -181,7 +177,6 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
     if (!evaluation) return false;
 
     if (!canTransition(evaluation.status, 'valide')) {
-      console.error('Cannot transition from', evaluation.status, 'to valide');
       return false;
     }
 
@@ -220,7 +215,6 @@ export function EvaluationProvider({ children }: { children: React.ReactNode }) 
     if (!evaluation) return false;
 
     if (!canTransition(evaluation.status, 'rejete')) {
-      console.error('Cannot transition from', evaluation.status, 'to rejete');
       return false;
     }
 

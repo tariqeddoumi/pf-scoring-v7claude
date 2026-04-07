@@ -62,17 +62,13 @@ export class EmailService {
 
   async send(to: string, template: EmailTemplate): Promise<boolean> {
     if (!this.apiKey) {
-      console.warn('⚠️ Email API key not configured. Skipping email.');
       return false;
     }
 
     try {
       // Mock implementation - replace with actual email provider
-      console.log(`📧 Email sent to ${to}`);
-      console.log(`   Subject: ${template.subject}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send email:', error);
       return false;
     }
   }

@@ -121,7 +121,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const admin = MOCK_USERS.find((u) => u.role === 'admin') || MOCK_USERS[0];
       setCurrentUserState(admin);
     } catch (error) {
-      console.error('Failed to load users:', error);
       setUsers(MOCK_USERS);
     }
   }, []);
@@ -133,7 +132,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
       }
     } catch (error) {
-      console.error('Failed to save users:', error);
     }
   }, [users]);
 
