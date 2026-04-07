@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { getErrorMessage } from "@/lib/error-handler";
+import { hashPassword } from "@/lib/auth";
 
 /**
  * Endpoint pour initialiser les données de test
@@ -20,56 +21,49 @@ export async function POST(request: Request) {
       );
     }
 
-    // Créer l'utilisateur admin de test
-    try {
-      // Nettoyer les prepared statements de Prisma
-      await prisma.$executeRawUnsafe(`DEALLOCATE ALL`);
+    // Hash du mot de passe par défaut: Admin123!
+    const hashedPassword = await hashPassword("Admin123!");
 
-      // Créer l'utilisateur avec INSERT OR UPDATE
-      await prisma.$executeRawUnsafe(`
-        INSERT INTO pf_scoring_users (id, email, nom, prenom, role, password, "createdAt", "updatedAt")
-        VALUES (
-          gen_random_uuid(),
-          'admin@pf-scoring.ma',
-          'Admin',
-          'Test',
-          'admin'::user_role,
-          '',
-          CURRENT_TIMESTAMP,
-          CURRENT_TIMESTAMP
-        )
-        ON CONFLICT (email) DO UPDATE SET
-          role = 'admin'::user_role,
-          "updatedAt" = CURRENT_TIMESTAMP;
-      `);
-    } catch (sqlError: unknown) {
-      console.error("Erreur lors de la création de l'utilisateur:", sqlError);
-      throw sqlError;
-    }
-
-    // Récupérer l'utilisateur créé
-    const user = await prisma.user.findUnique({
+    // Vérifier si l'utilisateur existe déjà
+    let user = await prisma.user.findUnique({
       where: { email: "admin@pf-scoring.ma" },
-    });
+    }).catch(() => null);
+
+    if (!user) {
+      // Créer l'utilisateur avec Prisma
+      user = await prisma.user.create({
+        data: {
+          email: "admin@pf-scoring.ma",
+          nom: "Admin",
+          prenom: "Test",
+          role: "admin",
+          password: hashedPassword,
+        },
+      });
+    } else {
+      // Mettre à jour le mot de passe de l'utilisateur existant
+      user = await prisma.user.update({
+        where: { email: "admin@pf-scoring.ma" },
+        data: {
+          password: hashedPassword,
+          role: "admin",
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,
       message: "Utilisateur admin créé/mis à jour avec succès",
-      user: user ? {
+      user: {
         id: user.id,
         email: user.email,
         nom: user.nom,
         prenom: user.prenom,
         role: user.role,
-      } : {
-        email: "admin@pf-scoring.ma",
-        nom: "Admin",
-        prenom: "Test",
-        role: "admin",
       },
     });
   } catch (error: unknown) {
-    console.error("Erreur lors de l'initialisation:", error);
+    console.error("[INIT] Erreur lors de l'initialisation:", error);
     return NextResponse.json(
       {
         error: "Erreur lors de l'initialisation",
