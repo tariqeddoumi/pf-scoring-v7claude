@@ -33,7 +33,6 @@ export function withAuth(handler: Function) {
 
       return handler(req, context, userRole);
     } catch (error) {
-      console.error('JWT verification error:', error);
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
   };

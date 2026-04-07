@@ -32,7 +32,7 @@ export default function EvaluationsPage() {
       setOpen(false);
       await execute();
     } catch (err: unknown) {
-      console.error('Failed to create evaluation:', err);
+      // Error handling
     }
   };
 
