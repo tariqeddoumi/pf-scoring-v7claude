@@ -1,35 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { webhookService } from '@/lib/webhook-service';
+import { withAuth, hasMinimumRole } from '@/lib/auth-middleware';
+import { EvaluationService } from '@/lib/services/evaluation-service';
 
-export async function POST(req: NextRequest) {
+/**
+ * POST /api/evaluations/submit - Submit evaluation for validation
+ */
+async function handlePOST(request: NextRequest, user: any) {
   try {
-    const { evaluationId, projectId, analyst_name, analyst_email } = await req.json();
-
-    if (!evaluationId) {
-      return NextResponse.json(
-        { error: 'evaluationId required' },
-        { status: 400 }
-      );
+    if (!hasMinimumRole(user.role, 'analyst')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Emit webhook event
-    await webhookService.emit('evaluation.submitted', {
-      evaluationId,
-      projectId,
-      analyst_name,
-      analyst_email,
-      timestamp: new Date().toISOString(),
-    });
+    const body = await request.json();
+    const { id, ...submitData } = body;
 
-    return NextResponse.json({
-      success: true,
-      message: 'Evaluation submitted',
-      evaluationId,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to submit evaluation' },
-      { status: 500 }
-    );
+    if (!id) {
+      return NextResponse.json({ error: 'Evaluation ID required' }, { status: 400 });
+    }
+
+    const evaluation = await EvaluationService.submitEvaluation(id, submitData, user.sub);
+
+    return NextResponse.json(evaluation, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
+}
+
+export async function POST(request: NextRequest) {
+  return withAuth(request, (req, user) => handlePOST(req, user));
 }

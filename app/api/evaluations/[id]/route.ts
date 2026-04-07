@@ -1,38 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, hasMinimumRole } from '@/lib/auth-middleware';
+import { EvaluationService } from '@/lib/services/evaluation-service';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteParams {
+  params: { id: string };
+}
+
+/**
+ * GET /api/evaluations/[id]
+ */
+async function handleGET(request: NextRequest, user: any, params: any) {
   try {
-    // TODO: Fetch from Supabase using prisma
-    return NextResponse.json({ id: params.id, status: 'soumis' });
-  } catch (error) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const evaluation = await EvaluationService.getEvaluationById(params.id, user.sub);
+
+    if (!evaluation) {
+      return NextResponse.json({ error: 'Evaluation not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(evaluation, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const data = await req.json();
-    // TODO: Update in Supabase
-    return NextResponse.json({ id: params.id, ...data, updatedAt: new Date() });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to update' }, { status: 400 });
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    // TODO: Delete from Supabase
-    return NextResponse.json({ success: true, deletedId: params.id });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 400 });
-  }
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  return withAuth(request, (req, user) => handleGET(req, user, params));
 }

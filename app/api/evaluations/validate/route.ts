@@ -1,25 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { webhookService } from '@/lib/webhook-service';
+import { withAuth, hasMinimumRole } from '@/lib/auth-middleware';
+import { EvaluationService } from '@/lib/services/evaluation-service';
 
-export async function POST(req: NextRequest) {
+/**
+ * POST /api/evaluations/validate - Validate evaluation (manager/admin)
+ */
+async function handlePOST(request: NextRequest, user: any) {
   try {
-    const { evaluationId, analyst_email } = await req.json();
+    if (!hasMinimumRole(user.role, 'manager')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    await webhookService.emit('evaluation.validated', {
-      evaluationId,
-      analyst_email,
-      timestamp: new Date().toISOString(),
-    });
+    const body = await request.json();
+    const { id, ...validateData } = body;
 
-    return NextResponse.json({
-      success: true,
-      message: 'Evaluation validated',
-      evaluationId,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to validate evaluation' },
-      { status: 500 }
-    );
+    if (!id) {
+      return NextResponse.json({ error: 'Evaluation ID required' }, { status: 400 });
+    }
+
+    const evaluation = await EvaluationService.validateEvaluation(id, validateData, user.sub);
+
+    return NextResponse.json(evaluation, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
+}
+
+export async function POST(request: NextRequest) {
+  return withAuth(request, (req, user) => handlePOST(req, user));
 }
