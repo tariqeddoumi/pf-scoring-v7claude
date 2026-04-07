@@ -51,12 +51,12 @@ export default function EvaluationsPage() {
 
   const columns = [
     {
-      key: 'projectId' as const,
+      key: 'projectId',
       label: 'Project',
       render: (value: string) => value.substring(0, 8) + '...',
     },
     {
-      key: 'status' as const,
+      key: 'status',
       label: 'Status',
       render: (value: string) => (
         <div className="flex items-center gap-2">
@@ -66,17 +66,17 @@ export default function EvaluationsPage() {
       ),
     },
     {
-      key: 'finalScore' as const,
+      key: 'finalScore',
       label: 'Score',
       render: (value: number | null) => value ? `${value.toFixed(1)}/10` : '-',
     },
     {
-      key: 'rating' as const,
+      key: 'rating',
       label: 'Rating',
       render: (value: string | null) => value || '-',
     },
     {
-      key: 'createdAt' as const,
+      key: 'createdAt',
       label: 'Created',
       render: (value: string) => new Date(value).toLocaleDateString(),
     },
