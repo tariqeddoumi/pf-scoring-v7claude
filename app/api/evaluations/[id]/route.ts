@@ -3,7 +3,7 @@ import { withAuth, hasMinimumRole } from '@/lib/auth-middleware';
 import { EvaluationService } from '@/lib/services/evaluation-service';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -24,5 +24,6 @@ async function handleGET(request: NextRequest, user: any, params: any) {
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  return withAuth(request, (req, user) => handleGET(req, user, params));
+  const resolvedParams = await params;
+  return withAuth(request, (req, user) => handleGET(req, user, resolvedParams));
 }
