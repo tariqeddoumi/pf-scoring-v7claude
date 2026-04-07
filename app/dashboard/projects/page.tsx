@@ -16,6 +16,15 @@ import {
 import { FormBuilder } from '@/components/crud/FormBuilder';
 import { createProjectSchema } from '@/lib/validation-schemas';
 
+interface Project {
+  id: string;
+  nom: string;
+  secteur: string;
+  montant: number;
+  status: string;
+  scoreGlobal: number | null;
+}
+
 export default function ProjectsPage() {
   const { data, loading, error, execute } = useProjects(1, 50);
   const { mutate: createProject, loading: creatingProject, error: createError } = useMutation(
@@ -24,23 +33,23 @@ export default function ProjectsPage() {
   );
   const [open, setOpen] = useState(false);
 
-  const projects = data?.data || [];
+  const projects: Project[] = data?.data || [];
 
   const handleCreateProject = async (formData: any) => {
     try {
       await createProject(formData);
       setOpen(false);
       await execute();
-    } catch (err) {
-      console.error('Failed to create project:', err);
+    } catch (err: unknown) {
+      // Error handling
     }
   };
 
-  const columns = [
-    { key: 'nom' as const, label: 'Project Name' },
-    { key: 'secteur' as const, label: 'Sector' },
+  const columns: Array<{ key: keyof Project; label: string; render?: (value: any) => React.ReactNode }> = [
+    { key: 'nom', label: 'Project Name' },
+    { key: 'secteur', label: 'Sector' },
     {
-      key: 'montant' as const,
+      key: 'montant',
       label: 'Amount (MAD)',
       render: (value: number) => new Intl.NumberFormat('fr-MA', {
         style: 'currency',
@@ -48,7 +57,7 @@ export default function ProjectsPage() {
       }).format(value),
     },
     {
-      key: 'status' as const,
+      key: 'status',
       label: 'Status',
       render: (value: string) => {
         const colors: Record<string, string> = {
@@ -66,7 +75,7 @@ export default function ProjectsPage() {
       },
     },
     {
-      key: 'scoreGlobal' as const,
+      key: 'scoreGlobal',
       label: 'Score',
       render: (value: number | null) => value ? `${value.toFixed(1)}/10` : '-',
     },
@@ -116,7 +125,7 @@ export default function ProjectsPage() {
               onSubmit={handleCreateProject}
               submitLabel="Create Project"
               loading={creatingProject}
-              error={createError}
+              error={createError || undefined}
             />
           </DialogContent>
         </Dialog>
