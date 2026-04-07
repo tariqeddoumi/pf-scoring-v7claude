@@ -16,6 +16,15 @@ import {
 import { FormBuilder } from '@/components/crud/FormBuilder';
 import { createEvaluationSchema } from '@/lib/validation-schemas';
 
+interface Evaluation {
+  id: string;
+  projectId: string;
+  status: string;
+  finalScore: number | null;
+  rating: string | null;
+  createdAt: string;
+}
+
 export default function EvaluationsPage() {
   const { data, loading, error, execute } = useEvaluations(1, 50);
   const { mutate: createEval, loading: creating, error: createError } = useMutation(
@@ -24,7 +33,7 @@ export default function EvaluationsPage() {
   );
   const [open, setOpen] = useState(false);
 
-  const evaluations = data?.data || [];
+  const evaluations: Evaluation[] = data?.data || [];
 
   const handleCreateEvaluation = async (formData: any) => {
     try {
@@ -49,7 +58,7 @@ export default function EvaluationsPage() {
     }
   };
 
-  const columns = [
+  const columns: Array<{ key: keyof Evaluation; label: string; render?: (value: any) => React.ReactNode }> = [
     {
       key: 'projectId',
       label: 'Project',
