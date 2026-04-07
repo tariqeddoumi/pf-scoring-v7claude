@@ -35,7 +35,7 @@ async function handlePOST(request: NextRequest, user: any) {
     }
 
     const body = await request.json();
-    const newUser = await UserService.createUser(body, user.sub);
+    const newUser = await UserService.createUser(body, user.userId);
 
     return NextResponse.json(
       {

@@ -44,12 +44,12 @@ async function handleGET(request: NextRequest, user: any, params: any) {
 async function handlePUT(request: NextRequest, user: any, params: any) {
   try {
     // Can update own profile or be admin
-    if (user.sub !== params.id && user.role !== 'admin') {
+    if (user.userId !== params.id && user.role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json();
-    const updatedUser = await UserService.updateUser(params.id, body, user.sub);
+    const updatedUser = await UserService.updateUser(params.id, body, user.userId);
 
     return NextResponse.json(
       {
@@ -77,11 +77,11 @@ async function handleDELETE(request: NextRequest, user: any, params: any) {
     }
 
     // Cannot delete self
-    if (user.sub === params.id) {
+    if (user.userId === params.id) {
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
     }
 
-    await UserService.deleteUser(params.id, user.sub);
+    await UserService.deleteUser(params.id, user.userId);
 
     return NextResponse.json({ message: 'User deleted' }, { status: 200 });
   } catch (error: any) {
