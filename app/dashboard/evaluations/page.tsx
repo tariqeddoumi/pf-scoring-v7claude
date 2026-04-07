@@ -130,7 +130,7 @@ export default function EvaluationsPage() {
               onSubmit={handleCreateEvaluation}
               submitLabel="Create Evaluation"
               loading={creating}
-              error={createError}
+              error={createError || undefined}
             />
           </DialogContent>
         </Dialog>
