@@ -16,6 +16,15 @@ import {
 import { FormBuilder } from '@/components/crud/FormBuilder';
 import { createUserSchema } from '@/lib/validation-schemas';
 
+interface User {
+  id: string;
+  email: string;
+  nom: string;
+  prenom: string;
+  role: string;
+  createdAt: string;
+}
+
 export default function UsersPage() {
   const { data, loading, error, execute } = useUsers(1, 50);
   const { mutate: createUser, loading: creatingUser, error: createError } = useMutation(
@@ -24,15 +33,15 @@ export default function UsersPage() {
   );
   const [open, setOpen] = useState(false);
 
-  const users = data?.data || [];
+  const users: User[] = data?.data || [];
 
   const handleCreateUser = async (formData: any) => {
     try {
       await createUser(formData);
       setOpen(false);
       await execute();
-    } catch (err) {
-      console.error('Failed to create user:', err);
+    } catch (err: unknown) {
+      // Error handling
     }
   };
 
