@@ -49,31 +49,31 @@ export default function NewClientPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-start space-x-2 md:space-x-4">
         <Link
           href="/clients"
-          className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+          className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors flex-shrink-0 mt-1"
         >
           <ArrowLeft size={20} />
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-white">Créer un nouveau client</h1>
-          <p className="text-slate-400 mt-2">Renseignez la signalétique complète du client</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-white truncate">Créer un nouveau client</h1>
+          <p className="text-slate-400 mt-1 md:mt-2 text-sm md:text-base">Renseignez la signalétique complète du client</p>
         </div>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
 
         {/* === SECTION 1 : Identité & Administration === */}
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-            <Building2 size={22} className="text-cyan-500" />
-            <span>Identité et Informations Administratives</span>
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
+          <h2 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6 flex items-center space-x-2">
+            <Building2 size={20} className="text-cyan-500 flex-shrink-0" />
+            <span className="truncate">Identité et Informations Administratives</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <FormField
               label="Raison Sociale"
               name="legal_name"
@@ -130,12 +130,12 @@ export default function NewClientPage() {
         </div>
 
         {/* === SECTION 2 : Organisation & Secteur === */}
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-            <Briefcase size={22} className="text-cyan-500" />
-            <span>Organisation et Secteur d&apos;Activité</span>
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
+          <h2 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6 flex items-center space-x-2">
+            <Briefcase size={20} className="text-cyan-500 flex-shrink-0" />
+            <span className="truncate">Organisation et Secteur d&apos;Activité</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <FormSelect
               label="Secteur"
               name="sector"
@@ -207,12 +207,12 @@ export default function NewClientPage() {
         </div>
 
         {/* === SECTION 3 : Coordonnées === */}
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-            <MapPin size={22} className="text-cyan-500" />
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
+          <h2 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6 flex items-center space-x-2">
+            <MapPin size={20} className="text-cyan-500 flex-shrink-0" />
             <span>Coordonnées</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <FormSelect
               label="Pays"
               name="country"
@@ -287,12 +287,12 @@ export default function NewClientPage() {
         </div>
 
         {/* === SECTION 4 : Relations Bancaires === */}
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-            <BarChart3 size={22} className="text-cyan-500" />
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
+          <h2 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6 flex items-center space-x-2">
+            <BarChart3 size={20} className="text-cyan-500 flex-shrink-0" />
             <span>Relations Bancaires</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <FormField
               label="Centre d'Affaires"
               name="business_center"
@@ -373,12 +373,12 @@ export default function NewClientPage() {
         </div>
 
         {/* === SECTION 5 : KYC & Compliance === */}
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-            <Shield size={22} className="text-cyan-500" />
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
+          <h2 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6 flex items-center space-x-2">
+            <Shield size={20} className="text-cyan-500 flex-shrink-0" />
             <span>KYC et Conformité</span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <FormSelect
               label="Statut KYC"
               name="kyc_status"
@@ -416,16 +416,16 @@ export default function NewClientPage() {
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex gap-4 pt-2">
+        <div className="flex flex-col md:flex-row gap-4 pt-2">
           <button
             type="submit"
-            className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-6 py-3 rounded-lg transition-all"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm md:text-base"
           >
             Créer le client
           </button>
           <Link
             href="/clients"
-            className="flex-1 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white font-semibold px-6 py-3 rounded-lg transition-all text-center"
+            className="flex-1 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white font-semibold px-6 py-3 rounded-lg transition-all text-center text-sm md:text-base"
           >
             Annuler
           </Link>
@@ -454,7 +454,7 @@ function FormField({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-semibold text-white mb-2">
+      <label htmlFor={name} className="block text-xs md:text-sm font-semibold text-white mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
@@ -465,7 +465,7 @@ function FormField({
         value={value}
         onChange={onChange}
         required={required}
-        className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+        className="w-full px-3 md:px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
       />
     </div>
   );
@@ -488,7 +488,7 @@ function FormTextarea({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-semibold text-white mb-2">
+      <label htmlFor={name} className="block text-xs md:text-sm font-semibold text-white mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <textarea
@@ -499,7 +499,7 @@ function FormTextarea({
         onChange={onChange}
         required={required}
         rows={3}
-        className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 resize-none"
+        className="w-full px-3 md:px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 resize-none text-sm md:text-base"
       />
     </div>
   );
@@ -524,7 +524,7 @@ function FormSelect({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-semibold text-white mb-2">
+      <label htmlFor={name} className="block text-xs md:text-sm font-semibold text-white mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <select
@@ -533,7 +533,7 @@ function FormSelect({
         value={value}
         onChange={onChange}
         required={required}
-        className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+        className="w-full px-3 md:px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
       >
         {placeholder && options[0] === '' && (
           <option value="" disabled>
