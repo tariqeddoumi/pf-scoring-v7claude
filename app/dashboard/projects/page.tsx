@@ -23,6 +23,7 @@ interface Project {
   montant: number;
   status: string;
   scoreGlobal: number | null;
+  client?: { id: string; nom: string; email?: string } | null;
 }
 
 export default function ProjectsPage() {
@@ -45,18 +46,14 @@ export default function ProjectsPage() {
     }
   };
 
-  interface Project {
-    id: string;
-    nom: string;
-    secteur: string;
-    montant: number;
-    status: string;
-    scoreGlobal: number | null;
-  }
-
   const columns: Array<{ key: keyof Project; label: string; render?: (value: any) => React.ReactNode }> = [
     { key: 'nom', label: 'Project Name' },
     { key: 'secteur', label: 'Sector' },
+    {
+      key: 'client',
+      label: 'Client',
+      render: (value: Project['client']) => value?.nom || '-',
+    },
     {
       key: 'montant',
       label: 'Amount (MAD)',
