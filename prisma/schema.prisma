@@ -29,6 +29,24 @@ model User {
   @@map("BP_PF_users")
 }
 
+model Client {
+  id            String    @id @default(uuid())
+  nom           String
+  email         String?   @unique
+  telephone     String?
+  secteur       String?
+  pays          String?
+  type          String?   @default("Entreprise")
+  description   String?
+  status        String    @default("Actif")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  projects      Project[]
+
+  @@map("BP_PF_clients")
+}
+
 model Project {
   id            String        @id @default(uuid())
   nom           String
@@ -41,15 +59,18 @@ model Project {
   grade         String?
   creePar       String        @db.Uuid
   countryCode   String?
+  clientId      String?
   dateCreation  DateTime      @default(now())
   dateMiseAJour DateTime      @updatedAt
 
   user      User       @relation(fields: [creePar], references: [id], onDelete: Cascade)
+  client    Client?    @relation(fields: [clientId], references: [id], onDelete: SetNull)
   scorings  Scoring[]
   auditLogs AuditLog[]
   evaluations Evaluation[]  @relation("ProjectEvaluations")
 
   @@index([creePar])
+  @@index([clientId])
   @@map("BP_PF_projects")
 }
 

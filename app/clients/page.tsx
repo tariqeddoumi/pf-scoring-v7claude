@@ -1,72 +1,88 @@
 'use client';
 
 import Link from 'next/link';
-import { Plus, Search, MoreVertical, Eye, Edit2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Plus, Search, Eye, Edit2, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { FormBuilder } from '@/components/crud/FormBuilder';
+import { createClientSchema } from '@/lib/validation-schemas';
 
-// Mock data - remplacé par API plus tard
-const MOCK_CLIENTS = [
-  {
-    id: '1',
-    name: 'ONEE (Office National de l\'Électricité)',
-    type: 'Entreprise Publique',
-    sector: 'Énergie',
-    country: 'Maroc',
-    email: 'contact@onee.ma',
-    phone: '+212 537 71 06 06',
-    rating: 'AA',
-    projects: 5,
-    evaluations: 12,
-    status: 'Actif',
-  },
-  {
-    id: '2',
-    name: 'EDF Renewables Africa',
-    type: 'Société Privée',
-    sector: 'Énergies Renouvelables',
-    country: 'France',
-    email: 'info@edf-renewables.fr',
-    phone: '+33 1 40 42 22 22',
-    rating: 'AA',
-    projects: 8,
-    evaluations: 18,
-    status: 'Actif',
-  },
-  {
-    id: '3',
-    name: 'Société Casablanca Infrastructure',
-    type: 'Société Privée',
-    sector: 'Infrastructure',
-    country: 'Maroc',
-    email: 'contact@casablanca-infra.ma',
-    phone: '+212 522 43 21 00',
-    rating: 'BBB',
-    projects: 3,
-    evaluations: 5,
-    status: 'Actif',
-  },
-];
+interface Client {
+  id: string;
+  nom: string;
+  email?: string;
+  telephone?: string;
+  secteur?: string;
+  pays?: string;
+  type?: string;
+  status: string;
+  createdAt: string;
+}
 
 export default function ClientsPage() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const [creatingClient, setCreatingClient] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
-  const filteredClients = MOCK_CLIENTS.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.sector.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    fetchClients();
+  }, []);
 
-  const getRatingColor = (rating: string) => {
-    const colors: Record<string, string> = {
-      AAA: 'text-green-500',
-      AA: 'text-cyan-500',
-      A: 'text-blue-500',
-      BBB: 'text-yellow-500',
-      BB: 'text-orange-500',
-      B: 'text-red-500',
-    };
-    return colors[rating] || 'text-slate-500';
+  const fetchClients = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/clients');
+      if (!response.ok) throw new Error('Failed to fetch clients');
+      const data = await response.json();
+      setClients(data.data || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch clients');
+      setClients([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleCreateClient = async (formData: any) => {
+    try {
+      setCreatingClient(true);
+      setCreateError(null);
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create client');
+      }
+
+      setOpen(false);
+      await fetchClients();
+    } catch (err: any) {
+      setCreateError(err.message || 'Failed to create client');
+    } finally {
+      setCreatingClient(false);
+    }
+  };
+
+  const filteredClients = clients.filter(client =>
+    client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -76,13 +92,56 @@ export default function ClientsPage() {
           <h1 className="text-3xl font-bold text-white">Clients</h1>
           <p className="text-slate-400 mt-2">Gérez les clients et leur signalétique</p>
         </div>
-        <Link
-          href="/clients/new"
-          className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
-        >
-          <Plus size={20} />
-          <span>Nouveau client</span>
-        </Link>
+
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <button className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all">
+              <Plus size={20} />
+              <span>Nouveau client</span>
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Client</DialogTitle>
+              <DialogDescription>
+                Add a new client to the system
+              </DialogDescription>
+            </DialogHeader>
+            {createError && (
+              <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-sm">
+                {createError}
+              </div>
+            )}
+            <FormBuilder
+              schema={createClientSchema}
+              fields={[
+                { name: 'nom', label: 'Client Name', type: 'text', placeholder: 'Company name', required: true },
+                { name: 'email', label: 'Email', type: 'email', placeholder: 'contact@company.com' },
+                { name: 'telephone', label: 'Phone', type: 'text', placeholder: '+212 6 XX XX XX XX' },
+                { name: 'secteur', label: 'Sector', type: 'text', placeholder: 'e.g., Agriculture, Energy' },
+                { name: 'pays', label: 'Country', type: 'text', placeholder: 'e.g., Morocco' },
+                {
+                  name: 'type',
+                  label: 'Client Type',
+                  type: 'select',
+                  options: [
+                    { label: 'Entreprise', value: 'Entreprise' },
+                    { label: 'PME', value: 'PME' },
+                    { label: 'TPME', value: 'TPME' },
+                    { label: 'Start-up', value: 'Start-up' },
+                    { label: 'Gouvernement', value: 'Gouvernement' },
+                  ],
+                  defaultValue: 'Entreprise',
+                },
+                { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Client description' },
+              ]}
+              onSubmit={handleCreateClient}
+              submitLabel="Create Client"
+              loading={creatingClient}
+              error={undefined}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search Bar */}
@@ -90,99 +149,86 @@ export default function ClientsPage() {
         <Search className="absolute left-3 top-3 text-slate-500" size={20} />
         <input
           type="text"
-          placeholder="Rechercher par nom ou secteur..."
+          placeholder="Rechercher par nom ou email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
         />
       </div>
 
-      {/* Table View */}
-      <div className="rounded-lg border border-slate-700 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-800">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">
-                <input
-                  type="checkbox"
-                  className="rounded border-slate-600"
-                  onChange={(e) =>
-                    setSelectedClients(e.target.checked ? MOCK_CLIENTS.map(c => c.id) : [])
-                  }
-                />
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Nom</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Type</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Secteur</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Rating</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Projets</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Statut</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-slate-300">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-700">
-            {filteredClients.map((client) => (
-              <tr key={client.id} className="hover:bg-slate-800 transition-colors">
-                <td className="px-6 py-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedClients.includes(client.id)}
-                    onChange={(e) =>
-                      setSelectedClients(
-                        e.target.checked
-                          ? [...selectedClients, client.id]
-                          : selectedClients.filter(id => id !== client.id)
-                      )
-                    }
-                    className="rounded border-slate-600"
-                  />
-                </td>
-                <td className="px-6 py-4">
-                  <Link
-                    href={`/clients/${client.id}`}
-                    className="font-semibold text-white hover:text-cyan-400 transition-colors"
-                  >
-                    {client.name}
-                  </Link>
-                </td>
-                <td className="px-6 py-4 text-slate-400">{client.type}</td>
-                <td className="px-6 py-4 text-slate-400">{client.sector}</td>
-                <td className={`px-6 py-4 font-bold ${getRatingColor(client.rating)}`}>
-                  {client.rating}
-                </td>
-                <td className="px-6 py-4 text-slate-400">{client.projects}</td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium">
-                    {client.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end space-x-2">
-                    <Link
-                      href={`/clients/${client.id}`}
-                      className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors"
-                      title="Voir détails"
-                    >
-                      <Eye size={18} />
-                    </Link>
-                    <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors">
-                      <Edit2 size={18} />
-                    </button>
-                    <button className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
+          {error}
+        </div>
+      )}
 
-      {/* Grid View Alternative */}
-      {filteredClients.length === 0 && (
-        <div className="text-center py-12">
+      {/* Loading State */}
+      {loading && (
+        <div className="rounded-lg border border-slate-700 p-8 text-center">
+          <p className="text-slate-400">Loading clients...</p>
+        </div>
+      )}
+
+      {/* Table View */}
+      {!loading && filteredClients.length > 0 && (
+        <div className="rounded-lg border border-slate-700 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-slate-800">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Nom</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Email</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Secteur</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Pays</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Type</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Statut</th>
+                <th className="px-6 py-3 text-right text-sm font-semibold text-slate-300">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-700">
+              {filteredClients.map((client) => (
+                <tr key={client.id} className="hover:bg-slate-800 transition-colors">
+                  <td className="px-6 py-4 font-semibold text-white">{client.nom}</td>
+                  <td className="px-6 py-4 text-slate-400">{client.email || '-'}</td>
+                  <td className="px-6 py-4 text-slate-400">{client.secteur || '-'}</td>
+                  <td className="px-6 py-4 text-slate-400">{client.pays || '-'}</td>
+                  <td className="px-6 py-4 text-slate-400">{client.type || 'Entreprise'}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      client.status === 'Actif'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {client.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end space-x-2">
+                      <button className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors">
+                        <Eye size={18} />
+                      </button>
+                      <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors">
+                        <Edit2 size={18} />
+                      </button>
+                      <button className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && filteredClients.length === 0 && (
+        <div className="text-center py-12 rounded-lg border border-slate-700">
           <p className="text-slate-400 text-lg">Aucun client trouvé</p>
+          <p className="text-slate-500 mt-1">
+            {searchTerm ? 'Essayez une autre recherche' : 'Créez votre premier client'}
+          </p>
         </div>
       )}
     </div>

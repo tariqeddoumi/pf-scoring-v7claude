@@ -38,6 +38,9 @@ export class ProjectService {
       include: {
         user: {
           select: { id: true, email: true, nom: true, prenom: true }
+        },
+        client: {
+          select: { id: true, nom: true, email: true, telephone: true }
         }
       }
     });
@@ -77,6 +80,9 @@ export class ProjectService {
           dateCreation: true,
           user: {
             select: { nom: true, prenom: true, email: true }
+          },
+          client: {
+            select: { id: true, nom: true, email: true }
           }
         }
       }),
@@ -183,7 +189,12 @@ export class ProjectService {
         where: { creePar: userId },
         skip,
         take: limit,
-        orderBy: { dateCreation: 'desc' }
+        orderBy: { dateCreation: 'desc' },
+        include: {
+          client: {
+            select: { id: true, nom: true, email: true }
+          }
+        }
       }),
       prisma.project.count({ where: { creePar: userId } })
     ]);

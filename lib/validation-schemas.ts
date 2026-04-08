@@ -84,6 +84,30 @@ export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 
 // ============================================================================
+// CLIENT SCHEMAS
+// ============================================================================
+
+export const createClientSchema = z.object({
+  nom: z.string().min(1, 'Client name is required').max(200),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  telephone: z.string().max(20).optional().or(z.literal('')),
+  secteur: z.string().max(100).optional().or(z.literal('')),
+  pays: z.string().max(100).optional().or(z.literal('')),
+  type: z.string().max(50).optional().default('Entreprise'),
+  description: z.string().max(5000).optional().or(z.literal('')),
+});
+
+export const updateClientSchema = createClientSchema.partial();
+
+export const clientListQuerySchema = paginationSchema.extend({
+  search: z.string().optional(),
+  status: z.string().optional(),
+});
+
+export type CreateClientInput = z.infer<typeof createClientSchema>;
+export type UpdateClientInput = z.infer<typeof updateClientSchema>;
+
+// ============================================================================
 // EVALUATION SCHEMAS
 // ============================================================================
 
