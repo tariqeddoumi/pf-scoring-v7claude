@@ -2,7 +2,7 @@
 const nextConfig = {
   output: "standalone",
 
-  // Disable ESLint during builds (validated locally)
+  // Disable ESLint during build
   eslint: {
     ignoreDuringBuilds: true,
   },

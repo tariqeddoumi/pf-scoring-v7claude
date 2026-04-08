@@ -13,6 +13,7 @@ import {
 const navItems = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/projects", label: "Projets", icon: FolderOpen },
+  { href: "/clients", label: "Clients", icon: FolderOpen },
   { href: "/methodology", label: "Méthodologie", icon: BookOpen },
   { href: "/audit", label: "Journal d'audit", icon: LogOut },
 ];

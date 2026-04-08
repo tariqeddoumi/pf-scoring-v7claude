@@ -89,10 +89,10 @@ export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 
 export const createEvaluationSchema = z.object({
   projectId: z.string().uuid('Invalid project ID'),
-  scoringResult: z.record(z.any()).optional(),
+  scoringResult: z.record(z.string(), z.unknown()).optional(),
   finalScore: z.number().min(0).max(10).optional(),
   stressTestResult: z.object({
-    scenarios: z.array(z.any()),
+    scenarios: z.array(z.unknown()),
     summary: z.object({
       allPass: z.boolean(),
       vulnerableScenarios: z.array(z.string()),
@@ -112,8 +112,8 @@ export const submitEvaluationSchema = z.object({
   finalScore: z.number().min(0).max(10),
   rating: z.enum(['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'D']).optional(),
   probabilityOfDefault: z.number().min(0).max(1).optional(),
-  triggeredNOGOs: z.array(z.any()).optional(),
-  appliedMALUS: z.record(z.any()).optional(),
+  triggeredNOGOs: z.array(z.unknown()).optional(),
+  appliedMALUS: z.record(z.string(), z.unknown()).optional(),
   malusTotal: z.number().optional(),
   notes: z.string().max(5000).optional(),
 });

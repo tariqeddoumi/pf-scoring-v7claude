@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 export interface AuthPayload {
-  sub: string;
+  userId: string;
   email: string;
   role: 'admin' | 'manager' | 'analyst' | 'viewer';
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
 }
 
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || 'your-secret-key';

@@ -25,6 +25,18 @@ function LoginPageContent() {
     setError("");
 
     try {
+      // Test de connexion au serveur d'abord
+      const healthCheck = await fetch("/api/health", {
+        method: "GET",
+        signal: AbortSignal.timeout(5000), // 5s timeout
+      }).catch(() => null);
+
+      if (!healthCheck?.ok) {
+        setError("❌ Serveur indisponible. Vérifiez votre connexion ou attendez quelques secondes.");
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,8 +54,9 @@ function LoginPageContent() {
           : data.error || "Erreur lors de la connexion";
         setError(errorMessage);
       }
-    } catch {
-      setError("Erreur de connexion au serveur");
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Erreur de connexion au serveur";
+      setError(`Erreur: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -241,6 +254,9 @@ function LoginPageContent() {
           </p>
           <p className="mt-2">
             Banque Marocaine • Monnaie: MAD
+          </p>
+          <p className="mt-3 text-xs text-slate-500">
+            v1.0.1 • Build {new Date().toISOString().split('T')[0]}
           </p>
         </div>
       </div>

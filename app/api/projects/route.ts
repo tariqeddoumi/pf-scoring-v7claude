@@ -39,7 +39,7 @@ async function handlePOST(request: NextRequest, user: any) {
     }
 
     const body = await request.json();
-    const project = await ProjectService.createProject(body, user.sub);
+    const project = await ProjectService.createProject(body, user.userId);
 
     return NextResponse.json(
       {

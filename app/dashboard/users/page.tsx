@@ -45,6 +45,15 @@ export default function UsersPage() {
     }
   };
 
+  interface User {
+    id: string;
+    email: string;
+    nom: string;
+    prenom: string;
+    role: string;
+    createdAt: string;
+  }
+
   const columns: Array<{ key: keyof User; label: string; render?: (value: any) => React.ReactNode }> = [
     { key: 'email', label: 'Email' },
     { key: 'nom', label: 'Last Name' },

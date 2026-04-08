@@ -18,7 +18,7 @@ async function handlePOST(request: NextRequest, user: any) {
       return NextResponse.json({ error: 'Evaluation ID required' }, { status: 400 });
     }
 
-    const evaluation = await EvaluationService.validateEvaluation(id, validateData, user.sub);
+    const evaluation = await EvaluationService.validateEvaluation(id, validateData, user.userId);
 
     return NextResponse.json(evaluation, { status: 200 });
   } catch (error: any) {

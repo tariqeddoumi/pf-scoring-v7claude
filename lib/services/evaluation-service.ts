@@ -30,8 +30,14 @@ export class EvaluationService {
       data: {
         projectId: validated.projectId,
         analystId: createdBy,
-        scoringResult: validated.scoringResult || {},
+        scoringResult: (validated.scoringResult || {}) as any,
         finalScore: validated.finalScore || 0,
+        rating: 'D',
+        recommendation: 'APPROVE',
+        probabilityOfDefault: 0,
+        triggeredNOGOs: [],
+        appliedMALUS: [],
+        malusTotal: 0,
         status: 'brouillon',
         version: '7.0'
       }
@@ -123,8 +129,8 @@ export class EvaluationService {
         finalScore: validated.finalScore,
         rating: validated.rating,
         probabilityOfDefault: validated.probabilityOfDefault,
-        triggeredNOGOs: validated.triggeredNOGOs,
-        appliedMALUS: validated.appliedMALUS,
+        triggeredNOGOs: validated.triggeredNOGOs as any,
+        appliedMALUS: validated.appliedMALUS as any,
         malusTotal: validated.malusTotal,
         notes: validated.notes,
         updatedAt: new Date()

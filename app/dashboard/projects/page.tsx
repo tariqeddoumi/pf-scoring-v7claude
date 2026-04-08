@@ -45,6 +45,15 @@ export default function ProjectsPage() {
     }
   };
 
+  interface Project {
+    id: string;
+    nom: string;
+    secteur: string;
+    montant: number;
+    status: string;
+    scoreGlobal: number | null;
+  }
+
   const columns: Array<{ key: keyof Project; label: string; render?: (value: any) => React.ReactNode }> = [
     { key: 'nom', label: 'Project Name' },
     { key: 'secteur', label: 'Sector' },
@@ -146,19 +155,19 @@ export default function ProjectsPage() {
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <p className="text-gray-600 text-sm">In Review</p>
           <p className="text-2xl font-bold text-yellow-600">
-            {projects.filter(p => p.status === 'en_revue').length}
+            {projects.filter((p: any) => p.status === 'en_revue').length}
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <p className="text-gray-600 text-sm">Approved</p>
           <p className="text-2xl font-bold text-green-600">
-            {projects.filter(p => p.status === 'approuve').length}
+            {projects.filter((p: any) => p.status === 'approuve').length}
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <p className="text-gray-600 text-sm">Rejected</p>
           <p className="text-2xl font-bold text-red-600">
-            {projects.filter(p => p.status === 'rejete').length}
+            {projects.filter((p: any) => p.status === 'rejete').length}
           </p>
         </div>
       </div>

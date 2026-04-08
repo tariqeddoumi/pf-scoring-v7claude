@@ -11,7 +11,7 @@ interface RouteParams {
  */
 async function handleGET(request: NextRequest, user: any, params: any) {
   try {
-    const evaluation = await EvaluationService.getEvaluationById(params.id, user.sub);
+    const evaluation = await EvaluationService.getEvaluationById(params.id, user.userId);
 
     if (!evaluation) {
       return NextResponse.json({ error: 'Evaluation not found' }, { status: 404 });

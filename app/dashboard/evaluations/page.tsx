@@ -58,6 +58,15 @@ export default function EvaluationsPage() {
     }
   };
 
+  interface Evaluation {
+    id: string;
+    projectId: string;
+    status: string;
+    finalScore: number | null;
+    rating: string | null;
+    createdAt: string;
+  }
+
   const columns: Array<{ key: keyof Evaluation; label: string; render?: (value: any) => React.ReactNode }> = [
     {
       key: 'projectId',

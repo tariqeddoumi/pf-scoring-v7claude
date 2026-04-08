@@ -47,7 +47,7 @@ async function handlePOST(request: NextRequest, user: any) {
     }
 
     const body = await request.json();
-    const evaluation = await EvaluationService.createEvaluation(body, user.sub);
+    const evaluation = await EvaluationService.createEvaluation(body, user.userId);
 
     return NextResponse.json(evaluation, { status: 201 });
   } catch (error: any) {
