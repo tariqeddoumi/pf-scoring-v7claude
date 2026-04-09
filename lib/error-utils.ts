@@ -82,6 +82,14 @@ export const ErrorCategories = {
     }
   },
 
+  DATABASE: {
+    CONNECTION_ERROR: {
+      code: 'DB_001',
+      userMessage: '⚠️ Impossible de se connecter à la base de données. Veuillez réessayer.',
+      debugMessage: 'Database connection failed. Check DATABASE_URL and DIRECT_URL environment variables.'
+    }
+  },
+
   BUSINESS: {
     INVALID_STATE: {
       code: 'BIZ_001',
@@ -171,6 +179,14 @@ export function parseApiError(apiResponse: any, endpoint: string): AppError {
   // Si c'est une erreur de contrainte unique
   if (errorCode === 'ERR_API_002' || errorMessage?.includes('déjà')) {
     return createAppError('VALIDATION', 'DUPLICATE_ENTRY', {
+      endpoint,
+      response: apiResponse
+    });
+  }
+
+  // Si c'est une erreur de base de données
+  if (errorCode === 'DB_CONNECTION_ERROR' || errorCode?.startsWith('DB_')) {
+    return createAppError('DATABASE', 'CONNECTION_ERROR', {
       endpoint,
       response: apiResponse
     });
