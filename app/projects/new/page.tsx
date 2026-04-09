@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { api, apiFetchWithErrorHandling } from '@/lib/api-client';
 import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
 
@@ -37,59 +36,26 @@ interface Client {
 }
 
 export default function NewProjectPage() {
-  const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsError, setClientsError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check authentication first
-    const checkAuth = async () => {
+    const fetchClients = async () => {
       try {
-        const response = await fetch('/api/clients', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        // If we get 401, user is not authenticated
-        if (response.status === 401) {
-          setIsAuthenticated(false);
-          setAuthError('Veuillez vous connecter pour accéder à cette page.');
-          setTimeout(() => {
-            router.push('/login');
-          }, 2000);
-          setClientsLoading(false);
-          return;
-        }
-
-        // User is authenticated
-        setIsAuthenticated(true);
-
-        // Parse and set clients
-        if (response.ok) {
-          const data = await response.json();
-          setClients(data.data || []);
-          setClientsError(null);
-        } else {
-          setClientsError('Could not load clients list');
-        }
+        const data = await api.clients.list();
+        setClients(data.data || []);
+        setClientsError(null);
       } catch (error: any) {
-        console.error('Auth/clients check error:', error);
-        // Network error - don't block access, assume authenticated
-        setIsAuthenticated(true);
-        setClientsError('Could not load clients list');
+        console.error('Failed to load clients:', error);
+        setClientsError(error.message || 'Failed to fetch clients');
+        setClients([]);
       } finally {
         setClientsLoading(false);
       }
     };
-
-    checkAuth();
-  }, [router]);
+    fetchClients();
+  }, []);
 
   const [formData, setFormData] = useState({
     // Client Selection
@@ -280,21 +246,6 @@ export default function NewProjectPage() {
         </div>
       </div>
 
-      {/* Auth Error Message */}
-      {authError && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
-          🔴 {authError}
-          <p className="text-xs mt-2">Redirection vers la page de connexion...</p>
-        </div>
-      )}
-
-      {/* Loading State */}
-      {isAuthenticated === null && (
-        <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 text-blue-400 text-sm md:text-base">
-          ⏳ Vérification de votre identité...
-        </div>
-      )}
-
       {/* Success Message */}
       {successMessage && (
         <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 text-green-400 text-sm md:text-base">
@@ -303,14 +254,14 @@ export default function NewProjectPage() {
       )}
 
       {/* Error Message */}
-      {errorMessage && !authError && (
+      {errorMessage && (
         <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
           🔴 {errorMessage}
         </div>
       )}
 
-      {/* Form - Disabled if not authenticated */}
-      <div className={`rounded-lg border border-slate-700 bg-slate-800 p-8 ${isAuthenticated === false ? 'opacity-50 pointer-events-none' : ''}`}>
+      {/* Form */}
+      <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Client Selection - REQUIRED */}
           <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-6">

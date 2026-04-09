@@ -2,15 +2,11 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Building2, MapPin, Phone, Briefcase, Shield, Users, BarChart3 } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { apiFetchWithErrorHandling } from '@/lib/api-client';
 import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
 
 export default function NewClientPage() {
-  const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     // Identité & Administration
     legal_name: '',
@@ -53,48 +49,6 @@ export default function NewClientPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  // Check authentication on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Try to fetch a protected endpoint to verify auth
-        const response = await fetch('/api/clients', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        // If we get any successful response (200-299), user is authenticated
-        if (response.ok) {
-          setIsAuthenticated(true);
-          return;
-        }
-
-        // If we get 401, user is not authenticated
-        if (response.status === 401) {
-          setIsAuthenticated(false);
-          setAuthError('Veuillez vous connecter pour accéder à cette page.');
-          setTimeout(() => {
-            router.push('/login');
-          }, 2000);
-          return;
-        }
-
-        // For other errors, assume user might be authenticated but API failed
-        // Don't block the form
-        setIsAuthenticated(true);
-      } catch (error: any) {
-        console.error('Auth check error:', error);
-        // Network error - don't block access, let API handle auth
-        setIsAuthenticated(true);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,33 +189,15 @@ export default function NewClientPage() {
         </div>
       )}
 
-      {/* Auth Error Message */}
-      {authError && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
-          🔴 {authError}
-          <p className="text-xs mt-2">Redirection vers la page de connexion...</p>
-        </div>
-      )}
-
-      {/* Loading State */}
-      {isAuthenticated === null && (
-        <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 text-blue-400 text-sm md:text-base">
-          ⏳ Vérification de votre identité...
-        </div>
-      )}
-
       {/* Error Message */}
-      {errorMessage && !authError && (
+      {errorMessage && (
         <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
           🔴 {errorMessage}
         </div>
       )}
 
-      {/* Form - Disabled if not authenticated */}
-      <form
-        onSubmit={handleSubmit}
-        className={`space-y-4 md:space-y-6 ${isAuthenticated === false ? 'opacity-50 pointer-events-none' : ''}`}
-      >
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
 
         {/* === SECTION 1 : Identité & Administration === */}
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
