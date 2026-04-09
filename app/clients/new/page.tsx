@@ -59,14 +59,16 @@ export default function NewClientPage() {
 
     // Map form fields to API schema
     const apiData = {
-      nom: formData.legal_name,
-      email: formData.email || undefined,
-      telephone: formData.phone || undefined,
-      secteur: formData.sector || undefined,
-      pays: formData.country || undefined,
-      type: formData.type,
-      description: formData.address || undefined,
+      nom: formData.legal_name.trim(),
+      email: formData.email.trim() || null,
+      telephone: formData.phone.trim() || null,
+      secteur: formData.sector.trim() || null,
+      pays: formData.country.trim() || null,
+      type: formData.type.trim() || 'Entreprise',
+      description: formData.address.trim() || null,
     };
+
+    console.log('[CLIENT FORM] Submitting data:', apiData);
 
     try {
 

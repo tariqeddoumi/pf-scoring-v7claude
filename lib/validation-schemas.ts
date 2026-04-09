@@ -91,19 +91,34 @@ export const createClientSchema = z.object({
   nom: z.string()
     .min(1, { message: 'Le nom du client est requis (ERR_VALID_001)' })
     .min(3, { message: 'Le nom doit contenir au moins 3 caractères' })
-    .max(200, { message: 'Le nom ne doit pas dépasser 200 caractères' }),
-  email: z.string()
-    .email({ message: 'Format email invalide (ERR_VALID_002)' })
-    .optional()
-    .or(z.literal('')),
-  telephone: z.string()
-    .regex(/^[+]?[\d\s\-()]{6,}$|^$/, { message: 'Format téléphone invalide (ERR_VALID_003)' })
-    .optional()
-    .or(z.literal('')),
-  secteur: z.string().max(100).optional().or(z.literal('')),
-  pays: z.string().max(100).optional().or(z.literal('')),
+    .max(200, { message: 'Le nom ne doit pas dépasser 200 caractères' })
+    .trim(),
+  email: z.union([
+    z.string().email({ message: 'Format email invalide (ERR_VALID_002)' }).trim(),
+    z.literal(''),
+    z.null()
+  ]).optional(),
+  telephone: z.union([
+    z.string().regex(/^[+]?[\d\s\-()]{6,}$/, { message: 'Format téléphone invalide (ERR_VALID_003)' }).trim(),
+    z.literal(''),
+    z.null()
+  ]).optional(),
+  secteur: z.union([
+    z.string().max(100).trim(),
+    z.literal(''),
+    z.null()
+  ]).optional(),
+  pays: z.union([
+    z.string().max(100).trim(),
+    z.literal(''),
+    z.null()
+  ]).optional(),
   type: z.string().max(50).optional().default('Entreprise'),
-  description: z.string().max(5000).optional().or(z.literal('')),
+  description: z.union([
+    z.string().max(5000).trim(),
+    z.literal(''),
+    z.null()
+  ]).optional(),
 });
 
 export const updateClientSchema = createClientSchema.partial();
