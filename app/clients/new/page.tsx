@@ -2,11 +2,15 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Building2, MapPin, Phone, Briefcase, Shield, Users, BarChart3 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiFetchWithErrorHandling } from '@/lib/api-client';
 import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
 
 export default function NewClientPage() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     // Identité & Administration
     legal_name: '',
@@ -49,6 +53,35 @@ export default function NewClientPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Try to fetch a protected endpoint to verify auth
+        const response = await fetch('/api/clients', {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        if (response.status === 401) {
+          setIsAuthenticated(false);
+          setAuthError('Veuillez vous connecter pour accéder à cette page.');
+          // Redirect to login after 2 seconds
+          setTimeout(() => {
+            router.push('/login');
+          }, 2000);
+        } else {
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,15 +222,33 @@ export default function NewClientPage() {
         </div>
       )}
 
+      {/* Auth Error Message */}
+      {authError && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
+          🔴 {authError}
+          <p className="text-xs mt-2">Redirection vers la page de connexion...</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isAuthenticated === null && (
+        <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 text-blue-400 text-sm md:text-base">
+          ⏳ Vérification de votre identité...
+        </div>
+      )}
+
       {/* Error Message */}
-      {errorMessage && (
+      {errorMessage && !authError && (
         <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
           🔴 {errorMessage}
         </div>
       )}
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+      {/* Form - Disabled if not authenticated */}
+      <form
+        onSubmit={handleSubmit}
+        className={`space-y-4 md:space-y-6 ${isAuthenticated === false ? 'opacity-50 pointer-events-none' : ''}`}
+      >
 
         {/* === SECTION 1 : Identité & Administration === */}
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
