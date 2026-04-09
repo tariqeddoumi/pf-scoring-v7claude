@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { api, apiFetchWithErrorHandling } from '@/lib/api-client';
 import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
 
@@ -36,25 +37,51 @@ interface Client {
 }
 
 export default function NewProjectPage() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsError, setClientsError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchClients = async () => {
+    // Check authentication first
+    const checkAuth = async () => {
       try {
+        const response = await fetch('/api/clients', {
+          method: 'GET',
+          credentials: 'include'
+        });
+
+        if (response.status === 401) {
+          setIsAuthenticated(false);
+          setAuthError('Veuillez vous connecter pour accéder à cette page.');
+          setTimeout(() => {
+            router.push('/login');
+          }, 2000);
+          return;
+        }
+
+        setIsAuthenticated(true);
+
+        // Only fetch clients if authenticated
         const data = await api.clients.list();
         setClients(data.data || []);
         setClientsError(null);
       } catch (error: any) {
-        setClientsError(error.message || 'Failed to fetch clients');
+        if (error.message?.includes('401')) {
+          setIsAuthenticated(false);
+        } else {
+          setClientsError(error.message || 'Failed to fetch clients');
+        }
         setClients([]);
       } finally {
         setClientsLoading(false);
       }
     };
-    fetchClients();
-  }, []);
+
+    checkAuth();
+  }, [router]);
 
   const [formData, setFormData] = useState({
     // Client Selection
@@ -245,6 +272,21 @@ export default function NewProjectPage() {
         </div>
       </div>
 
+      {/* Auth Error Message */}
+      {authError && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
+          🔴 {authError}
+          <p className="text-xs mt-2">Redirection vers la page de connexion...</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isAuthenticated === null && (
+        <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-4 text-blue-400 text-sm md:text-base">
+          ⏳ Vérification de votre identité...
+        </div>
+      )}
+
       {/* Success Message */}
       {successMessage && (
         <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 text-green-400 text-sm md:text-base">
@@ -253,14 +295,14 @@ export default function NewProjectPage() {
       )}
 
       {/* Error Message */}
-      {errorMessage && (
+      {errorMessage && !authError && (
         <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
           🔴 {errorMessage}
         </div>
       )}
 
-      {/* Form */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
+      {/* Form - Disabled if not authenticated */}
+      <div className={`rounded-lg border border-slate-700 bg-slate-800 p-8 ${isAuthenticated === false ? 'opacity-50 pointer-events-none' : ''}`}>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Client Selection - REQUIRED */}
           <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-6">
