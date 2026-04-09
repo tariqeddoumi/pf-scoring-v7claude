@@ -25,18 +25,8 @@ function LoginPageContent() {
     setError("");
 
     try {
-      // Test de connexion au serveur d'abord
-      const healthCheck = await fetch("/api/health", {
-        method: "GET",
-        signal: AbortSignal.timeout(5000), // 5s timeout
-      }).catch(() => null);
-
-      if (!healthCheck?.ok) {
-        setError("❌ Serveur indisponible. Vérifiez votre connexion ou attendez quelques secondes.");
-        setLoading(false);
-        return;
-      }
-
+      // Attempt login directly without health check blocking it
+      // The login endpoint will handle database errors properly
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,11 +42,17 @@ function LoginPageContent() {
         const errorMessage = data.errorCode
           ? `${data.error || "Erreur"} (${data.errorCode})`
           : data.error || "Erreur lors de la connexion";
-        setError(errorMessage);
+
+        // Special handling for server errors
+        if (response.status >= 500) {
+          setError(`⚠️ ${errorMessage}`);
+        } else {
+          setError(errorMessage);
+        }
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Erreur de connexion au serveur";
-      setError(`Erreur: ${errorMsg}`);
+      setError(`Erreur réseau: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
