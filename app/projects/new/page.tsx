@@ -185,11 +185,15 @@ export default function NewProjectPage() {
             errors[err.field] = err.message;
           });
           setFieldErrors(errors);
-          setErrorMessage('Veuillez corriger les erreurs dans le formulaire');
+          setErrorMessage('⚠️ Veuillez corriger les informations saisies dans le formulaire ci-dessous.');
+        } else if (data.errorCode === 'ERR_API_002') {
+          setErrorMessage('⚠️ Ce client est déjà associé à un projet. Veuillez en sélectionner un autre.');
+        } else if (data.error?.includes('Unauthorized')) {
+          setErrorMessage('⚠️ Votre session a expiré. Veuillez vous reconnecter pour continuer.');
         } else if (data.error) {
-          setErrorMessage(`${data.error} (${data.errorCode || 'ERR_API_001'})`);
+          setErrorMessage(`⚠️ ${data.error}`);
         } else {
-          setErrorMessage('Une erreur serveur est survenue (ERR_API_001)');
+          setErrorMessage('⚠️ Une erreur serveur est survenue. Veuillez réessayer.');
         }
         return;
       }
@@ -199,7 +203,16 @@ export default function NewProjectPage() {
         window.location.href = '/projects';
       }, 2000);
     } catch (error: any) {
-      setErrorMessage(`Erreur connexion serveur (ERR_NET_001): ${error.message}`);
+      console.error('Form submission error:', error);
+
+      // Error message mapping for better user experience
+      if (error.message?.includes('Unauthorized')) {
+        setErrorMessage('⚠️ Votre session a expiré. Veuillez vous reconnecter pour continuer.');
+      } else if (error.message?.includes('Failed to fetch')) {
+        setErrorMessage('⚠️ Erreur de connexion au serveur. Vérifiez votre connexion Internet.');
+      } else {
+        setErrorMessage(`⚠️ Erreur serveur. Veuillez réessayer ou contacter le support.`);
+      }
     } finally {
       setSubmitting(false);
     }
