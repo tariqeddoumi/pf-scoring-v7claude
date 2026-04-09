@@ -175,9 +175,22 @@ export default function NewProjectPage() {
     setFieldErrors({});
 
     try {
+      // Prepare data for API - map form fields to schema fields
+      const apiData = {
+        nom: formData.name || formData.nom,
+        description: formData.description,
+        secteur: formData.sector || formData.secteur,
+        montant: parseFloat(formData.totalCost) || 0,
+        devise: formData.devise || 'MAD',
+        countryCode: formData.country || formData.countryCode || 'MA',
+        clientId: formData.clientId
+      };
+
+      console.log('[PROJECT FORM] Submitting data:', apiData);
+
       const { ok, data } = await apiFetchWithErrorHandling('/api/projects', {
         method: 'POST',
-        body: JSON.stringify(formData)
+        body: JSON.stringify(apiData)
       });
 
       if (!ok) {

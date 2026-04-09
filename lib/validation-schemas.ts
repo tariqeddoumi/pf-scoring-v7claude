@@ -63,9 +63,18 @@ export const createProjectSchema = z.object({
   nom: z.string().min(3, 'Project name must be at least 3 characters').max(200),
   description: z.string().min(10, 'Description must be at least 10 characters').max(5000),
   secteur: z.string().min(1, 'Sector is required').max(100),
-  montant: z.number().positive('Amount must be positive').max(1e12, 'Amount exceeds maximum'),
+  montant: z.union([
+    z.number().positive('Amount must be positive').max(1e12, 'Amount exceeds maximum'),
+    z.string().transform((val) => {
+      const num = parseFloat(val);
+      if (isNaN(num)) throw new Error('Amount must be a valid number');
+      if (num <= 0) throw new Error('Amount must be positive');
+      return num;
+    })
+  ]),
   devise: z.string().length(3).default('MAD'),
   countryCode: z.string().length(2).optional(),
+  clientId: z.string().uuid('Invalid client ID'),
 });
 
 export const updateProjectSchema = createProjectSchema.partial();
