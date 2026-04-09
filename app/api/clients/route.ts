@@ -22,8 +22,21 @@ async function handleGET(request: NextRequest, user: any) {
     });
   } catch (error: any) {
     console.error('[CLIENTS] GET error:', error);
+
+    // Handle Prisma-specific errors
+    if (error.code === 'P1001') {
+      return NextResponse.json(
+        {
+          error: 'Impossible de se connecter à la base de données',
+          errorCode: 'DB_CONNECTION_ERROR',
+          details: 'Vérifiez que les variables d\'environnement DATABASE_URL sont correctement configurées'
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { 
+      {
         error: error.message || 'Failed to fetch clients',
         errorCode: 'ERR_API_001'
       },
@@ -120,8 +133,20 @@ async function handlePOST(request: NextRequest, user: any) {
       );
     }
 
+    // Handle Prisma-specific errors
+    if (error.code === 'P1001') {
+      return NextResponse.json(
+        {
+          error: 'Impossible de se connecter à la base de données',
+          errorCode: 'DB_CONNECTION_ERROR',
+          details: 'Vérifiez que les variables d\'environnement DATABASE_URL et DIRECT_URL sont correctement configurées'
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { 
+      {
         error: error.message || 'Erreur lors de la création du client',
         errorCode: 'ERR_API_001'
       },
