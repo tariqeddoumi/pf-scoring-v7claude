@@ -45,12 +45,13 @@ async function apiFetch(endpoint: string, options: FetchOptions = {}) {
     headers,
     credentials: 'include'
   });
-  const data = await response.json();
 
+  // Check if response is OK before parsing JSON
   if (!response.ok) {
-    throw new Error(`API error: ${response.statusText}`);
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
   }
 
+  const data = await response.json();
   return data;
 }
 
@@ -81,22 +82,22 @@ export async function apiFetchWithErrorHandling(endpoint: string, options: Fetch
 
 export const api = {
   evaluations: {
-    list: () => apiFetch('/evaluations'),
-    create: (data: any) => apiFetch('/evaluations', { method: 'POST', body: JSON.stringify(data) }),
-    get: (id: string) => apiFetch(`/evaluations/${id}`),
-    update: (id: string, data: any) => apiFetch(`/evaluations/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => apiFetch(`/evaluations/${id}`, { method: 'DELETE' }),
+    list: () => apiFetch('/api/evaluations'),
+    create: (data: any) => apiFetch('/api/evaluations', { method: 'POST', body: JSON.stringify(data) }),
+    get: (id: string) => apiFetch(`/api/evaluations/${id}`),
+    update: (id: string, data: any) => apiFetch(`/api/evaluations/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => apiFetch(`/api/evaluations/${id}`, { method: 'DELETE' }),
   },
   projects: {
-    list: () => apiFetch('/projects'),
-    create: (data: any) => apiFetch('/projects', { method: 'POST', body: JSON.stringify(data) }),
+    list: () => apiFetch('/api/projects'),
+    create: (data: any) => apiFetch('/api/projects', { method: 'POST', body: JSON.stringify(data) }),
   },
   clients: {
-    list: () => apiFetch('/clients'),
-    create: (data: any) => apiFetch('/clients', { method: 'POST', body: JSON.stringify(data) }),
+    list: () => apiFetch('/api/clients'),
+    create: (data: any) => apiFetch('/api/clients', { method: 'POST', body: JSON.stringify(data) }),
   },
   users: {
-    list: () => apiFetch('/users'),
-    create: (data: any) => apiFetch('/users', { method: 'POST', body: JSON.stringify(data) }),
+    list: () => apiFetch('/api/users'),
+    create: (data: any) => apiFetch('/api/users', { method: 'POST', body: JSON.stringify(data) }),
   },
 };
