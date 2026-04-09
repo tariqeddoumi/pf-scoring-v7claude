@@ -4,33 +4,25 @@ interface FetchOptions extends RequestInit {
   headers?: Record<string, string>;
 }
 
-function getAuthToken(): string | null {
-  // Get token from cookies on client side
-  if (typeof document === 'undefined') return null;
-  const cookies = document.cookie.split(';');
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === 'auth_token') {
-      return decodeURIComponent(value);
-    }
-  }
-  return null;
+function getApiUrl(endpoint: string): string {
+  // Use relative URL for same-origin requests
+  // This works on all deployments without env var configuration
+  return endpoint;
 }
 
 async function apiFetch(endpoint: string, options: FetchOptions = {}) {
-  const url = `${config.api.baseUrl}${endpoint}`;
-  const token = getAuthToken();
+  const url = getApiUrl(endpoint);
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  // Add authorization header if token exists
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    // Include cookies in request for authentication
+    credentials: 'include'
+  });
   const data = await response.json();
 
   if (!response.ok) {
@@ -42,19 +34,18 @@ async function apiFetch(endpoint: string, options: FetchOptions = {}) {
 
 // For handling responses with error codes (like form submissions)
 export async function apiFetchWithErrorHandling(endpoint: string, options: FetchOptions = {}) {
-  const url = `${config.api.baseUrl}${endpoint}`;
-  const token = getAuthToken();
+  const url = getApiUrl(endpoint);
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  // Add authorization header if token exists
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    // Include cookies in request for authentication
+    credentials: 'include'
+  });
   return {
     ok: response.ok,
     data: await response.json()
