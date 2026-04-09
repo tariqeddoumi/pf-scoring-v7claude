@@ -167,7 +167,7 @@ export async function GET(
 
     const response = NextResponse.redirect(dashboardUrl);
     response.cookies.set("auth_token", token, {
-      httpOnly: true,
+      httpOnly: false, // Allow JavaScript to read for Bearer token
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 86400,

@@ -8,7 +8,7 @@ export async function POST() {
 
   // Supprimer le cookie
   response.cookies.set("auth_token", "", {
-    httpOnly: true,
+    httpOnly: false,
     maxAge: 0,
     path: "/",
   });
