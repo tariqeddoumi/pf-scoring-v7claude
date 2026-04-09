@@ -50,31 +50,39 @@ export default function NewProjectPage() {
       try {
         const response = await fetch('/api/clients', {
           method: 'GET',
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
 
+        // If we get 401, user is not authenticated
         if (response.status === 401) {
           setIsAuthenticated(false);
           setAuthError('Veuillez vous connecter pour accéder à cette page.');
           setTimeout(() => {
             router.push('/login');
           }, 2000);
+          setClientsLoading(false);
           return;
         }
 
+        // User is authenticated
         setIsAuthenticated(true);
 
-        // Only fetch clients if authenticated
-        const data = await api.clients.list();
-        setClients(data.data || []);
-        setClientsError(null);
-      } catch (error: any) {
-        if (error.message?.includes('401')) {
-          setIsAuthenticated(false);
+        // Parse and set clients
+        if (response.ok) {
+          const data = await response.json();
+          setClients(data.data || []);
+          setClientsError(null);
         } else {
-          setClientsError(error.message || 'Failed to fetch clients');
+          setClientsError('Could not load clients list');
         }
-        setClients([]);
+      } catch (error: any) {
+        console.error('Auth/clients check error:', error);
+        // Network error - don't block access, assume authenticated
+        setIsAuthenticated(true);
+        setClientsError('Could not load clients list');
       } finally {
         setClientsLoading(false);
       }

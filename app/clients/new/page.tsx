@@ -61,22 +61,35 @@ export default function NewClientPage() {
         // Try to fetch a protected endpoint to verify auth
         const response = await fetch('/api/clients', {
           method: 'GET',
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
 
+        // If we get any successful response (200-299), user is authenticated
+        if (response.ok) {
+          setIsAuthenticated(true);
+          return;
+        }
+
+        // If we get 401, user is not authenticated
         if (response.status === 401) {
           setIsAuthenticated(false);
           setAuthError('Veuillez vous connecter pour accéder à cette page.');
-          // Redirect to login after 2 seconds
           setTimeout(() => {
             router.push('/login');
           }, 2000);
-        } else {
-          setIsAuthenticated(true);
+          return;
         }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        setIsAuthenticated(false);
+
+        // For other errors, assume user might be authenticated but API failed
+        // Don't block the form
+        setIsAuthenticated(true);
+      } catch (error: any) {
+        console.error('Auth check error:', error);
+        // Network error - don't block access, let API handle auth
+        setIsAuthenticated(true);
       }
     };
 
