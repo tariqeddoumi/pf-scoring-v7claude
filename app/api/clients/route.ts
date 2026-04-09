@@ -48,10 +48,19 @@ async function handleGET(request: NextRequest, user: any) {
 async function handlePOST(request: NextRequest, user: any) {
   try {
     const body = await request.json();
+    console.log('[CLIENTS] POST request body:', JSON.stringify(body));
 
     // Validation avec Zod
-    const validated = createClientSchema.parse(body);
+    let validated;
+    try {
+      validated = createClientSchema.parse(body);
+    } catch (validationError) {
+      console.error('[CLIENTS] Validation error:', validationError);
+      throw validationError;
+    }
+
     const { nom, email, telephone, secteur, pays, type, description } = validated;
+    console.log('[CLIENTS] Validated data:', { nom, email, telephone, secteur, pays, type, description });
 
     // Vérifier si email existe déjà (si fourni)
     if (email) {
@@ -61,7 +70,7 @@ async function handlePOST(request: NextRequest, user: any) {
 
       if (existingClient) {
         return NextResponse.json(
-          { 
+          {
             error: 'Un client avec cet email existe déjà',
             errorCode: 'ERR_API_002',
             errors: [
@@ -75,6 +84,8 @@ async function handlePOST(request: NextRequest, user: any) {
         );
       }
     }
+
+    console.log('[CLIENTS] Creating client with data:', { nom, email, telephone, secteur, pays, type, description });
 
     const client = await prisma.client.create({
       data: {
@@ -97,6 +108,9 @@ async function handlePOST(request: NextRequest, user: any) {
     );
   } catch (error: any) {
     console.error('[CLIENTS] POST error:', error);
+    console.error('[CLIENTS] Error stack:', error.stack);
+    console.error('[CLIENTS] Error code:', error.code);
+    console.error('[CLIENTS] Error message:', error.message);
 
     // Gestion des erreurs Zod
     if (error instanceof ZodError) {
@@ -106,8 +120,10 @@ async function handlePOST(request: NextRequest, user: any) {
         message: Array.isArray(messages) ? messages[0] : messages
       }));
 
+      console.error('[CLIENTS] Zod validation errors:', formattedErrors);
+
       return NextResponse.json(
-        { 
+        {
           error: 'Validation échouée',
           errorCode: 'ERR_VALID_001',
           errors: formattedErrors
@@ -119,7 +135,7 @@ async function handlePOST(request: NextRequest, user: any) {
     // Erreur Prisma - email unique constraint
     if (error.code === 'P2002') {
       return NextResponse.json(
-        { 
+        {
           error: 'Un client avec cet email existe déjà',
           errorCode: 'ERR_API_002',
           errors: [
@@ -145,10 +161,23 @@ async function handlePOST(request: NextRequest, user: any) {
       );
     }
 
+    // Handle JSON parse error
+    if (error instanceof SyntaxError && 'body' in error) {
+      return NextResponse.json(
+        {
+          error: 'Erreur de format des données envoyées',
+          errorCode: 'ERR_VALID_001'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Generic error
     return NextResponse.json(
       {
         error: error.message || 'Erreur lors de la création du client',
-        errorCode: 'ERR_API_001'
+        errorCode: 'ERR_API_001',
+        debugInfo: process.env.NODE_ENV === 'development' ? error.message : undefined
       },
       { status: 500 }
     );
