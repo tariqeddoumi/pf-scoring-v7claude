@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Building2, MapPin, Phone, Briefcase, Shield, Users, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 import { apiFetchWithErrorHandling } from '@/lib/api-client';
+import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
 
 export default function NewClientPage() {
   const [formData, setFormData] = useState({
@@ -56,17 +57,18 @@ export default function NewClientPage() {
     setSuccessMessage(null);
     setFieldErrors({});
 
+    // Map form fields to API schema
+    const apiData = {
+      nom: formData.legal_name,
+      email: formData.email || undefined,
+      telephone: formData.phone || undefined,
+      secteur: formData.sector || undefined,
+      pays: formData.country || undefined,
+      type: formData.type,
+      description: formData.address || undefined,
+    };
+
     try {
-      // Map form fields to API schema
-      const apiData = {
-        nom: formData.legal_name,
-        email: formData.email || undefined,
-        telephone: formData.phone || undefined,
-        secteur: formData.sector || undefined,
-        pays: formData.country || undefined,
-        type: formData.type,
-        description: formData.address || undefined,
-      };
 
       const { ok, data } = await apiFetchWithErrorHandling('/api/clients', {
         method: 'POST',
@@ -74,10 +76,15 @@ export default function NewClientPage() {
       });
 
       if (!ok) {
-        // Gestion des erreurs avec codes
+        // Parse API error and create structured error
+        const appError = parseApiError(data, '/api/clients');
+        logAppError(appError);
+
+        setErrorMessage(appError.userMessage);
+
+        // Handle field-level errors
         if (data.errors && Array.isArray(data.errors)) {
           const errors: Record<string, string> = {};
-          // Map API field names back to form field names
           const fieldMapping: Record<string, string> = {
             nom: 'legal_name',
             email: 'email',
@@ -93,16 +100,6 @@ export default function NewClientPage() {
             errors[formFieldName] = err.message;
           });
           setFieldErrors(errors);
-          setErrorMessage('⚠️ Veuillez corriger les informations saisies dans le formulaire ci-dessous.');
-        } else if (data.errorCode === 'ERR_API_002') {
-          setErrorMessage('⚠️ Cet email est déjà utilisé. Veuillez en utiliser un différent.');
-          setFieldErrors({ email: 'Email déjà enregistré' });
-        } else if (data.error?.includes('Unauthorized')) {
-          setErrorMessage('⚠️ Votre session a expiré. Veuillez vous reconnecter pour continuer.');
-        } else if (data.error) {
-          setErrorMessage(`⚠️ ${data.error}`);
-        } else {
-          setErrorMessage('⚠️ Une erreur serveur est survenue. Veuillez réessayer.');
         }
         return;
       }
@@ -142,16 +139,28 @@ export default function NewClientPage() {
         window.location.href = '/clients';
       }, 2000);
     } catch (error: any) {
-      console.error('Form submission error:', error);
+      let appError;
 
-      // Error message mapping for better user experience
       if (error.message?.includes('Unauthorized')) {
-        setErrorMessage('⚠️ Votre session a expiré. Veuillez vous reconnecter pour continuer.');
+        appError = createAppError('AUTH', 'EXPIRED_SESSION', {
+          endpoint: '/api/clients',
+          method: 'POST'
+        });
       } else if (error.message?.includes('Failed to fetch')) {
-        setErrorMessage('⚠️ Erreur de connexion au serveur. Vérifiez votre connexion Internet.');
+        appError = createAppError('NETWORK', 'CONNECTION_ERROR', {
+          endpoint: '/api/clients',
+          method: 'POST'
+        });
       } else {
-        setErrorMessage(`⚠️ Erreur serveur. Veuillez réessayer ou contacter le support.`);
+        appError = createAppError('NETWORK', 'SERVER_ERROR', {
+          endpoint: '/api/clients',
+          method: 'POST',
+          payload: apiData
+        });
       }
+
+      logAppError(appError);
+      setErrorMessage(appError.userMessage);
     } finally {
       setSubmitting(false);
     }

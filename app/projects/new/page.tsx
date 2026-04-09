@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { api, apiFetchWithErrorHandling } from '@/lib/api-client';
+import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
 
 const SECTORS = [
   'Énergie - Éolien',
@@ -179,21 +180,19 @@ export default function NewProjectPage() {
       });
 
       if (!ok) {
+        // Parse API error and create structured error
+        const appError = parseApiError(data, '/api/projects');
+        logAppError(appError);
+
+        setErrorMessage(appError.userMessage);
+
+        // Handle field-level errors
         if (data.errors && Array.isArray(data.errors)) {
           const errors: Record<string, string> = {};
           data.errors.forEach((err: any) => {
             errors[err.field] = err.message;
           });
           setFieldErrors(errors);
-          setErrorMessage('⚠️ Veuillez corriger les informations saisies dans le formulaire ci-dessous.');
-        } else if (data.errorCode === 'ERR_API_002') {
-          setErrorMessage('⚠️ Ce client est déjà associé à un projet. Veuillez en sélectionner un autre.');
-        } else if (data.error?.includes('Unauthorized')) {
-          setErrorMessage('⚠️ Votre session a expiré. Veuillez vous reconnecter pour continuer.');
-        } else if (data.error) {
-          setErrorMessage(`⚠️ ${data.error}`);
-        } else {
-          setErrorMessage('⚠️ Une erreur serveur est survenue. Veuillez réessayer.');
         }
         return;
       }
@@ -203,16 +202,28 @@ export default function NewProjectPage() {
         window.location.href = '/projects';
       }, 2000);
     } catch (error: any) {
-      console.error('Form submission error:', error);
+      let appError;
 
-      // Error message mapping for better user experience
       if (error.message?.includes('Unauthorized')) {
-        setErrorMessage('⚠️ Votre session a expiré. Veuillez vous reconnecter pour continuer.');
+        appError = createAppError('AUTH', 'EXPIRED_SESSION', {
+          endpoint: '/api/projects',
+          method: 'POST'
+        });
       } else if (error.message?.includes('Failed to fetch')) {
-        setErrorMessage('⚠️ Erreur de connexion au serveur. Vérifiez votre connexion Internet.');
+        appError = createAppError('NETWORK', 'CONNECTION_ERROR', {
+          endpoint: '/api/projects',
+          method: 'POST'
+        });
       } else {
-        setErrorMessage(`⚠️ Erreur serveur. Veuillez réessayer ou contacter le support.`);
+        appError = createAppError('NETWORK', 'SERVER_ERROR', {
+          endpoint: '/api/projects',
+          method: 'POST',
+          payload: formData
+        });
       }
+
+      logAppError(appError);
+      setErrorMessage(appError.userMessage);
     } finally {
       setSubmitting(false);
     }
