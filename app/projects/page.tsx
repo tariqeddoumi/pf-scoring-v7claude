@@ -1,87 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Plus, Eye, Edit2, Trash2, Filter } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-// Mock projects data - COMPLET selon spécifications
-const MOCK_PROJECTS = [
-  {
-    id: 'p1',
-    name: 'Parc Éolien Taourirt',
-    sponsor: 'ONEE',
-    sector: 'Énergie - Éolien',
-    country: 'Maroc',
-    totalCost: '500,000,000 MAD',
-    financeRequired: '400,000,000 MAD',
-    status: 'En cours d\'évaluation',
-    maturity: 'Phase d\'ingénierie',
-    rating: 'A',
-    createdAt: '2026-02-15',
-  },
-  {
-    id: 'p2',
-    name: 'Centrale Solaire Ouarzazate',
-    sponsor: 'ONEE',
-    sector: 'Énergie - Solaire',
-    country: 'Maroc',
-    totalCost: '800,000,000 MAD',
-    financeRequired: '650,000,000 MAD',
-    status: 'Validé',
-    maturity: 'Phase de financement',
-    rating: 'AA',
-    createdAt: '2026-01-20',
-  },
-  {
-    id: 'p3',
-    name: 'Dessalement d\'eau Agadir',
-    sponsor: 'AMENDIS',
-    sector: 'Eau - Dessalement',
-    country: 'Maroc',
-    totalCost: '350,000,000 MAD',
-    financeRequired: '280,000,000 MAD',
-    status: 'En préparation',
-    maturity: 'Phase de développement',
-    rating: 'BBB+',
-    createdAt: '2026-03-01',
-  },
-  {
-    id: 'p4',
-    name: 'Autoroute Fès-Taza',
-    sponsor: 'CITMADA',
-    sector: 'Infrastructure - Transport',
-    country: 'Maroc',
-    totalCost: '1,200,000,000 MAD',
-    financeRequired: '900,000,000 MAD',
-    status: 'En cours d\'évaluation',
-    maturity: 'Phase d\'étude de faisabilité',
-    rating: 'A-',
-    createdAt: '2026-02-28',
-  },
-  {
-    id: 'p5',
-    name: 'Port Sec Béni Mellal',
-    sponsor: 'BMCI Capital',
-    sector: 'Infrastructure - Logistique',
-    country: 'Maroc',
-    totalCost: '450,000,000 MAD',
-    financeRequired: '350,000,000 MAD',
-    status: 'Rejeté',
-    maturity: 'Phase d\'analyse',
-    rating: 'BB',
-    createdAt: '2026-01-10',
-  },
-];
+interface Project {
+  id: string;
+  nom: string;
+  description?: string;
+  secteur: string;
+  montant: number;
+  devise: string;
+  status: string;
+  scoreGlobal?: number;
+  grade?: string;
+  dateCreation: string;
+  user?: {
+    nom: string;
+    prenom: string;
+    email: string;
+  };
+  client?: {
+    id: string;
+    nom: string;
+    email: string;
+  };
+}
 
 const STATUSES = [
-  'Brouillon',
-  'En préparation',
-  'En cours d\'évaluation',
-  'Soumis validation',
-  'Validé',
-  'Rejeté',
-  'Archivé',
-  'Clos',
+  'brouillon',
+  'en_cours',
+  'en_revue',
+  'approuve',
+  'rejete',
 ];
 
 const SECTORS = [
@@ -97,38 +49,80 @@ const SECTORS = [
 ];
 
 export default function ProjectsPage() {
+  const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedSector, setSelectedSector] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const filteredProjects = MOCK_PROJECTS.filter((project) => {
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/projects');
+      if (!response.ok) throw new Error('Failed to fetch projects');
+      const data = await response.json();
+      setProjects(data.data || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch projects');
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (projectId: string) => {
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete project');
+      setProjects(projects.filter(p => p.id !== projectId));
+      setDeleteConfirm(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete project');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const filteredProjects = projects.filter((project) => {
     const matchesSearch =
-      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.sponsor.toLowerCase().includes(searchTerm.toLowerCase());
+      project.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.client?.nom.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !selectedStatus || project.status === selectedStatus;
-    const matchesSector = !selectedSector || project.sector === selectedSector;
+    const matchesSector = !selectedSector || project.secteur === selectedSector;
 
     return matchesSearch && matchesStatus && matchesSector;
   });
 
-  const getRatingColor = (rating: string) => {
-    if (rating.startsWith('AA')) return 'bg-green-500/20 text-green-400';
-    if (rating.startsWith('A')) return 'bg-blue-500/20 text-blue-400';
-    if (rating.startsWith('BBB')) return 'bg-cyan-500/20 text-cyan-400';
-    if (rating.startsWith('BB')) return 'bg-yellow-500/20 text-yellow-400';
+  const getRatingColor = (grade: string) => {
+    if (grade.startsWith('AA')) return 'bg-green-500/20 text-green-400';
+    if (grade.startsWith('A')) return 'bg-blue-500/20 text-blue-400';
+    if (grade.startsWith('BBB')) return 'bg-cyan-500/20 text-cyan-400';
+    if (grade.startsWith('BB')) return 'bg-yellow-500/20 text-yellow-400';
     return 'bg-red-500/20 text-red-400';
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Validé':
+      case 'approuve':
         return 'bg-green-500/20 text-green-400';
-      case 'En cours d\'évaluation':
-      case 'En préparation':
+      case 'en_revue':
+      case 'en_cours':
         return 'bg-yellow-500/20 text-yellow-400';
-      case 'Rejeté':
-      case 'Archivé':
+      case 'rejete':
         return 'bg-red-500/20 text-red-400';
+      case 'brouillon':
       default:
         return 'bg-slate-600 text-slate-300';
     }
@@ -150,6 +144,46 @@ export default function ProjectsPage() {
           <span>Nouveau Projet</span>
         </Link>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="rounded-lg border border-slate-700 p-8 text-center">
+          <p className="text-slate-400">Chargement des projets...</p>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-sm">
+            <h3 className="text-lg font-bold text-white mb-4">Confirmer la suppression</h3>
+            <p className="text-slate-400 mb-6">Êtes-vous sûr ? Cette action est irréversible.</p>
+            <div className="flex space-x-3 justify-end">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="px-4 py-2 rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirm)}
+                disabled={deleting}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? 'Suppression...' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
@@ -203,86 +237,105 @@ export default function ProjectsPage() {
       </div>
 
       {/* Projects Table */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 overflow-x-auto">
-        <table className="w-full">
-          <thead className="border-b border-slate-700">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Nom du Projet</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Sponsor</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Secteur</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Pays</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Coût Total</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Financement</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Statut</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Rating</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-700">
-            {filteredProjects.map((project) => (
-              <tr key={project.id} className="hover:bg-slate-700 transition-colors">
-                <td className="px-4 py-3">
-                  <p className="font-semibold text-white">{project.name}</p>
-                  <p className="text-xs text-slate-400 mt-1">Maturité: {project.maturity}</p>
-                </td>
-                <td className="px-4 py-3 text-slate-300">{project.sponsor}</td>
-                <td className="px-4 py-3 text-slate-300 text-sm">{project.sector}</td>
-                <td className="px-4 py-3 text-slate-300">{project.country}</td>
-                <td className="px-4 py-3 text-white font-semibold text-sm">{project.totalCost}</td>
-                <td className="px-4 py-3 text-slate-300 text-sm">{project.financeRequired}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}`}>
-                    {project.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRatingColor(project.rating)}`}>
-                    {project.rating}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center space-x-2">
-                    <Link
-                      href={`/projects/${project.id}`}
-                      className="p-2 text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors"
-                      title="Voir"
-                    >
-                      <Eye size={16} />
-                    </Link>
-                    <Link
-                      href={`/projects/${project.id}/edit`}
-                      className="p-2 text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
-                      title="Modifier"
-                    >
-                      <Edit2 size={16} />
-                    </Link>
-                    <button
-                      className="p-2 text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
-                      title="Supprimer"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
+      {!loading && filteredProjects.length > 0 && (
+        <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 overflow-x-auto">
+          <table className="w-full">
+            <thead className="border-b border-slate-700">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Nom du Projet</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Client</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Secteur</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Montant</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Statut</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Grade</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-700">
+              {filteredProjects.map((project) => (
+                <tr key={project.id} className="hover:bg-slate-700 transition-colors">
+                  <td className="px-4 py-3 font-semibold text-white">{project.nom}</td>
+                  <td className="px-4 py-3 text-slate-300">{project.client?.nom || '-'}</td>
+                  <td className="px-4 py-3 text-slate-300 text-sm">{project.secteur}</td>
+                  <td className="px-4 py-3 text-white font-semibold text-sm">
+                    {project.montant.toLocaleString('fr-FR')} {project.devise}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}`}>
+                      {project.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {project.grade && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRatingColor(project.grade)}`}>
+                        {project.grade}
+                      </span>
+                    )}
+                    {!project.grade && <span className="text-slate-400">-</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => router.push(`/projects/${project.id}`)}
+                        className="p-2 text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors"
+                        title="Voir"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => router.push(`/projects/${project.id}/edit`)}
+                        className="p-2 text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
+                        title="Modifier"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(project.id)}
+                        className="p-2 text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
+                        title="Supprimer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-        {filteredProjects.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-slate-400">Aucun projet ne correspond aux critères de recherche.</p>
-          </div>
-        )}
-      </div>
+      {/* Empty State */}
+      {!loading && filteredProjects.length === 0 && (
+        <div className="text-center py-12 rounded-lg border border-slate-700">
+          <p className="text-slate-400 text-lg">Aucun projet trouvé</p>
+          <p className="text-slate-500 mt-1">
+            {searchTerm ? 'Essayez une autre recherche' : 'Créez votre premier projet'}
+          </p>
+        </div>
+      )}
 
       {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <SummaryCard label="Total Projets" value={MOCK_PROJECTS.length.toString()} color="from-blue-600 to-blue-700" />
-        <SummaryCard label="Validés" value={MOCK_PROJECTS.filter((p) => p.status === 'Validé').length.toString()} color="from-green-600 to-green-700" />
-        <SummaryCard label="En Évaluation" value={MOCK_PROJECTS.filter((p) => p.status === 'En cours d\'évaluation').length.toString()} color="from-yellow-600 to-yellow-700" />
-        <SummaryCard label="Financement Total" value="3,8 Md MAD" color="from-cyan-600 to-cyan-700" />
-      </div>
+      {!loading && projects.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <SummaryCard label="Total Projets" value={projects.length.toString()} color="from-blue-600 to-blue-700" />
+          <SummaryCard
+            label="Approuvés"
+            value={projects.filter((p) => p.status === 'approuve').length.toString()}
+            color="from-green-600 to-green-700"
+          />
+          <SummaryCard
+            label="En Révision"
+            value={projects.filter((p) => p.status === 'en_revue').length.toString()}
+            color="from-yellow-600 to-yellow-700"
+          />
+          <SummaryCard
+            label="Financement Total"
+            value={`${(projects.reduce((sum, p) => sum + p.montant, 0) / 1000000).toFixed(0)} M ${projects[0]?.devise || 'MAD'}`}
+            color="from-cyan-600 to-cyan-700"
+          />
+        </div>
+      )}
     </div>
   );
 }
