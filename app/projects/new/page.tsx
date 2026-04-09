@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
@@ -26,8 +26,39 @@ const COUNTRIES = [
   { code: 'ZA', label: 'Afrique du Sud' },
 ];
 
+interface Client {
+  id: string;
+  nom: string;
+  email?: string;
+  type?: string;
+}
+
 export default function NewProjectPage() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientsLoading, setClientsLoading] = useState(true);
+  const [clientsError, setClientsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const response = await fetch('/api/clients');
+        if (!response.ok) throw new Error('Failed to fetch clients');
+        const data = await response.json();
+        setClients(data.data || []);
+        setClientsError(null);
+      } catch (error: any) {
+        setClientsError(error.message || 'Failed to fetch clients');
+        setClients([]);
+      } finally {
+        setClientsLoading(false);
+      }
+    };
+    fetchClients();
+  }, []);
+
   const [formData, setFormData] = useState({
+    // Client Selection
+    clientId: '',
     // Section 1: Identification
     name: '',
     projectId: '',
@@ -123,10 +154,59 @@ export default function NewProjectPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Intégrer avec API sur Jour 9-10
-    alert('Projet créé avec succès ! (Mock)');
+
+    if (!formData.clientId) {
+      setErrorMessage('Veuillez sélectionner un client (ERR_VALID_001)');
+      setFieldErrors({ clientId: 'Client est obligatoire' });
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setFieldErrors({});
+
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors && Array.isArray(data.errors)) {
+          const errors: Record<string, string> = {};
+          data.errors.forEach((err: any) => {
+            errors[err.field] = err.message;
+          });
+          setFieldErrors(errors);
+          setErrorMessage('Veuillez corriger les erreurs dans le formulaire');
+        } else if (data.error) {
+          setErrorMessage(`${data.error} (${data.errorCode || 'ERR_API_001'})`);
+        } else {
+          setErrorMessage('Une erreur serveur est survenue (ERR_API_001)');
+        }
+        return;
+      }
+
+      setSuccessMessage('✅ Projet créé avec succès !');
+      setTimeout(() => {
+        window.location.href = '/projects';
+      }, 2000);
+    } catch (error: any) {
+      setErrorMessage(`Erreur connexion serveur (ERR_NET_001): ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -145,9 +225,65 @@ export default function NewProjectPage() {
         </div>
       </div>
 
+      {/* Success Message */}
+      {successMessage && (
+        <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 text-green-400 text-sm md:text-base">
+          {successMessage}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
+          🔴 {errorMessage}
+        </div>
+      )}
+
       {/* Form */}
       <div className="rounded-lg border border-slate-700 bg-slate-800 p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Client Selection - REQUIRED */}
+          <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+              <span className="text-red-400">*</span>
+              <span>Sélectionner un Client</span>
+            </h2>
+            {clientsLoading && <p className="text-slate-400">Chargement des clients...</p>}
+            {clientsError && <p className="text-red-400">{clientsError}</p>}
+            {!clientsLoading && !clientsError && (
+              <div>
+                <label htmlFor="clientId" className="block text-sm font-semibold text-white mb-2">
+                  Client <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="clientId"
+                  name="clientId"
+                  value={formData.clientId}
+                  onChange={handleChange}
+                  required
+                  className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white focus:outline-none focus:ring-1 transition-all ${
+                    fieldErrors.clientId
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-slate-600 focus:border-cyan-500 focus:ring-cyan-500'
+                  }`}
+                >
+                  <option value="">-- Sélectionner un client --</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.nom} {client.type ? `(${client.type})` : ''}
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.clientId && <p className="text-red-400 text-sm mt-1">{fieldErrors.clientId}</p>}
+                {clients.length === 0 && !clientsLoading && (
+                  <p className="text-yellow-400 text-sm mt-2">
+                    ⚠️ Aucun client disponible. Veuillez <Link href="/clients/new" className="underline hover:text-yellow-300">créer un client</Link> d'abord.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Section 1: Identification */}
           <div>
             <h2 className="text-xl font-bold text-white mb-4 pb-2 border-b border-slate-700">1. Identification du Projet</h2>
@@ -366,13 +502,14 @@ export default function NewProjectPage() {
           <div className="flex gap-4 pt-6 border-t border-slate-700">
             <button
               type="submit"
-              className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+              disabled={submitting || clientsLoading || clients.length === 0}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Créer le Projet
+              {submitting ? '⏳ Création en cours...' : 'Créer le Projet'}
             </button>
             <Link
               href="/projects"
-              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg transition-all text-center"
+              className="flex-1 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white font-semibold px-4 py-2 rounded-lg transition-all text-center"
             >
               Annuler
             </Link>

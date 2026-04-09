@@ -43,9 +43,106 @@ export default function NewClientPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Appel API POST /api/clients
+    setSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setFieldErrors({});
+
+    try {
+      // Map form fields to API schema
+      const apiData = {
+        nom: formData.legal_name,
+        email: formData.email || undefined,
+        telephone: formData.phone || undefined,
+        secteur: formData.sector || undefined,
+        pays: formData.country || undefined,
+        type: formData.type,
+        description: formData.address || undefined,
+      };
+
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Gestion des erreurs avec codes
+        if (data.errors && Array.isArray(data.errors)) {
+          const errors: Record<string, string> = {};
+          // Map API field names back to form field names
+          const fieldMapping: Record<string, string> = {
+            nom: 'legal_name',
+            email: 'email',
+            telephone: 'phone',
+            secteur: 'sector',
+            pays: 'country',
+            type: 'type',
+            description: 'address'
+          };
+
+          data.errors.forEach((err: any) => {
+            const formFieldName = fieldMapping[err.field] || err.field;
+            errors[formFieldName] = err.message;
+          });
+          setFieldErrors(errors);
+          setErrorMessage('Veuillez corriger les erreurs dans le formulaire');
+        } else if (data.error) {
+          setErrorMessage(`${data.error} (${data.errorCode || 'ERR_API_001'})`);
+        } else {
+          setErrorMessage('Une erreur serveur est survenue (ERR_API_001)');
+        }
+        return;
+      }
+
+      // Succès
+      setSuccessMessage('✅ Client créé avec succès !');
+      setFormData({
+        legal_name: '',
+        trade_name: '',
+        type: 'Société Privée',
+        legal_form: '',
+        sector: '',
+        sub_sector: '',
+        segment: '',
+        employees: '',
+        capital_amount: '',
+        country: 'Maroc',
+        city: '',
+        address: '',
+        postal_code: '',
+        email: '',
+        phone: '',
+        website: '',
+        business_center: '',
+        account_manager: '',
+        rating: '',
+        banking_status: 'Prospect',
+        relationship_start_date: '',
+        exposure: '',
+        kyc_status: 'En attente',
+        kyc_last_update: '',
+        compliance_status: 'En attente',
+      });
+
+      // Redirection après 2 secondes
+      setTimeout(() => {
+        window.location.href = '/clients';
+      }, 2000);
+    } catch (error: any) {
+      setErrorMessage(`Erreur connexion serveur (ERR_NET_001): ${error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -63,6 +160,20 @@ export default function NewClientPage() {
           <p className="text-slate-400 mt-1 md:mt-2 text-sm md:text-base">Renseignez la signalétique complète du client</p>
         </div>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 text-green-400 text-sm md:text-base">
+          {successMessage}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
+          🔴 {errorMessage}
+        </div>
+      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
@@ -82,6 +193,7 @@ export default function NewClientPage() {
               value={formData.legal_name}
               onChange={handleChange}
               required
+              error={fieldErrors.legal_name}
             />
             <FormField
               label="Nom Commercial"
@@ -266,6 +378,7 @@ export default function NewClientPage() {
               value={formData.email}
               onChange={handleChange}
               required
+              error={fieldErrors.email}
             />
             <FormField
               label="Téléphone"
@@ -274,6 +387,7 @@ export default function NewClientPage() {
               placeholder="+212 5XX XX XX XX"
               value={formData.phone}
               onChange={handleChange}
+              error={fieldErrors.phone}
             />
             <FormField
               label="Site Web"
@@ -419,9 +533,10 @@ export default function NewClientPage() {
         <div className="flex flex-col md:flex-row gap-4 pt-2">
           <button
             type="submit"
-            className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm md:text-base"
+            disabled={submitting}
+            className={`flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            Créer le client
+            {submitting ? '⏳ Création en cours...' : 'Créer le client'}
           </button>
           <Link
             href="/clients"
@@ -443,6 +558,7 @@ function FormField({
   value,
   onChange,
   required,
+  error,
 }: {
   label: string;
   name: string;
@@ -451,6 +567,7 @@ function FormField({
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
+  error?: string;
 }) {
   return (
     <div>
@@ -465,8 +582,13 @@ function FormField({
         value={value}
         onChange={onChange}
         required={required}
-        className="w-full px-3 md:px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
+        className={`w-full px-3 md:px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 text-sm md:text-base transition-all ${
+          error
+            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+            : 'border-slate-600 focus:border-cyan-500 focus:ring-cyan-500'
+        }`}
       />
+      {error && <p className="text-red-400 text-xs md:text-sm mt-1">{error}</p>}
     </div>
   );
 }

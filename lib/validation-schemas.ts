@@ -88,9 +88,18 @@ export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 // ============================================================================
 
 export const createClientSchema = z.object({
-  nom: z.string().min(1, 'Client name is required').max(200),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
-  telephone: z.string().max(20).optional().or(z.literal('')),
+  nom: z.string()
+    .min(1, { message: 'Le nom du client est requis (ERR_VALID_001)' })
+    .min(3, { message: 'Le nom doit contenir au moins 3 caractères' })
+    .max(200, { message: 'Le nom ne doit pas dépasser 200 caractères' }),
+  email: z.string()
+    .email({ message: 'Format email invalide (ERR_VALID_002)' })
+    .optional()
+    .or(z.literal('')),
+  telephone: z.string()
+    .regex(/^[+]?[\d\s\-()]{6,}$|^$/, { message: 'Format téléphone invalide (ERR_VALID_003)' })
+    .optional()
+    .or(z.literal('')),
   secteur: z.string().max(100).optional().or(z.literal('')),
   pays: z.string().max(100).optional().or(z.literal('')),
   type: z.string().max(50).optional().default('Entreprise'),

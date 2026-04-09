@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma-client';
+import { createClientSchema } from '@/lib/validation-schemas';
+import { ZodError } from 'zod';
 
 async function handleGET(request: NextRequest, user: any) {
   try {
@@ -21,7 +23,10 @@ async function handleGET(request: NextRequest, user: any) {
   } catch (error: any) {
     console.error('[CLIENTS] GET error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch clients' },
+      { 
+        error: error.message || 'Failed to fetch clients',
+        errorCode: 'ERR_API_001'
+      },
       { status: 500 }
     );
   }
@@ -30,13 +35,32 @@ async function handleGET(request: NextRequest, user: any) {
 async function handlePOST(request: NextRequest, user: any) {
   try {
     const body = await request.json();
-    const { nom, email, telephone, secteur, pays, type, description } = body;
 
-    if (!nom) {
-      return NextResponse.json(
-        { error: 'Client name is required' },
-        { status: 400 }
-      );
+    // Validation avec Zod
+    const validated = createClientSchema.parse(body);
+    const { nom, email, telephone, secteur, pays, type, description } = validated;
+
+    // Vérifier si email existe déjà (si fourni)
+    if (email) {
+      const existingClient = await prisma.client.findUnique({
+        where: { email }
+      });
+
+      if (existingClient) {
+        return NextResponse.json(
+          { 
+            error: 'Un client avec cet email existe déjà',
+            errorCode: 'ERR_API_002',
+            errors: [
+              {
+                field: 'email',
+                message: 'Cet email est déjà utilisé (ERR_API_002)'
+              }
+            ]
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const client = await prisma.client.create({
@@ -47,9 +71,12 @@ async function handlePOST(request: NextRequest, user: any) {
         secteur: secteur || null,
         pays: pays || null,
         type: type || 'Entreprise',
-        description: description || null
+        description: description || null,
+        status: 'Actif'
       }
     });
+
+    console.log('[CLIENTS] POST success:', client.id);
 
     return NextResponse.json(
       { success: true, data: client },
@@ -57,8 +84,47 @@ async function handlePOST(request: NextRequest, user: any) {
     );
   } catch (error: any) {
     console.error('[CLIENTS] POST error:', error);
+
+    // Gestion des erreurs Zod
+    if (error instanceof ZodError) {
+      const errors = error.flatten().fieldErrors;
+      const formattedErrors = Object.entries(errors).map(([field, messages]) => ({
+        field,
+        message: Array.isArray(messages) ? messages[0] : messages
+      }));
+
+      return NextResponse.json(
+        { 
+          error: 'Validation échouée',
+          errorCode: 'ERR_VALID_001',
+          errors: formattedErrors
+        },
+        { status: 400 }
+      );
+    }
+
+    // Erreur Prisma - email unique constraint
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { 
+          error: 'Un client avec cet email existe déjà',
+          errorCode: 'ERR_API_002',
+          errors: [
+            {
+              field: 'email',
+              message: 'Cet email est déjà utilisé (ERR_API_002)'
+            }
+          ]
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: error.message || 'Failed to create client' },
+      { 
+        error: error.message || 'Erreur lors de la création du client',
+        errorCode: 'ERR_API_001'
+      },
       { status: 500 }
     );
   }
