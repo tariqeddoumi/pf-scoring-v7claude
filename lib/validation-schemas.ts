@@ -60,21 +60,21 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 // ============================================================================
 
 export const createProjectSchema = z.object({
-  nom: z.string().min(3, 'Project name must be at least 3 characters').max(200),
-  description: z.string().min(10, 'Description must be at least 10 characters').max(5000),
-  secteur: z.string().min(1, 'Sector is required').max(100),
+  nom: z.string().min(3, 'Le nom du projet doit contenir au moins 3 caractères').max(200),
+  description: z.string().max(5000).default('Projet de financement'),
+  secteur: z.string().min(1, 'Le secteur est requis').max(100),
   montant: z.union([
-    z.number().positive('Amount must be positive').max(1e12, 'Amount exceeds maximum'),
+    z.number().min(0, 'Le montant doit être positif').max(1e12, 'Montant trop élevé'),
     z.string().transform((val) => {
+      if (!val || val.trim() === '') return 0;
       const num = parseFloat(val);
-      if (isNaN(num)) throw new Error('Amount must be a valid number');
-      if (num <= 0) throw new Error('Amount must be positive');
+      if (isNaN(num)) throw new Error('Le montant doit être un nombre valide');
       return num;
     })
-  ]),
+  ]).default(0),
   devise: z.string().length(3).default('MAD'),
-  countryCode: z.string().length(2).optional(),
-  clientId: z.string().uuid('Invalid client ID'),
+  countryCode: z.string().max(5).optional(),
+  clientId: z.string().uuid('ID client invalide'),
 });
 
 export const updateProjectSchema = createProjectSchema.partial();
