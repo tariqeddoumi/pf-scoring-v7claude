@@ -1,27 +1,35 @@
-import { NextResponse } from "next/server";
-
+import { NextResponse, NextRequest } from "next/server";
+import { withAdminAuth } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
 
-export async function GET() {
-  try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        nom: true,
-        prenom: true,
-        role: true,
-      },
-    });
+export async function GET(request: NextRequest) {
+  return withAdminAuth(request, async () => {
+    try {
+      const users = await prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          nom: true,
+          prenom: true,
+          role: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' }
+      });
 
-    return NextResponse.json(users);
-  } catch (error) {
-    console.error("Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des utilisateurs" },
-      { status: 500 }
-    );
-  }
+      return NextResponse.json({
+        success: true,
+        data: users,
+        count: users.length
+      });
+    } catch (error: any) {
+      console.error("[ADMIN/USERS] GET error:", error);
+      return NextResponse.json(
+        { error: "Erreur lors de la récupération des utilisateurs", errorCode: "SRV_001" },
+        { status: 500 }
+      );
+    }
+  });
 }
 
 export async function POST(request: Request) {

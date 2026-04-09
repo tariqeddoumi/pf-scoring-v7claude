@@ -93,7 +93,7 @@ export async function POST(request: Request) {
 
     // Ajouter le cookie
     response.cookies.set("auth_token", token, {
-      httpOnly: true,
+      httpOnly: false, // Allow JavaScript to read for Bearer token
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 86400, // 24 heures

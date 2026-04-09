@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, LogOut, User, Settings } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useState } from 'react';
+import { UserProfile } from './UserProfile';
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -33,15 +34,9 @@ export function Navbar() {
 
           {/* User Menu & Mobile Menu Button */}
           <div className="flex items-center space-x-2">
-            <button className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors hidden md:inline-flex">
-              <User size={20} />
-            </button>
-            <button className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors hidden md:inline-flex">
-              <Settings size={20} />
-            </button>
-            <button className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors hidden md:inline-flex">
-              <LogOut size={20} />
-            </button>
+            <div className="hidden md:block">
+              <UserProfile />
+            </div>
 
             {/* Mobile Menu Button */}
             <button
