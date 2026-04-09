@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { api, apiFetchWithErrorHandling } from '@/lib/api-client';
 
 const SECTORS = [
   'Énergie - Éolien',
@@ -41,9 +42,7 @@ export default function NewProjectPage() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const response = await fetch('/api/clients');
-        if (!response.ok) throw new Error('Failed to fetch clients');
-        const data = await response.json();
+        const data = await api.clients.list();
         setClients(data.data || []);
         setClientsError(null);
       } catch (error: any) {
@@ -174,15 +173,12 @@ export default function NewProjectPage() {
     setFieldErrors({});
 
     try {
-      const response = await fetch('/api/projects', {
+      const { ok, data } = await apiFetchWithErrorHandling('/api/projects', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (!ok) {
         if (data.errors && Array.isArray(data.errors)) {
           const errors: Record<string, string> = {};
           data.errors.forEach((err: any) => {

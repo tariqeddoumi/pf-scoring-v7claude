@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowLeft, Building2, MapPin, Phone, Briefcase, Shield, Users, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
+import { apiFetchWithErrorHandling } from '@/lib/api-client';
 
 export default function NewClientPage() {
   const [formData, setFormData] = useState({
@@ -67,15 +68,12 @@ export default function NewClientPage() {
         description: formData.address || undefined,
       };
 
-      const response = await fetch('/api/clients', {
+      const { ok, data } = await apiFetchWithErrorHandling('/api/clients', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiData)
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (!ok) {
         // Gestion des erreurs avec codes
         if (data.errors && Array.isArray(data.errors)) {
           const errors: Record<string, string> = {};
