@@ -20,9 +20,17 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "scoring",
     title: "Configuration du Scoring",
-    description: "Gérez les domaines, critères et échelles de notation",
+    description: "Gérez les poids des domaines et seuils NO-GO",
     href: "/admin/scoring-config",
     icon: "⚙️",
+    requiredRole: "admin",
+  },
+  {
+    id: "scoring-grid",
+    title: "Grilles de Scoring",
+    description: "Paramétrage fin : domaines, critères, options et plages de notation",
+    href: "/admin/scoring-grid",
+    icon: "📊",
     requiredRole: "admin",
   },
   {
@@ -182,14 +190,7 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={(e) => {
-                      e.preventDefault();
-                    }}
-                  >
+                  <Button variant="outline" size="sm" className="w-full">
                     Configurer →
                   </Button>
                 </div>

@@ -126,6 +126,12 @@ export function Sidebar() {
       href: '/audit',
       description: 'Logs',
     },
+    {
+      icon: Settings,
+      label: 'Administration',
+      href: '/admin',
+      description: 'Paramètres & config',
+    },
   ];
 
   return (
@@ -181,10 +187,14 @@ export function Sidebar() {
 
         {/* Bottom Actions */}
         <div className="border-t border-slate-700 p-4 space-y-2">
-          <button className="w-full flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+          <Link
+            href="/admin"
+            onClick={() => setIsOpen(false)}
+            className="w-full flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          >
             <Settings size={20} />
             <span className="text-sm">Paramètres</span>
-          </button>
+          </Link>
           <button className="w-full flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors">
             <LogOut size={20} />
             <span className="text-sm">Déconnexion</span>
