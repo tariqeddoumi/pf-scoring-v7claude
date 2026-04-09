@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Building2, MapPin, Phone, Briefcase, Shield, Users, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 import { apiFetchWithErrorHandling } from '@/lib/api-client';
+import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
 
 export default function NewClientPage() {
   const [formData, setFormData] = useState({
@@ -56,17 +57,18 @@ export default function NewClientPage() {
     setSuccessMessage(null);
     setFieldErrors({});
 
+    // Map form fields to API schema
+    const apiData = {
+      nom: formData.legal_name,
+      email: formData.email || undefined,
+      telephone: formData.phone || undefined,
+      secteur: formData.sector || undefined,
+      pays: formData.country || undefined,
+      type: formData.type,
+      description: formData.address || undefined,
+    };
+
     try {
-      // Map form fields to API schema
-      const apiData = {
-        nom: formData.legal_name,
-        email: formData.email || undefined,
-        telephone: formData.phone || undefined,
-        secteur: formData.sector || undefined,
-        pays: formData.country || undefined,
-        type: formData.type,
-        description: formData.address || undefined,
-      };
 
       const { ok, data } = await apiFetchWithErrorHandling('/api/clients', {
         method: 'POST',
@@ -74,10 +76,15 @@ export default function NewClientPage() {
       });
 
       if (!ok) {
-        // Gestion des erreurs avec codes
+        // Parse API error and create structured error
+        const appError = parseApiError(data, '/api/clients');
+        logAppError(appError);
+
+        setErrorMessage(appError.userMessage);
+
+        // Handle field-level errors
         if (data.errors && Array.isArray(data.errors)) {
           const errors: Record<string, string> = {};
-          // Map API field names back to form field names
           const fieldMapping: Record<string, string> = {
             nom: 'legal_name',
             email: 'email',
@@ -93,11 +100,6 @@ export default function NewClientPage() {
             errors[formFieldName] = err.message;
           });
           setFieldErrors(errors);
-          setErrorMessage('Veuillez corriger les erreurs dans le formulaire');
-        } else if (data.error) {
-          setErrorMessage(`${data.error} (${data.errorCode || 'ERR_API_001'})`);
-        } else {
-          setErrorMessage('Une erreur serveur est survenue (ERR_API_001)');
         }
         return;
       }
@@ -137,7 +139,28 @@ export default function NewClientPage() {
         window.location.href = '/clients';
       }, 2000);
     } catch (error: any) {
-      setErrorMessage(`Erreur connexion serveur (ERR_NET_001): ${error.message}`);
+      let appError;
+
+      if (error.message?.includes('Unauthorized')) {
+        appError = createAppError('AUTH', 'EXPIRED_SESSION', {
+          endpoint: '/api/clients',
+          method: 'POST'
+        });
+      } else if (error.message?.includes('Failed to fetch')) {
+        appError = createAppError('NETWORK', 'CONNECTION_ERROR', {
+          endpoint: '/api/clients',
+          method: 'POST'
+        });
+      } else {
+        appError = createAppError('NETWORK', 'SERVER_ERROR', {
+          endpoint: '/api/clients',
+          method: 'POST',
+          payload: apiData
+        });
+      }
+
+      logAppError(appError);
+      setErrorMessage(appError.userMessage);
     } finally {
       setSubmitting(false);
     }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { api, apiFetchWithErrorHandling } from '@/lib/api-client';
+import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
 
 const SECTORS = [
   'Énergie - Éolien',
@@ -179,17 +180,19 @@ export default function NewProjectPage() {
       });
 
       if (!ok) {
+        // Parse API error and create structured error
+        const appError = parseApiError(data, '/api/projects');
+        logAppError(appError);
+
+        setErrorMessage(appError.userMessage);
+
+        // Handle field-level errors
         if (data.errors && Array.isArray(data.errors)) {
           const errors: Record<string, string> = {};
           data.errors.forEach((err: any) => {
             errors[err.field] = err.message;
           });
           setFieldErrors(errors);
-          setErrorMessage('Veuillez corriger les erreurs dans le formulaire');
-        } else if (data.error) {
-          setErrorMessage(`${data.error} (${data.errorCode || 'ERR_API_001'})`);
-        } else {
-          setErrorMessage('Une erreur serveur est survenue (ERR_API_001)');
         }
         return;
       }
@@ -199,7 +202,28 @@ export default function NewProjectPage() {
         window.location.href = '/projects';
       }, 2000);
     } catch (error: any) {
-      setErrorMessage(`Erreur connexion serveur (ERR_NET_001): ${error.message}`);
+      let appError;
+
+      if (error.message?.includes('Unauthorized')) {
+        appError = createAppError('AUTH', 'EXPIRED_SESSION', {
+          endpoint: '/api/projects',
+          method: 'POST'
+        });
+      } else if (error.message?.includes('Failed to fetch')) {
+        appError = createAppError('NETWORK', 'CONNECTION_ERROR', {
+          endpoint: '/api/projects',
+          method: 'POST'
+        });
+      } else {
+        appError = createAppError('NETWORK', 'SERVER_ERROR', {
+          endpoint: '/api/projects',
+          method: 'POST',
+          payload: formData
+        });
+      }
+
+      logAppError(appError);
+      setErrorMessage(appError.userMessage);
     } finally {
       setSubmitting(false);
     }
