@@ -4,20 +4,52 @@ interface FetchOptions extends RequestInit {
   headers?: Record<string, string>;
 }
 
+function getApiUrl(endpoint: string): string {
+  // Use relative URL for same-origin requests
+  // This works on all deployments without env var configuration
+  return endpoint;
+}
+
 async function apiFetch(endpoint: string, options: FetchOptions = {}) {
-  const url = `${config.api.baseUrl}${endpoint}`;
-  const headers = {
+  const url = getApiUrl(endpoint);
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    // Include cookies in request for authentication
+    credentials: 'include'
+  });
+  const data = await response.json();
 
   if (!response.ok) {
     throw new Error(`API error: ${response.statusText}`);
   }
 
-  return response.json();
+  return data;
+}
+
+// For handling responses with error codes (like form submissions)
+export async function apiFetchWithErrorHandling(endpoint: string, options: FetchOptions = {}) {
+  const url = getApiUrl(endpoint);
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    // Include cookies in request for authentication
+    credentials: 'include'
+  });
+  return {
+    ok: response.ok,
+    data: await response.json()
+  };
 }
 
 export const api = {
