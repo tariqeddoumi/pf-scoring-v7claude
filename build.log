@@ -1,0 +1,28 @@
+
+> pf-scoring-v7claude@1.0.1 build
+> prisma generate && next build
+
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v5.20.0) to ./node_modules/@prisma/client in 293ms
+
+Start by importing your Prisma Client (See: http://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+   ▲ Next.js 15.5.14
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 18.1s
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+app/api/admin/scoring/evaluations/[id]/answers/route.ts
+Type error: Route "app/api/admin/scoring/evaluations/[id]/answers/route.ts" has an invalid "GET" export:
+  Type "{ params: { id: string; }; }" is not a valid type for the function's second argument.
+
+Next.js build worker exited with code: 1 and signal: null
