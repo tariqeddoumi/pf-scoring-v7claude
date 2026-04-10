@@ -166,7 +166,7 @@ async function handler(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; versionId: string; nodeId: string } }
+  { params }: any
 ) {
   return withAuth(request, (req, user) =>
     handler(req, user, { params })
@@ -175,7 +175,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; versionId: string; nodeId: string } }
+  { params }: any
 ) {
   return withAuth(request, (req, user) =>
     handler(req, user, { params })
@@ -184,7 +184,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; versionId: string; nodeId: string } }
+  { params }: any
 ) {
   return withAuth(request, (req, user) =>
     handler(req, user, { params })

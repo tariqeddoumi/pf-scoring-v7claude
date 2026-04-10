@@ -88,7 +88,7 @@ async function handler(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; versionId: string } }
+  { params }: any
 ) {
   return withAuth(request, (req, user) =>
     handler(req, user, { params })
@@ -97,7 +97,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string; versionId: string } }
+  { params }: any
 ) {
   return withAuth(request, (req, user) =>
     handler(req, user, { params })
