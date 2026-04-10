@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma-client';
+import { ScoringEngine } from './scoring-engine';
 
 export class ScoringEvaluationService {
   /**
@@ -220,47 +221,25 @@ export class ScoringEvaluationService {
   }
 
   /**
-   * Calculate scores for evaluation
+   * Calculate scores for evaluation using the generic scoring engine
    */
   static async calculateScores(evaluationId: string) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },
-      include: {
-        answers: true,
-        version: {
-          include: {
-            nodes: true
-          }
-        }
-      }
+      select: { modelVersionId: true }
     });
 
     if (!evaluation) {
       throw new Error('Evaluation not found');
     }
 
-    // Get all nodes in the hierarchy
-    const nodes = evaluation.version.nodes;
-    const nodeResults = new Map<string, any>();
-
-    // Identify leaf nodes (nodes with no children)
-    const nodeIds = new Set(nodes.map((n) => n.id));
-    const parentNodeIds = new Set(
-      nodes.map((n) => n.parentNodeId).filter((id) => id)
-    );
-    const leafNodeIds = new Set(
-      nodes
-        .filter((n) => !parentNodeIds.has(n.id))
-        .map((n) => n.id)
+    // Use the generic scoring engine
+    const nodeResults = await ScoringEngine.scoreEvaluation(
+      evaluationId,
+      evaluation.modelVersionId
     );
 
-    // Score leaf nodes first
-    for (const node of nodes.filter((n) => leafNodeIds.has(n.id))) {
-      const score = await this.scoreNode(node, evaluation.answers);
-      nodeResults.set(node.id, score);
-    }
-
-    // Store results
+    // Store results in database
     for (const [nodeId, score] of nodeResults.entries()) {
       await prisma.scoringEvaluationNodeResult.upsert({
         where: {
@@ -272,83 +251,49 @@ export class ScoringEvaluationService {
         create: {
           evaluationId,
           nodeId,
-          rawScore: score.value,
-          weightedScore: score.value * (score.weight || 1),
-          explanation: score.notes
+          rawScore: score.rawScore,
+          weightedScore: score.weightedScore,
+          normalizedScore: score.normalizedScore,
+          explanation: score.explanation,
+          aggregationMethod: score.aggregationMethod,
+          ruleImpactJson: JSON.stringify(score.ruleImpacts),
+          traceJson: JSON.stringify({
+            weight: score.weight,
+            method: score.aggregationMethod,
+            ruleCount: score.ruleImpacts.length
+          })
         },
         update: {
-          rawScore: score.value,
-          weightedScore: score.value * (score.weight || 1),
-          explanation: score.notes
+          rawScore: score.rawScore,
+          weightedScore: score.weightedScore,
+          normalizedScore: score.normalizedScore,
+          explanation: score.explanation,
+          aggregationMethod: score.aggregationMethod,
+          ruleImpactJson: JSON.stringify(score.ruleImpacts),
+          traceJson: JSON.stringify({
+            weight: score.weight,
+            method: score.aggregationMethod,
+            ruleCount: score.ruleImpacts.length
+          })
         }
       });
     }
 
-    return { nodeResults };
-  }
+    // Calculate and store global score
+    const finalScores = await ScoringEngine.getFinalScores(
+      evaluationId,
+      nodeResults
+    );
 
-  /**
-   * Score a single node based on answer
-   */
-  private static async scoreNode(
-    node: any,
-    answers: any[]
-  ): Promise<{
-    value: number;
-    weight: number;
-    notes: string;
-  }> {
-    const answer = answers.find((a) => a.nodeId === node.id);
+    // Update evaluation with final score
+    await prisma.scoringEvaluation.update({
+      where: { id: evaluationId },
+      data: {
+        finalScore: finalScores.globalScore
+      }
+    });
 
-    if (!answer) {
-      return {
-        value: 0,
-        weight: node.weight || 0,
-        notes: 'No answer provided'
-      };
-    }
-
-    // Score based on node's scoring method
-    let score = 0;
-
-    switch (node.scoringMethod) {
-      case 'OPTION_SCORE':
-        // Find option and get its score value
-        const option = await prisma.scoringNodeOption.findFirst({
-          where: {
-            nodeId: node.id,
-            value: answer.valueString
-          }
-        });
-        score = option?.score || 0;
-        break;
-
-      case 'RANGE_SCORE':
-        // Find range that contains the value
-        const range = await prisma.scoringNodeRange.findFirst({
-          where: {
-            nodeId: node.id,
-            minValue: { lte: answer.valueNumber || 0 },
-            maxValue: { gte: answer.valueNumber || 0 }
-          }
-        });
-        score = range?.score || 0;
-        break;
-
-      case 'MANUAL_SCORE':
-        // Use the manual score provided
-        score = answer.manualScore || 0;
-        break;
-
-      default:
-        score = answer.valueNumber || 0;
-    }
-
-    return {
-      value: score,
-      weight: node.weight || 1,
-      notes: answer.comment || ''
-    };
+    return { nodeResults, finalScores };
   }
 
   /**
