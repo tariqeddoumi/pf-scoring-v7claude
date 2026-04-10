@@ -177,12 +177,12 @@ export default function NewProjectPage() {
     try {
       // Prepare data for API - map form fields to schema fields
       const apiData = {
-        nom: formData.name || formData.nom,
+        nom: formData.name,
         description: formData.description,
-        secteur: formData.sector || formData.secteur,
+        secteur: formData.sector,
         montant: parseFloat(formData.totalCost) || 0,
-        devise: formData.devise || 'MAD',
-        countryCode: formData.country || formData.countryCode || 'MA',
+        devise: 'MAD',
+        countryCode: formData.country || 'MA',
         clientId: formData.clientId
       };
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Search, Filter, X, Save, Trash2, Clock } from 'lucide-react';
+import { Search, X, Save, Clock } from 'lucide-react';
 
 interface SearchFilters {
   query: string;
@@ -11,51 +11,18 @@ interface SearchFilters {
   scoreMax: number;
   ratingFilter: string;
   statusFilter: string;
-  sectorFilter: string;
-  dateFrom: string;
-  dateTo: string;
 }
 
-const MOCK_SEARCH_RESULTS = [
-  {
-    id: 'p1',
-    title: 'Parc Éolien Taourirt',
-    type: 'project',
-    score: 8.08,
-    rating: 'A',
-    status: 'Validé',
-    sector: 'Énergie - Éolien',
-    date: '2026-03-15',
-  },
-  {
-    id: 'p5',
-    title: 'Port Logistique Casablanca',
-    type: 'project',
-    score: 7.92,
-    rating: 'A',
-    status: 'En cours',
-    sector: 'Infrastructure - Logistique',
-    date: '2026-03-28',
-  },
-  {
-    id: 'c1',
-    title: 'ONEE',
-    type: 'client',
-    rating: 'AA',
-    status: 'Actif',
-    sector: 'Énergie',
-    date: '2025-01-15',
-  },
-  {
-    id: 'ev1',
-    title: 'Parc Éolien Taourirt - Initiale',
-    type: 'evaluation',
-    score: 8.08,
-    rating: 'A',
-    status: 'Validée',
-    date: '2026-03-15',
-  },
-];
+interface SearchResult {
+  id: string;
+  title: string;
+  type: 'project' | 'client' | 'evaluation';
+  score?: number | null;
+  rating?: string | null;
+  status: string;
+  sector?: string;
+  date: string;
+}
 
 export default function SearchPage() {
   const [filters, setFilters] = useState<SearchFilters>({
@@ -65,24 +32,120 @@ export default function SearchPage() {
     scoreMax: 10,
     ratingFilter: '',
     statusFilter: '',
-    sectorFilter: '',
-    dateFrom: '',
-    dateTo: '',
   });
 
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [allResults, setAllResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(true);
   const [savedFilters, setSavedFilters] = useState<{ name: string; filters: SearchFilters }[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveName, setSaveName] = useState('');
 
-  const filtered = MOCK_SEARCH_RESULTS.filter(result => {
-    if (filters.query && !result.title.toLowerCase().includes(filters.query.toLowerCase())) return false;
-    if (filters.type && result.type !== filters.type) return false;
-    if ('score' in result && result.score !== undefined && (result.score < filters.scoreMin || result.score > filters.scoreMax)) return false;
-    if (filters.ratingFilter && result.rating !== filters.ratingFilter) return false;
-    if (filters.statusFilter && result.status !== filters.statusFilter) return false;
-    if (filters.sectorFilter && 'sector' in result && result.sector !== undefined && result.sector.includes(filters.sectorFilter)) return false;
-    return true;
-  });
+  // Fetch all data on mount
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [projRes, clientRes, evalRes] = await Promise.all([
+          fetch('/api/projects?limit=200'),
+          fetch('/api/clients'),
+          fetch('/api/evaluations?limit=200'),
+        ]);
+
+        const items: SearchResult[] = [];
+
+        if (projRes.ok) {
+          const projData = await projRes.json();
+          (projData.data || []).forEach((p: any) => {
+            items.push({
+              id: p.id,
+              title: p.nom,
+              type: 'project',
+              score: p.scoreGlobal,
+              rating: p.grade,
+              status: p.status || '',
+              sector: p.secteur,
+              date: p.dateCreation,
+            });
+          });
+        }
+
+        if (clientRes.ok) {
+          const clientData = await clientRes.json();
+          const clients = clientData.data || clientData;
+          (Array.isArray(clients) ? clients : []).forEach((c: any) => {
+            items.push({
+              id: c.id,
+              title: c.nom,
+              type: 'client',
+              status: c.status || 'actif',
+              sector: c.secteur,
+              date: c.createdAt,
+            });
+          });
+        }
+
+        if (evalRes.ok) {
+          const evalData = await evalRes.json();
+          (evalData.data || []).forEach((e: any) => {
+            items.push({
+              id: e.id,
+              title: `${e.project?.nom || 'Évaluation'} - ${e.status}`,
+              type: 'evaluation',
+              score: e.finalScore,
+              rating: e.rating,
+              status: e.status || '',
+              date: e.createdAt,
+            });
+          });
+        }
+
+        setAllResults(items);
+        setResults(items);
+      } catch {
+        // Silently handle errors - show empty results
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  // Filter results when filters change
+  const applyFilters = useCallback(() => {
+    let filtered = [...allResults];
+
+    if (filters.query) {
+      const q = filters.query.toLowerCase();
+      filtered = filtered.filter(r => r.title.toLowerCase().includes(q));
+    }
+
+    if (filters.type) {
+      const typeMap: Record<string, string> = { projects: 'project', clients: 'client', evaluations: 'evaluation' };
+      filtered = filtered.filter(r => r.type === typeMap[filters.type]);
+    }
+
+    if (filters.ratingFilter) {
+      filtered = filtered.filter(r => r.rating && r.rating.startsWith(filters.ratingFilter));
+    }
+
+    if (filters.statusFilter) {
+      filtered = filtered.filter(r => r.status === filters.statusFilter);
+    }
+
+    if (filters.scoreMin > 0) {
+      filtered = filtered.filter(r => r.score != null && r.score >= filters.scoreMin);
+    }
+
+    if (filters.scoreMax < 10) {
+      filtered = filtered.filter(r => r.score != null && r.score <= filters.scoreMax);
+    }
+
+    setResults(filtered);
+  }, [filters, allResults]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const handleSaveFilter = () => {
     if (!saveName.trim()) return;
@@ -103,33 +166,47 @@ export default function SearchPage() {
       scoreMax: 10,
       ratingFilter: '',
       statusFilter: '',
-      sectorFilter: '',
-      dateFrom: '',
-      dateTo: '',
     });
   };
 
   const getTypeIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      project: '📊',
-      client: '👥',
-      evaluation: '📈',
-    };
+    const icons: Record<string, string> = { project: '📊', client: '👥', evaluation: '📈' };
     return icons[type] || '📋';
   };
 
   const getTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      project: 'Projet',
-      client: 'Client',
-      evaluation: 'Évaluation',
-    };
+    const labels: Record<string, string> = { project: 'Projet', client: 'Client', evaluation: 'Évaluation' };
     return labels[type] || type;
+  };
+
+  const getLink = (result: SearchResult) => {
+    switch (result.type) {
+      case 'project': return `/projects/${result.id}`;
+      case 'client': return `/clients/${result.id}`;
+      case 'evaluation': return `/evaluations/${result.id}`;
+      default: return '#';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      brouillon: 'Brouillon', en_cours: 'En cours', en_revue: 'En révision',
+      approuve: 'Approuvé', rejete: 'Rejeté', actif: 'Actif',
+      soumis: 'Soumis', valide: 'Validé',
+    };
+    return labels[status] || status;
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    } catch {
+      return '';
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">Recherche Avancée</h1>
         <p className="text-slate-400 mt-2">Recherchez et filtrez les projets, clients et évaluations</p>
@@ -187,14 +264,18 @@ export default function SearchPage() {
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Tous les statuts</option>
-            <option value="Validé">Validé</option>
-            <option value="En cours">En cours</option>
-            <option value="Brouillon">Brouillon</option>
+            <option value="brouillon">Brouillon</option>
+            <option value="en_cours">En cours</option>
+            <option value="en_revue">En révision</option>
+            <option value="approuve">Approuvé</option>
+            <option value="rejete">Rejeté</option>
+            <option value="soumis">Soumis</option>
+            <option value="valide">Validé</option>
           </select>
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">Score</label>
+          <label className="text-sm font-semibold text-white block mb-2">Score min</label>
           <input
             type="range"
             min="0"
@@ -246,13 +327,15 @@ export default function SearchPage() {
 
       {/* Results */}
       <div className="space-y-3">
-        <p className="text-slate-400">{filtered.length} résultats trouvés</p>
+        <p className="text-slate-400">
+          {loading ? 'Chargement...' : `${results.length} résultats trouvés`}
+        </p>
 
-        {filtered.map(result => (
+        {results.map(result => (
           <Link
-            key={result.id}
-            href={result.type === 'project' ? `/projects/${result.id}` : result.type === 'client' ? `/clients/${result.id}` : `/evaluations/${result.id}`}
-            className="rounded-lg border border-slate-700 bg-slate-800 p-4 hover:bg-slate-700 transition-colors"
+            key={`${result.type}-${result.id}`}
+            href={getLink(result)}
+            className="block rounded-lg border border-slate-700 bg-slate-800 p-4 hover:bg-slate-700 transition-colors"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -266,17 +349,19 @@ export default function SearchPage() {
 
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
-                    {result.status}
+                    {getStatusLabel(result.status)}
                   </span>
-                  <span className="px-2 py-1 bg-slate-700 rounded text-xs text-cyan-400 font-semibold">
-                    {result.rating}
-                  </span>
-                  {'score' in result && (
-                    <span className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
-                      Score: {result.score}/10
+                  {result.rating && (
+                    <span className="px-2 py-1 bg-slate-700 rounded text-xs text-cyan-400 font-semibold">
+                      {result.rating}
                     </span>
                   )}
-                  {'sector' in result && (
+                  {result.score != null && (
+                    <span className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
+                      Score: {result.score.toFixed(2)}/10
+                    </span>
+                  )}
+                  {result.sector && (
                     <span className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
                       {result.sector}
                     </span>
@@ -284,17 +369,19 @@ export default function SearchPage() {
                 </div>
               </div>
 
-              <div className="text-right">
-                <p className="text-xs text-slate-500 flex items-center space-x-1">
-                  <Clock size={12} />
-                  <span>{new Date(result.date).toLocaleDateString('fr-FR')}</span>
-                </p>
-              </div>
+              {result.date && (
+                <div className="text-right">
+                  <p className="text-xs text-slate-500 flex items-center space-x-1">
+                    <Clock size={12} />
+                    <span>{formatDate(result.date)}</span>
+                  </p>
+                </div>
+              )}
             </div>
           </Link>
         ))}
 
-        {filtered.length === 0 && (
+        {!loading && results.length === 0 && (
           <div className="text-center py-12">
             <p className="text-slate-400">Aucun résultat trouvé</p>
           </div>
