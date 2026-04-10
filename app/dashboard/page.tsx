@@ -1,76 +1,174 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { TrendingUp, AlertCircle, CheckCircle, Clock, BarChart3, PieChart, Activity, ArrowRight } from 'lucide-react';
+import { TrendingUp, AlertCircle, BarChart3, PieChart, Activity, ArrowRight } from 'lucide-react';
 
-const MOCK_PORTFOLIO = {
-  projects: [
-    { id: 'p1', name: 'Parc Éolien Taourirt', sector: 'Énergie - Éolien', cost: 450000000, status: 'validated', score: 8.08, rating: 'A' },
-    { id: 'p2', name: 'Centrale Solaire Ouarzazate', sector: 'Énergie - Solaire', cost: 320000000, status: 'validated', score: 7.85, rating: 'A' },
-    { id: 'p3', name: 'Route Express Marrakech', sector: 'Infrastructure - Transport', cost: 280000000, status: 'in_review', score: 7.45, rating: 'BBB+' },
-    { id: 'p4', name: 'Dessalement Eau Skhira', sector: 'Eau - Dessalement', cost: 185000000, status: 'draft', score: 6.92, rating: 'BBB' },
-    { id: 'p5', name: 'Port Logistique Casablanca', sector: 'Infrastructure - Logistique', cost: 520000000, status: 'validated', score: 8.25, rating: 'A' },
-  ],
-  evaluations: [
-    { id: 'ev1', project: 'Parc Éolien Taourirt', analyst: 'Ahmed Ben Selhami', date: '2026-03-15', status: 'validated', score: 8.08 },
-    { id: 'ev2', project: 'Port Logistique Casablanca', analyst: 'Fatima Zohra', date: '2026-03-20', status: 'validated', score: 8.25 },
-    { id: 'ev3', project: 'Centrale Solaire Ouarzazate', analyst: 'Mohamed Karim', date: '2026-04-01', status: 'in_review', score: 7.85 },
-  ],
-  alerts: [
-    { id: 'a1', type: 'error', title: 'Évaluation manquante', message: 'Dessalement Eau Skhira n\'a pas d\'évaluation validée', date: '2026-04-02' },
-    { id: 'a2', type: 'warning', title: 'Score faible détecté', message: 'Route Express Marrakech: Score 7.45 - À surveiller', date: '2026-04-01' },
-    { id: 'a3', type: 'info', title: 'Nouveau projet créé', message: 'Port Logistique Casablanca ajouté au portefeuille', date: '2026-03-28' },
-  ],
-  activities: [
-    { id: '1', action: 'Validation', item: 'Évaluation Parc Éolien Taourirt', user: 'Manager Risk', date: '2026-03-15', time: '14:30' },
-    { id: '2', action: 'Création', item: 'Projet Port Logistique Casablanca', user: 'Analyste Junior', date: '2026-03-28', time: '09:15' },
-    { id: '3', action: 'Soumission', item: 'Évaluation Centrale Solaire', user: 'Ahmed Ben Selhami', date: '2026-04-01', time: '16:45' },
-  ],
-};
+interface Project {
+  id: string;
+  nom: string;
+  secteur: string;
+  montant: number;
+  devise: string;
+  status: string;
+  scoreGlobal: number | null;
+  grade: string | null;
+  dateCreation: string;
+}
+
+interface Evaluation {
+  id: string;
+  projectId: string;
+  finalScore: number | null;
+  rating: string | null;
+  status: string;
+  createdAt: string;
+  project?: { nom: string };
+  analyst?: { nom: string; prenom: string };
+}
+
+interface AuditLog {
+  id: string;
+  action: string;
+  details: any;
+  utilisateurId: string;
+  projectId: string | null;
+  dateAction: string;
+}
 
 export default function DashboardPage() {
-  const totalProjects = MOCK_PORTFOLIO.projects.length;
-  const validatedProjects = MOCK_PORTFOLIO.projects.filter(p => p.status === 'validated').length;
-  const avgScore = (MOCK_PORTFOLIO.projects.reduce((sum, p) => sum + p.score, 0) / totalProjects).toFixed(2);
-  const totalExposure = MOCK_PORTFOLIO.projects.reduce((sum, p) => sum + p.cost, 0);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [activities, setActivities] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const ratingDistribution = {
-    AAA: MOCK_PORTFOLIO.projects.filter(p => p.rating === 'AAA').length,
-    AA: MOCK_PORTFOLIO.projects.filter(p => p.rating === 'AA').length,
-    A: MOCK_PORTFOLIO.projects.filter(p => p.rating === 'A').length,
-    BBB: MOCK_PORTFOLIO.projects.filter(p => p.rating === 'BBB' || p.rating === 'BBB+').length,
-    B: MOCK_PORTFOLIO.projects.filter(p => p.rating === 'B').length,
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [projRes, evalRes, auditRes] = await Promise.all([
+          fetch('/api/projects?limit=100'),
+          fetch('/api/evaluations?limit=100'),
+          fetch('/api/audit?limit=10'),
+        ]);
 
-  const sectorExposure = [
-    { sector: 'Énergie - Éolien', amount: 450000000, percentage: 28.9 },
-    { sector: 'Infrastructure - Logistique', amount: 520000000, percentage: 33.3 },
-    { sector: 'Énergie - Solaire', amount: 320000000, percentage: 20.5 },
-    { sector: 'Infrastructure - Transport', amount: 280000000, percentage: 18.0 },
-    { sector: 'Eau - Dessalement', amount: 185000000, percentage: 11.8 },
-  ];
+        if (projRes.ok) {
+          const projData = await projRes.json();
+          setProjects(projData.data || []);
+        }
 
-  const statusBreakdown = {
-    validated: MOCK_PORTFOLIO.projects.filter(p => p.status === 'validated').length,
-    in_review: MOCK_PORTFOLIO.projects.filter(p => p.status === 'in_review').length,
-    draft: MOCK_PORTFOLIO.projects.filter(p => p.status === 'draft').length,
-  };
+        if (evalRes.ok) {
+          const evalData = await evalRes.json();
+          setEvaluations(evalData.data || []);
+        }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'validated': return { bg: 'bg-green-500/20', text: 'text-green-400', badge: 'bg-green-500/20 text-green-400' };
-      case 'in_review': return { bg: 'bg-yellow-500/20', text: 'text-yellow-400', badge: 'bg-yellow-500/20 text-yellow-400' };
-      case 'draft': return { bg: 'bg-slate-600', text: 'text-slate-300', badge: 'bg-slate-600 text-slate-300' };
-      default: return { bg: 'bg-slate-600', text: 'text-slate-300', badge: 'bg-slate-600 text-slate-300' };
+        if (auditRes.ok) {
+          const auditData = await auditRes.json();
+          setActivities(Array.isArray(auditData) ? auditData : []);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Erreur de chargement');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Tableau de Bord</h1>
+          <p className="text-slate-400 mt-2">Chargement...</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="rounded-lg bg-slate-800 p-6 animate-pulse h-28" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const totalProjects = projects.length;
+  const approvedProjects = projects.filter(p => p.status === 'approuve').length;
+  const scoredProjects = projects.filter(p => p.scoreGlobal != null);
+  const avgScore = scoredProjects.length > 0
+    ? (scoredProjects.reduce((sum, p) => sum + (p.scoreGlobal || 0), 0) / scoredProjects.length).toFixed(2)
+    : '—';
+  const totalExposure = projects.reduce((sum, p) => sum + (p.montant || 0), 0);
+
+  // Rating distribution from real project grades
+  const ratingCounts: Record<string, number> = {};
+  projects.forEach(p => {
+    if (p.grade) {
+      const base = p.grade.replace(/[+-]/, '');
+      ratingCounts[base] = (ratingCounts[base] || 0) + 1;
     }
+  });
+  const ratingLabels = ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'D'];
+
+  // Sector exposure computed from real data
+  const sectorMap: Record<string, number> = {};
+  projects.forEach(p => {
+    const sector = p.secteur || 'Autre';
+    sectorMap[sector] = (sectorMap[sector] || 0) + (p.montant || 0);
+  });
+  const sectorExposure = Object.entries(sectorMap)
+    .map(([sector, amount]) => ({
+      sector,
+      amount,
+      percentage: totalExposure > 0 ? (amount / totalExposure) * 100 : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  // Status breakdown using DB enum values
+  const statusBreakdown = {
+    approuve: projects.filter(p => p.status === 'approuve').length,
+    en_revue: projects.filter(p => p.status === 'en_revue').length,
+    en_cours: projects.filter(p => p.status === 'en_cours').length,
+    brouillon: projects.filter(p => p.status === 'brouillon').length,
+    rejete: projects.filter(p => p.status === 'rejete').length,
   };
+
+  // Alerts generated from real data
+  const alerts: { id: string; type: string; title: string; message: string }[] = [];
+  projects.forEach(p => {
+    if (p.status === 'brouillon' || p.status === 'en_cours') {
+      const hasEval = evaluations.some(e => e.projectId === p.id && e.status === 'valide');
+      if (!hasEval) {
+        alerts.push({
+          id: `alert-${p.id}`,
+          type: 'warning',
+          title: 'Évaluation manquante',
+          message: `${p.nom} n'a pas d'évaluation validée`,
+        });
+      }
+    }
+    if (p.scoreGlobal != null && p.scoreGlobal < 5) {
+      alerts.push({
+        id: `alert-score-${p.id}`,
+        type: 'error',
+        title: 'Score faible détecté',
+        message: `${p.nom}: Score ${p.scoreGlobal.toFixed(2)} - À surveiller`,
+      });
+    }
+  });
 
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'error': return '🔴';
       case 'warning': return '⚠️';
-      case 'info': return 'ℹ️';
       default: return 'ℹ️';
+    }
+  };
+
+  const getAlertBorder = (type: string) => {
+    switch (type) {
+      case 'error': return 'border-red-500';
+      case 'warning': return 'border-yellow-500';
+      default: return 'border-blue-500';
     }
   };
 
@@ -81,26 +179,57 @@ export default function DashboardPage() {
     return 'text-yellow-400';
   };
 
+  const getRatingBarColor = (rating: string) => {
+    if (rating.startsWith('AA')) return 'bg-green-500';
+    if (rating.startsWith('A')) return 'bg-blue-500';
+    if (rating.startsWith('BBB')) return 'bg-cyan-500';
+    return 'bg-yellow-500';
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatTime = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '';
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">Tableau de Bord</h1>
-        <p className="text-slate-400 mt-2">Vue d'ensemble du portefeuille de projets</p>
+        <p className="text-slate-400 mt-2">Vue d&apos;ensemble du portefeuille de projets</p>
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
           <p className="text-sm opacity-90 mb-2">Projets Total</p>
           <p className="text-3xl font-bold">{totalProjects}</p>
-          <p className="text-xs opacity-75 mt-2">{validatedProjects} validés</p>
+          <p className="text-xs opacity-75 mt-2">{approvedProjects} approuvés</p>
         </div>
 
         <div className="rounded-lg bg-gradient-to-br from-cyan-600 to-cyan-700 p-6 text-white">
           <p className="text-sm opacity-90 mb-2">Évaluations</p>
-          <p className="text-3xl font-bold">{MOCK_PORTFOLIO.evaluations.length}</p>
-          <p className="text-xs opacity-75 mt-2">Dernière: {MOCK_PORTFOLIO.evaluations[0]?.date}</p>
+          <p className="text-3xl font-bold">{evaluations.length}</p>
+          <p className="text-xs opacity-75 mt-2">
+            {evaluations.filter(e => e.status === 'valide').length} validées
+          </p>
         </div>
 
         <div className="rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 p-6 text-white">
@@ -110,8 +239,12 @@ export default function DashboardPage() {
         </div>
 
         <div className="rounded-lg bg-gradient-to-br from-orange-600 to-orange-700 p-6 text-white">
-          <p className="text-sm opacity-90 mb-2">Exposition Total</p>
-          <p className="text-3xl font-bold">{(totalExposure / 1000000000).toFixed(1)}B</p>
+          <p className="text-sm opacity-90 mb-2">Exposition Totale</p>
+          <p className="text-3xl font-bold">
+            {totalExposure >= 1000000000
+              ? `${(totalExposure / 1000000000).toFixed(1)}B`
+              : `${(totalExposure / 1000000).toFixed(0)}M`}
+          </p>
           <p className="text-xs opacity-75 mt-2">MAD</p>
         </div>
       </div>
@@ -127,14 +260,16 @@ export default function DashboardPage() {
               <span>Alertes</span>
             </h2>
             <div className="space-y-3">
-              {MOCK_PORTFOLIO.alerts.map((alert) => (
-                <div key={alert.id} className="bg-slate-700 rounded-lg p-3 border-l-4 border-red-500">
+              {alerts.length === 0 && (
+                <p className="text-sm text-slate-400">Aucune alerte active</p>
+              )}
+              {alerts.slice(0, 5).map((alert) => (
+                <div key={alert.id} className={`bg-slate-700 rounded-lg p-3 border-l-4 ${getAlertBorder(alert.type)}`}>
                   <div className="flex items-start space-x-2">
                     <span className="text-lg">{getAlertIcon(alert.type)}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white">{alert.title}</p>
                       <p className="text-xs text-slate-400 mt-1">{alert.message}</p>
-                      <p className="text-xs text-slate-500 mt-2">{alert.date}</p>
                     </div>
                   </div>
                 </div>
@@ -152,24 +287,40 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm text-slate-300">Validés</span>
+                  <span className="text-sm text-slate-300">Approuvés</span>
                 </div>
-                <span className="text-lg font-bold text-white">{statusBreakdown.validated}</span>
+                <span className="text-lg font-bold text-white">{statusBreakdown.approuve}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                   <span className="text-sm text-slate-300">En Révision</span>
                 </div>
-                <span className="text-lg font-bold text-white">{statusBreakdown.in_review}</span>
+                <span className="text-lg font-bold text-white">{statusBreakdown.en_revue}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span className="text-sm text-slate-300">En Cours</span>
+                </div>
+                <span className="text-lg font-bold text-white">{statusBreakdown.en_cours}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-slate-500"></div>
                   <span className="text-sm text-slate-300">Brouillon</span>
                 </div>
-                <span className="text-lg font-bold text-white">{statusBreakdown.draft}</span>
+                <span className="text-lg font-bold text-white">{statusBreakdown.brouillon}</span>
               </div>
+              {statusBreakdown.rejete > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span className="text-sm text-slate-300">Rejetés</span>
+                  </div>
+                  <span className="text-lg font-bold text-white">{statusBreakdown.rejete}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -183,9 +334,9 @@ export default function DashboardPage() {
               <span>Distribution par Rating</span>
             </h2>
             <div className="space-y-3">
-              {['AAA', 'AA', 'A', 'BBB', 'B'].map((rating) => {
-                const count = ratingDistribution[rating as keyof typeof ratingDistribution];
-                const percentage = (count / totalProjects) * 100;
+              {ratingLabels.filter(r => (ratingCounts[r] || 0) > 0 || ['AAA', 'AA', 'A', 'BBB', 'B'].includes(r)).map((rating) => {
+                const count = ratingCounts[rating] || 0;
+                const percentage = totalProjects > 0 ? (count / totalProjects) * 100 : 0;
                 return (
                   <div key={rating}>
                     <div className="flex items-center justify-between mb-2">
@@ -194,13 +345,8 @@ export default function DashboardPage() {
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full ${
-                          rating.startsWith('AA') ? 'bg-green-500' :
-                          rating.startsWith('A') ? 'bg-blue-500' :
-                          rating.startsWith('BBB') ? 'bg-cyan-500' :
-                          'bg-yellow-500'
-                        }`}
-                        style={{ width: `${percentage * 20}%` }}
+                        className={`h-2 rounded-full ${getRatingBarColor(rating)}`}
+                        style={{ width: `${Math.min(percentage, 100)}%` }}
                       ></div>
                     </div>
                   </div>
@@ -215,23 +361,27 @@ export default function DashboardPage() {
               <PieChart size={20} />
               <span>Exposition par Secteur</span>
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {sectorExposure.map((sector) => (
-                <div key={sector.sector} className="bg-slate-700 rounded-lg p-3">
-                  <p className="text-sm font-semibold text-white truncate">{sector.sector}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-xs text-slate-400">{sector.percentage.toFixed(1)}%</p>
-                    <p className="text-sm font-bold text-cyan-400">{(sector.amount / 1000000).toFixed(0)}M</p>
+            {sectorExposure.length === 0 ? (
+              <p className="text-sm text-slate-400">Aucun projet avec secteur défini</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {sectorExposure.map((sector) => (
+                  <div key={sector.sector} className="bg-slate-700 rounded-lg p-3">
+                    <p className="text-sm font-semibold text-white truncate">{sector.sector}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-slate-400">{sector.percentage.toFixed(1)}%</p>
+                      <p className="text-sm font-bold text-cyan-400">{(sector.amount / 1000000).toFixed(0)}M</p>
+                    </div>
+                    <div className="w-full bg-slate-600 rounded-full h-1 mt-2">
+                      <div
+                        className="bg-cyan-500 h-1 rounded-full"
+                        style={{ width: `${Math.min(sector.percentage, 100)}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-600 rounded-full h-1 mt-2">
-                    <div
-                      className="bg-cyan-500 h-1 rounded-full"
-                      style={{ width: `${sector.percentage}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -243,16 +393,23 @@ export default function DashboardPage() {
           <span>Activités Récentes</span>
         </h2>
         <div className="space-y-3">
-          {MOCK_PORTFOLIO.activities.map((activity) => (
+          {activities.length === 0 && (
+            <p className="text-sm text-slate-400">Aucune activité récente</p>
+          )}
+          {activities.slice(0, 8).map((activity) => (
             <div key={activity.id} className="flex items-start space-x-4 pb-3 border-b border-slate-700 last:border-b-0">
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
                   <span className="text-xs font-semibold text-cyan-400">{activity.action}</span>
                   <span className="text-xs text-slate-500">•</span>
-                  <span className="text-xs text-slate-400">{activity.date} {activity.time}</span>
+                  <span className="text-xs text-slate-400">{formatDate(activity.dateAction)} {formatTime(activity.dateAction)}</span>
                 </div>
-                <p className="text-sm text-white">{activity.item}</p>
-                <p className="text-xs text-slate-500 mt-1">Par {activity.user}</p>
+                <p className="text-sm text-white">
+                  {typeof activity.details === 'object' && activity.details
+                    ? activity.details.description || activity.details.message || JSON.stringify(activity.details)
+                    : activity.details || activity.action}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">Par {activity.utilisateurId}</p>
               </div>
               <ArrowRight size={16} className="text-slate-500 mt-1" />
             </div>

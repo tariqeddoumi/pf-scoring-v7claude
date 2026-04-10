@@ -1,61 +1,40 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, X, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Download } from 'lucide-react';
 
-const PROJECTS = [
-  {
-    id: 'p1',
-    name: 'Parc Éolien Taourirt',
-    sector: 'Énergie - Éolien',
-    cost: 450000000,
-    score: 8.08,
-    rating: 'A',
-    dscr: 1.35,
-    equity: 25,
-    leverage: 75,
-    status: 'Validé',
-  },
-  {
-    id: 'p2',
-    name: 'Centrale Solaire Ouarzazate',
-    sector: 'Énergie - Solaire',
-    cost: 320000000,
-    score: 7.85,
-    rating: 'A',
-    dscr: 1.28,
-    equity: 22,
-    leverage: 78,
-    status: 'Validé',
-  },
-  {
-    id: 'p3',
-    name: 'Route Express Marrakech',
-    sector: 'Infrastructure - Transport',
-    cost: 280000000,
-    score: 7.45,
-    rating: 'BBB+',
-    dscr: 1.15,
-    equity: 20,
-    leverage: 80,
-    status: 'En cours',
-  },
-  {
-    id: 'p5',
-    name: 'Port Logistique Casablanca',
-    sector: 'Infrastructure - Logistique',
-    cost: 520000000,
-    score: 8.25,
-    rating: 'A',
-    dscr: 1.42,
-    equity: 28,
-    leverage: 72,
-    status: 'Validé',
-  },
-];
+interface Project {
+  id: string;
+  nom: string;
+  secteur: string;
+  montant: number;
+  devise: string;
+  status: string;
+  scoreGlobal: number | null;
+  grade: string | null;
+}
 
 export default function ComparePage() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch('/api/projects?limit=100');
+        if (res.ok) {
+          const data = await res.json();
+          setProjects(data.data || []);
+        }
+      } catch {
+        // Silent fail - show empty list
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const handleSelectProject = (id: string) => {
     if (selectedProjects.includes(id)) {
@@ -65,35 +44,67 @@ export default function ComparePage() {
     }
   };
 
-  const compareProjects = PROJECTS.filter(p => selectedProjects.includes(p.id));
+  const compareProjects = projects.filter(p => selectedProjects.includes(p.id));
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      brouillon: 'Brouillon', en_cours: 'En cours', en_revue: 'En révision',
+      approuve: 'Approuvé', rejete: 'Rejeté',
+    };
+    return labels[status] || status;
+  };
+
+  const formatAmount = (amount: number) => {
+    if (amount >= 1000000000) return `${(amount / 1000000000).toFixed(1)}B`;
+    if (amount >= 1000000) return `${(amount / 1000000).toFixed(0)}M`;
+    return amount.toLocaleString('fr-FR');
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-white">Comparaison de Projets</h1>
-        <p className="text-slate-400 mt-2">Comparez jusqu'à 4 projets côte à côte</p>
+        <p className="text-slate-400 mt-2">Comparez jusqu&apos;à 4 projets côte à côte</p>
       </div>
 
       {/* Project Selection */}
       <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
         <h2 className="text-xl font-bold text-white mb-4">Sélectionner des Projets</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {PROJECTS.map(project => (
-            <button
-              key={project.id}
-              onClick={() => handleSelectProject(project.id)}
-              className={`rounded-lg border-2 p-4 text-left transition-all ${
-                selectedProjects.includes(project.id)
-                  ? 'border-cyan-500 bg-cyan-500/10'
-                  : 'border-slate-600 bg-slate-700 hover:border-slate-500'
-              }`}
-            >
-              <h3 className="font-semibold text-white">{project.name}</h3>
-              <p className="text-sm text-slate-400 mt-1">{project.sector}</p>
-              <p className="text-sm text-cyan-400 font-bold mt-2">Score: {project.score}/10</p>
-            </button>
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto"></div>
+            <p className="text-slate-400 mt-2">Chargement...</p>
+          </div>
+        ) : projects.length === 0 ? (
+          <p className="text-slate-400 text-center py-4">Aucun projet disponible</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {projects.map(project => (
+              <button
+                key={project.id}
+                onClick={() => handleSelectProject(project.id)}
+                className={`rounded-lg border-2 p-4 text-left transition-all ${
+                  selectedProjects.includes(project.id)
+                    ? 'border-cyan-500 bg-cyan-500/10'
+                    : 'border-slate-600 bg-slate-700 hover:border-slate-500'
+                }`}
+              >
+                <h3 className="font-semibold text-white">{project.nom}</h3>
+                <p className="text-sm text-slate-400 mt-1">{project.secteur || 'Secteur non défini'}</p>
+                <div className="flex items-center gap-3 mt-2">
+                  <p className="text-sm text-cyan-400 font-bold">
+                    {project.scoreGlobal != null ? `Score: ${project.scoreGlobal.toFixed(2)}/10` : 'Non noté'}
+                  </p>
+                  {project.grade && (
+                    <span className="px-2 py-0.5 rounded text-xs font-semibold bg-slate-600 text-white">
+                      {project.grade}
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Comparison Table */}
@@ -106,20 +117,38 @@ export default function ComparePage() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Métrique</th>
                   {compareProjects.map(project => (
                     <th key={project.id} className="px-4 py-3 text-left text-sm font-semibold text-white">
-                      {project.name}
+                      {project.nom}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700">
-                <Row label="Score Global" values={compareProjects.map(p => `${p.score}/10`)} highlight />
-                <Row label="Rating" values={compareProjects.map(p => p.rating)} highlight />
-                <Row label="Statut" values={compareProjects.map(p => p.status)} />
-                <Row label="Coût (MAD)" values={compareProjects.map(p => `${(p.cost / 1000000).toFixed(0)}M`)} />
-                <Row label="DSCR" values={compareProjects.map(p => `${p.dscr.toFixed(2)}x`)} />
-                <Row label="Equity" values={compareProjects.map(p => `${p.equity}%`)} />
-                <Row label="Leverage" values={compareProjects.map(p => `${p.leverage}%`)} />
-                <Row label="Secteur" values={compareProjects.map(p => p.sector)} />
+                <Row
+                  label="Score Global"
+                  values={compareProjects.map(p => p.scoreGlobal != null ? `${p.scoreGlobal.toFixed(2)}/10` : '—')}
+                  highlight
+                />
+                <Row
+                  label="Rating"
+                  values={compareProjects.map(p => p.grade || '—')}
+                  highlight
+                />
+                <Row
+                  label="Statut"
+                  values={compareProjects.map(p => getStatusLabel(p.status))}
+                />
+                <Row
+                  label="Montant (MAD)"
+                  values={compareProjects.map(p => formatAmount(p.montant))}
+                />
+                <Row
+                  label="Devise"
+                  values={compareProjects.map(p => p.devise || 'MAD')}
+                />
+                <Row
+                  label="Secteur"
+                  values={compareProjects.map(p => p.secteur || '—')}
+                />
               </tbody>
             </table>
           </div>
@@ -134,7 +163,7 @@ export default function ComparePage() {
         </div>
       )}
 
-      {selectedProjects.length === 0 && (
+      {selectedProjects.length === 0 && !loading && (
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-8 text-center">
           <p className="text-slate-400">Sélectionnez au moins 2 projets pour comparer</p>
         </div>

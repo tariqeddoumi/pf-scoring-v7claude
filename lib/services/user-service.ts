@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/prisma-client';
 import { createUserSchema, updateUserSchema, changeUserRoleSchema } from '@/lib/validation-schemas';
 import type { z } from 'zod';
 
