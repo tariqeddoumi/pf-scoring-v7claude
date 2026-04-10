@@ -269,7 +269,14 @@ export default function NewProjectPage() {
       {/* Error Message */}
       {errorMessage && (
         <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm md:text-base">
-          🔴 {errorMessage}
+          <p>🔴 {errorMessage}</p>
+          {Object.keys(fieldErrors).length > 0 && (
+            <ul className="mt-2 list-disc list-inside text-sm">
+              {Object.entries(fieldErrors).map(([field, msg]) => (
+                <li key={field}><strong>{field}</strong> : {msg}</li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
