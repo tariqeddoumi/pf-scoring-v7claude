@@ -3,24 +3,18 @@
 import Link from 'next/link';
 import { Plus, Search, Eye, Edit2, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-interface Client {
-  id: string;
-  nom: string;
-  email?: string;
-  telephone?: string;
-  secteur?: string;
-  pays?: string;
-  type?: string;
-  status: string;
-  createdAt: string;
-}
+import { useRouter } from 'next/navigation';
+import { Client } from '@/lib/types/models';
+import { DeleteConfirmation } from '@/components/modals/DeleteConfirmation';
 
 export default function ClientsPage() {
+  const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -39,6 +33,22 @@ export default function ClientsPage() {
       setClients([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (clientId: string) => {
+    try {
+      setDeleting(true);
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete client');
+      setClients(clients.filter(c => c.id !== clientId));
+      setDeleteConfirm(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete client');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -124,13 +134,22 @@ export default function ClientsPage() {
                   </td>
                   <td className="px-4 md:px-6 py-4 text-right">
                     <div className="flex justify-end space-x-1 md:space-x-2">
-                      <button className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors">
+                      <button
+                        onClick={() => router.push(`/clients/${client.id}`)}
+                        className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors"
+                      >
                         <Eye size={16} className="md:w-5 md:h-5" />
                       </button>
-                      <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors">
+                      <button
+                        onClick={() => router.push(`/clients/${client.id}/edit`)}
+                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
+                      >
                         <Edit2 size={16} className="md:w-5 md:h-5" />
                       </button>
-                      <button className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors">
+                      <button
+                        onClick={() => setDeleteConfirm(client.id)}
+                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
+                      >
                         <Trash2 size={16} className="md:w-5 md:h-5" />
                       </button>
                     </div>
@@ -151,6 +170,16 @@ export default function ClientsPage() {
           </p>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmation
+        isOpen={deleteConfirm !== null}
+        title="Supprimer le client"
+        message="Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible."
+        isDeleting={deleting}
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+      />
     </div>
   );
 }
