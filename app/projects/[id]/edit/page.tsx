@@ -330,6 +330,7 @@ export default function EditProjectPage({
               </div>
             </div>
           </TabPane>
+        </Tabs>
 
         {/* Buttons */}
         <div className="flex gap-4 pt-4">
