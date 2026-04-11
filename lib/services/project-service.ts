@@ -23,14 +23,21 @@ export class ProjectService {
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        projectId: project.id,
-        utilisateurId: createdBy,
-        action: "CREATE_PROJECT",
-        details: JSON.stringify({ projectName: project.nom }),
-      },
-    });
+    // Only log audit if createdBy is valid
+    if (createdBy && createdBy.trim()) {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            projectId: project.id,
+            utilisateurId: createdBy,
+            action: "CREATE_PROJECT",
+            details: JSON.stringify({ projectName: project.nom }),
+          },
+        });
+      } catch (auditError) {
+        console.error("Failed to create audit log:", auditError);
+      }
+    }
 
     return project;
   }
@@ -128,14 +135,22 @@ export class ProjectService {
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        projectId: id,
-        utilisateurId: updatedBy,
-        action: "UPDATE_PROJECT",
-        details: JSON.stringify({ projectName: project.nom }),
-      },
-    });
+    // Only log audit if updatedBy is valid
+    if (updatedBy && updatedBy.trim()) {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            projectId: id,
+            utilisateurId: updatedBy,
+            action: "UPDATE_PROJECT",
+            details: JSON.stringify({ projectName: project.nom }),
+          },
+        });
+      } catch (auditError) {
+        // Log error but don't fail the update
+        console.error("Failed to create audit log:", auditError);
+      }
+    }
 
     return project;
   }
@@ -156,14 +171,21 @@ export class ProjectService {
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        projectId: id,
-        utilisateurId: updatedBy,
-        action: "UPDATE_PROJECT_STATUS",
-        details: JSON.stringify({ status }),
-      },
-    });
+    // Only log audit if updatedBy is valid
+    if (updatedBy && updatedBy.trim()) {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            projectId: id,
+            utilisateurId: updatedBy,
+            action: "UPDATE_PROJECT_STATUS",
+            details: JSON.stringify({ status }),
+          },
+        });
+      } catch (auditError) {
+        console.error("Failed to create audit log:", auditError);
+      }
+    }
 
     return project;
   }
@@ -180,14 +202,21 @@ export class ProjectService {
 
     await prisma.project.delete({ where: { id } });
 
-    await prisma.auditLog.create({
-      data: {
-        projectId: id,
-        utilisateurId: deletedBy,
-        action: "DELETE_PROJECT",
-        details: JSON.stringify({ projectName: project.nom }),
-      },
-    });
+    // Only log audit if deletedBy is valid
+    if (deletedBy && deletedBy.trim()) {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            projectId: id,
+            utilisateurId: deletedBy,
+            action: "DELETE_PROJECT",
+            details: JSON.stringify({ projectName: project.nom }),
+          },
+        });
+      } catch (auditError) {
+        console.error("Failed to create audit log:", auditError);
+      }
+    }
 
     return project;
   }
