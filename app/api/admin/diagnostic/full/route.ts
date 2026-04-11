@@ -274,15 +274,14 @@ export async function GET(request: NextRequest) {
     // Verify token and check admin role
     const payload = await verifyToken(token);
     if (!payload) {
-      return NextResponse.json(
-        { error: "Token invalide" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token invalide" }, { status: 401 });
     }
 
     if (payload.role !== "admin") {
       return NextResponse.json(
-        { error: "Seuls les administrateurs peuvent accéder aux diagnostiques" },
+        {
+          error: "Seuls les administrateurs peuvent accéder aux diagnostiques",
+        },
         { status: 403 }
       );
     }

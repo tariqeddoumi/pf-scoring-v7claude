@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         role: true,
         avatar: true,
         createdAt: true,
-      }
+      },
     });
 
     if (!userDetails) {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: userDetails
+      data: userDetails,
     });
   } catch (error) {
     console.error("[AUTH/ME] Erreur:", error);

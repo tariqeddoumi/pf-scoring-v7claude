@@ -152,6 +152,7 @@ DIRECT_URL=postgresql://postgres:password@aws-0-eu-west-1.pooler.supabase.com:54
 ```
 
 **Important Notes:**
+
 - Copy your actual Supabase credentials from Step 1.2
 - `NEXTAUTH_URL` will be your Vercel deployment URL (you can update it after first deployment)
 - Use a different `JWT_SECRET` and `NEXTAUTH_SECRET` for production!
@@ -212,18 +213,23 @@ Before production, ensure:
 ## 🐛 Troubleshooting
 
 ### Issue: "DATABASE_URL not found"
+
 **Solution:** Check Vercel environment variables are correctly set
 
 ### Issue: "Connection timeout from Supabase"
+
 **Solution:** Verify your IP is whitelisted in Supabase settings (or disable IP restrictions)
 
 ### Issue: "Authentication failed"
+
 **Solution:** Verify `NEXT_PUBLIC_SUPABASE_ANON_KEY` is correct and matches your Supabase project
 
 ### Issue: "API routes returning 500"
+
 **Solution:** Check Vercel function logs in Deployments tab for error messages
 
 ### Issue: "CORS errors in browser console"
+
 **Solution:** Configure CORS in Supabase dashboard under Settings → API
 
 ---
@@ -245,14 +251,17 @@ No additional setup required - these are automatically enabled!
 ## 📊 Monitoring & Logs
 
 ### Vercel Logs
+
 - Go to Vercel dashboard → Deployments → Click on any deployment
 - View function logs in real-time
 
 ### Supabase Logs
+
 - In Supabase dashboard → Database → Logs
 - Monitor queries and performance
 
 ### Application Errors
+
 - Check browser console (F12)
 - Check Network tab for API errors
 - Review Supabase audit logs for database operations

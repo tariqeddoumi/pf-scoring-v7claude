@@ -3,6 +3,7 @@
 ## Vue d'Ensemble
 
 Tu as configuré une **architecture automatisée complète** où:
+
 - **Notion Database** = Source unique de vérité pour le tracking
 - **Claude Code** (moi) = Lire/écrire automatiquement dans Notion
 - **Python Scripts** = Générer les PPT automatiquement
@@ -36,6 +37,7 @@ python scripts/init-notion-db.py
 ```
 
 **Ce script va:**
+
 - ✅ Créer la Notion Database automatiquement
 - ✅ Importer les données du CSV
 - ✅ Sauvegarder le Database ID dans `.env.notion`
@@ -282,15 +284,15 @@ import { notion } from "@/lib/notion-client";
 
 // Lire les données
 const items = await notion.databases.query({
-  database_id: NOTION_DATABASE_ID
+  database_id: NOTION_DATABASE_ID,
 });
 
 // Mettre à jour
 await notion.pages.update({
   page_id: pageId,
   properties: {
-    "Complétion %": { number: 85 }
-  }
+    "Complétion %": { number: 85 },
+  },
 });
 ```
 
@@ -303,7 +305,7 @@ import { getTrackingItems, getTrackingStats } from "@/lib/notion-client";
 export async function GET() {
   const items = await getTrackingItems();
   const stats = await getTrackingStats();
-  
+
   return Response.json({ items, stats });
 }
 ```
@@ -320,7 +322,7 @@ export async function GET() {
 def add_custom_slide(prs, stats):
     """Ajoute une slide personnalisée"""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    
+
     # Ajoute ton contenu
     title_box = slide.shapes.add_textbox(...)
     # ...
@@ -389,7 +391,7 @@ print(f'Items: {len(response[\"results\"])}')
 name: Daily COPIL PPT Generation
 on:
   schedule:
-    - cron: '0 8 * * 1'  # Every Monday at 8am
+    - cron: "0 8 * * 1" # Every Monday at 8am
 
 jobs:
   generate-ppt:
@@ -398,17 +400,17 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      
+          python-version: "3.10"
+
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt
-      
+
       - name: Generate PPT
         env:
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
         run: python scripts/generate-copil-ppt.py --output "COPIL_$(date +%Y%m%d).pptx"
-      
+
       - name: Upload to Google Drive
         run: |
           # Your upload script here
@@ -443,6 +445,7 @@ jobs:
 ## 📞 Support
 
 **Problème?** Dis-moi:
+
 ```
 - Quel error tu vois?
 - À quelle étape?

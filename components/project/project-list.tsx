@@ -34,19 +34,25 @@ export function ProjectList({ projects }: ProjectListProps) {
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Badge variant="outline">{project.secteur}</Badge>
-                  <Badge variant="outline">{project.montant.toLocaleString()} MAD</Badge>
+                  <Badge variant="outline">
+                    {project.montant.toLocaleString()} MAD
+                  </Badge>
                 </div>
               </div>
 
               <div className="text-right ml-4">
                 <Badge variant="secondary">{project.status}</Badge>
                 {project.scoreGlobal !== null && (
-                  <div className={`mt-2 text-2xl font-bold ${getGradeColor(project.grade!)}`}>
+                  <div
+                    className={`mt-2 text-2xl font-bold ${getGradeColor(project.grade!)}`}
+                  >
                     {project.grade}
                   </div>
                 )}
                 {!project.scoreGlobal && (
-                  <p className="text-xs text-muted-foreground mt-2">Non scoré</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Non scoré
+                  </p>
                 )}
               </div>
             </div>

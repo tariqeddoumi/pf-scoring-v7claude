@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useUsers, useMutation } from '@/lib/hooks/useApi';
-import { DataTable } from '@/components/crud/DataTable';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import React, { useState } from "react";
+import { useUsers, useMutation } from "@/lib/hooks/useApi";
+import { DataTable } from "@/components/crud/DataTable";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,9 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { FormBuilder } from '@/components/crud/FormBuilder';
-import { createUserSchema } from '@/lib/validation-schemas';
+} from "@/components/ui/dialog";
+import { FormBuilder } from "@/components/crud/FormBuilder";
+import { createUserSchema } from "@/lib/validation-schemas";
 
 interface User {
   id: string;
@@ -27,10 +27,11 @@ interface User {
 
 export default function UsersPage() {
   const { data, loading, error, execute } = useUsers(1, 50);
-  const { mutate: createUser, loading: creatingUser, error: createError } = useMutation(
-    '/api/users',
-    'POST'
-  );
+  const {
+    mutate: createUser,
+    loading: creatingUser,
+    error: createError,
+  } = useMutation("/api/users", "POST");
   const [open, setOpen] = useState(false);
 
   const users: User[] = data?.data || [];
@@ -54,13 +55,17 @@ export default function UsersPage() {
     createdAt: string;
   }
 
-  const columns: Array<{ key: keyof User; label: string; render?: (value: any) => React.ReactNode }> = [
-    { key: 'email', label: 'Email' },
-    { key: 'nom', label: 'Last Name' },
-    { key: 'prenom', label: 'First Name' },
+  const columns: Array<{
+    key: keyof User;
+    label: string;
+    render?: (value: any) => React.ReactNode;
+  }> = [
+    { key: "email", label: "Email" },
+    { key: "nom", label: "Last Name" },
+    { key: "prenom", label: "First Name" },
     {
-      key: 'role',
-      label: 'Role',
+      key: "role",
+      label: "Role",
       render: (value: string) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">
           {value}
@@ -68,8 +73,8 @@ export default function UsersPage() {
       ),
     },
     {
-      key: 'createdAt',
-      label: 'Created',
+      key: "createdAt",
+      label: "Created",
       render: (value: string) => new Date(value).toLocaleDateString(),
     },
   ];
@@ -79,7 +84,9 @@ export default function UsersPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
-          <p className="text-gray-600 mt-1">Manage system users and their roles</p>
+          <p className="text-gray-600 mt-1">
+            Manage system users and their roles
+          </p>
         </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
@@ -99,26 +106,41 @@ export default function UsersPage() {
             <FormBuilder
               schema={createUserSchema}
               fields={[
-                { name: 'email', label: 'Email', type: 'email', placeholder: 'user@example.com' },
-                { name: 'prenom', label: 'First Name', type: 'text', placeholder: 'John' },
-                { name: 'nom', label: 'Last Name', type: 'text', placeholder: 'Doe' },
                 {
-                  name: 'password',
-                  label: 'Password',
-                  type: 'password',
-                  placeholder: 'Min 8 characters',
+                  name: "email",
+                  label: "Email",
+                  type: "email",
+                  placeholder: "user@example.com",
                 },
                 {
-                  name: 'role',
-                  label: 'Role',
-                  type: 'select',
+                  name: "prenom",
+                  label: "First Name",
+                  type: "text",
+                  placeholder: "John",
+                },
+                {
+                  name: "nom",
+                  label: "Last Name",
+                  type: "text",
+                  placeholder: "Doe",
+                },
+                {
+                  name: "password",
+                  label: "Password",
+                  type: "password",
+                  placeholder: "Min 8 characters",
+                },
+                {
+                  name: "role",
+                  label: "Role",
+                  type: "select",
                   options: [
-                    { label: 'Admin', value: 'admin' },
-                    { label: 'Manager', value: 'manager' },
-                    { label: 'Analyst', value: 'analyst' },
-                    { label: 'Viewer', value: 'viewer' },
+                    { label: "Admin", value: "admin" },
+                    { label: "Manager", value: "manager" },
+                    { label: "Analyst", value: "analyst" },
+                    { label: "Viewer", value: "viewer" },
                   ],
-                  defaultValue: 'analyst',
+                  defaultValue: "analyst",
                 },
               ]}
               onSubmit={handleCreateUser}

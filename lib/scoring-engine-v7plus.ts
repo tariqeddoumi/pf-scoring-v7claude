@@ -23,15 +23,15 @@ import {
 // ============================================================================
 
 const DOMAIN_WEIGHTS: Record<DomainCode, number> = {
-  [DomainCode.D1]: 0.10, // Project Fundamentals (10%)
-  [DomainCode.D2]: 0.10, // Host Country (10%)
+  [DomainCode.D1]: 0.1, // Project Fundamentals (10%)
+  [DomainCode.D2]: 0.1, // Host Country (10%)
   [DomainCode.D3]: 0.15, // Construction Phase (15%)
-  [DomainCode.D4]: 0.10, // Operation Phase (10%)
-  [DomainCode.D5]: 0.10, // Revenue & Market (10%)
-  [DomainCode.D6]: 0.10, // Financial Structure (10%)
+  [DomainCode.D4]: 0.1, // Operation Phase (10%)
+  [DomainCode.D5]: 0.1, // Revenue & Market (10%)
+  [DomainCode.D6]: 0.1, // Financial Structure (10%)
   [DomainCode.D7]: 0.15, // Financial Structure & Cash Flow (15%)
-  [DomainCode.D8]: 0.10, // Legal & Documentation (10%)
-  [DomainCode.D9]: 0.10, // ESG & Climate (10%)
+  [DomainCode.D8]: 0.1, // Legal & Documentation (10%)
+  [DomainCode.D9]: 0.1, // ESG & Climate (10%)
   // TOTAL: 100%
 };
 
@@ -41,13 +41,13 @@ const NORMALIZATION_FACTOR = 100 / (TOTAL_WEIGHTS * 100);
 // Rating transformation thresholds
 const SCORE_TO_RATING_THRESHOLDS: Array<[number, RatingScale, number]> = [
   [8.5, RatingScale.AAA, 0.005],
-  [8.0, RatingScale.AA, 0.010],
+  [8.0, RatingScale.AA, 0.01],
   [7.5, RatingScale.A, 0.015],
   [7.0, RatingScale.BBB, 0.025],
-  [6.5, RatingScale.BB, 0.040],
+  [6.5, RatingScale.BB, 0.04],
   [6.0, RatingScale.B, 0.065],
-  [5.5, RatingScale.CCC, 0.120],
-  [0, RatingScale.D, 0.250],
+  [5.5, RatingScale.CCC, 0.12],
+  [0, RatingScale.D, 0.25],
 ];
 
 // ============================================================================
@@ -92,8 +92,7 @@ export class ScoringEngine {
 
     // Calculate global score
     const globalScore = this.aggregateGlobalScore();
-    const normalizedScore =
-      globalScore * NORMALIZATION_FACTOR;
+    const normalizedScore = globalScore * NORMALIZATION_FACTOR;
 
     // Apply MALUS rules
     this.appliedMALUS = rulesEngine.checkMALUS(
@@ -144,8 +143,7 @@ export class ScoringEngine {
     // D1.3 - Permits & Land (30%)
     const d1_3_score = this.calculateD1_3_PermitsLand();
 
-    const aggregated =
-      d1_1_score * 0.35 + d1_2_score * 0.35 + d1_3_score * 0.3;
+    const aggregated = d1_1_score * 0.35 + d1_2_score * 0.35 + d1_3_score * 0.3;
 
     this.domainScores.set(DomainCode.D1, {
       domainId: DomainCode.D1,
@@ -181,10 +179,8 @@ export class ScoringEngine {
     const rating = this.projectData.sponsor?.rating;
     const liquidityRatio = this.projectData.sponsor?.liquidityRatio ?? 0;
 
-    if (rating === RatingScale.AAA || rating === RatingScale.AA)
-      return 10;
-    if (rating === RatingScale.A || rating === RatingScale.BBB)
-      return 8;
+    if (rating === RatingScale.AAA || rating === RatingScale.AA) return 10;
+    if (rating === RatingScale.A || rating === RatingScale.BBB) return 8;
     if (rating === RatingScale.BB) return 6;
     if (rating === RatingScale.B) return 4;
     if (liquidityRatio < 0.1) return 1; // CRITICAL
@@ -330,8 +326,7 @@ export class ScoringEngine {
   private calculateD5_1_OfftakerQuality(): number {
     const rating = this.projectData.offtaker?.rating;
 
-    if (rating === RatingScale.AAA || rating === RatingScale.AA)
-      return 10;
+    if (rating === RatingScale.AAA || rating === RatingScale.AA) return 10;
     if (rating === RatingScale.A) return 9;
     if (rating === RatingScale.BBB) return 8;
     if (rating === RatingScale.BB) return 7;
@@ -532,10 +527,8 @@ export class ScoringEngine {
   }
 
   private validateInput(): void {
-    if (!this.projectData.projectId)
-      throw new Error("Project ID required");
-    if (!this.projectData.projectName)
-      throw new Error("Project name required");
+    if (!this.projectData.projectId) throw new Error("Project ID required");
+    if (!this.projectData.projectName) throw new Error("Project name required");
   }
 
   private buildRejectionResult(): ScoringResult {

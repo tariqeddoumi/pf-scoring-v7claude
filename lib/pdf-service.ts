@@ -5,7 +5,7 @@ export class PDFService {
    */
   static generateEvaluationPDF(evaluation: any): Blob {
     const html = this.generateHTML(evaluation);
-    return new Blob([html], { type: 'text/html;charset=utf-8;' });
+    return new Blob([html], { type: "text/html;charset=utf-8;" });
   }
 
   private static generateHTML(evaluation: any): string {
@@ -95,7 +95,7 @@ export class PDFService {
             <strong>Projet:</strong> ${evaluation.projectId}
           </div>
           <div>
-            <strong>Date:</strong> ${new Date().toLocaleDateString('fr-FR')}
+            <strong>Date:</strong> ${new Date().toLocaleDateString("fr-FR")}
           </div>
         </div>
 
@@ -103,13 +103,13 @@ export class PDFService {
           <div>Score Global</div>
           <div class="score-value">${(evaluation.score || 0).toFixed(2)}/10</div>
           <div style="margin-top: 10px;">
-            Rating: <strong>${evaluation.rating || 'N/A'}</strong>
+            Rating: <strong>${evaluation.rating || "N/A"}</strong>
           </div>
         </div>
 
         <h2>Résumé</h2>
         <p>Statut: <strong>${evaluation.status}</strong></p>
-        ${evaluation.recommendation ? `<p>Recommandation: ${evaluation.recommendation}</p>` : ''}
+        ${evaluation.recommendation ? `<p>Recommandation: ${evaluation.recommendation}</p>` : ""}
 
         <h2>Domaines d'Évaluation</h2>
         <table>
@@ -144,7 +144,7 @@ export class PDFService {
         </table>
 
         <footer>
-          <p>Généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</p>
+          <p>Généré le ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}</p>
           <p>Conforme IFC, EBRD, Basel III et directives Bank Al-Maghrib</p>
         </footer>
       </body>
@@ -158,7 +158,7 @@ export class PDFService {
    */
   static openPrintDialog(evaluation: any) {
     const html = this.generateHTML(evaluation);
-    const newWindow = window.open('', '', 'height=600,width=900');
+    const newWindow = window.open("", "", "height=600,width=900");
     if (newWindow) {
       newWindow.document.write(html);
       newWindow.document.close();

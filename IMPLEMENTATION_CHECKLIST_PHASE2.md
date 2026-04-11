@@ -12,6 +12,7 @@
 ### 1.1 Create lib/scoring-engine-v7plus.ts ⏳
 
 **Requirements:**
+
 - [ ] Class `ScoringEngine` initialized
 - [ ] Method `calculateDomainScore(domainId, criteria)` → returns number (1-10)
 - [ ] Method `calculateGlobalScore()` → aggregates all domains
@@ -28,6 +29,7 @@
 ### 1.2 Create lib/scoring-rules-v7plus.ts ⏳
 
 **Requirements:**
+
 - [ ] NO-GO Rules engine (21 conditions)
   - [ ] NOGO_1A: Sponsor rating < CCC
   - [ ] NOGO_1B: Sponsor insolvency
@@ -47,6 +49,7 @@
 ### 1.3 Create lib/scoring-validators-v7plus.ts ⏳
 
 **Requirements:**
+
 - [ ] Function `validateProjectData(data)` → checks completeness
 - [ ] Function `calculateComplexIndicators(data)` → returns:
   - Offtaker Health Index
@@ -66,6 +69,7 @@
 ### 2.1 POST app/api/evaluations/[id]/score/calculate/route.ts ⏳
 
 **Input:**
+
 ```json
 {
   "projectId": "proj-001",
@@ -78,6 +82,7 @@
 ```
 
 **Output:**
+
 ```json
 {
   "globalScore": 8.2,
@@ -90,6 +95,7 @@
 ```
 
 **Checklist:**
+
 - [ ] Route configured
 - [ ] Input validation
 - [ ] Calculation logic integrated
@@ -104,6 +110,7 @@
 ### 2.2 POST app/api/evaluations/[id]/stress-test/route.ts ⏳
 
 **Input:**
+
 ```json
 {
   "projectId": "proj-001",
@@ -112,6 +119,7 @@
 ```
 
 **Output:**
+
 ```json
 {
   "scenarios": [
@@ -130,6 +138,7 @@
 ```
 
 **Checklist:**
+
 - [ ] Route configured
 - [ ] 6 stress scenarios hardcoded
 - [ ] DSCR recalculation logic
@@ -145,6 +154,7 @@
 **Output:** JSON + PDF export capability
 
 **Checklist:**
+
 - [ ] Route configured
 - [ ] Report formatting (JSON)
 - [ ] PDF generation (optional: use jsPDF)
@@ -159,6 +169,7 @@
 ### 3.1 Update prisma/schema.prisma ⏳
 
 **New Tables Needed:**
+
 ```prisma
 model Evaluation {
   id String @id
@@ -185,6 +196,7 @@ model ScoringCriteria {
 ```
 
 **Checklist:**
+
 - [ ] Schema updated
 - [ ] Migrations created
 - [ ] Relations defined
@@ -205,6 +217,7 @@ export async function listEvaluations(projectId) { ... }
 ```
 
 **Checklist:**
+
 - [ ] Helper functions created
 - [ ] Error handling
 - [ ] Type safety
@@ -215,7 +228,7 @@ export async function listEvaluations(projectId) { ... }
 
 ## 🔷 TASK 4: Testing & Validation (2 jours)
 
-### 4.1 Unit Tests (__tests__/scoring-engine.test.ts) ⏳
+### 4.1 Unit Tests (**tests**/scoring-engine.test.ts) ⏳
 
 ```typescript
 describe("ScoringEngine", () => {
@@ -227,6 +240,7 @@ describe("ScoringEngine", () => {
 ```
 
 **Checklist:**
+
 - [ ] Tests written
 - [ ] Coverage > 80%
 - [ ] All test cases passing
@@ -236,7 +250,7 @@ describe("ScoringEngine", () => {
 
 ---
 
-### 4.2 Integration Tests (__tests__/scoring-api.integration.test.ts) ⏳
+### 4.2 Integration Tests (**tests**/scoring-api.integration.test.ts) ⏳
 
 ```typescript
 describe("Scoring API Endpoints", () => {
@@ -247,6 +261,7 @@ describe("Scoring API Endpoints", () => {
 ```
 
 **Checklist:**
+
 - [ ] API endpoints testable
 - [ ] Real project test case (solar Maroc)
 - [ ] Expected outputs match
@@ -259,12 +274,14 @@ describe("Scoring API Endpoints", () => {
 ### 4.3 Validation Against Known Cases ⏳
 
 **Test Cases:**
+
 - [ ] **Case A:** Solar 100MW Maroc → Expected Rating: A
 - [ ] **Case B:** Infrastructure Water → Expected Rating: BBB
 - [ ] **Case C:** High-Risk Transport → Expected Rating: B
 - [ ] **Case D:** NO-GO Project → Expected: REJECT
 
 **Checklist:**
+
 - [ ] Manual scoring vs. automated → variance < 0.5 pts
 - [ ] Rating agreement > 95%
 - [ ] NO-GO triggering correctly
@@ -278,6 +295,7 @@ describe("Scoring API Endpoints", () => {
 ### 5.1 Code Review ⏳
 
 **Checklist:**
+
 - [ ] Code follows TypeScript strict mode
 - [ ] No `any` types (except justified cases)
 - [ ] Function documentation complete
@@ -295,10 +313,12 @@ describe("Scoring API Endpoints", () => {
 # Scoring API Documentation
 
 ## POST /api/evaluations/{id}/score/calculate
+
 Request/Response examples, error codes, etc.
 ```
 
 **Checklist:**
+
 - [ ] All endpoints documented
 - [ ] Request/response examples provided
 - [ ] Error codes listed
@@ -313,11 +333,13 @@ Request/Response examples, error codes, etc.
 ### 6.1 Environment Variables ⏳
 
 **Needed:**
+
 - [ ] NEXT_PUBLIC_SCORING_VERSION=7.0
 - [ ] SCORING_STRESS_TEST_ENABLED=true
 - [ ] SCORING_LOG_LEVEL=info
 
 **Checklist:**
+
 - [ ] .env.local updated
 - [ ] Vercel environment variables set
 - [ ] Secrets not exposed
@@ -327,6 +349,7 @@ Request/Response examples, error codes, etc.
 ### 6.2 Logging Setup ⏳
 
 **Checklist:**
+
 - [ ] Scoring calculations logged (INFO level)
 - [ ] NO-GO/MALUS decisions logged (WARN level)
 - [ ] Errors logged with stack trace
@@ -336,15 +359,15 @@ Request/Response examples, error codes, etc.
 
 ## 📊 SUMMARY TABLE
 
-| Task | Estimated | Status | Owner |
-|------|-----------|--------|-------|
-| **Scoring Engine Core** | 4 days | 🟡 | Dev |
-| **API Endpoints** | 3 days | 🟡 | Dev |
-| **Database Integration** | 2 days | ⏳ | DB |
-| **Testing & Validation** | 2 days | ⏳ | QA |
-| **Code Quality** | 1 day | ⏳ | Dev |
-| **Deployment Setup** | 0.5 day | ⏳ | DevOps |
-| **TOTAL** | **12.5 days** | 🟡 | - |
+| Task                     | Estimated     | Status | Owner  |
+| ------------------------ | ------------- | ------ | ------ |
+| **Scoring Engine Core**  | 4 days        | 🟡     | Dev    |
+| **API Endpoints**        | 3 days        | 🟡     | Dev    |
+| **Database Integration** | 2 days        | ⏳     | DB     |
+| **Testing & Validation** | 2 days        | ⏳     | QA     |
+| **Code Quality**         | 1 day         | ⏳     | Dev    |
+| **Deployment Setup**     | 0.5 day       | ⏳     | DevOps |
+| **TOTAL**                | **12.5 days** | 🟡     | -      |
 
 ---
 
@@ -375,4 +398,3 @@ Request/Response examples, error codes, etc.
 4. ✅ Unit test coverage > 85%
 5. ✅ Zero runtime errors on 5 test cases
 6. ✅ API response time < 500ms
-

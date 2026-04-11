@@ -30,7 +30,11 @@ export function createErrorResponse(
 
   if (!errorInfo) {
     console.error(`Code d'erreur invalide: ${errorCode}`);
-    return createErrorResponse("ERR_SRV_001", `Code d'erreur invalide: ${errorCode}`, requestId);
+    return createErrorResponse(
+      "ERR_SRV_001",
+      `Code d'erreur invalide: ${errorCode}`,
+      requestId
+    );
   }
 
   const response: ErrorResponse = {
@@ -147,7 +151,10 @@ export function handleError(error: unknown): string {
   const err = error as Record<string, unknown>;
 
   // Erreur Prisma
-  if ((err.constructor as { name?: string })?.name === "PrismaClientKnownRequestError") {
+  if (
+    (err.constructor as { name?: string })?.name ===
+    "PrismaClientKnownRequestError"
+  ) {
     return handlePrismaError(err);
   }
 

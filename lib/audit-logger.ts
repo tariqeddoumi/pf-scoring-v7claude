@@ -3,12 +3,25 @@
  * Tracks all data modifications with user context for compliance and debugging
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export type EntityType = 'user' | 'project' | 'evaluation' | 'scoring' | 'config';
-export type ActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'READ' | 'VALIDATE' | 'REJECT' | 'SUBMIT' | 'CALCULATE';
+export type EntityType =
+  | "user"
+  | "project"
+  | "evaluation"
+  | "scoring"
+  | "config";
+export type ActionType =
+  | "CREATE"
+  | "UPDATE"
+  | "DELETE"
+  | "READ"
+  | "VALIDATE"
+  | "REJECT"
+  | "SUBMIT"
+  | "CALCULATE";
 
 export interface AuditEntry {
   id?: string;
@@ -21,7 +34,7 @@ export interface AuditEntry {
   ipAddress: string;
   sessionId: string;
   timestamp?: Date;
-  status: 'success' | 'failure';
+  status: "success" | "failure";
   errorMessage?: string;
   changeDetails?: string;
 }
@@ -33,7 +46,7 @@ export interface AuditQueryOptions {
   action?: ActionType;
   dateFrom?: Date;
   dateTo?: Date;
-  status?: 'success' | 'failure';
+  status?: "success" | "failure";
   limit?: number;
   offset?: number;
 }
@@ -48,7 +61,10 @@ export class AuditLogger {
    */
   async logAction(entry: AuditEntry): Promise<void> {
     try {
-      const changeDetails = this.generateChangeDetails(entry.oldValues, entry.newValues);
+      const changeDetails = this.generateChangeDetails(
+        entry.oldValues,
+        entry.newValues
+      );
 
       await prisma.scoringAuditLog.create({
         data: {
@@ -69,7 +85,7 @@ export class AuditLogger {
         },
       });
     } catch (error) {
-      console.error('[AUDIT] Failed to log action:', error);
+      console.error("[AUDIT] Failed to log action:", error);
       // Don't throw - audit failures shouldn't break application flow
     }
   }
@@ -89,11 +105,11 @@ export class AuditLogger {
       entityType,
       entityId,
       userId,
-      action: 'CREATE',
+      action: "CREATE",
       newValues,
       ipAddress,
       sessionId,
-      status: 'success',
+      status: "success",
     });
   }
 
@@ -113,12 +129,12 @@ export class AuditLogger {
       entityType,
       entityId,
       userId,
-      action: 'UPDATE',
+      action: "UPDATE",
       oldValues,
       newValues,
       ipAddress,
       sessionId,
-      status: 'success',
+      status: "success",
     });
   }
 
@@ -137,11 +153,11 @@ export class AuditLogger {
       entityType,
       entityId,
       userId,
-      action: 'DELETE',
+      action: "DELETE",
       oldValues,
       ipAddress,
       sessionId,
-      status: 'success',
+      status: "success",
     });
   }
 
@@ -159,10 +175,10 @@ export class AuditLogger {
       entityType,
       entityId,
       userId,
-      action: 'READ',
+      action: "READ",
       ipAddress,
       sessionId,
-      status: 'success',
+      status: "success",
     });
   }
 
@@ -176,13 +192,13 @@ export class AuditLogger {
     sessionId: string
   ): Promise<void> {
     await this.logAction({
-      entityType: 'evaluation',
+      entityType: "evaluation",
       entityId,
       userId,
-      action: 'VALIDATE',
+      action: "VALIDATE",
       ipAddress,
       sessionId,
-      status: 'success',
+      status: "success",
     });
   }
 
@@ -197,14 +213,14 @@ export class AuditLogger {
     sessionId: string
   ): Promise<void> {
     await this.logAction({
-      entityType: 'evaluation',
+      entityType: "evaluation",
       entityId,
       userId,
-      action: 'REJECT',
+      action: "REJECT",
       newValues: { reason },
       ipAddress,
       sessionId,
-      status: 'success',
+      status: "success",
     });
   }
 
@@ -218,13 +234,13 @@ export class AuditLogger {
     sessionId: string
   ): Promise<void> {
     await this.logAction({
-      entityType: 'evaluation',
+      entityType: "evaluation",
       entityId,
       userId,
-      action: 'SUBMIT',
+      action: "SUBMIT",
       ipAddress,
       sessionId,
-      status: 'success',
+      status: "success",
     });
   }
 
@@ -239,14 +255,14 @@ export class AuditLogger {
     sessionId: string
   ): Promise<void> {
     await this.logAction({
-      entityType: 'scoring',
+      entityType: "scoring",
       entityId,
       userId,
-      action: 'CALCULATE',
+      action: "CALCULATE",
       newValues: calculationResult,
       ipAddress,
       sessionId,
-      status: 'success',
+      status: "success",
     });
   }
 
@@ -269,7 +285,7 @@ export class AuditLogger {
       action,
       ipAddress,
       sessionId,
-      status: 'failure',
+      status: "failure",
       errorMessage,
     });
   }
@@ -290,7 +306,7 @@ export class AuditLogger {
           evaluationId: entityId,
         },
         orderBy: {
-          timestamp: 'desc',
+          timestamp: "desc",
         },
         take: limit,
         skip: offset,
@@ -308,7 +324,7 @@ export class AuditLogger {
 
       return logs;
     } catch (error) {
-      console.error('[AUDIT] Failed to retrieve audit trail:', error);
+      console.error("[AUDIT] Failed to retrieve audit trail:", error);
       return [];
     }
   }
@@ -316,7 +332,9 @@ export class AuditLogger {
   /**
    * Query audit logs with filters
    */
-  async queryAuditLogs(options: AuditQueryOptions): Promise<{ entries: any[]; total: number }> {
+  async queryAuditLogs(
+    options: AuditQueryOptions
+  ): Promise<{ entries: any[]; total: number }> {
     try {
       const limit = options.limit || 50;
       const offset = options.offset || 0;
@@ -336,7 +354,7 @@ export class AuditLogger {
       const entries = await prisma.scoringAuditLog.findMany({
         where,
         orderBy: {
-          timestamp: 'desc',
+          timestamp: "desc",
         },
         take: limit,
         skip: offset,
@@ -356,7 +374,7 @@ export class AuditLogger {
 
       return { entries, total };
     } catch (error) {
-      console.error('[AUDIT] Failed to query audit logs:', error);
+      console.error("[AUDIT] Failed to query audit logs:", error);
       return { entries: [], total: 0 };
     }
   }
@@ -369,7 +387,7 @@ export class AuditLogger {
     newValues?: Record<string, any>
   ): string {
     if (!oldValues && !newValues) {
-      return '';
+      return "";
     }
 
     const changes: string[] = [];
@@ -400,7 +418,7 @@ export class AuditLogger {
       });
     }
 
-    return changes.join('; ');
+    return changes.join("; ");
   }
 
   /**
@@ -408,12 +426,12 @@ export class AuditLogger {
    */
   private formatValue(value: any): string {
     if (value === null || value === undefined) {
-      return 'null';
+      return "null";
     }
-    if (typeof value === 'boolean') {
-      return value ? 'true' : 'false';
+    if (typeof value === "boolean") {
+      return value ? "true" : "false";
     }
-    if (typeof value === 'object') {
+    if (typeof value === "object") {
       return JSON.stringify(value).substring(0, 100);
     }
     return String(value).substring(0, 100);

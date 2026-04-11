@@ -242,7 +242,7 @@ export async function GET() {
 
   return new NextResponse(html, {
     headers: {
-      'Content-Type': 'text/html; charset=utf-8',
+      "Content-Type": "text/html; charset=utf-8",
     },
   });
 }

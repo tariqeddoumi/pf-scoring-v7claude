@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getErrorMessage } from "@/lib/error-handler";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
-const MICROSOFT_AUTH_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+const MICROSOFT_AUTH_URL =
+  "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
 function generateRandomState(): string {
-  return Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15);
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -14,10 +17,7 @@ export async function POST(request: NextRequest) {
     const { provider } = await request.json();
 
     if (!provider || !["google", "microsoft"].includes(provider)) {
-      return NextResponse.json(
-        { error: "Invalid provider" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -50,10 +50,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(
-      { error: "Unknown error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Unknown error" }, { status: 500 });
   } catch (error: unknown) {
     console.error("OAuth init error:", error);
     return NextResponse.json(

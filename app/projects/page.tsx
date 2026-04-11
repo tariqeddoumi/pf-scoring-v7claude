@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Plus, Search, Eye, Edit2, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Project } from '@/lib/types/models';
-import { DeleteConfirmation } from '@/components/modals/DeleteConfirmation';
+import Link from "next/link";
+import { Plus, Search, Eye, Edit2, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Project } from "@/lib/types/models";
+import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 
 export default function ProjectsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -23,13 +23,13 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/projects');
-      if (!response.ok) throw new Error('Failed to fetch projects');
+      const response = await fetch("/api/projects");
+      if (!response.ok) throw new Error("Failed to fetch projects");
       const data = await response.json();
       setProjects(data.data || []);
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch projects');
+      setError(err.message || "Failed to fetch projects");
       setProjects([]);
     } finally {
       setLoading(false);
@@ -40,19 +40,19 @@ export default function ProjectsPage() {
     try {
       setDeleting(true);
       const response = await fetch(`/api/projects/${projectId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      if (!response.ok) throw new Error('Failed to delete project');
-      setProjects(projects.filter(p => p.id !== projectId));
+      if (!response.ok) throw new Error("Failed to delete project");
+      setProjects(projects.filter((p) => p.id !== projectId));
       setDeleteConfirm(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to delete project');
+      setError(err.message || "Failed to delete project");
     } finally {
       setDeleting(false);
     }
   };
 
-  const filteredProjects = projects.filter(project =>
+  const filteredProjects = projects.filter((project) =>
     project.nom.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -62,7 +62,9 @@ export default function ProjectsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white">Projets</h1>
-          <p className="text-slate-400 mt-2 text-sm md:text-base">Gérez les projets et leur suivi</p>
+          <p className="text-slate-400 mt-2 text-sm md:text-base">
+            Gérez les projets et leur suivi
+          </p>
         </div>
         <Link
           href="/projects/new"
@@ -105,27 +107,54 @@ export default function ProjectsPage() {
           <table className="w-full min-w-max md:min-w-full">
             <thead className="bg-slate-800">
               <tr>
-                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">Nom</th>
-                <th className="hidden sm:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">Secteur</th>
-                <th className="hidden md:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">Pays</th>
-                <th className="hidden lg:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">Montant</th>
-                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">Statut</th>
-                <th className="px-4 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-slate-300">Actions</th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                  Nom
+                </th>
+                <th className="hidden sm:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                  Secteur
+                </th>
+                <th className="hidden md:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                  Pays
+                </th>
+                <th className="hidden lg:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                  Montant
+                </th>
+                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                  Statut
+                </th>
+                <th className="px-4 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-slate-300">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
               {filteredProjects.map((project) => (
-                <tr key={project.id} className="hover:bg-slate-800 transition-colors">
-                  <td className="px-4 md:px-6 py-4 font-semibold text-white text-sm md:text-base">{project.nom}</td>
-                  <td className="hidden sm:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">{project.secteur || '-'}</td>
-                  <td className="hidden md:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">{project.pays || '-'}</td>
-                  <td className="hidden lg:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">{project.montant ? `${project.montant} ${project.devise || 'MAD'}` : '-'}</td>
+                <tr
+                  key={project.id}
+                  className="hover:bg-slate-800 transition-colors"
+                >
+                  <td className="px-4 md:px-6 py-4 font-semibold text-white text-sm md:text-base">
+                    {project.nom}
+                  </td>
+                  <td className="hidden sm:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">
+                    {project.secteur || "-"}
+                  </td>
+                  <td className="hidden md:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">
+                    {project.pays || "-"}
+                  </td>
+                  <td className="hidden lg:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">
+                    {project.montant
+                      ? `${project.montant} ${project.devise || "MAD"}`
+                      : "-"}
+                  </td>
                   <td className="px-4 md:px-6 py-4">
-                    <span className={`px-2 md:px-3 py-1 rounded-full text-xs font-medium inline-block ${
-                      project.status === 'Actif'
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-gray-500/20 text-gray-400'
-                    }`}>
+                    <span
+                      className={`px-2 md:px-3 py-1 rounded-full text-xs font-medium inline-block ${
+                        project.status === "Actif"
+                          ? "bg-green-500/20 text-green-400"
+                          : "bg-gray-500/20 text-gray-400"
+                      }`}
+                    >
                       {project.status}
                     </span>
                   </td>
@@ -138,7 +167,9 @@ export default function ProjectsPage() {
                         <Eye size={16} className="md:w-5 md:h-5" />
                       </button>
                       <button
-                        onClick={() => router.push(`/projects/${project.id}/edit`)}
+                        onClick={() =>
+                          router.push(`/projects/${project.id}/edit`)
+                        }
                         className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
                       >
                         <Edit2 size={16} className="md:w-5 md:h-5" />
@@ -163,7 +194,9 @@ export default function ProjectsPage() {
         <div className="text-center py-12 rounded-lg border border-slate-700">
           <p className="text-slate-400 text-lg">Aucun projet trouvé</p>
           <p className="text-slate-500 mt-1 text-sm md:text-base">
-            {searchTerm ? 'Essayez une autre recherche' : 'Créez votre premier projet'}
+            {searchTerm
+              ? "Essayez une autre recherche"
+              : "Créez votre premier projet"}
           </p>
         </div>
       )}

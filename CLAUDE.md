@@ -1,11 +1,13 @@
 # PF Scoring - Project Finance
 
 ## Description
+
 Application de Scoring Project Finance pour une banque marocaine.
 Conforme IFC, EBRD, Basel, Bank Al-Maghrib.
 Interface en français. Monnaie : MAD.
 
 ## Stack technique
+
 - **Framework** : Next.js 15 (App Router)
 - **Langage** : TypeScript strict
 - **Style** : TailwindCSS + shadcn/ui (thème sombre)
@@ -14,6 +16,7 @@ Interface en français. Monnaie : MAD.
 - **Déploiement** : Vercel
 
 ## Commandes
+
 - `npm run dev` — Serveur de développement
 - `npm run build` — Build production
 - `npm run lint` — ESLint
@@ -22,6 +25,7 @@ Interface en français. Monnaie : MAD.
 - `npm run format:check` — Prettier (vérification)
 
 ## Structure du projet
+
 ```
 /app            — Pages et routes (App Router)
   /dashboard    — Tableau de bord
@@ -49,6 +53,7 @@ Interface en français. Monnaie : MAD.
 ```
 
 ## Conventions
+
 - Interface entièrement en français
 - Monnaie : MAD (Dirham marocain)
 - Grades : AAA → D (conforme Basel)

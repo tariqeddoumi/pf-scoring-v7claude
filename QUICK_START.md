@@ -5,6 +5,7 @@
 ### Option 1: Utiliser le Mode Bypass (Plus facile)
 
 1. **Allez à la page de login:**
+
    ```
    https://votre-app.vercel.app/login
    ```
@@ -121,9 +122,9 @@ curl http://localhost:3000/api/auth/users \
 
 ## 🔑 Comptes de Test Disponibles
 
-| Email | Mot de passe | Rôle |
-|-------|-------------|------|
-| admin@pf-scoring.ma | Admin123! | Admin |
+| Email                  | Mot de passe | Rôle     |
+| ---------------------- | ------------ | -------- |
+| admin@pf-scoring.ma    | Admin123!    | Admin    |
 | analyste@pf-scoring.ma | Analyste123! | Analyste |
 
 ## 📱 Points d'accès principaux
@@ -141,21 +142,25 @@ curl http://localhost:3000/api/auth/users \
 ## 🐛 Dépannage Rapide
 
 **Je ne peux pas me connecter:**
+
 - Vérifiez l'email exact
 - Vérifiez le mot de passe (sensible à la casse)
 - Utilisez le mode bypass pour contourner
 
 **Je ne vois pas ma session:**
+
 - Vérifiez les cookies du navigateur
 - Essayez de vous reconnecter
 - Videz le cache du navigateur
 
 **L'API retourne 401:**
+
 - Vous n'êtes pas connecté
 - Utilisez `/api/projects-bypass` pour tester sans auth
 - Vérifiez que le token JWT est valide
 
 **OAuth ne fonctionne pas:**
+
 - Vérifiez les identifiants dans `.env.local`
 - Vérifiez les redirect URIs configurées
 - Consulter [AUTH.md](./AUTH.md) pour la configuration complète
@@ -163,6 +168,7 @@ curl http://localhost:3000/api/auth/users \
 ## 📚 Documentation Complète
 
 Pour plus de détails sur:
+
 - **Authentification OAuth:** Voir [AUTH.md](./AUTH.md)
 - **Gestion des comptes:** Voir [AUTH.md - Gestion des Comptes](./AUTH.md#-gestion-des-comptes)
 - **Configuration:** Voir [AUTH.md - Configuration](./AUTH.md#-configuration-de-lenvironnement)

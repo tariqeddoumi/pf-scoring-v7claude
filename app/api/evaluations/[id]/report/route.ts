@@ -60,11 +60,16 @@ export async function GET(
         version: `${evaluation.version}`,
       },
       recommendations: [
-        evaluation.recommendation === "APPROVE" ? "Project approved for financing" : "Additional due diligence required",
+        evaluation.recommendation === "APPROVE"
+          ? "Project approved for financing"
+          : "Additional due diligence required",
         ...(evaluation.notes ? [evaluation.notes] : []),
       ],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      conditions: (evaluation.triggeredNOGOs as any)?.length > 0 ? ["NO-GO rules triggered"] : [],
+      conditions:
+        (evaluation.triggeredNOGOs as any)?.length > 0
+          ? ["NO-GO rules triggered"]
+          : [],
     };
 
     // Generate response based on format query parameter
@@ -161,7 +166,9 @@ export async function POST(
       retrieveAt: `/api/evaluations/${evaluationId}/report?format=${format}`,
     };
 
-    console.log(`[REPORT] Generation started for ${evaluationId} (format: ${format})`);
+    console.log(
+      `[REPORT] Generation started for ${evaluationId} (format: ${format})`
+    );
 
     return NextResponse.json(response, { status: 202 }); // 202 Accepted
   } catch (error) {

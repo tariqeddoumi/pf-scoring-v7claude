@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma-client';
+import prisma from "@/lib/prisma-client";
 
 export class ScoringModelService {
   /**
@@ -16,27 +16,27 @@ export class ScoringModelService {
         code: data.code,
         label: data.label,
         description: data.description,
-        status: 'DRAFT',
+        status: "DRAFT",
         isActive: true,
         ownerBusinessId: data.createdBy,
         versions: {
           create: {
             versionNumber: data.versionNumber,
             label: `v${data.versionNumber}`,
-            status: 'DRAFT',
+            status: "DRAFT",
             createdBy: data.createdBy,
-            changeReason: 'Initial version'
-          }
-        }
+            changeReason: "Initial version",
+          },
+        },
       },
       include: {
-        versions: true
-      }
+        versions: true,
+      },
     });
 
     // Log change
-    await this.logChange('CREATE', model.id, data.createdBy, {
-      modelLabel: model.label
+    await this.logChange("CREATE", model.id, data.createdBy, {
+      modelLabel: model.label,
     });
 
     return model;
@@ -50,9 +50,9 @@ export class ScoringModelService {
       where: { id: modelId },
       include: {
         versions: {
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+          orderBy: { createdAt: "desc" },
+        },
+      },
     });
   }
 
@@ -60,7 +60,7 @@ export class ScoringModelService {
    * List all models
    */
   static async listModels(filters?: {
-    status?: 'DRAFT' | 'IN_VALIDATION' | 'PUBLISHED' | 'RETIRED' | 'ARCHIVED';
+    status?: "DRAFT" | "IN_VALIDATION" | "PUBLISHED" | "RETIRED" | "ARCHIVED";
     isActive?: boolean;
   }) {
     const where: any = {};
@@ -72,10 +72,10 @@ export class ScoringModelService {
       include: {
         versions: {
           take: 1,
-          orderBy: { createdAt: 'desc' }
-        }
+          orderBy: { createdAt: "desc" },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
   }
 
@@ -95,12 +95,12 @@ export class ScoringModelService {
       data: {
         label: data.label,
         description: data.description,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
-    await this.logChange('UPDATE', modelId, data.updatedBy, {
-      changes: { label: data.label, description: data.description }
+    await this.logChange("UPDATE", modelId, data.updatedBy, {
+      changes: { label: data.label, description: data.description },
     });
 
     return model;
@@ -111,19 +111,19 @@ export class ScoringModelService {
    */
   static async changeModelStatus(
     modelId: string,
-    status: 'DRAFT' | 'IN_VALIDATION' | 'PUBLISHED' | 'RETIRED' | 'ARCHIVED',
+    status: "DRAFT" | "IN_VALIDATION" | "PUBLISHED" | "RETIRED" | "ARCHIVED",
     changedBy: string
   ) {
     const model = await prisma.scoringModel.update({
       where: { id: modelId },
       data: {
         status,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
-    await this.logChange('STATUS_CHANGE', modelId, changedBy, {
-      newStatus: status
+    await this.logChange("STATUS_CHANGE", modelId, changedBy, {
+      newStatus: status,
     });
 
     return model;
@@ -137,12 +137,12 @@ export class ScoringModelService {
       where: { id: modelId },
       data: {
         isActive: false,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
-    await this.logChange('ARCHIVE', modelId, archivedBy, {
-      archived: true
+    await this.logChange("ARCHIVE", modelId, archivedBy, {
+      archived: true,
     });
 
     return model;
@@ -159,14 +159,14 @@ export class ScoringModelService {
   ) {
     await prisma.scoringChangeLog.create({
       data: {
-        entityType: 'ScoringModel',
+        entityType: "ScoringModel",
         entityId: modelId,
         modelId: modelId,
         action,
         changedBy: userId,
         changedAt: new Date(),
-        comment: JSON.stringify(details)
-      }
+        comment: JSON.stringify(details),
+      },
     });
   }
 }

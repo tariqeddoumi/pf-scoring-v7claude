@@ -1,5 +1,5 @@
-import prisma from '@/lib/prisma-client';
-import { ScoringAnswerType } from '@prisma/client';
+import prisma from "@/lib/prisma-client";
+import { ScoringAnswerType } from "@prisma/client";
 
 /**
  * Result of scoring a single node
@@ -48,13 +48,13 @@ export class ScoringEngine {
           ranges: true,
           formulas: true,
           rules: true,
-          applicabilityRules: true
+          applicabilityRules: true,
         },
-        orderBy: { depth: 'asc' }
+        orderBy: { depth: "asc" },
       }),
       prisma.scoringEvaluationAnswer.findMany({
-        where: { evaluationId }
-      })
+        where: { evaluationId },
+      }),
     ]);
 
     // Build node tree structure
@@ -149,35 +149,35 @@ export class ScoringEngine {
   ): Promise<NodeScore> {
     const answer = answers.find((a) => a.nodeId === node.id);
     let rawScore = 0;
-    let explanation = '';
+    let explanation = "";
 
     if (!answer) {
-      explanation = 'No answer provided';
+      explanation = "No answer provided";
       rawScore = 0;
     } else {
       // Score based on scoring method
       switch (node.scoringMethod) {
-        case 'OPTION_SCORE':
+        case "OPTION_SCORE":
           rawScore = await this.scoreFromOption(node, answer);
           explanation = `Scored from option selection`;
           break;
 
-        case 'RANGE_SCORE':
+        case "RANGE_SCORE":
           rawScore = await this.scoreFromRange(node, answer);
           explanation = `Scored from numeric range`;
           break;
 
-        case 'NUMERIC_DIRECT':
+        case "NUMERIC_DIRECT":
           rawScore = answer.valueNumber || 0;
           explanation = `Direct numeric score: ${rawScore}`;
           break;
 
-        case 'MANUAL_SCORE':
+        case "MANUAL_SCORE":
           rawScore = answer.manualScore || 0;
           explanation = `Manual score provided: ${rawScore}`;
           break;
 
-        case 'FORMULA_SCORE':
+        case "FORMULA_SCORE":
           rawScore = await this.scoreFromFormula(node, answer);
           explanation = `Scored from formula`;
           break;
@@ -202,15 +202,20 @@ export class ScoringEngine {
       weight: node.weight || 1,
       aggregationMethod: node.aggregationMethod,
       explanation,
-      ruleImpacts: []
+      ruleImpacts: [],
     };
   }
 
   /**
    * Score from option selection
    */
-  private static async scoreFromOption(node: any, answer: any): Promise<number> {
-    const option = node.options?.find((o: any) => o.value === answer.valueString);
+  private static async scoreFromOption(
+    node: any,
+    answer: any
+  ): Promise<number> {
+    const option = node.options?.find(
+      (o: any) => o.value === answer.valueString
+    );
     return option?.score || 0;
   }
 
@@ -232,7 +237,10 @@ export class ScoringEngine {
   /**
    * Score from formula
    */
-  private static async scoreFromFormula(node: any, answer: any): Promise<number> {
+  private static async scoreFromFormula(
+    node: any,
+    answer: any
+  ): Promise<number> {
     const formula = node.formulas?.[0];
     if (!formula) return 0;
 
@@ -255,43 +263,43 @@ export class ScoringEngine {
     answers: any[]
   ): Promise<NodeScore> {
     let rawScore = 0;
-    let explanation = '';
+    let explanation = "";
 
     switch (node.aggregationMethod) {
-      case 'WEIGHTED_AVERAGE':
+      case "WEIGHTED_AVERAGE":
         rawScore = this.weightedAverage(childScores);
         explanation = `Weighted average of ${childScores.length} children`;
         break;
 
-      case 'SIMPLE_AVERAGE':
+      case "SIMPLE_AVERAGE":
         rawScore =
           childScores.reduce((sum, cs) => sum + cs.rawScore, 0) /
           childScores.length;
         explanation = `Simple average of ${childScores.length} children`;
         break;
 
-      case 'SUM':
+      case "SUM":
         rawScore = childScores.reduce((sum, cs) => sum + cs.rawScore, 0);
         explanation = `Sum of ${childScores.length} children`;
         break;
 
-      case 'MIN':
+      case "MIN":
         rawScore = Math.min(...childScores.map((cs) => cs.rawScore));
         explanation = `Minimum of ${childScores.length} children`;
         break;
 
-      case 'MAX':
+      case "MAX":
         rawScore = Math.max(...childScores.map((cs) => cs.rawScore));
         explanation = `Maximum of ${childScores.length} children`;
         break;
 
-      case 'FIRST_NON_NULL':
+      case "FIRST_NON_NULL":
         const nonNull = childScores.find((cs) => cs.rawScore !== 0);
         rawScore = nonNull?.rawScore || 0;
         explanation = `First non-zero child score`;
         break;
 
-      case 'CHILDREN_AGGREGATION':
+      case "CHILDREN_AGGREGATION":
         // Use weighted average if weights present
         rawScore = this.weightedAverage(childScores);
         explanation = `Hierarchical aggregation`;
@@ -312,7 +320,7 @@ export class ScoringEngine {
       weight: node.weight || 1,
       aggregationMethod: node.aggregationMethod,
       explanation,
-      ruleImpacts: []
+      ruleImpacts: [],
     };
   }
 
@@ -352,9 +360,9 @@ export class ScoringEngine {
           ruleId: rule.id,
           ruleCode: rule.code,
           ruleType: rule.ruleType,
-          severity: rule.severity || 'MEDIUM',
+          severity: rule.severity || "MEDIUM",
           impact: rule.penaltyValue || 0,
-          message: rule.messageUser || `Rule ${rule.code} triggered`
+          message: rule.messageUser || `Rule ${rule.code} triggered`,
         };
 
         impacts.push(impact);
@@ -409,16 +417,14 @@ export class ScoringEngine {
   }> {
     // Find root scores (nodes with no parent)
     const rootScores = Array.from(results.values()).filter(
-      (score) => !score.nodeId.startsWith('child')
+      (score) => !score.nodeId.startsWith("child")
     );
 
     // Calculate global score as weighted average of roots
     const globalScore =
       rootScores.length > 0
-        ? rootScores.reduce(
-            (sum, s) => sum + s.weightedScore,
-            0
-          ) / rootScores.length
+        ? rootScores.reduce((sum, s) => sum + s.weightedScore, 0) /
+          rootScores.length
         : 0;
 
     return {
@@ -427,8 +433,8 @@ export class ScoringEngine {
       summary: {
         totalNodes: results.size,
         rootNodeCount: rootScores.length,
-        timestamp: new Date()
-      }
+        timestamp: new Date(),
+      },
     };
   }
 }

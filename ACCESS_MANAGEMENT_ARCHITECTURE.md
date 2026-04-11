@@ -9,6 +9,7 @@
 ## Overview
 
 Complete system for managing user access with:
+
 - ✅ Windows/Active Directory authentication
 - ✅ Guest mode for unauthenticated users (read-only)
 - ✅ Role request workflow
@@ -113,6 +114,7 @@ CREATE TABLE BP_PF_approval_workflows (
 ## 3. User Permission Model
 
 ### Guest (Invité) - Level 0
+
 ```typescript
 {
   role: 'guest',
@@ -134,6 +136,7 @@ CREATE TABLE BP_PF_approval_workflows (
 ```
 
 ### Analyst - Level 2
+
 ```typescript
 {
   role: 'analyst',
@@ -155,6 +158,7 @@ CREATE TABLE BP_PF_approval_workflows (
 ```
 
 ### Manager - Level 3
+
 ```typescript
 {
   role: 'manager',
@@ -179,6 +183,7 @@ CREATE TABLE BP_PF_approval_workflows (
 ```
 
 ### Admin - Level 4
+
 ```typescript
 {
   role: 'admin',
@@ -247,9 +252,9 @@ interface User {
   email: string;
   nom: string;
   prenom: string;
-  role: 'guest' | 'analyst' | 'manager' | 'admin';
+  role: "guest" | "analyst" | "manager" | "admin";
   permissions: PermissionSet;
-  status: 'active' | 'pending_approval' | 'rejected';
+  status: "active" | "pending_approval" | "rejected";
   createdAt: Date;
   lastLogin?: Date;
 }
@@ -265,7 +270,7 @@ interface RoleRequest {
   userId: string;
   requestedRoles: string[];
   reason: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   submittedAt: Date;
   reviewedBy?: string;
   approvalNotes?: string;
@@ -379,17 +384,17 @@ export async function withPermission(
   handler: (req: NextRequest, user: User) => Promise<NextResponse>
 ): Promise<NextResponse> {
   const user = await getAuthUser(request);
-  
+
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Get permission matrix for user's role
   const permissions = await getPermissions(user.role);
-  
+
   // Check if user has required permission
   if (!checkPermission(permissions, requiredAction)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   // Allow request
@@ -398,13 +403,9 @@ export async function withPermission(
 
 // Usage in API route:
 export async function POST(request: NextRequest) {
-  return withPermission(
-    request,
-    'create_evaluation',
-    async (req, user) => {
-      // Your logic here
-    }
-  );
+  return withPermission(request, "create_evaluation", async (req, user) => {
+    // Your logic here
+  });
 }
 ```
 
@@ -515,6 +516,7 @@ export class WorkflowService {
 ## 9. Guest Mode Features
 
 ### What Guests Can See
+
 - ✅ Dashboard (read-only)
 - ✅ Projects list (view only)
 - ✅ Evaluations list (view only)
@@ -523,6 +525,7 @@ export class WorkflowService {
 - ✅ Scoring methodology (documentation)
 
 ### What Guests Cannot Do
+
 - ❌ Create projects
 - ❌ Create evaluations
 - ❌ Update projects
@@ -532,6 +535,7 @@ export class WorkflowService {
 - ❌ Approve/reject evaluations
 
 ### Guest Indicators
+
 - Banner at top: "You have Guest access - Request role to perform actions"
 - Disabled buttons with tooltips
 - Modal prompts: "You need [analyst] role to perform this action"
@@ -550,10 +554,10 @@ interface ApprovalDashboard {
     approved: number;
     rejected: number;
   };
-  
+
   filters: {
-    status: 'pending' | 'approved' | 'rejected';
-    role: 'analyst' | 'manager' | 'admin';
+    status: "pending" | "approved" | "rejected";
+    role: "analyst" | "manager" | "admin";
     dateRange: [Date, Date];
   };
 
@@ -590,36 +594,42 @@ interface ApprovalDashboard {
 ## 11. Implementation Phases
 
 ### Phase 1: Foundation (Week 1)
+
 - [ ] Add database tables
 - [ ] Create permission matrix
 - [ ] Implement permission checking middleware
 - [ ] Add guest role to BP_PF_users
 
 ### Phase 2: Authentication (Week 2)
+
 - [ ] Implement Windows/LDAP authentication
 - [ ] Create login flow
 - [ ] Setup JWT with permissions
 - [ ] Auto-create guests on first login
 
 ### Phase 3: Role Requests (Week 2-3)
+
 - [ ] Create RoleRequest API endpoints
 - [ ] Build request submission form
 - [ ] Create approval dashboard
 - [ ] Implement approval workflow
 
 ### Phase 4: Workflow Integration (Week 3)
+
 - [ ] Implement workflow provider interface
 - [ ] Create email provider
 - [ ] Create Teams provider
 - [ ] Add workflow configuration
 
 ### Phase 5: UI Implementation (Week 4)
+
 - [ ] Guest dashboard layout
 - [ ] Permission-based UI hiding
 - [ ] Role request modal
 - [ ] Admin approval dashboard
 
 ### Phase 6: Testing & Deployment (Week 4-5)
+
 - [ ] Unit tests for permissions
 - [ ] Integration tests
 - [ ] UAT with stakeholders
@@ -632,9 +642,7 @@ interface ApprovalDashboard {
 ```typescript
 // Zod schema for role request
 export const createRoleRequestSchema = z.object({
-  requestedRoles: z.array(
-    z.enum(['analyst', 'manager'])
-  ).min(1),
+  requestedRoles: z.array(z.enum(["analyst", "manager"])).min(1),
   reason: z.string().min(10).max(500),
   workflowCode: z.string().optional(), // 'email', 'teams', 'jira', 'servicenow'
 });
@@ -642,7 +650,7 @@ export const createRoleRequestSchema = z.object({
 // Zod schema for approval
 export const approveRoleRequestSchema = z.object({
   requestId: z.string().uuid(),
-  grantedRoles: z.array(z.enum(['analyst', 'manager'])),
+  grantedRoles: z.array(z.enum(["analyst", "manager"])),
   notes: z.string().optional(),
 });
 ```
@@ -654,7 +662,7 @@ export const approveRoleRequestSchema = z.object({
 ```typescript
 // User with permission status
 interface EnhancedUser extends User {
-  permissionStatus: 'active' | 'guest' | 'pending_approval' | 'rejected';
+  permissionStatus: "active" | "guest" | "pending_approval" | "rejected";
   pendingRequest?: RoleRequest;
   lastRoleRequestAt?: Date;
 }
@@ -663,13 +671,13 @@ interface EnhancedUser extends User {
 interface AccessAudit {
   id: string;
   userId: string;
-  action: 
-    | 'LOGIN'
-    | 'REQUEST_ROLE'
-    | 'ROLE_GRANTED'
-    | 'ROLE_REJECTED'
-    | 'PERMISSION_DENIED'
-    | 'WORKFLOW_ROUTED';
+  action:
+    | "LOGIN"
+    | "REQUEST_ROLE"
+    | "ROLE_GRANTED"
+    | "ROLE_REJECTED"
+    | "PERMISSION_DENIED"
+    | "WORKFLOW_ROUTED";
   details: {
     ip?: string;
     userAgent?: string;
@@ -686,6 +694,7 @@ interface AccessAudit {
 ## 14. Security Considerations
 
 ### Best Practices
+
 - ✅ All permissions checked server-side (not just frontend)
 - ✅ JWT includes permission hash (invalidates on role change)
 - ✅ Audit trail for all access changes
@@ -695,6 +704,7 @@ interface AccessAudit {
 - ✅ IP logging for suspicious access patterns
 
 ### Potential Threats & Mitigation
+
 ```
 Threat: User modifies JWT to gain permissions
 Mitigation: Always validate permissions server-side
@@ -721,7 +731,7 @@ authentication:
     provider: windows-ldap
     domain: "bank.local"
     fallback: email-password
-  
+
   email_auth:
     enabled: true
     provider: supabase
@@ -753,7 +763,7 @@ role_requests:
   require_approval: true
   max_requests_per_day: 1
   auto_expire_after_days: 30
-  
+
 workflows:
   default: email
   available:
@@ -774,17 +784,20 @@ guest_features:
 ## 16. Migration Path
 
 ### Current State (Today)
+
 - ✅ Backend complete with full CRUD APIs
 - ✅ 4 roles (admin, manager, analyst, viewer)
 - ✅ No guest/read-only access
 
 ### Transition State (After Phase 1-2)
+
 - ✅ Windows SSO + email authentication
 - ✅ Guest role with read-only access
 - ✅ Role requests functionality
 - ✅ Permission-based access control
 
 ### Final State (After Phase 5)
+
 - ✅ Complete access management system
 - ✅ Workflow integration
 - ✅ Admin dashboard
@@ -795,24 +808,28 @@ guest_features:
 ## 17. Success Criteria
 
 ✅ **Authentication**
+
 - [ ] Windows/LDAP SSO works
 - [ ] Email authentication works
 - [ ] Auto-create guests on first login
 - [ ] JWT includes permissions
 
 ✅ **Guest Mode**
+
 - [ ] Guests can view projects/evaluations
 - [ ] Guests cannot create/edit anything
 - [ ] Guest indicator visible in UI
 - [ ] Permission-denied messages helpful
 
 ✅ **Role Requests**
+
 - [ ] Users can submit requests
 - [ ] Admins receive notifications
 - [ ] Approvals update permissions immediately
 - [ ] Audit trail complete
 
 ✅ **Workflows**
+
 - [ ] Email notifications work
 - [ ] Teams integration (if enabled)
 - [ ] JIRA integration (if enabled)
@@ -823,6 +840,7 @@ guest_features:
 ## 18. Cost/Benefit Analysis
 
 ### Benefits
+
 - ✅ Improved security (no full access on first login)
 - ✅ Better audit trail (track all access requests)
 - ✅ Flexible workflow integration
@@ -831,6 +849,7 @@ guest_features:
 - ✅ Admin control without user complaints
 
 ### Costs
+
 - ~2-3 weeks implementation
 - 3-4 new database tables
 - 5-6 new API endpoints
@@ -838,6 +857,7 @@ guest_features:
 - Workflow provider implementations (optional)
 
 ### ROI
+
 - Reduced security incidents
 - Better compliance audit trail
 - Faster user onboarding
@@ -849,24 +869,28 @@ guest_features:
 ## 19. Recommendations
 
 ### Phase 1 Focus (Recommended Start)
+
 1. **Start with**: Database schema + Permission middleware
 2. **Why**: Foundation for everything else
 3. **Timeline**: 3-4 days
 4. **Impact**: Low-risk, high-value foundation
 
 ### Phase 2 Focus (Next Priority)
+
 1. **Start with**: Windows/LDAP SSO
 2. **Why**: Solves primary authentication need
 3. **Timeline**: 4-5 days
 4. **Impact**: Enables guest mode
 
 ### Phase 3 Focus (Complete Feature)
+
 1. **Start with**: Role request API + Dashboard
 2. **Why**: Core business need
 3. **Timeline**: 5-6 days
 4. **Impact**: Full feature completeness
 
 ### Phase 4 Focus (Future Enhancement)
+
 1. **Start with**: Email workflow only
 2. **Why**: Most common use case
 3. **Timeline**: 2-3 days
@@ -890,11 +914,8 @@ export class PermissionChecker {
     return this.hasPermission(permissions, action);
   }
 
-  static hasPermission(
-    permissions: PermissionSet,
-    action: string
-  ): boolean {
-    const [resource, operation] = action.split('_');
+  static hasPermission(permissions: PermissionSet, action: string): boolean {
+    const [resource, operation] = action.split("_");
     return permissions[resource]?.[operation] ?? false;
   }
 }
@@ -915,8 +936,8 @@ export class RoleRequestService {
       userId,
       requestedRoles,
       reason,
-      status: 'pending',
-      workflowCode
+      status: "pending",
+      workflowCode,
     });
 
     // Route to workflow if specified
@@ -936,21 +957,21 @@ export class RoleRequestService {
     approvedBy: string
   ): Promise<void> {
     const request = await updateRoleRequest(requestId, {
-      status: 'approved',
+      status: "approved",
       reviewedBy: approvedBy,
-      reviewedAt: new Date()
+      reviewedAt: new Date(),
     });
 
     // Update user role
     await updateUserRole(request.userId, grantedRoles);
 
     // Notify user
-    await notifyUser(request, 'approved');
+    await notifyUser(request, "approved");
 
     // Log audit trail
-    await logAccessAction(request.userId, 'ROLE_GRANTED', {
+    await logAccessAction(request.userId, "ROLE_GRANTED", {
       grantedRoles,
-      approvedBy
+      approvedBy,
     });
   }
 }
@@ -961,6 +982,7 @@ export class RoleRequestService {
 ## Conclusion
 
 This architecture provides:
+
 - ✅ **Security**: Guest mode + permission checking
 - ✅ **Flexibility**: Workflow integration pattern
 - ✅ **Scalability**: Database-driven permissions
@@ -973,4 +995,3 @@ This architecture provides:
 
 **Status**: Ready for Review & Discussion  
 **Next Step**: User feedback on approach, then implementation planning
-

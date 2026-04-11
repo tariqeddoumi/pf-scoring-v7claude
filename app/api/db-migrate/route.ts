@@ -246,7 +246,8 @@ export async function POST(request: Request) {
         );
         CREATE INDEX IF NOT EXISTS "BP_PF_system_config_key_idx" ON "BP_PF_system_config"("key");
       `);
-      results.table_system_config = "✓ Table BP_PF_system_config créée/vérifiée";
+      results.table_system_config =
+        "✓ Table BP_PF_system_config créée/vérifiée";
     } catch (error) {
       results.table_system_config_error = (error as Error).message;
     }
@@ -289,7 +290,8 @@ export async function POST(request: Request) {
         CREATE INDEX IF NOT EXISTS "BP_PF_evaluation_domain_scores_domainId_idx" ON "BP_PF_evaluation_domain_scores"("domainId");
         CREATE INDEX IF NOT EXISTS "BP_PF_evaluation_domain_scores_scoringId_idx" ON "BP_PF_evaluation_domain_scores"("scoringId");
       `);
-      results.table_eval_domain_scores = "✓ Table BP_PF_evaluation_domain_scores créée/vérifiée";
+      results.table_eval_domain_scores =
+        "✓ Table BP_PF_evaluation_domain_scores créée/vérifiée";
     } catch (error) {
       results.table_eval_domain_scores_error = (error as Error).message;
     }
@@ -310,7 +312,8 @@ export async function POST(request: Request) {
         CREATE INDEX IF NOT EXISTS "BP_PF_evaluation_answers_criterionId_idx" ON "BP_PF_evaluation_answers"("criterionId");
         CREATE INDEX IF NOT EXISTS "BP_PF_evaluation_answers_scoringId_idx" ON "BP_PF_evaluation_answers"("scoringId");
       `);
-      results.table_eval_answers = "✓ Table BP_PF_evaluation_answers créée/vérifiée";
+      results.table_eval_answers =
+        "✓ Table BP_PF_evaluation_answers créée/vérifiée";
     } catch (error) {
       results.table_eval_answers_error = (error as Error).message;
     }
@@ -370,7 +373,8 @@ export async function POST(request: Request) {
         );
         CREATE INDEX IF NOT EXISTS "BP_PF_stress_test_results_evaluationId_idx" ON "BP_PF_stress_test_results"("evaluationId");
       `);
-      results.table_stress_results = "✓ Table BP_PF_stress_test_results créée/vérifiée";
+      results.table_stress_results =
+        "✓ Table BP_PF_stress_test_results créée/vérifiée";
     } catch (error) {
       results.table_stress_results_error = (error as Error).message;
     }
@@ -416,7 +420,8 @@ export async function POST(request: Request) {
         CREATE INDEX IF NOT EXISTS "BP_PF_scoring_audit_logs_userId_idx" ON "BP_PF_scoring_audit_logs"("userId");
         CREATE INDEX IF NOT EXISTS "BP_PF_scoring_audit_logs_timestamp_idx" ON "BP_PF_scoring_audit_logs"("timestamp");
       `);
-      results.table_scoring_audit_logs = "✓ Table BP_PF_scoring_audit_logs créée/vérifiée";
+      results.table_scoring_audit_logs =
+        "✓ Table BP_PF_scoring_audit_logs créée/vérifiée";
     } catch (error) {
       results.table_scoring_audit_logs_error = (error as Error).message;
     }
@@ -464,7 +469,7 @@ export async function GET() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer your-init-token",
+        Authorization: "Bearer your-init-token",
       },
       example_curl: `curl -X POST http://localhost:3000/api/db-migrate -H "Authorization: Bearer init-secret-token"`,
     },

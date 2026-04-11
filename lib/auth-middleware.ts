@@ -1,20 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
 export interface AuthPayload {
   userId: string;
   email: string;
-  role: 'admin' | 'manager' | 'analyst' | 'viewer';
+  role: "admin" | "manager" | "analyst" | "viewer";
   iat?: number;
   exp?: number;
 }
 
-const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET =
+  process.env.SUPABASE_JWT_SECRET ||
+  process.env.JWT_SECRET ||
+  "your-secret-key";
 
-export async function authenticateRequest(request: NextRequest): Promise<AuthPayload | null> {
+export async function authenticateRequest(
+  request: NextRequest
+): Promise<AuthPayload | null> {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return null;
     }
 
@@ -29,18 +34,15 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthPay
 
 export async function withAuth(
   request: NextRequest,
-  handler: (
-    request: NextRequest,
-    user: AuthPayload
-  ) => Promise<NextResponse>
+  handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
 ): Promise<NextResponse> {
   const user = await authenticateRequest(request);
   if (!user) {
     // Allow requests without auth in development or with default mock user
     const mockUser: AuthPayload = {
-      userId: 'mock-user-001',
-      email: 'mock@example.com',
-      role: 'admin'
+      userId: "mock-user-001",
+      email: "mock@example.com",
+      role: "admin",
     };
     return handler(request, mockUser);
   }
@@ -49,14 +51,11 @@ export async function withAuth(
 
 export async function withAdminAuth(
   request: NextRequest,
-  handler: (
-    request: NextRequest,
-    user: AuthPayload
-  ) => Promise<NextResponse>
+  handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
 ): Promise<NextResponse> {
   return withAuth(request, async (req, user) => {
-    if (user.role !== 'admin' && user.role !== 'manager') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (user.role !== "admin" && user.role !== "manager") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     return handler(req, user);
   });
@@ -66,7 +65,7 @@ export const ROLE_HIERARCHY: Record<string, number> = {
   admin: 4,
   manager: 3,
   analyst: 2,
-  viewer: 1
+  viewer: 1,
 };
 
 export function hasMinimumRole(userRole: string, minimumRole: string): boolean {

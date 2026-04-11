@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, Mail, Phone, MapPin, Building } from 'lucide-react';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Edit2, Mail, Phone, MapPin, Building } from "lucide-react";
 
 interface Client {
   id: string;
@@ -18,7 +18,11 @@ interface Client {
   createdAt: string;
 }
 
-export default function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ClientDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,12 +35,12 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         const { id } = await params;
         setClientId(id);
         const response = await fetch(`/api/clients/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch client');
+        if (!response.ok) throw new Error("Failed to fetch client");
         const data = await response.json();
         setClient(data.data || data);
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'Failed to load client');
+        setError(err.message || "Failed to load client");
         setClient(null);
       } finally {
         setLoading(false);
@@ -57,12 +61,15 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
   if (error || !client) {
     return (
       <div className="space-y-6">
-        <Link href="/clients" className="inline-flex items-center space-x-2 text-slate-400 hover:text-white">
+        <Link
+          href="/clients"
+          className="inline-flex items-center space-x-2 text-slate-400 hover:text-white"
+        >
           <ArrowLeft size={20} />
           <span>Retour aux clients</span>
         </Link>
         <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
-          {error || 'Client non trouvé'}
+          {error || "Client non trouvé"}
         </div>
       </div>
     );
@@ -97,13 +104,17 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Status */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase">Statut</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase">
+            Statut
+          </p>
           <p className="mt-2 text-lg font-semibold text-white">
-            <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-              client.status === 'Actif'
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-yellow-500/20 text-yellow-400'
-            }`}>
+            <span
+              className={`inline-block px-3 py-1 rounded-full text-sm ${
+                client.status === "Actif"
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-yellow-500/20 text-yellow-400"
+              }`}
+            >
               {client.status}
             </span>
           </p>
@@ -112,8 +123,12 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         {/* Type */}
         {client.type && (
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <p className="text-xs font-semibold text-slate-400 uppercase">Type</p>
-            <p className="mt-2 text-lg font-semibold text-white">{client.type}</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase">
+              Type
+            </p>
+            <p className="mt-2 text-lg font-semibold text-white">
+              {client.type}
+            </p>
           </div>
         )}
 
@@ -122,9 +137,13 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <Building size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">Secteur</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase">
+                Secteur
+              </p>
             </div>
-            <p className="mt-2 text-lg font-semibold text-white">{client.secteur}</p>
+            <p className="mt-2 text-lg font-semibold text-white">
+              {client.secteur}
+            </p>
           </div>
         )}
 
@@ -133,9 +152,13 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <MapPin size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">Pays</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase">
+                Pays
+              </p>
             </div>
-            <p className="mt-2 text-lg font-semibold text-white">{client.pays}</p>
+            <p className="mt-2 text-lg font-semibold text-white">
+              {client.pays}
+            </p>
           </div>
         )}
 
@@ -144,7 +167,9 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <Mail size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">Email</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase">
+                Email
+              </p>
             </div>
             <p className="mt-2 text-white break-all">{client.email}</p>
           </div>
@@ -155,7 +180,9 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <Phone size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">Téléphone</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase">
+                Téléphone
+              </p>
             </div>
             <p className="mt-2 text-white">{client.telephone}</p>
           </div>
@@ -163,8 +190,12 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Date de création */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase">Créé le</p>
-          <p className="mt-2 text-white">{new Date(client.createdAt).toLocaleDateString('fr-FR')}</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase">
+            Créé le
+          </p>
+          <p className="mt-2 text-white">
+            {new Date(client.createdAt).toLocaleDateString("fr-FR")}
+          </p>
         </div>
       </div>
 

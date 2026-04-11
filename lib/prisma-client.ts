@@ -16,9 +16,7 @@ const prismaConfig: any = {
 // Add errorFormat for better error messages
 prismaConfig.errorFormat = "pretty";
 
-const prisma =
-  global.prisma ||
-  new PrismaClient(prismaConfig);
+const prisma = global.prisma || new PrismaClient(prismaConfig);
 
 if (process.env.NODE_ENV !== "production") global.prisma = prisma;
 

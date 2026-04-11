@@ -61,7 +61,9 @@ export default function AuditPage() {
         </Card>
       ) : logs.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Aucun enregistrement d&apos;audit</p>
+          <p className="text-muted-foreground">
+            Aucun enregistrement d&apos;audit
+          </p>
         </Card>
       ) : (
         <Card>

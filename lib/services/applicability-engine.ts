@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma-client';
+import prisma from "@/lib/prisma-client";
 
 /**
  * Applicability evaluation result
@@ -35,16 +35,13 @@ export class ApplicabilityEngine {
   ): Promise<Map<string, ApplicabilityResult>> {
     const nodes = await prisma.scoringNode.findMany({
       where: { versionId },
-      include: { applicabilityRules: { where: { isActive: true } } }
+      include: { applicabilityRules: { where: { isActive: true } } },
     });
 
     const results = new Map<string, ApplicabilityResult>();
 
     for (const node of nodes) {
-      const applicability = await this.evaluateNodeApplicability(
-        node,
-        context
-      );
+      const applicability = await this.evaluateNodeApplicability(node, context);
       results.set(node.id, applicability);
     }
 
@@ -63,7 +60,7 @@ export class ApplicabilityEngine {
     let required = node.isMandatory || false;
     let readOnly = false;
     let excludeFromScore = false;
-    let explanation = 'Node is applicable';
+    let explanation = "Node is applicable";
 
     if (!node.applicabilityRules || node.applicabilityRules.length === 0) {
       return {
@@ -72,7 +69,7 @@ export class ApplicabilityEngine {
         required,
         readOnly,
         excludeFromScore,
-        explanation
+        explanation,
       };
     }
 
@@ -85,32 +82,32 @@ export class ApplicabilityEngine {
 
       if (triggered) {
         switch (rule.effectType) {
-          case 'SHOW':
+          case "SHOW":
             visible = true;
             explanation = `Rule: ${rule.id} - Node shown`;
             break;
 
-          case 'HIDE':
+          case "HIDE":
             visible = false;
             explanation = `Rule: ${rule.id} - Node hidden`;
             break;
 
-          case 'REQUIRE':
+          case "REQUIRE":
             required = true;
             explanation = `Rule: ${rule.id} - Node required`;
             break;
 
-          case 'OPTIONAL':
+          case "OPTIONAL":
             required = false;
             explanation = `Rule: ${rule.id} - Node optional`;
             break;
 
-          case 'READ_ONLY':
+          case "READ_ONLY":
             readOnly = true;
             explanation = `Rule: ${rule.id} - Node read-only`;
             break;
 
-          case 'EXCLUDE_FROM_SCORE':
+          case "EXCLUDE_FROM_SCORE":
             excludeFromScore = true;
             explanation = `Rule: ${rule.id} - Excluded from scoring`;
             break;
@@ -124,7 +121,7 @@ export class ApplicabilityEngine {
       required,
       readOnly,
       excludeFromScore,
-      explanation
+      explanation,
     };
   }
 
@@ -141,39 +138,33 @@ export class ApplicabilityEngine {
       // Build evaluation context from project and evaluation data
       const evalContext = {
         ...context.projectData,
-        ...context.evaluationData
+        ...context.evaluationData,
       };
 
       // Simple pattern matching for common conditions
       // In production, use a safe expression evaluator
 
       // Pattern: field == value
-      if (expression.includes('==')) {
-        const [left, right] = expression
-          .split('==')
-          .map((s) => s.trim());
+      if (expression.includes("==")) {
+        const [left, right] = expression.split("==").map((s) => s.trim());
         const contextValue = (evalContext as any)[left];
         return contextValue === right || contextValue === parseFloat(right);
       }
 
       // Pattern: field != value
-      if (expression.includes('!=')) {
-        const [left, right] = expression
-          .split('!=')
-          .map((s) => s.trim());
+      if (expression.includes("!=")) {
+        const [left, right] = expression.split("!=").map((s) => s.trim());
         const contextValue = (evalContext as any)[left];
         return contextValue !== right && contextValue !== parseFloat(right);
       }
 
       // Pattern: field in [value1, value2]
-      if (expression.includes(' in ')) {
-        const [left, right] = expression
-          .split(' in ')
-          .map((s) => s.trim());
+      if (expression.includes(" in ")) {
+        const [left, right] = expression.split(" in ").map((s) => s.trim());
         const contextValue = (evalContext as any)[left];
         const values = right
-          .replace(/[\[\]]/g, '')
-          .split(',')
+          .replace(/[\[\]]/g, "")
+          .split(",")
           .map((s) => s.trim());
         return values.includes(String(contextValue));
       }
@@ -181,7 +172,7 @@ export class ApplicabilityEngine {
       // Default: evaluate as truthy
       return Boolean(evalContext);
     } catch (error) {
-      console.error('Error evaluating applicability condition:', error);
+      console.error("Error evaluating applicability condition:", error);
       return true; // Default to showing node on error
     }
   }
@@ -223,7 +214,7 @@ export class ApplicabilityEngine {
 
     return {
       satisfied: missingNodes.length === 0,
-      missingNodes
+      missingNodes,
     };
   }
 
@@ -268,7 +259,7 @@ export class ApplicabilityEngine {
       visibleNodes: values.filter((a) => a.visible).length,
       hiddenNodes: values.filter((a) => !a.visible).length,
       requiredNodes: values.filter((a) => a.required && a.visible).length,
-      readOnlyNodes: values.filter((a) => a.readOnly && a.visible).length
+      readOnlyNodes: values.filter((a) => a.readOnly && a.visible).length,
     };
   }
 }

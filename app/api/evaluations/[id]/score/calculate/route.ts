@@ -6,8 +6,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ScoringEngine } from "@/lib/scoring-engine-v7plus";
 import { RulesEngine } from "@/lib/scoring-rules-v7plus";
-import { DataValidator, ComplexIndicatorsCalculator } from "@/lib/scoring-validators-v7plus";
-import { ScoringRequestBody, ScoringResponseBody } from "@/types/scoring-v7plus";
+import {
+  DataValidator,
+  ComplexIndicatorsCalculator,
+} from "@/lib/scoring-validators-v7plus";
+import {
+  ScoringRequestBody,
+  ScoringResponseBody,
+} from "@/types/scoring-v7plus";
 import { saveEvaluation, logScoringAction } from "@/lib/db-scoring";
 
 export async function POST(
@@ -103,7 +109,9 @@ export async function POST(
     };
 
     // Log calculation (for audit trail)
-    console.log(`[SCORING] Evaluation ${evaluationId} calculated by ${analystName || "unknown"}`);
+    console.log(
+      `[SCORING] Evaluation ${evaluationId} calculated by ${analystName || "unknown"}`
+    );
     console.log(
       `[SCORING] Result: ${result.rating} (Score: ${result.finalScore.toFixed(2)})`
     );
@@ -114,7 +122,8 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred",
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
       },
       { status: 500 }
     );
@@ -137,7 +146,8 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
-        error: "Use POST to calculate scores. Use GET /api/evaluations/[id]/report to retrieve saved results.",
+        error:
+          "Use POST to calculate scores. Use GET /api/evaluations/[id]/report to retrieve saved results.",
       },
       { status: 405 }
     );

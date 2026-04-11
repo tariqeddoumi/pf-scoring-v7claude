@@ -3,6 +3,7 @@
 ## Architecture Overview
 
 ### Tech Stack
+
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript (strict mode)
 - **Database**: Supabase PostgreSQL
@@ -61,6 +62,7 @@ class ScoringEngine {
 ```
 
 **How it works:**
+
 1. Validates input data
 2. Calculates score for each of 9 domains (1-10 scale)
 3. Applies domain weights (sum = 135% due to overlapping criteria)
@@ -69,6 +71,7 @@ class ScoringEngine {
 6. Maps to Probability of Default
 
 **Extending:** Add new domains by:
+
 1. Adding `DomainCode` enum value
 2. Implementing `calculateDX_()` method
 3. Adding to domain weight configuration
@@ -96,6 +99,7 @@ class RulesEngine {
 ```
 
 **Rule Categories:**
+
 - **NO-GO**: Automatic rejection (21 rules)
 - **MALUS**: Score deductions -1 to -5 pts (19+ rules)
 
@@ -143,6 +147,7 @@ class ComplexIndicatorsCalculator {
 ```
 
 **Validation levels:**
+
 1. **Completeness**: Check domain-by-domain data availability
 2. **Field-level**: Type checking, range validation, format validation
 3. **Business logic**: Cross-field validation (e.g., debt + equity = total)
@@ -192,15 +197,15 @@ export enum DomainCode {
   D1 = "D1",
   // ...
   D9 = "D9",
-  D10 = "D10",  // NEW
+  D10 = "D10", // NEW
 }
 
 // Update domain weights
 export const DOMAIN_WEIGHTS: Record<DomainCode, number> = {
-  D1: 0.20,
+  D1: 0.2,
   // ...
-  D9: 0.10,
-  D10: 0.10,  // NEW - adjust others to sum to 135%
+  D9: 0.1,
+  D10: 0.1, // NEW - adjust others to sum to 135%
 };
 ```
 
@@ -245,7 +250,7 @@ const d10Score = this.calculateD10_CyberSecurity();
 const weightedScores = [
   d1Score * DOMAIN_WEIGHTS[DomainCode.D1],
   // ...
-  d10Score * DOMAIN_WEIGHTS[DomainCode.D10],  // NEW
+  d10Score * DOMAIN_WEIGHTS[DomainCode.D10], // NEW
 ];
 ```
 
@@ -313,7 +318,7 @@ it("should trigger NOGO_10A for critical cyber vulnerabilities", () => {
   };
 
   const nogoRules = rulesEngine.checkNOGOs(vulnerableData);
-  expect(nogoRules.some(rule => rule.ruleId === "NOGO_10A")).toBe(true);
+  expect(nogoRules.some((rule) => rule.ruleId === "NOGO_10A")).toBe(true);
 });
 ```
 
@@ -445,11 +450,11 @@ return result;
 // Process multiple projects
 async function batchScore(projectIds: string[]): Promise<ScoringResult[]> {
   const results = await Promise.all(
-    projectIds.map(id =>
+    projectIds.map((id) =>
       fetch(`/api/evaluations/${id}/score/calculate`, {
         method: "POST",
         body: JSON.stringify({ projectData: getProjectData(id) }),
-      }).then(r => r.json())
+      }).then((r) => r.json())
     )
   );
 
@@ -513,16 +518,19 @@ JWT_SECRET=...
 ### Common Issues
 
 **Issue**: TypeScript compilation fails
+
 ```
 Solution: npm run type-check -- --diagnostics
 ```
 
 **Issue**: Prisma client not generated
+
 ```
 Solution: npx prisma generate
 ```
 
 **Issue**: Database migration fails
+
 ```
 Solution: npx prisma migrate resolve --rolled-back <migration_name>
 ```

@@ -5,6 +5,7 @@
 J'ai créé une **suite complète de suivi de projet** avec 4 fichiers:
 
 ### 1. **PF_SCORING_SPECIFICATIONS_TRACKING.csv** (Principal)
+
 - **Format**: Tableau CSV (75+ lignes)
 - **Contenu**: Toutes les spécifications organisées par bloc
 - **Colonnes**:
@@ -16,7 +17,7 @@ J'ai créé une **suite complète de suivi de projet** avec 4 fichiers:
   - STATUT: INTÉGRÉ / EN COURS / PLANIFIÉ / BLOQUÉ
   - TYPE_CHANGEMENT: AJOUT / FIX / ENHANCEMENT ou vide
   - NOTES: Détails complémentaires
-  - COMPLÉTION_%: 0-100%
+  - COMPLÉTION\_%: 0-100%
   - DATE_COMPLÉTION: Quand finalisé
 
 - **Utilisation**:
@@ -26,6 +27,7 @@ J'ai créé une **suite complète de suivi de projet** avec 4 fichiers:
   ```
 
 ### 2. **SPECIFICATIONS_TRACKING.json** (Backup + API)
+
 - **Format**: JSON structuré
 - **Contenu**: Même données que CSV mais en format hiérarchique
 - **Utilisation**:
@@ -34,6 +36,7 @@ J'ai créé une **suite complète de suivi de projet** avec 4 fichiers:
   - Sync automatique vers outils externes
 
 ### 3. **IMPORT_GUIDE_GOOGLE_SHEETS.md** (Tutoriel)
+
 - **Format**: Markdown avec instructions détaillées
 - **Contenu**:
   - Comment importer le CSV dans Google Sheets
@@ -43,6 +46,7 @@ J'ai créé une **suite complète de suivi de projet** avec 4 fichiers:
   - Alternatives à Google Sheets (Notion, Asana, Monday.com)
 
 ### 4. **PROJECT_TRACKING_SETUP.md** (Stratégie PMO)
+
 - **Format**: Markdown complet
 - **Contenu**:
   - Vue synthétique du projet (85% complétion)
@@ -58,6 +62,7 @@ J'ai créé une **suite complète de suivi de projet** avec 4 fichiers:
 ### **Pour les Managers / Product Owners**
 
 1. **Télécharge le CSV**:
+
    ```
    google_drive_export/PF_SCORING_SPECIFICATIONS_TRACKING.csv
    ```
@@ -82,13 +87,14 @@ J'ai créé une **suite complète de suivi de projet** avec 4 fichiers:
    - Permissions: Editor / Viewer selon rôle
 
 5. **Mettez à jour quotidiennement**:
-   - Colonne COMPLÉTION_%: Progression réelle
+   - Colonne COMPLÉTION\_%: Progression réelle
    - Colonne STATUT: Si changement de phase
    - Colonne NOTES: Blocages / détails importants
 
 ### **Pour les Tech Leads / Developers**
 
 1. **Lire le JSON**:
+
    ```bash
    cat SPECIFICATIONS_TRACKING.json | jq '.blocs[] | {name, completion, status}'
    ```
@@ -107,6 +113,7 @@ J'ai créé une **suite complète de suivi de projet** avec 4 fichiers:
 ## 📊 Vue d'Ensemble Actuelle
 
 ### Statistiques Globales
+
 ```
 85 éléments suivi
 65 INTÉGRÉ  (76%)  ✅
@@ -118,6 +125,7 @@ Complétion globale: 85% ⭐
 ```
 
 ### Complétion par Bloc
+
 ```
 ✅ 100%  Système & Architecture (6/6)
 ✅ 100%  Règles Métier NO-GO/MALUS (9/9)
@@ -162,24 +170,28 @@ Complétion globale: 85% ⭐
 ## 🎯 Prochaines Étapes
 
 ### **IMMÉDIAT (Cette semaine)**
+
 - [ ] Import CSV → Google Sheets
 - [ ] Formatage conditionnel (couleurs + barres)
 - [ ] Partage avec stakeholders
 - [ ] **Commencer Phase 9**: Mobile Responsive Design
 
 ### **COURT TERME (2 semaines)**
+
 - [ ] Compléter D2 (Host Country domain)
 - [ ] Finir Phase 9 (Mobile testing)
 - [ ] Configurer email provider (SendGrid)
 - [ ] Commencer Phase 10 (Cypress tests)
 
 ### **MOYEN TERME (4 semaines)**
+
 - [ ] Renforcer RLS policies (sécurité)
 - [ ] Compléter migration Supabase
 - [ ] Préparer guide utilisateur
 - [ ] Teste pré-déploiement
 
 ### **GO-LIVE (5-6 semaines)**
+
 - [ ] Déployer sur Vercel
 - [ ] Tester en production (smoke tests)
 - [ ] Training utilisateurs
@@ -190,6 +202,7 @@ Complétion globale: 85% ⭐
 ## 📈 Comment Utiliser le PMO Tracking
 
 ### ✅ Quotidien (10 min)
+
 ```
 1. Ouvrir Google Sheet
 2. Mettre à jour COMPLÉTION_% (colonne I)
@@ -198,6 +211,7 @@ Complétion globale: 85% ⭐
 ```
 
 ### ✅ Hebdomadaire (30 min)
+
 ```
 1. Analyser graphique COMPLÉTION_%
 2. Identifier items BLOQUÉ (> 5 jours à 0%)
@@ -206,6 +220,7 @@ Complétion globale: 85% ⭐
 ```
 
 ### ✅ Bi-hebdomadaire - Status Meeting (60 min)
+
 ```
 Présenter aux stakeholders:
 1. Pie chart: INTÉGRÉ vs EN COURS vs PLANIFIÉ
@@ -219,18 +234,22 @@ Présenter aux stakeholders:
 ## 🛠️ Recommandations Outil
 
 ### ✅ **Google Sheets** (SÉLECTIONNÉ)
+
 **Pourquoi?**
+
 - Gratuit + collaboratif
 - Parfait pour 85 items
 - Historique automatique (audit trail)
 - Export facile (PDF, Excel)
 
 **Configuration**:
+
 - Conditional formatting = Couleurs statut
 - Groupage par BLOC
 - Graphiques intégrés
 
 ### Alternatives (Si besoin futur)
+
 - **Notion**: Plus puissant (database views, relations)
 - **Asana**: Timeline (Gantt) pour Gantt charts
 - **Monday.com**: Visual no-code interface
@@ -256,6 +275,7 @@ Présenter aux stakeholders:
 ## 🎬 Prochaines Actions
 
 ### **1️⃣ Import & Setup (Aujourd'hui)**
+
 ```bash
 1. Télécharge google_drive_export/PF_SCORING_SPECIFICATIONS_TRACKING.csv
 2. Va sur Google Drive: https://drive.google.com/drive/folders/1NHWJtB5OP44zbhdfdl3IInnhe1C8KYLi
@@ -265,11 +285,13 @@ Présenter aux stakeholders:
 ```
 
 ### **2️⃣ Phase 9: Mobile Responsive** (Cette semaine)
+
 ```bash
 Voir: PROJECT_TRACKING_SETUP.md "Phase 9" section
 ```
 
 ### **3️⃣ Tests & Déploiement** (Semaines suivantes)
+
 ```bash
 Voir: Phases 10-12 dans PROJECT_TRACKING_SETUP.md
 ```
@@ -295,6 +317,7 @@ A: Google Sheet publié. JSON = backup. CSV = source initiale.
 ## 📞 Support
 
 Si questions ou blocages:
+
 1. Ajouter dans NOTES (Google Sheet)
 2. Changer STATUT → BLOQUÉ
 3. Créer GitHub Issue avec label "blocker"
@@ -304,6 +327,6 @@ Si questions ou blocages:
 
 **Créé**: 2026-04-06  
 **Version**: 1.0  
-**Status**: PRÊT POUR PRODUCTION  
+**Status**: PRÊT POUR PRODUCTION
 
 🚀 **Bon suivi!**

@@ -10,9 +10,15 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     environment: {
       DATABASE_URL: process.env.DATABASE_URL ? "✅ Défini" : "❌ Manquant",
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "✅ Défini" : "❌ Manquant",
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✅ Défini" : "❌ Manquant",
-      SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET ? "✅ Défini" : "❌ Manquant",
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? "✅ Défini"
+        : "❌ Manquant",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        ? "✅ Défini"
+        : "❌ Manquant",
+      SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET
+        ? "✅ Défini"
+        : "❌ Manquant",
       JWT_SECRET: process.env.JWT_SECRET ? "✅ Défini" : "❌ Manquant",
     },
     tests: {} as Record<string, unknown>,
@@ -93,15 +99,21 @@ export async function GET() {
 
   // Résumé
   const failedTests = Object.entries(diagnostics.tests)
-    .filter(([, test]) => typeof test === 'object' && test !== null && (test as Record<string, unknown>).status === "❌ FAILED")
+    .filter(
+      ([, test]) =>
+        typeof test === "object" &&
+        test !== null &&
+        (test as Record<string, unknown>).status === "❌ FAILED"
+    )
     .map(([name]) => name);
 
   diagnostics.tests.summary = {
     total_tests: Object.keys(diagnostics.tests).length - 1,
     failed_tests: failedTests.length,
-    recommendation: failedTests.length === 0
-      ? "✅ Tout fonctionne! Le problème vient peut-être du Mode Test."
-      : `❌ Corrige ces problèmes: ${failedTests.join(", ")}`,
+    recommendation:
+      failedTests.length === 0
+        ? "✅ Tout fonctionne! Le problème vient peut-être du Mode Test."
+        : `❌ Corrige ces problèmes: ${failedTests.join(", ")}`,
   };
 
   return NextResponse.json(diagnostics, { status: 200 });

@@ -1,9 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, MapPin, Briefcase, DollarSign, TrendingUp } from 'lucide-react';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  Edit2,
+  MapPin,
+  Briefcase,
+  DollarSign,
+  TrendingUp,
+} from "lucide-react";
 
 interface Project {
   id: string;
@@ -17,7 +24,11 @@ interface Project {
   createdAt: string;
 }
 
-export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ProjectDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,12 +41,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         const { id } = await params;
         setProjectId(id);
         const response = await fetch(`/api/projects/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch project');
+        if (!response.ok) throw new Error("Failed to fetch project");
         const data = await response.json();
         setProject(data.data || data);
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'Failed to load project');
+        setError(err.message || "Failed to load project");
         setProject(null);
       } finally {
         setLoading(false);
@@ -56,12 +67,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   if (error || !project) {
     return (
       <div className="space-y-6">
-        <Link href="/projects" className="inline-flex items-center space-x-2 text-slate-400 hover:text-white">
+        <Link
+          href="/projects"
+          className="inline-flex items-center space-x-2 text-slate-400 hover:text-white"
+        >
           <ArrowLeft size={20} />
           <span>Retour aux projets</span>
         </Link>
         <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
-          {error || 'Projet non trouvé'}
+          {error || "Projet non trouvé"}
         </div>
       </div>
     );
@@ -84,7 +98,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
         <button
-          onClick={() => projectId && router.push(`/projects/${projectId}/edit`)}
+          onClick={() =>
+            projectId && router.push(`/projects/${projectId}/edit`)
+          }
           className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
         >
           <Edit2 size={20} />
@@ -96,13 +112,17 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Status */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase">Statut</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase">
+            Statut
+          </p>
           <p className="mt-2 text-lg font-semibold text-white">
-            <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-              project.status === 'Actif'
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-yellow-500/20 text-yellow-400'
-            }`}>
+            <span
+              className={`inline-block px-3 py-1 rounded-full text-sm ${
+                project.status === "Actif"
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-yellow-500/20 text-yellow-400"
+              }`}
+            >
               {project.status}
             </span>
           </p>
@@ -113,9 +133,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <Briefcase size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">Secteur</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase">
+                Secteur
+              </p>
             </div>
-            <p className="mt-2 text-lg font-semibold text-white">{project.secteur}</p>
+            <p className="mt-2 text-lg font-semibold text-white">
+              {project.secteur}
+            </p>
           </div>
         )}
 
@@ -124,9 +148,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <MapPin size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">Pays</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase">
+                Pays
+              </p>
             </div>
-            <p className="mt-2 text-lg font-semibold text-white">{project.pays}</p>
+            <p className="mt-2 text-lg font-semibold text-white">
+              {project.pays}
+            </p>
           </div>
         )}
 
@@ -135,18 +163,24 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <DollarSign size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">Montant</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase">
+                Montant
+              </p>
             </div>
             <p className="mt-2 text-lg font-semibold text-white">
-              {project.montant} {project.devise || 'MAD'}
+              {project.montant} {project.devise || "MAD"}
             </p>
           </div>
         )}
 
         {/* Date de création */}
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase">Créé le</p>
-          <p className="mt-2 text-white">{new Date(project.createdAt).toLocaleDateString('fr-FR')}</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase">
+            Créé le
+          </p>
+          <p className="mt-2 text-white">
+            {new Date(project.createdAt).toLocaleDateString("fr-FR")}
+          </p>
         </div>
       </div>
 

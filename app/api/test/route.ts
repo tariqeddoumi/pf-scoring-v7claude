@@ -19,9 +19,12 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
-    return NextResponse.json({
-      status: "error",
-      message: getErrorMessage(error),
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        status: "error",
+        message: getErrorMessage(error),
+      },
+      { status: 400 }
+    );
   }
 }

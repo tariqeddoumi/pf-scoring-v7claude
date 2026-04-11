@@ -114,7 +114,7 @@ export const SOLAR_MAROC_FIXTURE: ProjectData = {
     estimatedAnnualRevenue: 7_700_000, // Based on 50MW @ capacity factor ~18%
     estimatedAnnualDebtService: 5_280_000, // DSRA sizing
     dscr: 1.45, // Debt Service Coverage Ratio (base case)
-    dscrStressed: 1.30, // Under stress
+    dscrStressed: 1.3, // Under stress
     reserveFunds: true,
     dscaPercentage: 15, // Debt Service Reserve Account = 15% of annual DS
 
@@ -134,7 +134,8 @@ export const SOLAR_MAROC_FIXTURE: ProjectData = {
     contractsQuality: "HIGH",
     jurisdiction: "Morocco",
     riskOfLitigation: "LOW",
-    insuranceStructure: "Comprehensive (property, liability, business interruption)",
+    insuranceStructure:
+      "Comprehensive (property, liability, business interruption)",
     insuranceCoverage: "Full project coverage",
     insuranceCarrier: "AXA / Munich Re",
     insuranceRating: "AAA",

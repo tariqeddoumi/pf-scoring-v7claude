@@ -3,7 +3,13 @@
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RefreshCw, CheckCircle2, AlertCircle, XCircle, Lock } from "lucide-react";
+import {
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  Lock,
+} from "lucide-react";
 
 interface DiagnosticTest {
   name: string;
@@ -27,8 +33,10 @@ interface DiagnosticResponse {
 
 export default function DiagnosticPage() {
   // Password from environment variable (can be disabled by setting DIAGNOSTIC_ENABLED=false)
-  const DIAGNOSTIC_PASSWORD = process.env.NEXT_PUBLIC_DIAGNOSTIC_PASSWORD || "diagnostic2024";
-  const DIAGNOSTIC_ENABLED = process.env.NEXT_PUBLIC_DIAGNOSTIC_ENABLED !== "false";
+  const DIAGNOSTIC_PASSWORD =
+    process.env.NEXT_PUBLIC_DIAGNOSTIC_PASSWORD || "diagnostic2024";
+  const DIAGNOSTIC_ENABLED =
+    process.env.NEXT_PUBLIC_DIAGNOSTIC_ENABLED !== "false";
 
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
@@ -46,7 +54,8 @@ export default function DiagnosticPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Diagnostic Désactivé</h1>
             <p className="text-slate-300">
-              L'outil de diagnostic est actuellement désactivé. Contactez l'administrateur pour plus d'informations.
+              L'outil de diagnostic est actuellement désactivé. Contactez
+              l'administrateur pour plus d'informations.
             </p>
           </div>
         </Card>
@@ -73,7 +82,9 @@ export default function DiagnosticPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération des diagnostiques");
+        throw new Error(
+          data.error || "Erreur lors de la récupération des diagnostiques"
+        );
       }
 
       const diagnosticData = data as DiagnosticResponse;
@@ -84,7 +95,8 @@ export default function DiagnosticPage() {
         setEnvVars(diagnosticData.environment);
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       setError(errorMessage);
       setTests([
         {
@@ -143,7 +155,9 @@ export default function DiagnosticPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Mot de passe</label>
+              <label className="block text-sm font-medium mb-2">
+                Mot de passe
+              </label>
               <input
                 type="password"
                 value={password}
@@ -153,16 +167,14 @@ export default function DiagnosticPage() {
                 className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50 placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
             </div>
-            <Button
-              onClick={handlePasswordSubmit}
-              className="w-full"
-            >
+            <Button onClick={handlePasswordSubmit} className="w-full">
               Accéder aux Diagnostiques
             </Button>
           </div>
 
           <p className="text-xs text-slate-400 mt-6">
-            ⚠️ Interface temporaire - sera désactivée une fois l&apos;outil opérationnel
+            ⚠️ Interface temporaire - sera désactivée une fois l&apos;outil
+            opérationnel
           </p>
         </Card>
       </div>
@@ -182,11 +194,15 @@ export default function DiagnosticPage() {
               variant="outline"
               size="sm"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
               Actualiser
             </Button>
           </div>
-          <p className="text-slate-400">Tests de santé et configuration de l&apos;application</p>
+          <p className="text-slate-400">
+            Tests de santé et configuration de l&apos;application
+          </p>
         </div>
 
         {/* Error Alert */}
@@ -204,20 +220,28 @@ export default function DiagnosticPage() {
 
         {/* Environment Variables */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Variables d&apos;Environnement</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            Variables d&apos;Environnement
+          </h2>
           <div className="grid gap-3">
             {envVars.map((envVar) => (
               <Card
                 key={envVar.name}
                 className={`p-4 border ${
-                  envVar.defined ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5"
+                  envVar.defined
+                    ? "border-green-500/30 bg-green-500/5"
+                    : "border-red-500/30 bg-red-500/5"
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-mono text-sm font-medium">{envVar.name}</p>
+                    <p className="font-mono text-sm font-medium">
+                      {envVar.name}
+                    </p>
                     {envVar.value && (
-                      <p className="text-xs text-slate-400 mt-1">{envVar.value}</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {envVar.value}
+                      </p>
                     )}
                   </div>
                   {getStatusIcon(envVar.defined ? "success" : "error")}
@@ -240,7 +264,9 @@ export default function DiagnosticPage() {
                   {getStatusIcon(test.status)}
                   <div className="flex-1">
                     <p className="font-medium">{test.name}</p>
-                    <p className="text-sm text-slate-300 mt-1">{test.message}</p>
+                    <p className="text-sm text-slate-300 mt-1">
+                      {test.message}
+                    </p>
                     {test.details && (
                       <pre className="text-xs bg-slate-900 p-2 rounded mt-2 overflow-auto max-h-48 text-slate-300">
                         {JSON.stringify(test.details, null, 2)}

@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma-client';
+import prisma from "@/lib/prisma-client";
 
 /**
  * Rule evaluation context
@@ -42,7 +42,7 @@ export class RuleEngine {
   ): Promise<RuleEvaluation[]> {
     const rules = await prisma.scoringNodeRule.findMany({
       where: { versionId, isActive: true },
-      orderBy: { orderIndex: 'asc' }
+      orderBy: { orderIndex: "asc" },
     });
 
     const evaluations: RuleEvaluation[] = [];
@@ -67,7 +67,7 @@ export class RuleEngine {
     try {
       // Evaluate rule condition
       const triggered = await this.evaluateCondition(
-        rule.conditionExpression || '',
+        rule.conditionExpression || "",
         context
       );
 
@@ -80,13 +80,13 @@ export class RuleEngine {
         ruleCode: rule.code,
         ruleType: rule.ruleType,
         triggered: true,
-        severity: rule.severity || 'MEDIUM',
-        actionType: rule.actionType || 'BLOCK',
+        severity: rule.severity || "MEDIUM",
+        actionType: rule.actionType || "BLOCK",
         penalty: rule.penaltyValue || 0,
         blocking: rule.blocking || false,
-        message: rule.description || '',
+        message: rule.description || "",
         messageUser: rule.messageUser,
-        messageCommittee: rule.messageCommittee
+        messageCommittee: rule.messageCommittee,
       };
     } catch (error) {
       console.error(`Error evaluating rule ${rule.code}:`, error);
@@ -110,32 +110,32 @@ export class RuleEngine {
         nodeId: context.nodeId,
         evaluationId: context.evaluationId,
         ...context.projectData,
-        ...context.evaluationData
+        ...context.evaluationData,
       };
 
       // Simple condition evaluation patterns
       // In production, use a safe expression evaluator library
 
       // Pattern: score > value
-      if (expression.includes('>')) {
-        const [left, right] = expression.split('>').map((s) => s.trim());
-        if (left === 'score') {
+      if (expression.includes(">")) {
+        const [left, right] = expression.split(">").map((s) => s.trim());
+        if (left === "score") {
           return context.nodeScore > parseFloat(right);
         }
       }
 
       // Pattern: score < value
-      if (expression.includes('<')) {
-        const [left, right] = expression.split('<').map((s) => s.trim());
-        if (left === 'score') {
+      if (expression.includes("<")) {
+        const [left, right] = expression.split("<").map((s) => s.trim());
+        if (left === "score") {
           return context.nodeScore < parseFloat(right);
         }
       }
 
       // Pattern: score == value
-      if (expression.includes('==')) {
-        const [left, right] = expression.split('==').map((s) => s.trim());
-        if (left === 'score') {
+      if (expression.includes("==")) {
+        const [left, right] = expression.split("==").map((s) => s.trim());
+        if (left === "score") {
           return context.nodeScore === parseFloat(right);
         }
       }
@@ -143,7 +143,7 @@ export class RuleEngine {
       // Default: evaluate as boolean
       return Boolean(evalContext);
     } catch (error) {
-      console.error('Error evaluating condition:', error);
+      console.error("Error evaluating condition:", error);
       return false;
     }
   }
@@ -153,26 +153,26 @@ export class RuleEngine {
    */
   static getRuleTypeCategory(ruleType: string): string {
     switch (ruleType) {
-      case 'HARD_STOP':
-      case 'NO_GO':
-        return 'BLOCKING';
+      case "HARD_STOP":
+      case "NO_GO":
+        return "BLOCKING";
 
-      case 'MALUS':
-        return 'PENALTY';
+      case "MALUS":
+        return "PENALTY";
 
-      case 'WARNING':
-      case 'REQUIRE_REVIEW':
-        return 'WARNING';
+      case "WARNING":
+      case "REQUIRE_REVIEW":
+        return "WARNING";
 
-      case 'VISIBILITY':
-      case 'MANDATORY_IF':
-        return 'VISIBILITY';
+      case "VISIBILITY":
+      case "MANDATORY_IF":
+        return "VISIBILITY";
 
-      case 'BLOCK_PUBLICATION':
-        return 'PUBLICATION_BLOCK';
+      case "BLOCK_PUBLICATION":
+        return "PUBLICATION_BLOCK";
 
       default:
-        return 'OTHER';
+        return "OTHER";
     }
   }
 
@@ -182,8 +182,7 @@ export class RuleEngine {
   static hasBlockingRules(evaluations: RuleEvaluation[]): boolean {
     return evaluations.some(
       (e) =>
-        e.triggered &&
-        (e.ruleType === 'HARD_STOP' || e.ruleType === 'NO_GO')
+        e.triggered && (e.ruleType === "HARD_STOP" || e.ruleType === "NO_GO")
     );
   }
 
@@ -192,7 +191,7 @@ export class RuleEngine {
    */
   static calculateTotalPenalty(evaluations: RuleEvaluation[]): number {
     return evaluations
-      .filter((e) => e.triggered && e.ruleType === 'MALUS')
+      .filter((e) => e.triggered && e.ruleType === "MALUS")
       .reduce((sum, e) => sum + (e.penalty || 0), 0);
   }
 
@@ -222,7 +221,7 @@ export class RuleEngine {
       (e) =>
         e.triggered &&
         !e.blocking &&
-        (e.ruleType === 'WARNING' || e.ruleType === 'REQUIRE_REVIEW')
+        (e.ruleType === "WARNING" || e.ruleType === "REQUIRE_REVIEW")
     );
   }
 
@@ -231,7 +230,7 @@ export class RuleEngine {
    */
   static canPublish(evaluations: RuleEvaluation[]): boolean {
     const blockers = evaluations.filter(
-      (e) => e.triggered && e.ruleType === 'BLOCK_PUBLICATION'
+      (e) => e.triggered && e.ruleType === "BLOCK_PUBLICATION"
     );
     return blockers.length === 0;
   }

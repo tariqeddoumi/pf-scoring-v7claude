@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface IntegrationOptions {
   evaluationId: string;
@@ -16,15 +16,15 @@ export function useEvaluationIntegrations() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/evaluations/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/evaluations/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(options),
       });
-      if (!response.ok) throw new Error('Failed to submit');
+      if (!response.ok) throw new Error("Failed to submit");
       return await response.json();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
+      const msg = err instanceof Error ? err.message : "Unknown error";
       setError(msg);
       throw err;
     } finally {
@@ -36,15 +36,15 @@ export function useEvaluationIntegrations() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/evaluations/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/evaluations/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(options),
       });
-      if (!response.ok) throw new Error('Failed to validate');
+      if (!response.ok) throw new Error("Failed to validate");
       return await response.json();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
+      const msg = err instanceof Error ? err.message : "Unknown error";
       setError(msg);
       throw err;
     } finally {
@@ -56,15 +56,15 @@ export function useEvaluationIntegrations() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/evaluations/reject', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/evaluations/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(options),
       });
-      if (!response.ok) throw new Error('Failed to reject');
+      if (!response.ok) throw new Error("Failed to reject");
       return await response.json();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
+      const msg = err instanceof Error ? err.message : "Unknown error";
       setError(msg);
       throw err;
     } finally {
@@ -85,19 +85,21 @@ export function useAlertIntegrations() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createAlert = async (options: IntegrationOptions & { type: string; severity: string }) => {
+  const createAlert = async (
+    options: IntegrationOptions & { type: string; severity: string }
+  ) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/alerts/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/alerts/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(options),
       });
-      if (!response.ok) throw new Error('Failed to create alert');
+      if (!response.ok) throw new Error("Failed to create alert");
       return await response.json();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
+      const msg = err instanceof Error ? err.message : "Unknown error";
       setError(msg);
       throw err;
     } finally {

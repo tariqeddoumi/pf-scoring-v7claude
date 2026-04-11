@@ -36,10 +36,10 @@ async function main() {
     console.log("✓ Utilisateur admin créé:");
     console.log(`  Email: ${user.email}`);
     console.log(`  Rôle: ${user.role}`);
+    console.log(`\n⚠️  Mot de passe temporaire: ${password}`);
     console.log(
-      `\n⚠️  Mot de passe temporaire: ${password}`
+      "   Veuillez le changer immédiatement après la première connexion."
     );
-    console.log("   Veuillez le changer immédiatement après la première connexion.");
   } catch (error) {
     console.error("Erreur:", error);
     process.exit(1);

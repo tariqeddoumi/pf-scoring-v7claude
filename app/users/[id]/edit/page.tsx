@@ -1,14 +1,18 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { User } from '@/lib/types/models';
-import { FormInput } from '@/components/form/FormInput';
-import { RoleSelect } from '@/components/form/RoleSelect';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { User } from "@/lib/types/models";
+import { FormInput } from "@/components/form/FormInput";
+import { RoleSelect } from "@/components/form/RoleSelect";
 
-export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditUserPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -17,10 +21,10 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
   const [userId, setUserId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<Partial<User>>({
-    email: '',
-    nom: '',
-    prenom: '',
-    role: 'analyst',
+    email: "",
+    nom: "",
+    prenom: "",
+    role: "analyst",
   });
 
   // Fetch user data on mount
@@ -30,13 +34,13 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
         const { id } = await params;
         setUserId(id);
         const response = await fetch(`/api/users/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch user');
+        if (!response.ok) throw new Error("Failed to fetch user");
         const data = await response.json();
         const user = data.data || data;
         setFormData(user);
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'Failed to load user');
+        setError(err.message || "Failed to load user");
       } finally {
         setLoading(false);
       }
@@ -45,15 +49,17 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     resolveAndFetch();
   }, [params]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear field error when user starts typing
     if (fieldErrors[name]) {
-      setFieldErrors(prev => {
+      setFieldErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
@@ -68,12 +74,12 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
     setFieldErrors({});
 
     try {
-      if (!userId) throw new Error('User ID not found');
+      if (!userId) throw new Error("User ID not found");
 
       const response = await fetch(`/api/users/${userId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -88,13 +94,13 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
           });
           setFieldErrors(errors);
         }
-        throw new Error(data.error || 'Failed to update user');
+        throw new Error(data.error || "Failed to update user");
       }
 
       // Success - redirect to detail page
       router.push(`/users/${userId}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to update user');
+      setError(err.message || "Failed to update user");
     } finally {
       setSubmitting(false);
     }
@@ -113,14 +119,18 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
       {/* Header */}
       <div className="flex items-center space-x-4">
         <Link
-          href={userId ? `/users/${userId}` : '/users'}
+          href={userId ? `/users/${userId}` : "/users"}
           className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white">Modifier l'utilisateur</h1>
-          <p className="text-slate-400 mt-1">{formData.nom} {formData.prenom}</p>
+          <h1 className="text-3xl font-bold text-white">
+            Modifier l'utilisateur
+          </h1>
+          <p className="text-slate-400 mt-1">
+            {formData.nom} {formData.prenom}
+          </p>
         </div>
       </div>
 
@@ -131,7 +141,9 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
           {Object.keys(fieldErrors).length > 0 && (
             <ul className="mt-2 ml-4 list-disc">
               {Object.entries(fieldErrors).map(([field, message]) => (
-                <li key={field} className="text-sm">{message}</li>
+                <li key={field} className="text-sm">
+                  {message}
+                </li>
               ))}
             </ul>
           )}
@@ -139,12 +151,15 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6"
+      >
         <FormInput
           label="Nom"
           name="nom"
           type="text"
-          value={formData.nom || ''}
+          value={formData.nom || ""}
           onChange={handleChange}
           placeholder="Nom"
           error={fieldErrors.nom}
@@ -155,7 +170,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
           label="Prénom"
           name="prenom"
           type="text"
-          value={formData.prenom || ''}
+          value={formData.prenom || ""}
           onChange={handleChange}
           placeholder="Prénom"
           error={fieldErrors.prenom}
@@ -166,7 +181,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
           label="Email"
           name="email"
           type="email"
-          value={formData.email || ''}
+          value={formData.email || ""}
           onChange={handleChange}
           placeholder="email@example.com"
           error={fieldErrors.email}
@@ -174,7 +189,7 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
         />
 
         <RoleSelect
-          value={formData.role || 'analyst'}
+          value={formData.role || "analyst"}
           onChange={handleChange}
           error={fieldErrors.role}
           required
@@ -188,10 +203,10 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
             className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold px-6 py-2 rounded-lg transition-all"
           >
             {submitting && <Loader2 size={20} className="animate-spin" />}
-            <span>{submitting ? 'Enregistrement...' : 'Enregistrer'}</span>
+            <span>{submitting ? "Enregistrement..." : "Enregistrer"}</span>
           </button>
           <Link
-            href={userId ? `/users/${userId}` : '/users'}
+            href={userId ? `/users/${userId}` : "/users"}
             className="inline-flex items-center space-x-2 px-6 py-2 border border-slate-600 rounded-lg text-slate-400 hover:text-white hover:border-slate-500 transition-colors"
           >
             <span>Annuler</span>

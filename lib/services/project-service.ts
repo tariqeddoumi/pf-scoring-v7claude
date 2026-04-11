@@ -1,29 +1,35 @@
-import prisma from '@/lib/prisma-client';
-import { createProjectSchema, updateProjectSchema } from '@/lib/validation-schemas';
-import type { z } from 'zod';
+import prisma from "@/lib/prisma-client";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+} from "@/lib/validation-schemas";
+import type { z } from "zod";
 
 export class ProjectService {
   /**
    * Create new project
    */
-  static async createProject(data: z.infer<typeof createProjectSchema>, createdBy: string) {
+  static async createProject(
+    data: z.infer<typeof createProjectSchema>,
+    createdBy: string
+  ) {
     const validated = createProjectSchema.parse(data);
 
     const project = await prisma.project.create({
       data: {
         ...validated,
         creePar: createdBy,
-        status: 'brouillon'
-      }
+        status: "brouillon",
+      },
     });
 
     await prisma.auditLog.create({
       data: {
         projectId: project.id,
         utilisateurId: createdBy,
-        action: 'CREATE_PROJECT',
-        details: JSON.stringify({ projectName: project.nom })
-      }
+        action: "CREATE_PROJECT",
+        details: JSON.stringify({ projectName: project.nom }),
+      },
     });
 
     return project;
@@ -37,12 +43,12 @@ export class ProjectService {
       where: { id },
       include: {
         user: {
-          select: { id: true, email: true, nom: true, prenom: true }
+          select: { id: true, email: true, nom: true, prenom: true },
         },
         client: {
-          select: { id: true, nom: true, email: true, telephone: true }
-        }
-      }
+          select: { id: true, nom: true, email: true, telephone: true },
+        },
+      },
     });
 
     // No need to log reads for performance
@@ -53,7 +59,11 @@ export class ProjectService {
   /**
    * Get all projects (paginated)
    */
-  static async getAllProjects(page: number = 1, limit: number = 50, filters?: any) {
+  static async getAllProjects(
+    page: number = 1,
+    limit: number = 50,
+    filters?: any
+  ) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -66,7 +76,7 @@ export class ProjectService {
         where,
         skip,
         take: limit,
-        orderBy: { dateCreation: 'desc' },
+        orderBy: { dateCreation: "desc" },
         select: {
           id: true,
           nom: true,
@@ -79,14 +89,14 @@ export class ProjectService {
           grade: true,
           dateCreation: true,
           user: {
-            select: { nom: true, prenom: true, email: true }
+            select: { nom: true, prenom: true, email: true },
           },
           client: {
-            select: { id: true, nom: true, email: true }
-          }
-        }
+            select: { id: true, nom: true, email: true },
+          },
+        },
       }),
-      prisma.project.count({ where })
+      prisma.project.count({ where }),
     ]);
 
     return {
@@ -95,32 +105,36 @@ export class ProjectService {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 
   /**
    * Update project
    */
-  static async updateProject(id: string, data: z.infer<typeof updateProjectSchema>, updatedBy: string) {
+  static async updateProject(
+    id: string,
+    data: z.infer<typeof updateProjectSchema>,
+    updatedBy: string
+  ) {
     const validated = updateProjectSchema.parse(data);
 
     const project = await prisma.project.update({
       where: { id },
       data: {
         ...validated,
-        dateMiseAJour: new Date()
-      }
+        dateMiseAJour: new Date(),
+      },
     });
 
     await prisma.auditLog.create({
       data: {
         projectId: id,
         utilisateurId: updatedBy,
-        action: 'UPDATE_PROJECT',
-        details: JSON.stringify({ projectName: project.nom })
-      }
+        action: "UPDATE_PROJECT",
+        details: JSON.stringify({ projectName: project.nom }),
+      },
     });
 
     return project;
@@ -131,24 +145,24 @@ export class ProjectService {
    */
   static async updateProjectStatus(
     id: string,
-    status: 'brouillon' | 'en_cours' | 'en_revue' | 'approuve' | 'rejete',
+    status: "brouillon" | "en_cours" | "en_revue" | "approuve" | "rejete",
     updatedBy: string
   ) {
     const project = await prisma.project.update({
       where: { id },
       data: {
         status,
-        dateMiseAJour: new Date()
-      }
+        dateMiseAJour: new Date(),
+      },
     });
 
     await prisma.auditLog.create({
       data: {
         projectId: id,
         utilisateurId: updatedBy,
-        action: 'UPDATE_PROJECT_STATUS',
-        details: JSON.stringify({ status })
-      }
+        action: "UPDATE_PROJECT_STATUS",
+        details: JSON.stringify({ status }),
+      },
     });
 
     return project;
@@ -161,7 +175,7 @@ export class ProjectService {
     const project = await prisma.project.findUnique({ where: { id } });
 
     if (!project) {
-      throw new Error('Project not found');
+      throw new Error("Project not found");
     }
 
     await prisma.project.delete({ where: { id } });
@@ -170,9 +184,9 @@ export class ProjectService {
       data: {
         projectId: id,
         utilisateurId: deletedBy,
-        action: 'DELETE_PROJECT',
-        details: JSON.stringify({ projectName: project.nom })
-      }
+        action: "DELETE_PROJECT",
+        details: JSON.stringify({ projectName: project.nom }),
+      },
     });
 
     return project;
@@ -181,7 +195,11 @@ export class ProjectService {
   /**
    * Get projects by user
    */
-  static async getProjectsByUser(userId: string, page: number = 1, limit: number = 50) {
+  static async getProjectsByUser(
+    userId: string,
+    page: number = 1,
+    limit: number = 50
+  ) {
     const skip = (page - 1) * limit;
 
     const [projects, total] = await Promise.all([
@@ -189,14 +207,14 @@ export class ProjectService {
         where: { creePar: userId },
         skip,
         take: limit,
-        orderBy: { dateCreation: 'desc' },
+        orderBy: { dateCreation: "desc" },
         include: {
           client: {
-            select: { id: true, nom: true, email: true }
-          }
-        }
+            select: { id: true, nom: true, email: true },
+          },
+        },
       }),
-      prisma.project.count({ where: { creePar: userId } })
+      prisma.project.count({ where: { creePar: userId } }),
     ]);
 
     return {
@@ -205,8 +223,8 @@ export class ProjectService {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 }

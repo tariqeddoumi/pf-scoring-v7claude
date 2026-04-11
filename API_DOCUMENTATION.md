@@ -9,6 +9,7 @@ API REST pour le calcul de score Project Finance (PF) selon la méthodologie V7+
 ## Authentication
 
 Toutes les requêtes API doivent inclure:
+
 ```
 Authorization: Bearer <JWT_TOKEN>
 Content-Type: application/json
@@ -154,14 +155,14 @@ Exécute 6 scénarios de stress testing.
 
 #### Scenario Details
 
-| Scenario | Impact | Threshold |
-|----------|--------|-----------|
-| REVENUE_DECLINE_10 | Revenue × 0.90 | DSCR > 1.25 |
-| COST_INFLATION_5 | Cost × 1.05 | DSCR > 1.20 |
-| INTEREST_RATE_200BPS | Rate + 2% | DSCR > 1.25 |
-| FX_DEPRECIATION_10 | Revenue × 0.90 | DSCR > 1.25 |
-| MARKET_DECAY_2_CAGR | Growth -2% | DSCR > 1.30 |
-| COMBINED_PERFECT_STORM | Multi-shock | DSCR > 1.10 |
+| Scenario               | Impact         | Threshold   |
+| ---------------------- | -------------- | ----------- |
+| REVENUE_DECLINE_10     | Revenue × 0.90 | DSCR > 1.25 |
+| COST_INFLATION_5       | Cost × 1.05    | DSCR > 1.20 |
+| INTEREST_RATE_200BPS   | Rate + 2%      | DSCR > 1.25 |
+| FX_DEPRECIATION_10     | Revenue × 0.90 | DSCR > 1.25 |
+| MARKET_DECAY_2_CAGR    | Growth -2%     | DSCR > 1.30 |
+| COMBINED_PERFECT_STORM | Multi-shock    | DSCR > 1.10 |
 
 ---
 
@@ -342,9 +343,9 @@ Result of scoring calculation:
 interface ScoringResult {
   evaluationId: string;
   projectId: string;
-  rating: RatingScale;        // AAA | AA | A | BBB | BB | B | CCC | D
-  finalScore: number;          // 1.0 - 10.0
-  recommendation: string;      // APPROVE | APPROVE_WITH_CONDITIONS | REJECT
+  rating: RatingScale; // AAA | AA | A | BBB | BB | B | CCC | D
+  finalScore: number; // 1.0 - 10.0
+  recommendation: string; // APPROVE | APPROVE_WITH_CONDITIONS | REJECT
   probabilityOfDefault: number; // 0.0 - 1.0
   domains: Map<DomainCode, DomainScore>;
   triggeredNOGOs: NOGORule[];
@@ -356,16 +357,16 @@ interface ScoringResult {
 
 ## Rating Scale Mapping
 
-| Rating | Score | PD | Risk Level |
-|--------|-------|----|----|
-| AAA | 9.5-10.0 | 0.005 | Minimal |
-| AA | 9.0-9.5 | 0.010 | Very Low |
-| A | 8.0-8.95 | 0.015 | Low |
-| BBB | 7.0-7.95 | 0.030 | Moderate |
-| BB | 6.0-6.95 | 0.075 | Medium |
-| B | 5.0-5.95 | 0.150 | High |
-| CCC | 3.0-4.95 | 0.250 | Very High |
-| D | <3.0 | 0.500+ | Default |
+| Rating | Score    | PD     | Risk Level |
+| ------ | -------- | ------ | ---------- |
+| AAA    | 9.5-10.0 | 0.005  | Minimal    |
+| AA     | 9.0-9.5  | 0.010  | Very Low   |
+| A      | 8.0-8.95 | 0.015  | Low        |
+| BBB    | 7.0-7.95 | 0.030  | Moderate   |
+| BB     | 6.0-6.95 | 0.075  | Medium     |
+| B      | 5.0-5.95 | 0.150  | High       |
+| CCC    | 3.0-4.95 | 0.250  | Very High  |
+| D      | <3.0     | 0.500+ | Default    |
 
 ---
 
@@ -437,6 +438,7 @@ All endpoints return consistent error format:
 ```
 
 Common error codes:
+
 - `INVALID_INPUT`: Malformed request
 - `VALIDATION_FAILED`: Data validation error
 - `MISSING_FIELD`: Required field missing
@@ -458,6 +460,7 @@ API version: **7.0**
 Methodology: **PF Scoring V7++**
 
 Future versions will support:
+
 - PDF report generation
 - CSV export
 - Advanced filtering and querying
@@ -472,68 +475,93 @@ Complete REST API for managing users, projects, and evaluations.
 ### Users Management
 
 #### GET /api/users
+
 List all users (manager+)
+
 - **Pagination**: page, limit
 - **Response**: Array of users with pagination
 
 #### POST /api/users
+
 Create new user (admin only)
+
 - **Body**: email, password, nom, prenom, role
 
 #### GET /api/users/[id]
+
 Get user by ID (manager+)
 
 #### PUT /api/users/[id]
+
 Update user (self or admin)
 
 #### DELETE /api/users/[id]
+
 Delete user (admin only, cannot delete self)
 
 ### Projects Management
 
 #### GET /api/projects
+
 List all projects
+
 - **Filters**: status, secteur
 - **Pagination**: page, limit
 
 #### POST /api/projects
+
 Create new project (analyst+)
+
 - **Body**: nom, description, secteur, montant, devise, countryCode
 
 #### GET /api/projects/[id]
+
 Get project by ID
 
 #### PUT /api/projects/[id]
+
 Update project (owner or admin)
 
 #### DELETE /api/projects/[id]
+
 Delete project (owner or admin)
 
 ### Evaluations Management
 
 #### GET /api/evaluations
+
 List all evaluations (analyst+)
+
 - **Filters**: status, projectId
 - **Pagination**: page, limit
 
 #### POST /api/evaluations
+
 Create evaluation (analyst+)
+
 - **Body**: projectId, scoringResult, finalScore
 
 #### GET /api/evaluations/[id]
+
 Get evaluation by ID
 
 #### POST /api/evaluations/submit
+
 Submit for validation (analyst+)
+
 - **Body**: id, finalScore, rating, probabilityOfDefault, triggeredNOGOs, appliedMALUS, malusTotal, notes
 
 #### POST /api/evaluations/validate
+
 Validate evaluation (manager+)
+
 - **Body**: id, recommendation, notes
 - **Side effect**: Updates project to "approuve" status
 
 #### POST /api/evaluations/reject
+
 Reject evaluation (manager+)
+
 - **Body**: id, notes
 - **Side effect**: Updates project to "rejete" status
 

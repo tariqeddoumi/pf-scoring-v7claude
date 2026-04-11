@@ -3,6 +3,7 @@
 ## Overview
 
 Phase 8 frontend integration includes:
+
 - ✅ Custom React hooks for API consumption
 - ✅ Reusable CRUD components (DataTable, FormBuilder)
 - ✅ Complete pages for Users, Projects, and Evaluations
@@ -25,13 +26,14 @@ const { projects, pagination } = useProjects(page, limit, filters);
 const { evaluations } = useEvaluations(page, limit, filters);
 
 // Mutate data
-const { mutate, data, error, loading } = useMutation('/api/endpoint', 'POST');
-await mutate({ field: 'value' });
+const { mutate, data, error, loading } = useMutation("/api/endpoint", "POST");
+await mutate({ field: "value" });
 ```
 
 ### 2. Components (`components/crud/`)
 
 #### DataTable.tsx
+
 Generic table component for displaying list data with actions:
 
 ```typescript
@@ -49,6 +51,7 @@ Generic table component for displaying list data with actions:
 ```
 
 #### FormBuilder.tsx
+
 Form component with Zod validation:
 
 ```typescript
@@ -67,12 +70,14 @@ Form component with Zod validation:
 ### 3. Pages (`app/dashboard/`)
 
 #### Users Page (`users/page.tsx`)
+
 - ✅ List all users
 - ✅ Create new users
 - ✅ Manage user roles
 - ✅ Delete users
 
 #### Projects Page (`projects/page.tsx`)
+
 - ✅ List all projects
 - ✅ Create new projects
 - ✅ Filter by status
@@ -80,6 +85,7 @@ Form component with Zod validation:
 - ✅ Dashboard stats cards
 
 #### Evaluations Page (`evaluations/page.tsx`)
+
 - ✅ List all evaluations
 - ✅ Create new evaluations
 - ✅ Workflow visualization
@@ -130,8 +136,9 @@ const { users } = useUsers();
 ```
 
 Login flow sets token:
+
 ```typescript
-localStorage.setItem('auth_token', jwtToken);
+localStorage.setItem("auth_token", jwtToken);
 ```
 
 ---
@@ -169,17 +176,20 @@ lib/
 ## Features Implemented
 
 ### ✅ Authentication
+
 - JWT token handling
 - Auto-redirect on 401
 - Token persistence
 
 ### ✅ Data Fetching
+
 - useApi hook
 - useUsers, useProjects, useEvaluations
 - Pagination support
 - Error handling
 
 ### ✅ Forms
+
 - Zod validation
 - Dynamic field rendering
 - Multiple input types
@@ -187,6 +197,7 @@ lib/
 - Error messages
 
 ### ✅ Tables
+
 - Generic reusable component
 - Sortable columns
 - Action buttons
@@ -194,6 +205,7 @@ lib/
 - Empty states
 
 ### ✅ Pages
+
 - Complete CRUD workflows
 - Dashboard stats
 - Status tracking
@@ -204,6 +216,7 @@ lib/
 ## Integration Checklist
 
 - [x] Install dependencies
+
   ```bash
   npm install react-hook-form @hookform/resolvers zod
   ```
@@ -234,17 +247,20 @@ lib/
 ## Next Steps
 
 ### 1. Complete Authentication
+
 - Create login page (`app/login/page.tsx`)
 - Implement JWT flow
 - Add user context
 
 ### 2. Enhance UI
+
 - Add sidebar navigation
 - Create layout wrapper
 - Add loading skeletons
 - Add toast notifications
 
 ### 3. Add Features
+
 - Edit/Update operations (PUT)
 - Delete with confirmation
 - Bulk operations
@@ -252,12 +268,14 @@ lib/
 - Export to CSV
 
 ### 4. Testing
+
 - Unit tests for hooks
 - Component tests
 - Integration tests
 - E2E tests
 
 ### 5. Performance
+
 - Add React Query for caching
 - Implement pagination optimization
 - Add data persistence
@@ -314,21 +332,27 @@ export default function MyPage() {
 ## Troubleshooting
 
 ### Issue: "401 Unauthorized"
+
 **Solution**: Check JWT token in localStorage:
+
 ```typescript
-console.log(localStorage.getItem('auth_token'));
+console.log(localStorage.getItem("auth_token"));
 ```
 
 ### Issue: "Components not found"
+
 **Solution**: Ensure shadcn/ui components are installed:
+
 ```bash
 npx shadcn-ui@latest add table button form input
 ```
 
 ### Issue: Form validation not working
+
 **Solution**: Verify Zod schema is imported:
+
 ```typescript
-import { createUserSchema } from '@/lib/validation-schemas';
+import { createUserSchema } from "@/lib/validation-schemas";
 ```
 
 ---
@@ -344,9 +368,9 @@ import { DataTable } from '@/components/crud/DataTable';
 test('renders table with data', () => {
   const data = [{ id: '1', name: 'Test' }];
   const columns = [{ key: 'name', label: 'Name' }];
-  
+
   render(<DataTable data={data} columns={columns} />);
-  
+
   expect(screen.getByText('Test')).toBeInTheDocument();
 });
 ```
@@ -356,16 +380,19 @@ test('renders table with data', () => {
 ## Performance Tips
 
 1. **Memoize components**
+
    ```typescript
    export const DataTable = React.memo(({ data, columns }) => {...});
    ```
 
 2. **Use useCallback for handlers**
+
    ```typescript
    const handleCreate = useCallback(async (data) => {...}, []);
    ```
 
 3. **Implement pagination**
+
    ```typescript
    const { projects, pagination } = useProjects(page, 50);
    ```

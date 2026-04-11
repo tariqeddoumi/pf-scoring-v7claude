@@ -1,48 +1,61 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ArrowLeft, Building2, MapPin, Phone, Briefcase, Shield, Users, BarChart3 } from 'lucide-react';
-import { useState } from 'react';
-import { apiFetchWithErrorHandling } from '@/lib/api-client';
-import { createAppError, parseApiError, logAppError } from '@/lib/error-utils';
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Phone,
+  Briefcase,
+  Shield,
+  Users,
+  BarChart3,
+} from "lucide-react";
+import { useState } from "react";
+import { apiFetchWithErrorHandling } from "@/lib/api-client";
+import { createAppError, parseApiError, logAppError } from "@/lib/error-utils";
 
 export default function NewClientPage() {
   const [formData, setFormData] = useState({
     // Identité & Administration
-    legal_name: '',
-    trade_name: '',
-    type: 'Société Privée',
-    legal_form: '',
+    legal_name: "",
+    trade_name: "",
+    type: "Société Privée",
+    legal_form: "",
     // Organisation & Secteur
-    sector: '',
-    sub_sector: '',
-    segment: '',
-    employees: '',
-    capital_amount: '',
+    sector: "",
+    sub_sector: "",
+    segment: "",
+    employees: "",
+    capital_amount: "",
     // Coordonnées
-    country: 'Maroc',
-    city: '',
-    address: '',
-    postal_code: '',
-    email: '',
-    phone: '',
-    website: '',
+    country: "Maroc",
+    city: "",
+    address: "",
+    postal_code: "",
+    email: "",
+    phone: "",
+    website: "",
     // Relations Bancaires
-    business_center: '',
-    account_manager: '',
-    rating: '',
-    banking_status: 'Prospect',
-    relationship_start_date: '',
-    exposure: '',
+    business_center: "",
+    account_manager: "",
+    rating: "",
+    banking_status: "Prospect",
+    relationship_start_date: "",
+    exposure: "",
     // KYC & Compliance
-    kyc_status: 'En attente',
-    kyc_last_update: '',
-    compliance_status: 'En attente',
+    kyc_status: "En attente",
+    kyc_last_update: "",
+    compliance_status: "En attente",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const [submitting, setSubmitting] = useState(false);
@@ -64,22 +77,21 @@ export default function NewClientPage() {
       telephone: formData.phone.trim() || null,
       secteur: formData.sector.trim() || null,
       pays: formData.country.trim() || null,
-      type: formData.type.trim() || 'Entreprise',
+      type: formData.type.trim() || "Entreprise",
       description: formData.address.trim() || null,
     };
 
-    console.log('[CLIENT FORM] Submitting data:', apiData);
+    console.log("[CLIENT FORM] Submitting data:", apiData);
 
     try {
-
-      const { ok, data } = await apiFetchWithErrorHandling('/api/clients', {
-        method: 'POST',
-        body: JSON.stringify(apiData)
+      const { ok, data } = await apiFetchWithErrorHandling("/api/clients", {
+        method: "POST",
+        body: JSON.stringify(apiData),
       });
 
       if (!ok) {
         // Parse API error and create structured error
-        const appError = parseApiError(data, '/api/clients');
+        const appError = parseApiError(data, "/api/clients");
         logAppError(appError);
 
         setErrorMessage(appError.userMessage);
@@ -88,13 +100,13 @@ export default function NewClientPage() {
         if (data.errors && Array.isArray(data.errors)) {
           const errors: Record<string, string> = {};
           const fieldMapping: Record<string, string> = {
-            nom: 'legal_name',
-            email: 'email',
-            telephone: 'phone',
-            secteur: 'sector',
-            pays: 'country',
-            type: 'type',
-            description: 'address'
+            nom: "legal_name",
+            email: "email",
+            telephone: "phone",
+            secteur: "sector",
+            pays: "country",
+            type: "type",
+            description: "address",
           };
 
           data.errors.forEach((err: any) => {
@@ -107,57 +119,57 @@ export default function NewClientPage() {
       }
 
       // Succès
-      setSuccessMessage('✅ Client créé avec succès !');
+      setSuccessMessage("✅ Client créé avec succès !");
       setFormData({
-        legal_name: '',
-        trade_name: '',
-        type: 'Société Privée',
-        legal_form: '',
-        sector: '',
-        sub_sector: '',
-        segment: '',
-        employees: '',
-        capital_amount: '',
-        country: 'Maroc',
-        city: '',
-        address: '',
-        postal_code: '',
-        email: '',
-        phone: '',
-        website: '',
-        business_center: '',
-        account_manager: '',
-        rating: '',
-        banking_status: 'Prospect',
-        relationship_start_date: '',
-        exposure: '',
-        kyc_status: 'En attente',
-        kyc_last_update: '',
-        compliance_status: 'En attente',
+        legal_name: "",
+        trade_name: "",
+        type: "Société Privée",
+        legal_form: "",
+        sector: "",
+        sub_sector: "",
+        segment: "",
+        employees: "",
+        capital_amount: "",
+        country: "Maroc",
+        city: "",
+        address: "",
+        postal_code: "",
+        email: "",
+        phone: "",
+        website: "",
+        business_center: "",
+        account_manager: "",
+        rating: "",
+        banking_status: "Prospect",
+        relationship_start_date: "",
+        exposure: "",
+        kyc_status: "En attente",
+        kyc_last_update: "",
+        compliance_status: "En attente",
       });
 
       // Redirection après 2 secondes
       setTimeout(() => {
-        window.location.href = '/clients';
+        window.location.href = "/clients";
       }, 2000);
     } catch (error: any) {
       let appError;
 
-      if (error.message?.includes('Unauthorized')) {
-        appError = createAppError('AUTH', 'EXPIRED_SESSION', {
-          endpoint: '/api/clients',
-          method: 'POST'
+      if (error.message?.includes("Unauthorized")) {
+        appError = createAppError("AUTH", "EXPIRED_SESSION", {
+          endpoint: "/api/clients",
+          method: "POST",
         });
-      } else if (error.message?.includes('Failed to fetch')) {
-        appError = createAppError('NETWORK', 'CONNECTION_ERROR', {
-          endpoint: '/api/clients',
-          method: 'POST'
+      } else if (error.message?.includes("Failed to fetch")) {
+        appError = createAppError("NETWORK", "CONNECTION_ERROR", {
+          endpoint: "/api/clients",
+          method: "POST",
         });
       } else {
-        appError = createAppError('NETWORK', 'SERVER_ERROR', {
-          endpoint: '/api/clients',
-          method: 'POST',
-          payload: apiData
+        appError = createAppError("NETWORK", "SERVER_ERROR", {
+          endpoint: "/api/clients",
+          method: "POST",
+          payload: apiData,
         });
       }
 
@@ -179,8 +191,12 @@ export default function NewClientPage() {
           <ArrowLeft size={20} />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-white truncate">Créer un nouveau client</h1>
-          <p className="text-slate-400 mt-1 md:mt-2 text-sm md:text-base">Renseignez la signalétique complète du client</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white truncate">
+            Créer un nouveau client
+          </h1>
+          <p className="text-slate-400 mt-1 md:mt-2 text-sm md:text-base">
+            Renseignez la signalétique complète du client
+          </p>
         </div>
       </div>
 
@@ -200,12 +216,13 @@ export default function NewClientPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-
         {/* === SECTION 1 : Identité & Administration === */}
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
           <h2 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6 flex items-center space-x-2">
             <Building2 size={20} className="text-cyan-500 flex-shrink-0" />
-            <span className="truncate">Identité et Informations Administratives</span>
+            <span className="truncate">
+              Identité et Informations Administratives
+            </span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <FormField
@@ -232,12 +249,12 @@ export default function NewClientPage() {
               value={formData.type}
               onChange={handleChange}
               options={[
-                'Entreprise Publique',
-                'Société Privée',
-                'Organisme International',
-                'PME',
-                'Startup',
-                'Autre',
+                "Entreprise Publique",
+                "Société Privée",
+                "Organisme International",
+                "PME",
+                "Startup",
+                "Autre",
               ]}
               required
             />
@@ -247,17 +264,17 @@ export default function NewClientPage() {
               value={formData.legal_form}
               onChange={handleChange}
               options={[
-                '',
-                'SA (Société Anonyme)',
-                'SARL (Société à Responsabilité Limitée)',
-                'SAS (Société par Actions Simplifiée)',
-                'SNC (Société en Nom Collectif)',
-                'Établissement Public',
-                'EPIC',
-                'GIE',
-                'Coopérative',
-                'Association',
-                'Autre',
+                "",
+                "SA (Société Anonyme)",
+                "SARL (Société à Responsabilité Limitée)",
+                "SAS (Société par Actions Simplifiée)",
+                "SNC (Société en Nom Collectif)",
+                "Établissement Public",
+                "EPIC",
+                "GIE",
+                "Coopérative",
+                "Association",
+                "Autre",
               ]}
               placeholder="Sélectionner..."
             />
@@ -268,7 +285,9 @@ export default function NewClientPage() {
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 md:p-8">
           <h2 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6 flex items-center space-x-2">
             <Briefcase size={20} className="text-cyan-500 flex-shrink-0" />
-            <span className="truncate">Organisation et Secteur d&apos;Activité</span>
+            <span className="truncate">
+              Organisation et Secteur d&apos;Activité
+            </span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <FormSelect
@@ -277,22 +296,22 @@ export default function NewClientPage() {
               value={formData.sector}
               onChange={handleChange}
               options={[
-                '',
-                'Énergie',
-                'Infrastructure',
-                'Transport',
-                'Télécommunications',
-                'Immobilier',
-                'Industrie',
-                'Agriculture',
-                'Mines',
-                'Eau & Assainissement',
-                'Santé',
-                'Éducation',
-                'Tourisme',
-                'Services Financiers',
-                'BTP',
-                'Autre',
+                "",
+                "Énergie",
+                "Infrastructure",
+                "Transport",
+                "Télécommunications",
+                "Immobilier",
+                "Industrie",
+                "Agriculture",
+                "Mines",
+                "Eau & Assainissement",
+                "Santé",
+                "Éducation",
+                "Tourisme",
+                "Services Financiers",
+                "BTP",
+                "Autre",
               ]}
               required
               placeholder="Sélectionner un secteur..."
@@ -311,14 +330,14 @@ export default function NewClientPage() {
               value={formData.segment}
               onChange={handleChange}
               options={[
-                '',
-                'Grands Corporates',
-                'Grands Corporates - Secteur Public',
-                'Corporate',
-                'PME / ETI',
-                'Institutionnel',
-                'Retail',
-                'Autre',
+                "",
+                "Grands Corporates",
+                "Grands Corporates - Secteur Public",
+                "Corporate",
+                "PME / ETI",
+                "Institutionnel",
+                "Retail",
+                "Autre",
               ]}
               placeholder="Sélectionner un segment..."
             />
@@ -354,17 +373,17 @@ export default function NewClientPage() {
               value={formData.country}
               onChange={handleChange}
               options={[
-                'Maroc',
-                'Algérie',
-                'Tunisie',
-                'Mauritanie',
-                'Sénégal',
-                'Côte d\'Ivoire',
-                'France',
-                'Belgique',
-                'Suisse',
-                'Espagne',
-                'Autres',
+                "Maroc",
+                "Algérie",
+                "Tunisie",
+                "Mauritanie",
+                "Sénégal",
+                "Côte d'Ivoire",
+                "France",
+                "Belgique",
+                "Suisse",
+                "Espagne",
+                "Autres",
               ]}
               required
             />
@@ -452,27 +471,27 @@ export default function NewClientPage() {
               value={formData.rating}
               onChange={handleChange}
               options={[
-                '',
-                'AAA',
-                'AA+',
-                'AA',
-                'AA-',
-                'A+',
-                'A',
-                'A-',
-                'BBB+',
-                'BBB',
-                'BBB-',
-                'BB+',
-                'BB',
-                'BB-',
-                'B+',
-                'B',
-                'B-',
-                'CCC',
-                'CC',
-                'C',
-                'D',
+                "",
+                "AAA",
+                "AA+",
+                "AA",
+                "AA-",
+                "A+",
+                "A",
+                "A-",
+                "BBB+",
+                "BBB",
+                "BBB-",
+                "BB+",
+                "BB",
+                "BB-",
+                "B+",
+                "B",
+                "B-",
+                "CCC",
+                "CC",
+                "C",
+                "D",
               ]}
               placeholder="Sélectionner un rating..."
             />
@@ -482,12 +501,12 @@ export default function NewClientPage() {
               value={formData.banking_status}
               onChange={handleChange}
               options={[
-                'Prospect',
-                'Client Actif',
-                'Client Inactif',
-                'En Cours d\'Activation',
-                'Résilié',
-                'Suspendu',
+                "Prospect",
+                "Client Actif",
+                "Client Inactif",
+                "En Cours d'Activation",
+                "Résilié",
+                "Suspendu",
               ]}
             />
             <FormField
@@ -522,11 +541,11 @@ export default function NewClientPage() {
               value={formData.kyc_status}
               onChange={handleChange}
               options={[
-                'En attente',
-                'En cours',
-                'Complète et À Jour',
-                'Expirée',
-                'Non conforme',
+                "En attente",
+                "En cours",
+                "Complète et À Jour",
+                "Expirée",
+                "Non conforme",
               ]}
             />
             <FormField
@@ -543,10 +562,10 @@ export default function NewClientPage() {
               value={formData.compliance_status}
               onChange={handleChange}
               options={[
-                'En attente',
-                'Conforme',
-                'Non conforme',
-                'En cours de vérification',
+                "En attente",
+                "Conforme",
+                "Non conforme",
+                "En cours de vérification",
               ]}
             />
           </div>
@@ -559,7 +578,7 @@ export default function NewClientPage() {
             disabled={submitting}
             className={`flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-6 py-3 rounded-lg transition-all text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {submitting ? '⏳ Création en cours...' : 'Créer le client'}
+            {submitting ? "⏳ Création en cours..." : "Créer le client"}
           </button>
           <Link
             href="/clients"
@@ -594,7 +613,10 @@ function FormField({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-xs md:text-sm font-semibold text-white mb-2">
+      <label
+        htmlFor={name}
+        className="block text-xs md:text-sm font-semibold text-white mb-2"
+      >
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
@@ -607,8 +629,8 @@ function FormField({
         required={required}
         className={`w-full px-3 md:px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 text-sm md:text-base transition-all ${
           error
-            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-            : 'border-slate-600 focus:border-cyan-500 focus:ring-cyan-500'
+            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+            : "border-slate-600 focus:border-cyan-500 focus:ring-cyan-500"
         }`}
       />
       {error && <p className="text-red-400 text-xs md:text-sm mt-1">{error}</p>}
@@ -633,7 +655,10 @@ function FormTextarea({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-xs md:text-sm font-semibold text-white mb-2">
+      <label
+        htmlFor={name}
+        className="block text-xs md:text-sm font-semibold text-white mb-2"
+      >
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <textarea
@@ -669,7 +694,10 @@ function FormSelect({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="block text-xs md:text-sm font-semibold text-white mb-2">
+      <label
+        htmlFor={name}
+        className="block text-xs md:text-sm font-semibold text-white mb-2"
+      >
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <select
@@ -680,13 +708,13 @@ function FormSelect({
         required={required}
         className="w-full px-3 md:px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
       >
-        {placeholder && options[0] === '' && (
+        {placeholder && options[0] === "" && (
           <option value="" disabled>
             {placeholder}
           </option>
         )}
-        {options.map(option =>
-          option === '' && placeholder ? null : (
+        {options.map((option) =>
+          option === "" && placeholder ? null : (
             <option key={option} value={option}>
               {option}
             </option>

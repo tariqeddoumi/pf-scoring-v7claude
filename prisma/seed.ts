@@ -1,20 +1,21 @@
-import prisma from '@/lib/prisma-client';
+import prisma from "@/lib/prisma-client";
 
 async function main() {
-  console.log('🌱 Starting database seed...');
+  console.log("🌱 Starting database seed...");
 
   try {
     // Create default scoring model if it doesn't exist
     const defaultModel = await prisma.scoringModel.upsert({
-      where: { code: 'PF_STANDARD_V7PP' },
+      where: { code: "PF_STANDARD_V7PP" },
       update: {},
       create: {
-        code: 'PF_STANDARD_V7PP',
-        label: 'Project Finance Standard V7++',
-        description: 'Standard project finance scoring model based on IFC, EBRD, and Basel guidelines',
-        businessSegment: 'Project Finance',
-        projectType: 'All',
-        status: 'DRAFT',
+        code: "PF_STANDARD_V7PP",
+        label: "Project Finance Standard V7++",
+        description:
+          "Standard project finance scoring model based on IFC, EBRD, and Basel guidelines",
+        businessSegment: "Project Finance",
+        projectType: "All",
+        status: "DRAFT",
         isActive: true,
       },
     });
@@ -33,11 +34,11 @@ async function main() {
       create: {
         modelId: defaultModel.id,
         versionNumber: 1,
-        label: 'Initial Version',
-        status: 'DRAFT',
+        label: "Initial Version",
+        status: "DRAFT",
         isPublished: false,
-        changeReason: 'Initial creation',
-        createdBy: 'system',
+        changeReason: "Initial creation",
+        createdBy: "system",
       },
     });
 
@@ -45,14 +46,14 @@ async function main() {
 
     // Create 8 domain nodes
     const domainCodes = [
-      { code: 'D1', label: 'Financial Analysis', weight: 0.25 },
-      { code: 'D2', label: 'Technical Analysis', weight: 0.20 },
-      { code: 'D3', label: 'Market & Revenue', weight: 0.20 },
-      { code: 'D4', label: 'Environmental (IFC)', weight: 0.10 },
-      { code: 'D5', label: 'Social (EBRD)', weight: 0.10 },
-      { code: 'D6', label: 'Governance', weight: 0.05 },
-      { code: 'D7', label: 'Legal & Regulatory', weight: 0.05 },
-      { code: 'D8', label: 'Country Risk', weight: 0.05 },
+      { code: "D1", label: "Financial Analysis", weight: 0.25 },
+      { code: "D2", label: "Technical Analysis", weight: 0.2 },
+      { code: "D3", label: "Market & Revenue", weight: 0.2 },
+      { code: "D4", label: "Environmental (IFC)", weight: 0.1 },
+      { code: "D5", label: "Social (EBRD)", weight: 0.1 },
+      { code: "D6", label: "Governance", weight: 0.05 },
+      { code: "D7", label: "Legal & Regulatory", weight: 0.05 },
+      { code: "D8", label: "Country Risk", weight: 0.05 },
     ];
 
     for (let i = 0; i < domainCodes.length; i++) {
@@ -69,7 +70,7 @@ async function main() {
         create: {
           versionId: initialVersion.id,
           parentNodeId: null,
-          nodeType: 'DOMAIN',
+          nodeType: "DOMAIN",
           code: domain.code,
           label: domain.label,
           description: `Domain ${i + 1}: ${domain.label}`,
@@ -79,16 +80,16 @@ async function main() {
           isTerminal: false,
           isScored: true,
           weight: domain.weight,
-          weightMode: 'RELATIVE',
-          aggregationMethod: 'WEIGHTED_AVERAGE',
+          weightMode: "RELATIVE",
+          aggregationMethod: "WEIGHTED_AVERAGE",
         },
       });
     }
 
     console.log(`✅ Created 8 domain nodes`);
-    console.log('\n✨ Database seed completed successfully!');
+    console.log("\n✨ Database seed completed successfully!");
   } catch (error) {
-    console.error('❌ Error during seed:', error);
+    console.error("❌ Error during seed:", error);
     throw error;
   }
 }

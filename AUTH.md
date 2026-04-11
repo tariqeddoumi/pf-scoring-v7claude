@@ -3,6 +3,7 @@
 ## 📋 Vue d'ensemble
 
 L'application PF Scoring intègre un système d'authentification complet avec:
+
 - **Authentification OAuth** (Google et Microsoft)
 - **Authentification traditionnelle** (Email/Mot de passe)
 - **Gestion des comptes** (création, suppression, mise à jour)
@@ -19,6 +20,7 @@ L'application PF Scoring intègre un système d'authentification complet avec:
 Cela crée automatiquement une session avec l'utilisateur admin et vous permet de créer des projets immédiatement.
 
 **API Bypass:**
+
 - **POST** `/api/projects-bypass` - Créer un projet sans authentification
 - **GET** `/api/projects-bypass` - Lister les projets
 
@@ -116,6 +118,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 ```
 
 **Rôles disponibles:**
+
 - `admin` - Administrateur système
 - `manager` - Gestionnaire de projets
 - `analyste` - Analyste de scoring
@@ -184,6 +187,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 **Réponse:**
+
 ```json
 {
   "success": true,
@@ -222,6 +226,7 @@ curl http://localhost:3000/api/auth/me \
 ### Middleware de protection
 
 Le fichier `middleware.ts` protège automatiquement toutes les routes sauf:
+
 - `/login` - Page de connexion
 - `/api/auth/*` - Endpoints d'authentification
 - `/api/health` - Health check
@@ -237,25 +242,25 @@ Le fichier `middleware.ts` protège automatiquement toutes les routes sauf:
 
 ### Table `pf_scoring_users`
 
-| Colonne | Type | Description |
-|---------|------|-------------|
-| id | UUID | Identifiant unique |
-| email | String | Email unique |
-| password | String | Hash bcrypt du mot de passe |
-| nom | String | Nom de famille |
-| prenom | String | Prénom |
-| role | Enum | admin, manager, analyste, lecteur |
-| oauthProvider | String | google, microsoft, etc. |
-| oauthId | String | Identifiant du fournisseur OAuth |
-| avatar | String | URL de l'avatar |
-| createdAt | DateTime | Date de création |
-| updatedAt | DateTime | Date de mise à jour |
+| Colonne       | Type     | Description                       |
+| ------------- | -------- | --------------------------------- |
+| id            | UUID     | Identifiant unique                |
+| email         | String   | Email unique                      |
+| password      | String   | Hash bcrypt du mot de passe       |
+| nom           | String   | Nom de famille                    |
+| prenom        | String   | Prénom                            |
+| role          | Enum     | admin, manager, analyste, lecteur |
+| oauthProvider | String   | google, microsoft, etc.           |
+| oauthId       | String   | Identifiant du fournisseur OAuth  |
+| avatar        | String   | URL de l'avatar                   |
+| createdAt     | DateTime | Date de création                  |
+| updatedAt     | DateTime | Date de mise à jour               |
 
 ## 🧪 Comptes de Test
 
-| Email | Mot de passe | Rôle |
-|-------|-------------|------|
-| admin@pf-scoring.ma | Admin123! | admin |
+| Email                  | Mot de passe | Rôle     |
+| ---------------------- | ------------ | -------- |
+| admin@pf-scoring.ma    | Admin123!    | admin    |
 | analyste@pf-scoring.ma | Analyste123! | analyste |
 
 ## ⚙️ Configuration de l'Environnement
@@ -308,16 +313,19 @@ NODE_ENV=development
 ## 🐛 Dépannage
 
 ### Erreur "Email ou mot de passe incorrect"
+
 - Vérifiez que l'utilisateur existe en base de données
 - Vérifiez le mot de passe
 - Vérifiez que le mot de passe a été hashé correctement
 
 ### OAuth échoue
+
 - Vérifiez les identifiants OAuth dans `.env.local`
 - Vérifiez les redirect URIs configurées
 - Assurez-vous que `NEXT_PUBLIC_BASE_URL` est correct
 
 ### Token invalide/expiré
+
 - Reconnectez-vous pour obtenir un nouveau token
 - Vérifiez que le `JWT_SECRET` est correct
 - Vérifiez la date du serveur (problème de synchronisation de temps)

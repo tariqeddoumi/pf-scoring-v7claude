@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { Search, X, Save, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { Search, X, Save, Clock } from "lucide-react";
 
 interface SearchFilters {
   query: string;
-  type: 'projects' | 'clients' | 'evaluations' | '';
+  type: "projects" | "clients" | "evaluations" | "";
   scoreMin: number;
   scoreMax: number;
   ratingFilter: string;
@@ -16,7 +16,7 @@ interface SearchFilters {
 interface SearchResult {
   id: string;
   title: string;
-  type: 'project' | 'client' | 'evaluation';
+  type: "project" | "client" | "evaluation";
   score?: number | null;
   rating?: string | null;
   status: string;
@@ -26,29 +26,31 @@ interface SearchResult {
 
 export default function SearchPage() {
   const [filters, setFilters] = useState<SearchFilters>({
-    query: '',
-    type: '',
+    query: "",
+    type: "",
     scoreMin: 0,
     scoreMax: 10,
-    ratingFilter: '',
-    statusFilter: '',
+    ratingFilter: "",
+    statusFilter: "",
   });
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [allResults, setAllResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savedFilters, setSavedFilters] = useState<{ name: string; filters: SearchFilters }[]>([]);
+  const [savedFilters, setSavedFilters] = useState<
+    { name: string; filters: SearchFilters }[]
+  >([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveName, setSaveName] = useState('');
+  const [saveName, setSaveName] = useState("");
 
   // Fetch all data on mount
   useEffect(() => {
     const fetchAll = async () => {
       try {
         const [projRes, clientRes, evalRes] = await Promise.all([
-          fetch('/api/projects?limit=200'),
-          fetch('/api/clients'),
-          fetch('/api/evaluations?limit=200'),
+          fetch("/api/projects?limit=200"),
+          fetch("/api/clients"),
+          fetch("/api/evaluations?limit=200"),
         ]);
 
         const items: SearchResult[] = [];
@@ -59,10 +61,10 @@ export default function SearchPage() {
             items.push({
               id: p.id,
               title: p.nom,
-              type: 'project',
+              type: "project",
               score: p.scoreGlobal,
               rating: p.grade,
-              status: p.status || '',
+              status: p.status || "",
               sector: p.secteur,
               date: p.dateCreation,
             });
@@ -76,8 +78,8 @@ export default function SearchPage() {
             items.push({
               id: c.id,
               title: c.nom,
-              type: 'client',
-              status: c.status || 'actif',
+              type: "client",
+              status: c.status || "actif",
               sector: c.secteur,
               date: c.createdAt,
             });
@@ -89,11 +91,11 @@ export default function SearchPage() {
           (evalData.data || []).forEach((e: any) => {
             items.push({
               id: e.id,
-              title: `${e.project?.nom || 'Évaluation'} - ${e.status}`,
-              type: 'evaluation',
+              title: `${e.project?.nom || "Évaluation"} - ${e.status}`,
+              type: "evaluation",
               score: e.finalScore,
               rating: e.rating,
-              status: e.status || '',
+              status: e.status || "",
               date: e.createdAt,
             });
           });
@@ -116,28 +118,38 @@ export default function SearchPage() {
 
     if (filters.query) {
       const q = filters.query.toLowerCase();
-      filtered = filtered.filter(r => r.title.toLowerCase().includes(q));
+      filtered = filtered.filter((r) => r.title.toLowerCase().includes(q));
     }
 
     if (filters.type) {
-      const typeMap: Record<string, string> = { projects: 'project', clients: 'client', evaluations: 'evaluation' };
-      filtered = filtered.filter(r => r.type === typeMap[filters.type]);
+      const typeMap: Record<string, string> = {
+        projects: "project",
+        clients: "client",
+        evaluations: "evaluation",
+      };
+      filtered = filtered.filter((r) => r.type === typeMap[filters.type]);
     }
 
     if (filters.ratingFilter) {
-      filtered = filtered.filter(r => r.rating && r.rating.startsWith(filters.ratingFilter));
+      filtered = filtered.filter(
+        (r) => r.rating && r.rating.startsWith(filters.ratingFilter)
+      );
     }
 
     if (filters.statusFilter) {
-      filtered = filtered.filter(r => r.status === filters.statusFilter);
+      filtered = filtered.filter((r) => r.status === filters.statusFilter);
     }
 
     if (filters.scoreMin > 0) {
-      filtered = filtered.filter(r => r.score != null && r.score >= filters.scoreMin);
+      filtered = filtered.filter(
+        (r) => r.score != null && r.score >= filters.scoreMin
+      );
     }
 
     if (filters.scoreMax < 10) {
-      filtered = filtered.filter(r => r.score != null && r.score <= filters.scoreMax);
+      filtered = filtered.filter(
+        (r) => r.score != null && r.score <= filters.scoreMax
+      );
     }
 
     setResults(filtered);
@@ -149,8 +161,11 @@ export default function SearchPage() {
 
   const handleSaveFilter = () => {
     if (!saveName.trim()) return;
-    setSavedFilters(prev => [...prev, { name: saveName, filters: { ...filters } }]);
-    setSaveName('');
+    setSavedFilters((prev) => [
+      ...prev,
+      { name: saveName, filters: { ...filters } },
+    ]);
+    setSaveName("");
     setShowSaveModal(false);
   };
 
@@ -160,48 +175,65 @@ export default function SearchPage() {
 
   const handleClearFilters = () => {
     setFilters({
-      query: '',
-      type: '',
+      query: "",
+      type: "",
       scoreMin: 0,
       scoreMax: 10,
-      ratingFilter: '',
-      statusFilter: '',
+      ratingFilter: "",
+      statusFilter: "",
     });
   };
 
   const getTypeIcon = (type: string) => {
-    const icons: Record<string, string> = { project: '📊', client: '👥', evaluation: '📈' };
-    return icons[type] || '📋';
+    const icons: Record<string, string> = {
+      project: "📊",
+      client: "👥",
+      evaluation: "📈",
+    };
+    return icons[type] || "📋";
   };
 
   const getTypeLabel = (type: string) => {
-    const labels: Record<string, string> = { project: 'Projet', client: 'Client', evaluation: 'Évaluation' };
+    const labels: Record<string, string> = {
+      project: "Projet",
+      client: "Client",
+      evaluation: "Évaluation",
+    };
     return labels[type] || type;
   };
 
   const getLink = (result: SearchResult) => {
     switch (result.type) {
-      case 'project': return `/projects/${result.id}`;
-      case 'client': return `/clients/${result.id}`;
-      case 'evaluation': return `/evaluations/${result.id}`;
-      default: return '#';
+      case "project":
+        return `/projects/${result.id}`;
+      case "client":
+        return `/clients/${result.id}`;
+      case "evaluation":
+        return `/evaluations/${result.id}`;
+      default:
+        return "#";
     }
   };
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      brouillon: 'Brouillon', en_cours: 'En cours', en_revue: 'En révision',
-      approuve: 'Approuvé', rejete: 'Rejeté', actif: 'Actif',
-      soumis: 'Soumis', valide: 'Validé',
+      brouillon: "Brouillon",
+      en_cours: "En cours",
+      en_revue: "En révision",
+      approuve: "Approuvé",
+      rejete: "Rejeté",
+      actif: "Actif",
+      soumis: "Soumis",
+      valide: "Validé",
     };
     return labels[status] || status;
   };
 
   const formatDate = (dateStr: string) => {
     try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
+      return new Date(dateStr).toLocaleDateString("fr-FR");
     } catch {
-      return '';
+      return "";
     }
   };
 
@@ -209,7 +241,9 @@ export default function SearchPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-white">Recherche Avancée</h1>
-        <p className="text-slate-400 mt-2">Recherchez et filtrez les projets, clients et évaluations</p>
+        <p className="text-slate-400 mt-2">
+          Recherchez et filtrez les projets, clients et évaluations
+        </p>
       </div>
 
       {/* Search Bar */}
@@ -227,10 +261,14 @@ export default function SearchPage() {
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">Type</label>
+          <label className="text-sm font-semibold text-white block mb-2">
+            Type
+          </label>
           <select
             value={filters.type}
-            onChange={(e) => setFilters({ ...filters, type: e.target.value as any })}
+            onChange={(e) =>
+              setFilters({ ...filters, type: e.target.value as any })
+            }
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Tous les types</option>
@@ -241,10 +279,14 @@ export default function SearchPage() {
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">Rating</label>
+          <label className="text-sm font-semibold text-white block mb-2">
+            Rating
+          </label>
           <select
             value={filters.ratingFilter}
-            onChange={(e) => setFilters({ ...filters, ratingFilter: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, ratingFilter: e.target.value })
+            }
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Tous les ratings</option>
@@ -257,10 +299,14 @@ export default function SearchPage() {
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">Statut</label>
+          <label className="text-sm font-semibold text-white block mb-2">
+            Statut
+          </label>
           <select
             value={filters.statusFilter}
-            onChange={(e) => setFilters({ ...filters, statusFilter: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, statusFilter: e.target.value })
+            }
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Tous les statuts</option>
@@ -275,17 +321,23 @@ export default function SearchPage() {
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">Score min</label>
+          <label className="text-sm font-semibold text-white block mb-2">
+            Score min
+          </label>
           <input
             type="range"
             min="0"
             max="10"
             step="0.5"
             value={filters.scoreMin}
-            onChange={(e) => setFilters({ ...filters, scoreMin: parseFloat(e.target.value) })}
+            onChange={(e) =>
+              setFilters({ ...filters, scoreMin: parseFloat(e.target.value) })
+            }
             className="w-full"
           />
-          <p className="text-xs text-slate-400 mt-1">Min: {filters.scoreMin.toFixed(1)}/10</p>
+          <p className="text-xs text-slate-400 mt-1">
+            Min: {filters.scoreMin.toFixed(1)}/10
+          </p>
         </div>
       </div>
 
@@ -310,7 +362,9 @@ export default function SearchPage() {
       {/* Saved Filters */}
       {savedFilters.length > 0 && (
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
-          <p className="text-sm font-semibold text-white mb-3">Filtres Enregistrés</p>
+          <p className="text-sm font-semibold text-white mb-3">
+            Filtres Enregistrés
+          </p>
           <div className="flex flex-wrap gap-2">
             {savedFilters.map((sf, i) => (
               <button
@@ -328,10 +382,10 @@ export default function SearchPage() {
       {/* Results */}
       <div className="space-y-3">
         <p className="text-slate-400">
-          {loading ? 'Chargement...' : `${results.length} résultats trouvés`}
+          {loading ? "Chargement..." : `${results.length} résultats trouvés`}
         </p>
 
-        {results.map(result => (
+        {results.map((result) => (
           <Link
             key={`${result.type}-${result.id}`}
             href={getLink(result)}
@@ -343,7 +397,9 @@ export default function SearchPage() {
                   <span className="text-2xl">{getTypeIcon(result.type)}</span>
                   <div>
                     <h3 className="font-semibold text-white">{result.title}</h3>
-                    <p className="text-xs text-slate-400">{getTypeLabel(result.type)}</p>
+                    <p className="text-xs text-slate-400">
+                      {getTypeLabel(result.type)}
+                    </p>
                   </div>
                 </div>
 
@@ -392,7 +448,9 @@ export default function SearchPage() {
       {showSaveModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md space-y-6">
-            <h2 className="text-2xl font-bold text-white">Enregistrer le Filtre</h2>
+            <h2 className="text-2xl font-bold text-white">
+              Enregistrer le Filtre
+            </h2>
             <input
               type="text"
               placeholder="Nom du filtre"

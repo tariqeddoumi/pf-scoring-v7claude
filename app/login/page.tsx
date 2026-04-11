@@ -51,7 +51,10 @@ function LoginPageContent() {
         }
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Erreur de connexion au serveur";
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : "Erreur de connexion au serveur";
       setError(`Erreur réseau: ${errorMsg}`);
     } finally {
       setLoading(false);
@@ -98,7 +101,10 @@ function LoginPageContent() {
         setError(errorMessage);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Impossible de rejoindre le serveur";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Impossible de rejoindre le serveur";
       setError(`Erreur de connexion: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -168,7 +174,10 @@ function LoginPageContent() {
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-200 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-slate-200 mb-2"
+              >
                 Adresse e-mail
               </label>
               <input
@@ -183,7 +192,10 @@ function LoginPageContent() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-200 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-slate-200 mb-2"
+              >
                 Mot de passe
               </label>
               <input
@@ -212,7 +224,8 @@ function LoginPageContent() {
               <span className="font-medium">Compte de test :</span>
             </p>
             <p className="text-xs text-slate-400">
-              📧 admin@pf-scoring.ma<br />
+              📧 admin@pf-scoring.ma
+              <br />
               🔑 Admin123!
             </p>
           </div>
@@ -245,14 +258,10 @@ function LoginPageContent() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-slate-400 text-sm">
-          <p>
-            PF Scoring • Scoring Project Finance Conforme IFC, EBRD, Basel
-          </p>
-          <p className="mt-2">
-            Banque Marocaine • Monnaie: MAD
-          </p>
+          <p>PF Scoring • Scoring Project Finance Conforme IFC, EBRD, Basel</p>
+          <p className="mt-2">Banque Marocaine • Monnaie: MAD</p>
           <p className="mt-3 text-xs text-slate-500">
-            v1.0.1 • Build {new Date().toISOString().split('T')[0]}
+            v1.0.1 • Build {new Date().toISOString().split("T")[0]}
           </p>
         </div>
       </div>
@@ -262,7 +271,13 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">Chargement...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+          Chargement...
+        </div>
+      }
+    >
       <LoginPageContent />
     </Suspense>
   );

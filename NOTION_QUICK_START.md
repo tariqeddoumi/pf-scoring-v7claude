@@ -17,6 +17,7 @@ pip install -r scripts/requirements.txt
 ```
 
 **Output attendu:**
+
 ```
 Successfully installed notion-client, python-pptx, ...
 ```
@@ -31,6 +32,7 @@ python scripts/init-notion-db.py
 ```
 
 **Output attendu:**
+
 ```
 🚀 PF Scoring - Notion Database Initialization
 📦 Creating Notion Database...
@@ -68,6 +70,7 @@ EOF
 ```
 
 **Output attendu:**
+
 ```
 ✅ SUCCESS! Found 85 items
 📊 Notion is connected to Claude!
@@ -83,6 +86,7 @@ python scripts/generate-copil-ppt.py
 ```
 
 **Output attendu:**
+
 ```
 🚀 PF Scoring - COPIL Presentation Generator
 ==================================================
@@ -278,6 +282,7 @@ Tu peux maintenant:
 ## 📞 Si tu es bloqué
 
 **Dis-moi:**
+
 ```
 - Quelle étape?
 - Quel erreur?

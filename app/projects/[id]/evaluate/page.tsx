@@ -79,8 +79,7 @@ export default function EvaluationFormPage({
         const data = await res.json();
         setProject(data);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const fetchDomains = async () => {
@@ -96,9 +95,7 @@ export default function EvaluationFormPage({
               const criteriaRes = await fetch(
                 `/api/admin/domains/${domain.id}/criteria`
               );
-              const criteria = criteriaRes.ok
-                ? await criteriaRes.json()
-                : [];
+              const criteria = criteriaRes.ok ? await criteriaRes.json() : [];
               return { ...domain, criteria };
             })
         );
@@ -217,7 +214,10 @@ export default function EvaluationFormPage({
 
               <div className="space-y-6">
                 {domain.criteria.map((criterion) => (
-                  <div key={criterion.id} className="border-l-2 border-primary pl-4">
+                  <div
+                    key={criterion.id}
+                    className="border-l-2 border-primary pl-4"
+                  >
                     <label className="block text-sm font-medium mb-3">
                       {criterion.label}
                     </label>
@@ -259,9 +259,13 @@ export default function EvaluationFormPage({
                         />
                         <div className="bg-secondary/50 p-3 rounded text-xs space-y-1">
                           {criterion.ranges?.map((range) => (
-                            <div key={range.id} className="flex justify-between">
+                            <div
+                              key={range.id}
+                              className="flex justify-between"
+                            >
                               <span>
-                                {range.label || `${range.minValue} à ${range.maxValue}`}
+                                {range.label ||
+                                  `${range.minValue} à ${range.maxValue}`}
                               </span>
                               <span>→ {range.score}</span>
                             </div>
@@ -271,11 +275,13 @@ export default function EvaluationFormPage({
                     )}
 
                     {/* Aperçu du score */}
-                    {answers[criterion.id] !== undefined && answers[criterion.id] !== "" && (
-                      <div className="mt-2 text-sm text-green-400">
-                        Score: {calculateScore(criterion, answers[criterion.id])}
-                      </div>
-                    )}
+                    {answers[criterion.id] !== undefined &&
+                      answers[criterion.id] !== "" && (
+                        <div className="mt-2 text-sm text-green-400">
+                          Score:{" "}
+                          {calculateScore(criterion, answers[criterion.id])}
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>

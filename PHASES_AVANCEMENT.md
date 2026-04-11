@@ -126,12 +126,14 @@
 📦 Vous avez une **API REST complète** fonctionnelle
 
 **Endpoints disponibles**:
+
 - `POST /api/evaluations/[id]/score/calculate` → Calcule le score
 - `POST /api/evaluations/[id]/stress-test` → Stress testing
 - `GET /api/evaluations/[id]/report` → Récupère rapport
 - `POST /api/evaluations/[id]/report` → Génère rapport
 
 **Testable avec**:
+
 ```bash
 npm run dev           # Lance le serveur
 npm test              # Lance les tests
@@ -194,15 +196,15 @@ curl http://localhost:3000/api/evaluations/test/score/calculate
 
 ### Effort estimé
 
-| Tâche | Effort | Complexité |
-|-------|--------|-----------|
-| Pages (6-8 pages) | 3-4 jours | Moyen |
-| Composants (10-15) | 2-3 jours | Moyen |
-| Intégration API | 1-2 jours | Facile |
-| Visualisations | 1-2 jours | Moyen |
-| Authentification | 2 jours | Moyen |
-| Polish & Tests | 2 jours | Moyen |
-| **TOTAL** | **11-15 jours** | - |
+| Tâche              | Effort          | Complexité |
+| ------------------ | --------------- | ---------- |
+| Pages (6-8 pages)  | 3-4 jours       | Moyen      |
+| Composants (10-15) | 2-3 jours       | Moyen      |
+| Intégration API    | 1-2 jours       | Facile     |
+| Visualisations     | 1-2 jours       | Moyen      |
+| Authentification   | 2 jours         | Moyen      |
+| Polish & Tests     | 2 jours         | Moyen      |
+| **TOTAL**          | **11-15 jours** | -          |
 
 ---
 
@@ -239,12 +241,14 @@ curl http://localhost:3000/api/evaluations/test/score/calculate
 ### 🔵 Option A: Backend seul (RECOMMANDÉ pour MVP)
 
 **Avantages**:
+
 - ✅ API complète et prête
 - ✅ Peut être utilisée immédiatement
 - ✅ Facilement intégrable à n'importe quel frontend
 - ✅ Déployable maintenant en production
 
 **Utilisation**:
+
 - Tester avec Postman
 - Intégrer avec votre propre UI
 - Utiliser en production rapidement
@@ -252,6 +256,7 @@ curl http://localhost:3000/api/evaluations/test/score/calculate
 **Temps pour production**: 1-2 jours (déploiement seul)
 
 **Exemple**:
+
 ```bash
 # Vous avez ceci prêt:
 POST /api/evaluations/test/score/calculate
@@ -275,6 +280,7 @@ POST /api/evaluations/test/score/calculate
 ### 🟢 Option B: Backend + Frontend (COMPLET)
 
 **Avantages**:
+
 - ✅ Système complètement intégré
 - ✅ Interface utilisateur professionnelle
 - ✅ Prêt à l'emploi sans code supplémentaire
@@ -284,6 +290,7 @@ POST /api/evaluations/test/score/calculate
 **Temps pour production**: 2-3 semaines (tout complet)
 
 **Résultat**:
+
 - Application web complète
 - Interface pour saisir les projets
 - Visualisation des résultats
@@ -295,6 +302,7 @@ POST /api/evaluations/test/score/calculate
 ### 🟡 Option C: Hybrid (Frontend minimaliste)
 
 **Avantages**:
+
 - ✅ Interface basique pour tester
 - ✅ Pas trop de travail
 - ✅ Peut être amélioré plus tard
@@ -304,6 +312,7 @@ POST /api/evaluations/test/score/calculate
 **Temps pour production**: 1 semaine
 
 **Résultat**:
+
 - Pages de base pour l'API
 - Formulaires simples
 - Affichage des résultats
@@ -337,13 +346,15 @@ AVRIL 2026: PHASE 3 Frontend (À DÉCIDER)
 
 ### Pour démarrer MAINTENANT: **Option A** ✅
 
-**Raison**: 
+**Raison**:
+
 - Vous avez une API production-ready
 - Vous pouvez l'utiliser/tester tout de suite
 - Vous pouvez ajouter frontend après
 - C'est plus rapide au marché
 
 **Actions**:
+
 ```bash
 1. npm install
 2. npm run dev
@@ -360,11 +371,13 @@ AVRIL 2026: PHASE 3 Frontend (À DÉCIDER)
 ### Pour une solution COMPLÈTE: **Option B**
 
 **Raison**:
+
 - Interface professionnelle
 - Prêt à l'emploi sans code supplémentaire
 - Meilleure expérience utilisateur
 
 **Actions**:
+
 ```bash
 1. Terminer PHASE 2 (déjà fait)
 2. Commencer PHASE 3 (créer pages React)
@@ -418,6 +431,7 @@ PRÊT À UTILISER: 0%
 ## 💡 Clarification importante
 
 **Vous avez REÇU**:
+
 ```
 ✅ Backend COMPLET + testé + documenté
    • API REST opérationnelle
@@ -427,6 +441,7 @@ PRÊT À UTILISER: 0%
 ```
 
 **Vous n'avez PAS reçu**:
+
 ```
 ❌ Interface Frontend nouvelle
    • Les pages existantes sont les anciennes
@@ -465,7 +480,7 @@ Dites-moi et je commencerai PHASE 3 immédiatement.
 
 **A) Backend seul** (API production ASAP)  
 **B) Backend + Frontend complet** (solution clé en main)  
-**C) Backend + Frontend minimaliste** (milieu)  
+**C) Backend + Frontend minimaliste** (milieu)
 
 **Dites-moi votre choix et je procède!** 🚀
 
@@ -473,12 +488,12 @@ Dites-moi et je commencerai PHASE 3 immédiatement.
 
 ## 📞 Récapitulatif en 10 secondes
 
-| Aspect | PHASE 1 | PHASE 2 | PHASE 3 |
-|--------|---------|---------|---------|
-| **Statut** | ✅ Fait | ✅ Fait | ⏳ À faire |
-| **Quoi** | Docs | API | UI |
-| **Utilisable** | Référence | OUI | NON |
-| **Temps restant** | 0 | 0 | 3-15 jours |
-| **Production** | Non | OUI | Dépend |
+| Aspect            | PHASE 1   | PHASE 2 | PHASE 3    |
+| ----------------- | --------- | ------- | ---------- |
+| **Statut**        | ✅ Fait   | ✅ Fait | ⏳ À faire |
+| **Quoi**          | Docs      | API     | UI         |
+| **Utilisable**    | Référence | OUI     | NON        |
+| **Temps restant** | 0         | 0       | 3-15 jours |
+| **Production**    | Non       | OUI     | Dépend     |
 
 **Recommandation**: Lancez PHASE 2 en production MAINTENANT, faire PHASE 3 après si nécessaire.

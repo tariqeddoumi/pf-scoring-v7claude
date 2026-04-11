@@ -63,8 +63,7 @@ export async function calculateGlobalScoreV2(
     grade,
     composantes: composantes.map((c) => ({
       ...c,
-      weight:
-        activeDomains.find((d) => d.code === c.domainCode)?.weight || 0,
+      weight: activeDomains.find((d) => d.code === c.domainCode)?.weight || 0,
     })),
     details,
   };
@@ -126,7 +125,9 @@ export async function checkHardStopRules(
 /**
  * Auto-assigns country risk score based on country code
  */
-export async function getCountryRiskScore(countryCode: string): Promise<number> {
+export async function getCountryRiskScore(
+  countryCode: string
+): Promise<number> {
   const country = await prisma.country.findUnique({
     where: { code: countryCode },
   });

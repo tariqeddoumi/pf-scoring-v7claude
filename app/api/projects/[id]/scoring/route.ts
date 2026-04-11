@@ -21,7 +21,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const data = await request.json() as {
+    const data = (await request.json()) as {
       composantes: ComposanteScore[];
       countryCode?: string;
     };
@@ -146,4 +146,3 @@ export async function POST(
     );
   }
 }
-

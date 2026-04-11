@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'manager' | 'analyst' | 'viewer';
+export type UserRole = "admin" | "manager" | "analyst" | "viewer";
 
 export interface User {
   id: string;
@@ -14,7 +14,7 @@ export interface Evaluation {
   id: string;
   evaluationId: string;
   projectId: string;
-  status: 'brouillon' | 'soumis' | 'valide' | 'rejete';
+  status: "brouillon" | "soumis" | "valide" | "rejete";
   score?: number;
   rating?: string;
   recommendation?: string;

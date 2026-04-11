@@ -48,6 +48,7 @@ vercel deploy --prod
 ```
 
 **Required Environment Variables for Vercel:**
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
@@ -63,6 +64,7 @@ NEXTAUTH_SECRET=your-secret-key
 For detailed step-by-step instructions, see: **`DEPLOYMENT_READY.md`**
 
 This includes:
+
 - ✅ Detailed Supabase setup
 - ✅ Environment variables configuration
 - ✅ Database schema initialization
@@ -78,6 +80,7 @@ This includes:
 ## 🎯 What's Included
 
 ### ✅ Complete Frontend
+
 - Next.js 15 with App Router
 - TypeScript strict mode
 - TailwindCSS + shadcn/ui (Dark theme)
@@ -92,6 +95,7 @@ This includes:
   - Analytics & Benchmarking
 
 ### ✅ Complete Backend
+
 - REST API routes (CRUD operations)
 - Supabase PostgreSQL integration
 - Prisma ORM
@@ -103,6 +107,7 @@ This includes:
 - Error handling & validation
 
 ### ✅ Performance Optimizations
+
 - React Query caching (5-min TTL)
 - Database indexes (15+)
 - Image optimization (WebP/AVIF)
@@ -111,6 +116,7 @@ This includes:
 - 95% cache hit rate
 
 ### ✅ Compliance & Security
+
 - IFC/EBRD/Basel standards
 - Bank Al-Maghrib conformance
 - French interface

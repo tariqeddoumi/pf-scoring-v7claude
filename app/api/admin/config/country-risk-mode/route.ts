@@ -25,10 +25,7 @@ export async function PATCH(request: Request) {
     const { mode } = await request.json();
 
     if (!["AUTO_ASSIGN", "MANUAL"].includes(mode)) {
-      return NextResponse.json(
-        { error: "Mode invalide" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Mode invalide" }, { status: 400 });
     }
 
     await prisma.systemConfig.upsert({

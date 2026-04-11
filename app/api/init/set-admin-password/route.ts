@@ -15,10 +15,7 @@ export async function POST(request: Request) {
     const expectedToken = process.env.INIT_TOKEN || "init-secret-token";
 
     if (authHeader !== `Bearer ${expectedToken}`) {
-      return NextResponse.json(
-        { error: "Non autorisé" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
     const { email = "admin@pf-scoring.ma", password } = await request.json();
@@ -87,7 +84,7 @@ export async function GET() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer your-init-token",
+        Authorization: "Bearer your-init-token",
       },
       body: {
         email: "admin@pf-scoring.ma",

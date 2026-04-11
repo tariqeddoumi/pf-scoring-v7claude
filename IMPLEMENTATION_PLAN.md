@@ -11,6 +11,7 @@ Statut : EN COURS
 ### 1.1 Approche par Phases
 
 **Phase 1 (MVP) : Fondations (Semaines 1-2)**
+
 - Architecture base de données
 - Bloc Client (CRUD)
 - Bloc Projet (CRUD)
@@ -18,24 +19,28 @@ Statut : EN COURS
 - Écrans de base
 
 **Phase 2 : Scoring (Semaines 3-4)**
+
 - Moteur de scoring
 - Modèle paramétrable
 - Calcul automatique
 - Restitution scores
 
 **Phase 3 : Workflow & Gouvernance (Semaines 5-6)**
+
 - Workflow de validation
 - Règles de no-go
 - Audit trail complet
 - Justifications obligatoires
 
 **Phase 4 : Administration & Pilotage (Semaines 7-8)**
+
 - Gestion utilisateurs/rôles avancée
 - Paramétrage du modèle
 - Portefeuille & dashboards
 - Notifications
 
 **Phase 5 : Reporting & Premium (Semaines 9-10)**
+
 - Exports PDF/Excel/Word
 - Notes comité
 - Graphiques avancés
@@ -362,6 +367,7 @@ Documents
 **Voir fichier dédié : `IMPLEMENTATION_CHECKLIST.md`**
 
 Résumé rapide des % par phase :
+
 - Phase 1 (Fondations) : 0% ✓
 - Phase 2 (Scoring) : 0% ✓
 - Phase 3 (Workflow) : 0% ✓

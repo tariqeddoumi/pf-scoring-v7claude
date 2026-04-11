@@ -44,7 +44,9 @@ export default function AuthSettingsPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">Paramètres d&apos;Authentification</h1>
+            <h1 className="text-3xl font-bold">
+              Paramètres d&apos;Authentification
+            </h1>
             <p className="mt-2 text-muted-foreground">
               Configurez les méthodes et politiques d&apos;authentification
             </p>
@@ -53,7 +55,9 @@ export default function AuthSettingsPage() {
 
         {/* Password Settings */}
         <Card className="p-6 mb-6">
-          <h2 className="font-semibold mb-4 text-lg">Politique de Mot de Passe</h2>
+          <h2 className="font-semibold mb-4 text-lg">
+            Politique de Mot de Passe
+          </h2>
 
           <div className="space-y-4">
             <label className="flex items-center gap-3 cursor-pointer">
@@ -68,7 +72,9 @@ export default function AuthSettingsPage() {
                 }
                 className="w-4 h-4"
               />
-              <span className="font-medium">Authentification par mot de passe</span>
+              <span className="font-medium">
+                Authentification par mot de passe
+              </span>
             </label>
 
             {settings.enablePassword && (

@@ -5,7 +5,7 @@ interface EmailTemplate {
 
 const TEMPLATES = {
   evaluation_submitted: (name: string, evalId: string): EmailTemplate => ({
-    subject: 'Évaluation soumise - ' + evalId,
+    subject: "Évaluation soumise - " + evalId,
     html: `
       <h2>Évaluation soumise</h2>
       <p>Bonjour,</p>
@@ -22,7 +22,7 @@ const TEMPLATES = {
   }),
 
   evaluation_validated: (evalId: string): EmailTemplate => ({
-    subject: 'Évaluation validée - ' + evalId,
+    subject: "Évaluation validée - " + evalId,
     html: `
       <h2>Évaluation validée ✅</h2>
       <p>L'évaluation <strong>${evalId}</strong> a été validée.</p>
@@ -31,7 +31,7 @@ const TEMPLATES = {
   }),
 
   evaluation_rejected: (evalId: string, reason: string): EmailTemplate => ({
-    subject: 'Évaluation rejetée - ' + evalId,
+    subject: "Évaluation rejetée - " + evalId,
     html: `
       <h2>Évaluation rejetée ❌</h2>
       <p>L'évaluation <strong>${evalId}</strong> a été rejetée.</p>
@@ -41,7 +41,7 @@ const TEMPLATES = {
   }),
 
   alert_critical: (type: string, project: string): EmailTemplate => ({
-    subject: '🚨 ALERTE CRITIQUE - ' + type,
+    subject: "🚨 ALERTE CRITIQUE - " + type,
     html: `
       <h2>Alerte Critique</h2>
       <p>Type: <strong>${type}</strong></p>
@@ -56,8 +56,8 @@ export class EmailService {
   private fromEmail: string;
 
   constructor() {
-    this.apiKey = process.env.EMAIL_API_KEY || '';
-    this.fromEmail = process.env.EMAIL_FROM || 'noreply@pfscoring.ma';
+    this.apiKey = process.env.EMAIL_API_KEY || "";
+    this.fromEmail = process.env.EMAIL_FROM || "noreply@pfscoring.ma";
   }
 
   async send(to: string, template: EmailTemplate): Promise<boolean> {

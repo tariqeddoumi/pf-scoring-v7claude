@@ -1,5 +1,5 @@
-import Image from 'next/image';
-import { useState } from 'react';
+import Image from "next/image";
+import { useState } from "react";
 
 interface OptimizedImageProps {
   src: string;
@@ -28,13 +28,15 @@ export function OptimizedImage({
         width={width}
         height={height}
         priority={priority}
-        loading={priority ? 'eager' : 'lazy'}
+        loading={priority ? "eager" : "lazy"}
         onLoadingComplete={() => setIsLoading(false)}
         className={`transition-opacity duration-300 ${
-          isLoading ? 'opacity-0' : 'opacity-100'
+          isLoading ? "opacity-0" : "opacity-100"
         }`}
       />
-      {isLoading && <div className="absolute inset-0 bg-slate-200 animate-pulse" />}
+      {isLoading && (
+        <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+      )}
     </div>
   );
 }
