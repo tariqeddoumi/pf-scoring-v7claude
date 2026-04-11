@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Plus, Eye, Edit2, Download } from 'lucide-react';
+import { STATUS_COLORS, STATUS_LABELS, RATING_COLORS } from '@/lib/ui-constants';
 
 interface EvaluationRow {
   id: string;
@@ -62,30 +63,8 @@ export default function EvaluationsPage() {
     return 'bg-red-500/20 text-red-400';
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'valide':
-        return 'bg-green-500/20 text-green-400';
-      case 'soumis':
-        return 'bg-yellow-500/20 text-yellow-400';
-      case 'brouillon':
-        return 'bg-slate-600 text-slate-300';
-      case 'rejete':
-        return 'bg-red-500/20 text-red-400';
-      default:
-        return 'bg-slate-600 text-slate-300';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      brouillon: 'Brouillon',
-      soumis: 'Soumis',
-      valide: 'Validé',
-      rejete: 'Rejeté',
-    };
-    return labels[status] || status;
-  };
+  const getStatusColor = (status: string) => STATUS_COLORS[status] || 'bg-slate-600 text-slate-300';
+  const getStatusLabel = (status: string) => STATUS_LABELS[status] || status;
 
   const formatDate = (dateStr: string) => {
     try {
