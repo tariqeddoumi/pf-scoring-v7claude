@@ -59,13 +59,13 @@ export async function getEvaluation(
   evaluationId: string
 ): Promise<Evaluation | null> {
   try {
-    return await prisma.evaluation.findUnique({
+    return (await prisma.evaluation.findUnique({
       where: { id: evaluationId },
       include: {
         project: true,
         analyst: true,
       },
-    }) as any;
+    })) as any;
   } catch (error) {
     throw error;
   }
@@ -192,7 +192,6 @@ export async function logScoringAction(
         changes: changes as any,
       },
     });
-
   } catch (error) {
     // Don't throw - logging failure shouldn't break the flow
   }
@@ -201,9 +200,7 @@ export async function logScoringAction(
 /**
  * Get audit logs for an evaluation
  */
-export async function getAuditLogs(
-  evaluationId: string
-): Promise<any[]> {
+export async function getAuditLogs(evaluationId: string): Promise<any[]> {
   try {
     // Note: This requires evaluationId to be linked in ScoringAuditLog
     // For now, retrieve all logs and filter by user
@@ -223,9 +220,7 @@ export async function getAuditLogs(
 /**
  * Get evaluation statistics for a project
  */
-export async function getProjectEvaluationStats(
-  projectId: string
-): Promise<{
+export async function getProjectEvaluationStats(projectId: string): Promise<{
   totalEvaluations: number;
   averageScore: number;
   ratingDistribution: Record<string, number>;

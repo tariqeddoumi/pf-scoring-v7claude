@@ -7,25 +7,27 @@
 
 ## 🎯 TABLEAU DE PILOTAGE GLOBAL
 
-| Phase | Nom | % Complet | Statut | Deadline |
-|-------|-----|----------|--------|----------|
-| 1 | Fondations & BD | 0% | ⚪ Pending | Semaine 1 |
-| 2 | Bloc Client & Projet | 0% | ⚪ Pending | Semaine 2 |
-| 3 | Moteur de Scoring | 0% | ⚪ Pending | Semaine 3-4 |
-| 4 | Workflow & Validation | 0% | ⚪ Pending | Semaine 5 |
-| 5 | Admin & Rôles | 0% | ⚪ Pending | Semaine 6 |
-| 6 | Portefeuille & Dashboards | 0% | ⚪ Pending | Semaine 7 |
-| 7 | Reporting | 0% | ⚪ Pending | Semaine 8 |
-| 8 | Tests & Polissage | 0% | ⚪ Pending | Semaine 9 |
+| Phase | Nom                       | % Complet | Statut     | Deadline    |
+| ----- | ------------------------- | --------- | ---------- | ----------- |
+| 1     | Fondations & BD           | 0%        | ⚪ Pending | Semaine 1   |
+| 2     | Bloc Client & Projet      | 0%        | ⚪ Pending | Semaine 2   |
+| 3     | Moteur de Scoring         | 0%        | ⚪ Pending | Semaine 3-4 |
+| 4     | Workflow & Validation     | 0%        | ⚪ Pending | Semaine 5   |
+| 5     | Admin & Rôles             | 0%        | ⚪ Pending | Semaine 6   |
+| 6     | Portefeuille & Dashboards | 0%        | ⚪ Pending | Semaine 7   |
+| 7     | Reporting                 | 0%        | ⚪ Pending | Semaine 8   |
+| 8     | Tests & Polissage         | 0%        | ⚪ Pending | Semaine 9   |
 
 **TOTAL GLOBAL : 0%**
 
 ---
 
 ## PHASE 1 : FONDATIONS & BASE DE DONNÉES
+
 **Objectif :** Architecturer la BD, créer les migrations, configurer l'auth
 
 ### 1.1 Schéma Prisma Complet
+
 - [ ] **Lire spec complète** (SPECIFICATION.md)
 - [ ] **Créer/Mettre à jour schema.prisma**
   - [ ] Model User (avec rôles)
@@ -49,6 +51,7 @@
 - [ ] **Valider schéma** (vérifier cohérence)
 
 ### 1.2 Migrations Supabase
+
 - [ ] **Générer migrations Prisma**
   - `npm run prisma migrate dev --name init_schema`
 - [ ] **Appliquer migrations** dans Supabase
@@ -57,6 +60,7 @@
 - [ ] **Backup initial** de la BD
 
 ### 1.3 Authentification & Sécurité
+
 - [ ] **Implémenter JWT custom** ou Supabase Auth
 - [ ] **Hash password** (bcrypt configuré)
 - [ ] **Gestion sessions** (cookies sécurisés)
@@ -64,6 +68,7 @@
 - [ ] **Tests login/logout**
 
 ### 1.4 Gestion des Rôles & Permissions
+
 - [ ] **Définir 7 rôles** (Admin, Manager, Analyste, Risk, Comité, Lecteur, Audit)
 - [ ] **Créer fichier lib/permissions.ts**
 - [ ] **Implémenter système de droits**
@@ -73,6 +78,7 @@
 - [ ] **Middleware de vérification droits**
 
 ### 1.5 Données de Référence
+
 - [ ] **Créer fichiers constants.ts**
   - [ ] Secteurs & sous-secteurs
   - [ ] Types de projets
@@ -85,6 +91,7 @@
   - [ ] Référentiels pays/secteur
 
 ### 1.6 Structure Fichiers & Folders
+
 - [ ] **Créer arborescence complète**
   - [ ] `/app/(auth)/`
   - [ ] `/app/(dashboard)/`
@@ -105,9 +112,11 @@
 ---
 
 ## PHASE 2 : BLOC CLIENT & PROJET
+
 **Objectif :** CRUD Client, CRUD Projet, signalétique
 
 ### 2.1 Bloc Client
+
 - [ ] **API Endpoints**
   - [ ] GET /api/clients (liste, filtres)
   - [ ] POST /api/clients (créer)
@@ -134,6 +143,7 @@
   - [ ] Audit log intégré
 
 ### 2.2 Bloc Projet
+
 - [ ] **API Endpoints**
   - [ ] GET /api/projects (liste)
   - [ ] POST /api/projects (créer)
@@ -172,6 +182,7 @@
   - [ ] Contrôle d'accès
 
 ### 2.3 Gestion Documents
+
 - [ ] **API**
   - [ ] POST /api/documents (upload)
   - [ ] GET /api/documents/[id] (télécharger)
@@ -188,9 +199,11 @@
 ---
 
 ## PHASE 3 : MOTEUR DE SCORING
+
 **Objectif :** Implémente le moteur de scoring V7++ avec tous domaines
 
 ### 3.1 Modèle de Scoring V7++
+
 - [ ] **Fichier lib/scoring-engine.ts**
   - [ ] Class ScoringEngine
   - [ ] Méthode calculateDomainScore()
@@ -208,6 +221,7 @@
   - [ ] Domain 7: ESG & Climate Risk (10%)
 
 ### 3.2 Paramétrage du Modèle
+
 - [ ] **Fichier lib/scoring-rules.ts**
   - [ ] Rules engine (NO-GO, MALUS, BONUS)
   - [ ] Liste NO-GO conditions
@@ -222,6 +236,7 @@
   - [ ] Rating mapping
 
 ### 3.3 API de Calcul
+
 - [ ] **POST /api/evaluations/[id]/score**
   - [ ] Recevoir réponses
   - [ ] Calculer scores
@@ -231,6 +246,7 @@
   - [ ] Recalcul avec override
 
 ### 3.4 Création d'Évaluation
+
 - [ ] **GET /api/evaluations** (liste)
 - [ ] **POST /api/evaluations** (créer)
   - [ ] Lier à projet
@@ -240,6 +256,7 @@
 - [ ] **PUT /api/evaluations/[id]** (modifier brouillon)
 
 ### 3.5 Interface Saisie Scoring
+
 - [ ] **Écran /projects/[id]/evaluation/[evalId]/score**
   - [ ] Afficher domaines
   - [ ] Formulaire par domaine
@@ -253,6 +270,7 @@
   - [ ] ScoringProgressBar.tsx
 
 ### 3.6 Restitution Score
+
 - [ ] **Écran /projects/[id]/evaluation/[evalId]/restitution**
   - [ ] Score global & note
   - [ ] PD indicative
@@ -273,9 +291,11 @@
 ---
 
 ## PHASE 4 : WORKFLOW & VALIDATION
+
 **Objectif :** Encadrer circulation évaluation, traçabilité
 
 ### 4.1 Gestion Workflow
+
 - [ ] **Statuts Évaluation**
   - [ ] brouillon
   - [ ] soumis
@@ -289,6 +309,7 @@
   - [ ] valide → archivé (admin)
 
 ### 4.2 API Workflow
+
 - [ ] **POST /api/evaluations/[id]/submit**
   - [ ] Valider complétude
   - [ ] Changer statut soumis
@@ -304,6 +325,7 @@
   - [ ] Historique workflow
 
 ### 4.3 Interface Workflow
+
 - [ ] **Écran /workflow**
   - [ ] Liste évaluations par statut
   - [ ] Filtres (date, analyste, projet)
@@ -319,6 +341,7 @@
   - [ ] Approbation finale
 
 ### 4.4 Audit Trail & Traçabilité
+
 - [ ] **Fichier lib/audit.ts**
   - [ ] Function logAction()
   - [ ] Stocker dans AuditLog
@@ -334,9 +357,11 @@
 ---
 
 ## PHASE 5 : ADMINISTRATION & RÔLES
+
 **Objectif :** Gestion utilisateurs, paramétrages, droits fins
 
 ### 5.1 Gestion Utilisateurs
+
 - [ ] **API /api/admin/users**
   - [ ] CRUD complet
   - [ ] Activation/désactivation
@@ -349,6 +374,7 @@
   - [ ] Historique
 
 ### 5.2 Gestion Rôles & Droits
+
 - [ ] **API /api/admin/roles**
   - [ ] CRUD rôles
   - [ ] Matrice droits
@@ -366,6 +392,7 @@
   - [ ] Auditeur
 
 ### 5.3 Paramétrage du Modèle de Scoring
+
 - [ ] **Écran /admin/model**
   - [ ] Voir/éditer domaines
   - [ ] Voir/éditer critères
@@ -380,6 +407,7 @@
   - [ ] Indications quel modèle utilisé
 
 ### 5.4 Références & Listes
+
 - [ ] **Écran /admin/references**
   - [ ] Gérer listes déroulantes
   - [ ] Ajouter/supprimer valeurs
@@ -398,9 +426,11 @@
 ---
 
 ## PHASE 6 : PORTEFEUILLE & DASHBOARDS
+
 **Objectif :** Vue consolidée, KPIs, alertes
 
 ### 6.1 Vue Portefeuille
+
 - [ ] **Écran /portefeuille**
   - [ ] Nombre total projets
   - [ ] Répartition par statut
@@ -416,6 +446,7 @@
   - [ ] SensitiveDossiers.tsx
 
 ### 6.2 Dashboards
+
 - [ ] **Écran /portefeuille/dashboard**
   - [ ] KPIs clés
   - [ ] Graphiques (pie, bar, line)
@@ -432,6 +463,7 @@
   - [ ] Taux rotation dossiers
 
 ### 6.3 Alertes & Tâches
+
 - [ ] **Système d'alertes**
   - [ ] Score < seuil critique
   - [ ] NO-GO détecté
@@ -444,6 +476,7 @@
   - [ ] Marquage accompli
 
 ### 6.4 Recherche Avancée
+
 - [ ] **Moteur de recherche**
   - [ ] Recherche globale
   - [ ] Filtres multiples
@@ -456,9 +489,11 @@
 ---
 
 ## PHASE 7 : REPORTING & EXPORTS
+
 **Objectif :** PDF, Excel, notes comité
 
 ### 7.1 Rapport Projet
+
 - [ ] **API /api/reporting/project-report**
   - [ ] Générer PDF
   - [ ] Générer Word (.docx)
@@ -473,6 +508,7 @@
   - [ ] ReportGenerator.tsx
 
 ### 7.2 Note Comité
+
 - [ ] **API /api/reporting/committee-note**
   - [ ] Générer PDF
   - [ ] Générer Word
@@ -490,6 +526,7 @@
   - [ ] Branding bancaire
 
 ### 7.3 Exports Portefeuille
+
 - [ ] **API /api/reporting/portfolio-export**
   - [ ] Export Excel complet
   - [ ] Export CSV
@@ -501,6 +538,7 @@
   - [ ] Onglet workflow/statuts
 
 ### 7.4 Export Audit
+
 - [ ] **API /api/reporting/audit-export**
   - [ ] Historique actions
   - [ ] Format Excel
@@ -511,9 +549,11 @@
 ---
 
 ## PHASE 8 : TESTS, POLISSAGE & DÉPLOIEMENT
+
 **Objectif :** QA, optimisation, déploiement Vercel
 
 ### 8.1 Tests Unitaires
+
 - [ ] **Moteur de scoring**
   - [ ] Tests calculs domaines
   - [ ] Tests conversion notes
@@ -527,6 +567,7 @@
   - [ ] Tests conversions
 
 ### 8.2 Tests d'Intégration
+
 - [ ] **Workflow complet**
   - [ ] Création client → projet → évaluation → validation
 - [ ] **Droits d'accès**
@@ -535,6 +576,7 @@
   - [ ] Tracer toutes actions
 
 ### 8.3 Tests UI
+
 - [ ] **Chaque formulaire**
   - [ ] Création/édition complet
   - [ ] Validation côté client
@@ -547,6 +589,7 @@
   - [ ] Menu intuitif
 
 ### 8.4 Optimisations
+
 - [ ] **Performance BD**
   - [ ] Indexes créés
   - [ ] Requêtes optimisées (eager loading)
@@ -558,6 +601,7 @@
   - [ ] Bundle size réduit
 
 ### 8.5 Sécurité
+
 - [ ] **Checklist sécurité**
   - [ ] Pas secrets en code
   - [ ] Validations côté serveur
@@ -569,12 +613,14 @@
   - [ ] Escalade privilèges impossible
 
 ### 8.6 Documentation
+
 - [ ] **README.md complet**
 - [ ] **API documentation**
 - [ ] **Guide utilisateur** (optionnel)
 - [ ] **Runbook déploiement**
 
 ### 8.7 Déploiement Vercel
+
 - [ ] **Configuration Vercel**
   - [ ] Variables d'environnement
   - [ ] Domaine custom
@@ -592,6 +638,7 @@
 ## 🔥 FONCTIONNALITÉS CRITIQUES (À NE PAS OUBLIER)
 
 ### Sécurité & Conformité
+
 - [ ] ✅ Authentification JWT sécurisée
 - [ ] ✅ Gestion sessions
 - [ ] ✅ Contrôle d'accès granulaire (par rôle + périmètre)
@@ -600,6 +647,7 @@
 - [ ] ✅ Chiffrement données sensibles si requis
 
 ### Métier
+
 - [ ] ✅ Moteur de scoring V7++ complètement implémenté
 - [ ] ✅ NO-GO rules détectées automatiquement
 - [ ] ✅ Red flags générées automatiquement
@@ -608,6 +656,7 @@
 - [ ] ✅ Versioning modèle de scoring
 
 ### Usabilité
+
 - [ ] ✅ Interfaces intuitives (TailwindCSS + shadcn/ui)
 - [ ] ✅ Préremplissage intelligent (client/projet → évaluation)
 - [ ] ✅ Messages d'erreur explicites
@@ -619,6 +668,7 @@
 ## 📊 RÉCAPITULATIF STATISTIQUES
 
 **Nombre de**
+
 - Écrans UI : ~25
 - Endpoints API : ~40
 - Composants React : ~60
@@ -627,6 +677,7 @@
 - Règles de scoring : ~15 domaines × 4 critères = 60 critères
 
 **Taille estimée**
+
 - Schéma Prisma : ~500 lignes
 - Code métier : ~5000 lignes
 - UI components : ~3000 lignes
@@ -648,4 +699,4 @@
 
 **Fin de la checklist**
 
-*Mise à jour fréquemment au fil de l'implémentation*
+_Mise à jour fréquemment au fil de l'implémentation_

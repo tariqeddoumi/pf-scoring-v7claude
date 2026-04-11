@@ -23,6 +23,7 @@ PHASE 3 (Frontend) - 15 jours
 ### **JOUR 1-2: Setup & Layout (Pages de base)**
 
 **Tâches**:
+
 - [ ] Créer structure layout principal
 - [ ] Navbar avec navigation
 - [ ] Sidebar/Menu latéral
@@ -30,6 +31,7 @@ PHASE 3 (Frontend) - 15 jours
 - [ ] Responsive design
 
 **Fichiers à créer**:
+
 ```
 /app/
 ├── layout.tsx (Layout principal)
@@ -50,12 +52,14 @@ PHASE 3 (Frontend) - 15 jours
 ### **JOUR 3-4: Pages Clients & Signalétique**
 
 **Tâches**:
+
 - [ ] Page `/clients` (Liste clients)
 - [ ] Page `/clients/[id]` (Détail client - SIGNALÉTIQUE)
 - [ ] Formulaire création client
 - [ ] Tableau clients avec filtres
 
 **Fichiers à créer**:
+
 ```
 /app/
 ├── clients/
@@ -79,12 +83,14 @@ PHASE 3 (Frontend) - 15 jours
 ### **JOUR 5-6: Pages Projets & Évaluations**
 
 **Tâches**:
+
 - [ ] Page `/projects` (Liste projets)
 - [ ] Page `/projects/[id]` (Détail projet)
 - [ ] Page `/evaluations` (Liste évaluations)
 - [ ] Page `/evaluations/[id]` (Détail évaluation)
 
 **Fichiers à créer**:
+
 ```
 /app/
 ├── projects/
@@ -117,12 +123,14 @@ PHASE 3 (Frontend) - 15 jours
 ### **JOUR 7-8: Formulaires & Saisie de Données**
 
 **Tâches**:
+
 - [ ] Formulaire de scoring (9 domaines)
 - [ ] Validation de formulaire
 - [ ] Gestion des erreurs
 - [ ] Form states (loading, success, error)
 
 **Composants à créer**:
+
 - ScoringForm (formulaire 9 domaines)
 - ProjectDataForm (saisie données projet)
 - DomainInputs (inputs par domaine)
@@ -135,6 +143,7 @@ PHASE 3 (Frontend) - 15 jours
 ### **JOUR 9-10: Intégration API & Appels**
 
 **Tâches**:
+
 - [ ] Créer clients API (`/lib/api-client.ts`)
 - [ ] Appels POST `/score/calculate`
 - [ ] Appels POST `/stress-test`
@@ -143,10 +152,11 @@ PHASE 3 (Frontend) - 15 jours
 - [ ] Loading states & spinners
 
 **Fichiers à créer**:
+
 ```
 /lib/
 ├── api-client.ts (Client API)
-├── queries/ 
+├── queries/
 │   ├── useScoring.ts (Hook calcul)
 │   ├── useStressTest.ts (Hook stress)
 │   └── useEvaluation.ts (Hook récupération)
@@ -163,6 +173,7 @@ PHASE 3 (Frontend) - 15 jours
 ### **JOUR 11-12: Visualisations & Résultats**
 
 **Tâches**:
+
 - [ ] Affichage résultats scoring
 - [ ] Graphiques domaines (Radar chart)
 - [ ] Tableau stress testing
@@ -170,6 +181,7 @@ PHASE 3 (Frontend) - 15 jours
 - [ ] Rating display (AAA-D)
 
 **Composants à créer**:
+
 - ScoringResults (résultats)
 - DomainChart (graphique domaines)
 - StressTestResults (tableau stress)
@@ -183,6 +195,7 @@ PHASE 3 (Frontend) - 15 jours
 ### **JOUR 13-14: Authentification & Gestion Utilisateurs**
 
 **Tâches**:
+
 - [ ] Intégration Supabase Auth
 - [ ] Page login/logout
 - [ ] Gestion rôles (analyste, reviewer, admin)
@@ -190,6 +203,7 @@ PHASE 3 (Frontend) - 15 jours
 - [ ] Session management
 
 **Fichiers à créer**:
+
 ```
 /app/
 ├── auth/
@@ -207,6 +221,7 @@ PHASE 3 (Frontend) - 15 jours
 ### **JOUR 15: Polish & Tests**
 
 **Tâches**:
+
 - [ ] Tests UI (Cypress/Playwright)
 - [ ] Performance optimization
 - [ ] Mobile responsiveness
@@ -310,6 +325,7 @@ pf-scoring-v7claude/
 ## ✅ CHECKLIST JOUR PAR JOUR
 
 ### Jour 1-2: Setup & Layout
+
 - [ ] Layout principal créé
 - [ ] Navbar fonctionnelle
 - [ ] Sidebar avec navigation
@@ -317,6 +333,7 @@ pf-scoring-v7claude/
 - [ ] Responsive design testé
 
 ### Jour 3-4: Clients & Signalétique
+
 - [ ] Page liste clients (/clients)
 - [ ] Page détail client (/clients/[id]) - **SIGNALÉTIQUE COMPLÈTE**
 - [ ] Formulaire création client
@@ -324,6 +341,7 @@ pf-scoring-v7claude/
 - [ ] CRUD clients opérationnel
 
 ### Jour 5-6: Projets & Évaluations
+
 - [ ] Page liste projets (/projects)
 - [ ] Page détail projet (/projects/[id])
 - [ ] Page liste évaluations (/evaluations)
@@ -331,6 +349,7 @@ pf-scoring-v7claude/
 - [ ] Navigation entre pages
 
 ### Jour 7-8: Formulaires
+
 - [ ] Formulaire scoring 9 domaines
 - [ ] Validation formulaire
 - [ ] Gestion des erreurs
@@ -338,6 +357,7 @@ pf-scoring-v7claude/
 - [ ] UX fluide
 
 ### Jour 9-10: API Integration
+
 - [ ] Client API créé
 - [ ] Hooks React (useScoring, useStressTest, etc.)
 - [ ] Appels API POST /score/calculate
@@ -347,6 +367,7 @@ pf-scoring-v7claude/
 - [ ] Loading states
 
 ### Jour 11-12: Visualisations
+
 - [ ] Affichage résultats scoring
 - [ ] Graphiques domaines (Recharts)
 - [ ] Tableau stress testing
@@ -355,6 +376,7 @@ pf-scoring-v7claude/
 - [ ] Charts réactifs
 
 ### Jour 13-14: Authentification
+
 - [ ] Login/Register pages
 - [ ] Supabase Auth intégré
 - [ ] Protected routes
@@ -362,6 +384,7 @@ pf-scoring-v7claude/
 - [ ] Rôles utilisateurs (analyste, reviewer, admin)
 
 ### Jour 15: Polish
+
 - [ ] Tests UI
 - [ ] Performance optimisée
 - [ ] Mobile responsive
@@ -374,14 +397,17 @@ pf-scoring-v7claude/
 ## 🎯 Livrables attendus
 
 ### **Jour 5** (Mi-session):
+
 - Layout principal + Clients page
 - Avancement: 30%
 
 ### **Jour 10** (Mi-mi-session):
+
 - Toutes les pages + API intégrée
 - Avancement: 75%
 
 ### **Jour 15** (Fin):
+
 - Application complète avec auth
 - Avancement: 100%
 
@@ -437,6 +463,7 @@ Jour 15:    ████████████████████ 100% (D
 ## ✨ Résultat final Phase 3
 
 **Vous aurez**:
+
 - ✅ Application web complète
 - ✅ Pages clients avec signalétique
 - ✅ Pages projets & évaluations

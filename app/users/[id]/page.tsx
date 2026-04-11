@@ -1,21 +1,25 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Edit2, Mail, Shield, Calendar } from 'lucide-react';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Edit2, Mail, Shield, Calendar } from "lucide-react";
 
 interface User {
   id: string;
   email: string;
   nom: string;
   prenom: string;
-  role: 'admin' | 'manager' | 'analyst' | 'viewer';
+  role: "admin" | "manager" | "analyst" | "viewer";
   avatar?: string;
   createdAt: string;
 }
 
-export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function UserDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,12 +32,12 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         const { id } = await params;
         setUserId(id);
         const response = await fetch(`/api/users/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch user');
+        if (!response.ok) throw new Error("Failed to fetch user");
         const data = await response.json();
         setUser(data.data || data);
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'Failed to load user');
+        setError(err.message || "Failed to load user");
         setUser(null);
       } finally {
         setLoading(false);
@@ -54,29 +58,32 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
   if (error || !user) {
     return (
       <div className="space-y-6">
-        <Link href="/users" className="inline-flex items-center space-x-2 text-slate-400 hover:text-white">
+        <Link
+          href="/users"
+          className="inline-flex items-center space-x-2 text-slate-400 hover:text-white"
+        >
           <ArrowLeft size={20} />
           <span>Retour aux utilisateurs</span>
         </Link>
         <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
-          {error || 'Utilisateur non trouvé'}
+          {error || "Utilisateur non trouvé"}
         </div>
       </div>
     );
   }
 
   const roleColors: Record<string, string> = {
-    admin: 'bg-red-500/20 text-red-400',
-    manager: 'bg-blue-500/20 text-blue-400',
-    analyst: 'bg-green-500/20 text-green-400',
-    viewer: 'bg-slate-500/20 text-slate-400',
+    admin: "bg-red-500/20 text-red-400",
+    manager: "bg-blue-500/20 text-blue-400",
+    analyst: "bg-green-500/20 text-green-400",
+    viewer: "bg-slate-500/20 text-slate-400",
   };
 
   const roleLabels: Record<string, string> = {
-    admin: 'Administrateur',
-    manager: 'Gestionnaire',
-    analyst: 'Analyste',
-    viewer: 'Lecteur',
+    admin: "Administrateur",
+    manager: "Gestionnaire",
+    analyst: "Analyste",
+    viewer: "Lecteur",
   };
 
   return (
@@ -91,7 +98,9 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-white">{user.nom} {user.prenom}</h1>
+            <h1 className="text-3xl font-bold text-white">
+              {user.nom} {user.prenom}
+            </h1>
             <p className="text-slate-400 mt-1 text-sm">ID: {user.id}</p>
           </div>
         </div>
@@ -110,7 +119,9 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
           <div className="flex items-center space-x-2">
             <Mail size={16} className="text-slate-400" />
-            <p className="text-xs font-semibold text-slate-400 uppercase">Email</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase">
+              Email
+            </p>
           </div>
           <p className="mt-2 text-white break-all">{user.email}</p>
         </div>
@@ -119,10 +130,14 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
           <div className="flex items-center space-x-2">
             <Shield size={16} className="text-slate-400" />
-            <p className="text-xs font-semibold text-slate-400 uppercase">Rôle</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase">
+              Rôle
+            </p>
           </div>
           <p className="mt-2">
-            <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${roleColors[user.role]}`}>
+            <span
+              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${roleColors[user.role]}`}
+            >
               {roleLabels[user.role]}
             </span>
           </p>
@@ -132,28 +147,44 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
           <div className="flex items-center space-x-2">
             <Calendar size={16} className="text-slate-400" />
-            <p className="text-xs font-semibold text-slate-400 uppercase">Créé le</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase">
+              Créé le
+            </p>
           </div>
-          <p className="mt-2 text-white">{new Date(user.createdAt).toLocaleDateString('fr-FR')}</p>
+          <p className="mt-2 text-white">
+            {new Date(user.createdAt).toLocaleDateString("fr-FR")}
+          </p>
         </div>
       </div>
 
       {/* User Details Card */}
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Informations complètes</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">
+          Informations complètes
+        </h2>
         <div className="space-y-4">
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase">Nom complet</p>
-            <p className="mt-1 text-white">{user.nom} {user.prenom}</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase">
+              Nom complet
+            </p>
+            <p className="mt-1 text-white">
+              {user.nom} {user.prenom}
+            </p>
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase">Adresse email</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase">
+              Adresse email
+            </p>
             <p className="mt-1 text-white">{user.email}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase">Rôle d'accès</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase">
+              Rôle d'accès
+            </p>
             <p className="mt-1">
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${roleColors[user.role]}`}>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${roleColors[user.role]}`}
+              >
                 {roleLabels[user.role]}
               </span>
             </p>

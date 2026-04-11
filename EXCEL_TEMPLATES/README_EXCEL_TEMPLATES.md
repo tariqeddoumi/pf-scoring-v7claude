@@ -2,43 +2,49 @@
 
 **Purpose:** Interactive templates for analysts, risk managers, and deal teams  
 **Format:** CSV (universal format for Excel & Google Sheets)  
-**Status:** Ready to import  
+**Status:** Ready to import
 
 ---
 
 ## 📋 FILES INCLUDED
 
 ### **1. Domain Summary** (`01_DOMAIN_SUMMARY.csv`)
+
 - Quick reference of all 9 domains
 - Weight %, focus area, key risks, red flag thresholds
 - **Use:** Dashboard, onboarding, quick lookup
 - **Import:** Google Sheets → File → Import → Select file
 
 ### **2. Scoring Scales Reference** (`02_SCORING_SCALES.csv`)
+
 - Score 1-10 mapping for each criterion
 - Descriptions for all scoring levels (10 = best, 1-3 = reject)
 - **Use:** Analyst training, consistent scoring
 - **Import:** Excel → Data tab → Import from text file
 
 ### **3. NO-GO Rules Matrix** (`03_NO_GO_RULES.csv`)
+
 - All 21 automatic rejection conditions
 - Category, severity, description, workarounds
 - **Use:** Deal evaluation checklist
 - **Use Case:** "Does this project have any NO-GOs?"
 
 ### **4. MALUS Rules Matrix** (`04_MALUS_RULES.csv`)
+
 - All ~20 score reduction conditions
 - Penalty points, trigger levels, mitigations
 - **Use:** Score adjustment reference
 - **Use Case:** "What penalties apply to this project?"
 
 ### **5. Case Study – Solar Maroc** (`05_CASE_STUDY_SOLAR_MAROC.csv`)
+
 - Complete worked example with calculations
 - Base case metrics, all 6 stress scenarios, results
 - **Use:** Training, validation, expected output reference
 - **Use Case:** "What does a good project look like?"
 
 ### **6. Stress Test Template (Blank)** (`06_STRESS_TEST_TEMPLATE.csv`)
+
 - Interactive template for analysts to fill in
 - Formulas for DSCR stress calculations
 - Guidance for each scenario
@@ -52,12 +58,14 @@
 ### **Option A: Google Sheets** (Recommended for collaboration)
 
 **Step 1: Create new Google Sheet**
+
 ```
 Google Drive → New → Google Sheets → Blank spreadsheet
 Name it: "PF_SCORING_V7PLUS_TEMPLATES"
 ```
 
 **Step 2: Import CSV files**
+
 ```
 File → Import → Upload → Select CSV file
 When prompted: "Replace spreadsheet" or "Insert new sheet"
@@ -65,6 +73,7 @@ Choose "Insert new sheet" to keep all in one file
 ```
 
 **Step 3: Organize into tabs**
+
 ```
 Sheet 1: Domain Summary
 Sheet 2: Scoring Scales
@@ -75,6 +84,7 @@ Sheet 6: Stress Test Template
 ```
 
 **Step 4: Share with team**
+
 ```
 Click "Share" → Add emails → Adjust permissions (edit/view)
 ```
@@ -82,23 +92,27 @@ Click "Share" → Add emails → Adjust permissions (edit/view)
 ### **Option B: Excel** (For desktop users)
 
 **Step 1: Create new workbook**
+
 ```
 Excel → Blank workbook → File → Save as "PF_SCORING_V7PLUS_TEMPLATES.xlsx"
 ```
 
 **Step 2: Import CSV files into different sheets**
+
 ```
 Sheet tab → Import (or manually copy-paste from CSV)
 Repeat for each CSV file
 ```
 
 **Step 3: Add formulas** (for interactive templates)
+
 ```
 Case Study sheet → Add formula: =SUM(D1:D9 scores) for global score
 Stress Test sheet → Add formulas for DSCR calculations
 ```
 
 **Step 4: Share file**
+
 ```
 File → Share → Share with team members
 ```
@@ -136,6 +150,7 @@ Cell [Combined Stress] = (Revenue - 0.08×margin) + (Cost + 0.03×margin) + ...
 ### **For Deal Evaluation (Analyst)**
 
 **Workflow:**
+
 1. Open "Scoring Scales Reference" → Understand criteria
 2. Open "Stress Test Template" → Create copy for your project
 3. Fill in base case data from financial model
@@ -148,6 +163,7 @@ Cell [Combined Stress] = (Revenue - 0.08×margin) + (Cost + 0.03×margin) + ...
 ### **For Committee Presentation**
 
 **Workflow:**
+
 1. Use "Domain Summary" → Show all 9 scores on slide
 2. Reference "Case Study" → Compare project vs Solar Maroc
 3. Show stress test results → Demonstrate resilience
@@ -157,6 +173,7 @@ Cell [Combined Stress] = (Revenue - 0.08×margin) + (Cost + 0.03×margin) + ...
 ### **For Risk Manager Monitoring**
 
 **Workflow:**
+
 1. Open "Stress Test Template" (annual review)
 2. Update actual data from financial reports
 3. Recalculate DSCR vs. covenant thresholds
@@ -169,25 +186,30 @@ Cell [Combined Stress] = (Revenue - 0.08×margin) + (Cost + 0.03×margin) + ...
 ## 🎓 TRAINING SEQUENCE
 
 **Day 1 – Fundamentals (1 hour)**
+
 - Review "Domain Summary" (understand 9 domains)
 - Review "Scoring Scales" (understand 1-10 mapping)
 
 **Day 2 – Rules** (1 hour)
+
 - Study "NO-GO Rules" (what causes rejection)
 - Study "MALUS Rules" (what causes penalties)
 - Practice identifying rules from sample project descriptions
 
 **Day 3 – Application** (2 hours)
+
 - Review "Case Study – Solar Maroc" in detail
 - Replicate calculations in "Stress Test Template"
 - Verify outputs match expected results
 
 **Day 4 – Practice** (4 hours)
+
 - Analyst works on practice project
 - Uses all 6 templates
 - Presents findings to mentor
 
 **Day 5 – Certification** (ongoing)
+
 - Analyst scores 3 real projects
 - Results reviewed by risk manager
 - Certified when >95% accuracy vs. benchmark
@@ -198,17 +220,18 @@ Cell [Combined Stress] = (Revenue - 0.08×margin) + (Cost + 0.03×margin) + ...
 
 ### **When to Update Templates**
 
-| Event | Action | Frequency |
-|-------|--------|-----------|
-| New NO-GO rule defined | Update 03_NO_GO_RULES.csv | As needed |
-| New MALUS rule | Update 04_MALUS_RULES.csv | As needed |
-| Scoring scales change | Update 02_SCORING_SCALES.csv | Quarterly |
+| Event                    | Action                               | Frequency   |
+| ------------------------ | ------------------------------------ | ----------- |
+| New NO-GO rule defined   | Update 03_NO_GO_RULES.csv            | As needed   |
+| New MALUS rule           | Update 04_MALUS_RULES.csv            | As needed   |
+| Scoring scales change    | Update 02_SCORING_SCALES.csv         | Quarterly   |
 | New case study completed | Add to 05_CASE_STUDY_SOLAR_MAROC.csv | Per project |
-| Template improvements | Update 06_STRESS_TEST_TEMPLATE.csv | Quarterly |
+| Template improvements    | Update 06_STRESS_TEST_TEMPLATE.csv   | Quarterly   |
 
 ### **Version Control**
 
 Keep a folder in Google Drive:
+
 ```
 /PF_SCORING_V7PLUS_TEMPLATES/
   ├─ v1.0_2026_Q1/ (Initial)
@@ -234,19 +257,23 @@ Keep a folder in Google Drive:
 ## ❓ TROUBLESHOOTING
 
 ### **"CSV won't import into Google Sheets"**
+
 → Make sure you're using File → Import, not File → Open  
 → Select "Insert new sheet" when prompted
 
 ### **"Formulas not working"**
+
 → After importing, check cells contain formulas (=...) not text  
 → In Excel: Format → AutoCalulate enabled  
 → In Google Sheets: Format → Numbers → Number
 
 ### **"Data looks misaligned"**
+
 → CSV uses commas as separators; if data has commas, they may shift columns  
 → Solution: Use Google Sheets (handles this better)
 
 ### **"Can't edit template"**
+
 → Make sure you have "Edit" permissions (ask Google Drive owner)  
 → Or make a copy: File → Make a copy → Edit your version
 
@@ -256,11 +283,10 @@ Keep a folder in Google Drive:
 
 **For specific domain:** See METHODOLOGY_NOTE_V7PLUS.md  
 **For stress formulas:** See STRESS_TESTING_GUIDE.md  
-**For implementation:** See IMPLEMENTATION_CHECKLIST_PHASE2.md  
+**For implementation:** See IMPLEMENTATION_CHECKLIST_PHASE2.md
 
 ---
 
 **Last Updated:** April 2026  
 **Version:** 1.0  
 **Status:** Ready for use ✅
-

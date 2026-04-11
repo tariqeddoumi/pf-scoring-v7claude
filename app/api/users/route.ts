@@ -1,23 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, hasMinimumRole } from '@/lib/auth-middleware';
-import { UserService } from '@/lib/services/user-service';
-import { paginationSchema } from '@/lib/validation-schemas';
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import { UserService } from "@/lib/services/user-service";
+import { paginationSchema } from "@/lib/validation-schemas";
 
 /**
  * GET /api/users - List all users (paginated)
  */
 async function handleGET(request: NextRequest, user: any) {
   try {
-    if (!hasMinimumRole(user.role, 'manager')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!hasMinimumRole(user.role, "manager")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
 
     const validated = paginationSchema.parse({ page, limit });
-    const result = await UserService.getAllUsers(validated.page, validated.limit);
+    const result = await UserService.getAllUsers(
+      validated.page,
+      validated.limit
+    );
 
     return NextResponse.json(result, { status: 200 });
   } catch (error: any) {
@@ -30,8 +33,8 @@ async function handleGET(request: NextRequest, user: any) {
  */
 async function handlePOST(request: NextRequest, user: any) {
   try {
-    if (user.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -44,7 +47,7 @@ async function handlePOST(request: NextRequest, user: any) {
         nom: newUser.nom,
         prenom: newUser.prenom,
         role: newUser.role,
-        createdAt: newUser.createdAt
+        createdAt: newUser.createdAt,
       },
       { status: 201 }
     );

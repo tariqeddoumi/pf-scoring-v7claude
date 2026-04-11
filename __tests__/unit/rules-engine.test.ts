@@ -34,7 +34,9 @@ describe("RulesEngine - NO-GO Rules", () => {
 
       // Should have at least one NO-GO for poor sponsor
       expect(nogoRules.length).toBeGreaterThan(0);
-      expect(nogoRules.some((rule) => rule.ruleId.includes("NOGO_1"))).toBe(true);
+      expect(nogoRules.some((rule) => rule.ruleId.includes("NOGO_1"))).toBe(
+        true
+      );
     });
 
     it("should trigger NOGO_5A for missing PPA", () => {
@@ -50,7 +52,9 @@ describe("RulesEngine - NO-GO Rules", () => {
 
       // Should have NO-GO for missing PPA
       expect(nogoRules.length).toBeGreaterThan(0);
-      expect(nogoRules.some((rule) => rule.ruleId.includes("NOGO_5"))).toBe(true);
+      expect(nogoRules.some((rule) => rule.ruleId.includes("NOGO_5"))).toBe(
+        true
+      );
     });
 
     it("should trigger NOGO_6A for DSCR below 1.10", () => {
@@ -66,7 +70,9 @@ describe("RulesEngine - NO-GO Rules", () => {
 
       // Should have NO-GO for insufficient DSCR
       expect(nogoRules.length).toBeGreaterThan(0);
-      expect(nogoRules.some((rule) => rule.ruleId.includes("NOGO_6"))).toBe(true);
+      expect(nogoRules.some((rule) => rule.ruleId.includes("NOGO_6"))).toBe(
+        true
+      );
     });
 
     it("should trigger NOGO_6C for excessive leverage (>85%)", () => {
@@ -82,7 +88,9 @@ describe("RulesEngine - NO-GO Rules", () => {
 
       // Should have NO-GO for excessive leverage
       expect(nogoRules.length).toBeGreaterThan(0);
-      expect(nogoRules.some((rule) => rule.ruleId.includes("NOGO_6"))).toBe(true);
+      expect(nogoRules.some((rule) => rule.ruleId.includes("NOGO_6"))).toBe(
+        true
+      );
     });
   });
 });
@@ -108,7 +116,7 @@ describe("RulesEngine - MALUS Rules", () => {
         ...SOLAR_MAROC_FIXTURE,
         financialStructure: {
           ...SOLAR_MAROC_FIXTURE.financialStructure,
-          dscr: 1.20, // Below 1.25 but above 1.10
+          dscr: 1.2, // Below 1.25 but above 1.10
         },
         revenue: {
           ...SOLAR_MAROC_FIXTURE.revenue,
@@ -121,7 +129,9 @@ describe("RulesEngine - MALUS Rules", () => {
       // Should have MALUS for tight DSCR coverage
       expect(malusRules.length).toBeGreaterThan(0);
       expect(
-        malusRules.some((rule) => rule.penaltyPoints && rule.penaltyPoints <= -5)
+        malusRules.some(
+          (rule) => rule.penaltyPoints && rule.penaltyPoints <= -5
+        )
       ).toBe(true);
     });
 
@@ -131,7 +141,7 @@ describe("RulesEngine - MALUS Rules", () => {
         financialStructure: {
           ...SOLAR_MAROC_FIXTURE.financialStructure,
           dscr: 1.22, // Tight coverage
-          equityToDebtRatio: 0.20, // High leverage (80% debt)
+          equityToDebtRatio: 0.2, // High leverage (80% debt)
         },
         revenue: {
           ...SOLAR_MAROC_FIXTURE.revenue,

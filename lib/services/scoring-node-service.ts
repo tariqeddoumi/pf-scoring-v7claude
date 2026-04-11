@@ -1,5 +1,5 @@
-import prisma from '@/lib/prisma-client';
-import { ScoringNodeType, ScoringAnswerType } from '@prisma/client';
+import prisma from "@/lib/prisma-client";
+import { ScoringNodeType, ScoringAnswerType } from "@prisma/client";
 
 export class ScoringNodeService {
   /**
@@ -24,17 +24,17 @@ export class ScoringNodeService {
     if (data.parentNodeId) {
       const maxOrderResult = await prisma.scoringNode.aggregate({
         where: { parentNodeId: data.parentNodeId, versionId: data.versionId },
-        _max: { orderIndex: true }
+        _max: { orderIndex: true },
       });
       maxOrderIndex = (maxOrderResult._max.orderIndex || -1) + 1;
     }
 
     const version = await prisma.scoringModelVersion.findUnique({
-      where: { id: data.versionId }
+      where: { id: data.versionId },
     });
 
     if (!version) {
-      throw new Error('Version not found');
+      throw new Error("Version not found");
     }
 
     const node = await prisma.scoringNode.create({
@@ -51,19 +51,19 @@ export class ScoringNodeService {
         answerType: data.answerType,
         scoringMethod: data.scoringMethod,
         aggregationMethod: data.aggregationMethod,
-        isActive: true
+        isActive: true,
       },
       include: {
         options: true,
         ranges: true,
-        childNodes: true
-      }
+        childNodes: true,
+      },
     });
 
     // Log creation
-    await this.logNodeChange('CREATE', version.modelId, data.createdBy, {
+    await this.logNodeChange("CREATE", version.modelId, data.createdBy, {
       nodeId: node.id,
-      nodeLabel: node.label
+      nodeLabel: node.label,
     });
 
     return node;
@@ -77,20 +77,20 @@ export class ScoringNodeService {
       where: { id: nodeId },
       include: {
         options: {
-          orderBy: { orderIndex: 'asc' }
+          orderBy: { orderIndex: "asc" },
         },
         ranges: {
-          orderBy: { orderIndex: 'asc' }
+          orderBy: { orderIndex: "asc" },
         },
         formulas: true,
         rules: true,
         applicabilityRules: true,
         documentRequirements: true,
         childNodes: {
-          orderBy: { orderIndex: 'asc' }
+          orderBy: { orderIndex: "asc" },
         },
-        parentNode: true
-      }
+        parentNode: true,
+      },
     });
   }
 
@@ -104,10 +104,10 @@ export class ScoringNodeService {
         options: true,
         ranges: true,
         childNodes: {
-          orderBy: { orderIndex: 'asc' }
-        }
+          orderBy: { orderIndex: "asc" },
+        },
       },
-      orderBy: [{ parentNodeId: 'asc' }, { orderIndex: 'asc' }]
+      orderBy: [{ parentNodeId: "asc" }, { orderIndex: "asc" }],
     });
   }
 
@@ -127,11 +127,11 @@ export class ScoringNodeService {
     }
   ) {
     const node = await prisma.scoringNode.findUnique({
-      where: { id: nodeId }
+      where: { id: nodeId },
     });
 
     if (!node) {
-      throw new Error('Node not found');
+      throw new Error("Node not found");
     }
 
     const updated = await prisma.scoringNode.update({
@@ -143,13 +143,13 @@ export class ScoringNodeService {
         answerType: data.answerType,
         scoringMethod: data.scoringMethod,
         aggregationMethod: data.aggregationMethod,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
-    await this.logNodeChange('UPDATE', node.id, data.updatedBy, {
+    await this.logNodeChange("UPDATE", node.id, data.updatedBy, {
       nodeId,
-      changes: data
+      changes: data,
     });
 
     return updated;
@@ -164,24 +164,24 @@ export class ScoringNodeService {
     reorderedBy: string
   ) {
     const node = await prisma.scoringNode.findUnique({
-      where: { id: nodeId }
+      where: { id: nodeId },
     });
 
     if (!node) {
-      throw new Error('Node not found');
+      throw new Error("Node not found");
     }
 
     // Get all siblings
     const siblings = await prisma.scoringNode.findMany({
       where: {
         parentNodeId: node.parentNodeId,
-        versionId: node.versionId
+        versionId: node.versionId,
       },
-      orderBy: { orderIndex: 'asc' }
+      orderBy: { orderIndex: "asc" },
     });
 
     if (newOrderIndex < 0 || newOrderIndex >= siblings.length) {
-      throw new Error('Invalid order');
+      throw new Error("Invalid order");
     }
 
     // Reorder siblings
@@ -194,14 +194,14 @@ export class ScoringNodeService {
           versionId: node.versionId,
           orderIndex: {
             gte: newOrderIndex,
-            lt: oldOrder
-          }
+            lt: oldOrder,
+          },
         },
         data: {
           orderIndex: {
-            increment: 1
-          }
-        }
+            increment: 1,
+          },
+        },
       });
     } else if (newOrderIndex > oldOrder) {
       // Moving down: decrement siblings between old and new order
@@ -211,26 +211,26 @@ export class ScoringNodeService {
           versionId: node.versionId,
           orderIndex: {
             gt: oldOrder,
-            lte: newOrderIndex
-          }
+            lte: newOrderIndex,
+          },
         },
         data: {
           orderIndex: {
-            decrement: 1
-          }
-        }
+            decrement: 1,
+          },
+        },
       });
     }
 
     const updated = await prisma.scoringNode.update({
       where: { id: nodeId },
-      data: { orderIndex: newOrderIndex }
+      data: { orderIndex: newOrderIndex },
     });
 
-    await this.logNodeChange('REORDER', node.id, reorderedBy, {
+    await this.logNodeChange("REORDER", node.id, reorderedBy, {
       nodeId,
       oldOrder,
-      newOrder: newOrderIndex
+      newOrder: newOrderIndex,
     });
 
     return updated;
@@ -241,17 +241,17 @@ export class ScoringNodeService {
    */
   static async deleteNode(nodeId: string, deletedBy: string) {
     const node = await prisma.scoringNode.findUnique({
-      where: { id: nodeId }
+      where: { id: nodeId },
     });
 
     if (!node) {
-      throw new Error('Node not found');
+      throw new Error("Node not found");
     }
 
     // Delete all descendants
     const deleteDescendants = async (parentId: string) => {
       const children = await prisma.scoringNode.findMany({
-        where: { parentNodeId: parentId }
+        where: { parentNodeId: parentId },
       });
 
       for (const child of children) {
@@ -259,7 +259,7 @@ export class ScoringNodeService {
       }
 
       await prisma.scoringNode.deleteMany({
-        where: { parentNodeId: parentId }
+        where: { parentNodeId: parentId },
       });
     };
 
@@ -267,12 +267,12 @@ export class ScoringNodeService {
 
     // Delete node itself
     await prisma.scoringNode.delete({
-      where: { id: nodeId }
+      where: { id: nodeId },
     });
 
-    await this.logNodeChange('DELETE', node.id, deletedBy, {
+    await this.logNodeChange("DELETE", node.id, deletedBy, {
       nodeId,
-      nodeLabel: node.label
+      nodeLabel: node.label,
     });
 
     return { success: true };
@@ -289,16 +289,16 @@ export class ScoringNodeService {
     createdBy: string;
   }) {
     const node = await prisma.scoringNode.findUnique({
-      where: { id: data.nodeId }
+      where: { id: data.nodeId },
     });
 
     if (!node) {
-      throw new Error('Node not found');
+      throw new Error("Node not found");
     }
 
     const maxOrder = await prisma.scoringNodeOption.aggregate({
       where: { nodeId: data.nodeId },
-      _max: { orderIndex: true }
+      _max: { orderIndex: true },
     });
 
     const option = await prisma.scoringNodeOption.create({
@@ -308,8 +308,8 @@ export class ScoringNodeService {
         value: data.value,
         score: data.score,
         orderIndex: (maxOrder._max.orderIndex || -1) + 1,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     return option;
@@ -327,16 +327,16 @@ export class ScoringNodeService {
     createdBy: string;
   }) {
     const node = await prisma.scoringNode.findUnique({
-      where: { id: data.nodeId }
+      where: { id: data.nodeId },
     });
 
     if (!node) {
-      throw new Error('Node not found');
+      throw new Error("Node not found");
     }
 
     const maxOrder = await prisma.scoringNodeRange.aggregate({
       where: { nodeId: data.nodeId },
-      _max: { orderIndex: true }
+      _max: { orderIndex: true },
     });
 
     const range = await prisma.scoringNodeRange.create({
@@ -347,8 +347,8 @@ export class ScoringNodeService {
         maxValue: data.maxValue,
         score: data.score,
         orderIndex: (maxOrder._max.orderIndex || -1) + 1,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     return range;
@@ -377,12 +377,12 @@ export class ScoringNodeService {
         code: data.code,
         label: data.label,
         description: data.description,
-        conditionExpression: data.conditionExpression || '',
-        severity: data.severity || 'MEDIUM',
-        actionType: data.actionType || 'BLOCK',
+        conditionExpression: data.conditionExpression || "",
+        severity: data.severity || "MEDIUM",
+        actionType: data.actionType || "BLOCK",
         orderIndex: 0,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     return rule;
@@ -400,10 +400,10 @@ export class ScoringNodeService {
     const rule = await prisma.scoringNodeApplicabilityRule.create({
       data: {
         nodeId: data.nodeId,
-        conditionExpression: data.conditionExpression || '',
+        conditionExpression: data.conditionExpression || "",
         effectType: data.effectType as any,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     return rule;
@@ -421,29 +421,29 @@ export class ScoringNodeService {
     // Get the node to find the model and version
     const node = await prisma.scoringNode.findUnique({
       where: { id: nodeId },
-      select: { versionId: true }
+      select: { versionId: true },
     });
 
     if (!node) return;
 
     const version = await prisma.scoringModelVersion.findUnique({
       where: { id: node.versionId },
-      select: { modelId: true }
+      select: { modelId: true },
     });
 
     if (!version) return;
 
     await prisma.scoringChangeLog.create({
       data: {
-        entityType: 'ScoringNode',
+        entityType: "ScoringNode",
         entityId: nodeId,
         modelId: version.modelId,
         versionId: node.versionId,
         action: `NODE_${action}`,
         changedBy: userId,
         changedAt: new Date(),
-        comment: JSON.stringify(details)
-      }
+        comment: JSON.stringify(details),
+      },
     });
   }
 }

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 interface Evaluation {
   id: string;
@@ -14,7 +14,11 @@ interface Evaluation {
   status: string;
 }
 
-export default function EditEvaluationPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditEvaluationPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -22,9 +26,9 @@ export default function EditEvaluationPage({ params }: { params: Promise<{ id: s
   const [evalId, setEvalId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<Partial<Evaluation>>({
-    recommendation: 'APPROVE',
-    notes: '',
-    status: 'brouillon',
+    recommendation: "APPROVE",
+    notes: "",
+    status: "brouillon",
   });
 
   useEffect(() => {
@@ -33,13 +37,13 @@ export default function EditEvaluationPage({ params }: { params: Promise<{ id: s
         const { id } = await params;
         setEvalId(id);
         const response = await fetch(`/api/evaluations/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch evaluation');
+        if (!response.ok) throw new Error("Failed to fetch evaluation");
         const data = await response.json();
         const evaluation = data.data || data;
         setFormData(evaluation);
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'Failed to load evaluation');
+        setError(err.message || "Failed to load evaluation");
       } finally {
         setLoading(false);
       }
@@ -48,9 +52,11 @@ export default function EditEvaluationPage({ params }: { params: Promise<{ id: s
     resolveAndFetch();
   }, [params]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,18 +65,18 @@ export default function EditEvaluationPage({ params }: { params: Promise<{ id: s
     setError(null);
 
     try {
-      if (!evalId) throw new Error('Evaluation ID not found');
+      if (!evalId) throw new Error("Evaluation ID not found");
 
       const response = await fetch(`/api/evaluations/${evalId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error('Failed to update evaluation');
+      if (!response.ok) throw new Error("Failed to update evaluation");
       router.push(`/evaluations/${evalId}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to update evaluation');
+      setError(err.message || "Failed to update evaluation");
     } finally {
       setSubmitting(false);
     }
@@ -88,14 +94,18 @@ export default function EditEvaluationPage({ params }: { params: Promise<{ id: s
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
         <Link
-          href={evalId ? `/evaluations/${evalId}` : '/evaluations'}
+          href={evalId ? `/evaluations/${evalId}` : "/evaluations"}
           className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white">Modifier l'évaluation</h1>
-          <p className="text-slate-400 mt-1">{formData.project?.nom || 'Projet'}</p>
+          <h1 className="text-3xl font-bold text-white">
+            Modifier l'évaluation
+          </h1>
+          <p className="text-slate-400 mt-1">
+            {formData.project?.nom || "Projet"}
+          </p>
         </div>
       </div>
 
@@ -105,14 +115,18 @@ export default function EditEvaluationPage({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6">
-
+      <form
+        onSubmit={handleSubmit}
+        className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6"
+      >
         {/* Status */}
         <div>
-          <label className="block text-sm font-semibold text-white mb-2">Statut</label>
+          <label className="block text-sm font-semibold text-white mb-2">
+            Statut
+          </label>
           <select
             name="status"
-            value={formData.status || 'brouillon'}
+            value={formData.status || "brouillon"}
             onChange={handleChange}
             className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
           >
@@ -125,25 +139,31 @@ export default function EditEvaluationPage({ params }: { params: Promise<{ id: s
 
         {/* Recommendation */}
         <div>
-          <label className="block text-sm font-semibold text-white mb-2">Recommandation</label>
+          <label className="block text-sm font-semibold text-white mb-2">
+            Recommandation
+          </label>
           <select
             name="recommendation"
-            value={formData.recommendation || 'APPROVE'}
+            value={formData.recommendation || "APPROVE"}
             onChange={handleChange}
             className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
           >
             <option value="APPROVE">Approuvé</option>
-            <option value="APPROVE_WITH_CONDITIONS">Approuvé avec conditions</option>
+            <option value="APPROVE_WITH_CONDITIONS">
+              Approuvé avec conditions
+            </option>
             <option value="REJECT">Rejeté</option>
           </select>
         </div>
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-semibold text-white mb-2">Notes</label>
+          <label className="block text-sm font-semibold text-white mb-2">
+            Notes
+          </label>
           <textarea
             name="notes"
-            value={formData.notes || ''}
+            value={formData.notes || ""}
             onChange={handleChange}
             rows={6}
             className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
@@ -159,10 +179,10 @@ export default function EditEvaluationPage({ params }: { params: Promise<{ id: s
             className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-semibold px-6 py-2 rounded-lg transition-all"
           >
             {submitting && <Loader2 size={20} className="animate-spin" />}
-            <span>{submitting ? 'Enregistrement...' : 'Enregistrer'}</span>
+            <span>{submitting ? "Enregistrement..." : "Enregistrer"}</span>
           </button>
           <Link
-            href={evalId ? `/evaluations/${evalId}` : '/evaluations'}
+            href={evalId ? `/evaluations/${evalId}` : "/evaluations"}
             className="inline-flex items-center space-x-2 px-6 py-2 border border-slate-600 rounded-lg text-slate-400 hover:text-white transition-colors"
           >
             <span>Annuler</span>

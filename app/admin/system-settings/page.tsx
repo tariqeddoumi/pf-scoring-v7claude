@@ -27,7 +27,9 @@ export default function SystemSettingsPage() {
 
         {/* Application Info */}
         <Card className="p-6 mb-6">
-          <h2 className="font-semibold mb-4 text-lg">Informations de l&apos;Application</h2>
+          <h2 className="font-semibold mb-4 text-lg">
+            Informations de l&apos;Application
+          </h2>
           <div className="space-y-2">
             <div>
               <p className="text-sm text-muted-foreground">Version</p>
@@ -59,7 +61,9 @@ export default function SystemSettingsPage() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">EBRD Environmental and Social Policy</p>
+                <p className="font-medium">
+                  EBRD Environmental and Social Policy
+                </p>
                 <p className="text-xs text-muted-foreground">2015 (Latest)</p>
               </div>
               <span className="text-xs bg-green-100/20 text-green-200 px-2 py-1 rounded">

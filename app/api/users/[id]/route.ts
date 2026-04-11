@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, hasMinimumRole } from '@/lib/auth-middleware';
-import { UserService } from '@/lib/services/user-service';
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import { UserService } from "@/lib/services/user-service";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -11,14 +11,14 @@ interface RouteParams {
  */
 async function handleGET(request: NextRequest, user: any, params: any) {
   try {
-    if (!hasMinimumRole(user.role, 'manager')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!hasMinimumRole(user.role, "manager")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const targetUser = await UserService.getUserById(params.id);
 
     if (!targetUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json(
@@ -29,7 +29,7 @@ async function handleGET(request: NextRequest, user: any, params: any) {
         prenom: targetUser.prenom,
         role: targetUser.role,
         avatar: targetUser.avatar,
-        createdAt: targetUser.createdAt
+        createdAt: targetUser.createdAt,
       },
       { status: 200 }
     );
@@ -44,12 +44,16 @@ async function handleGET(request: NextRequest, user: any, params: any) {
 async function handlePUT(request: NextRequest, user: any, params: any) {
   try {
     // Can update own profile or be admin
-    if (user.userId !== params.id && user.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (user.userId !== params.id && user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();
-    const updatedUser = await UserService.updateUser(params.id, body, user.userId);
+    const updatedUser = await UserService.updateUser(
+      params.id,
+      body,
+      user.userId
+    );
 
     return NextResponse.json(
       {
@@ -58,7 +62,7 @@ async function handlePUT(request: NextRequest, user: any, params: any) {
         nom: updatedUser.nom,
         prenom: updatedUser.prenom,
         role: updatedUser.role,
-        updatedAt: updatedUser.updatedAt
+        updatedAt: updatedUser.updatedAt,
       },
       { status: 200 }
     );
@@ -72,18 +76,21 @@ async function handlePUT(request: NextRequest, user: any, params: any) {
  */
 async function handleDELETE(request: NextRequest, user: any, params: any) {
   try {
-    if (user.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (user.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Cannot delete self
     if (user.userId === params.id) {
-      return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Cannot delete your own account" },
+        { status: 400 }
+      );
     }
 
     await UserService.deleteUser(params.id, user.userId);
 
-    return NextResponse.json({ message: 'User deleted' }, { status: 200 });
+    return NextResponse.json({ message: "User deleted" }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
@@ -101,5 +108,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const resolvedParams = await params;
-  return withAuth(request, (req, user) => handleDELETE(req, user, resolvedParams));
+  return withAuth(request, (req, user) =>
+    handleDELETE(req, user, resolvedParams)
+  );
 }

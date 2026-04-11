@@ -13,7 +13,12 @@ interface Evaluation {
   recommendation?: string;
   createdAt?: string;
   analyst_name?: string;
-  domainScores?: Array<{ domain_id: string; domain_name: string; score: number; weight: number }>;
+  domainScores?: Array<{
+    domain_id: string;
+    domain_name: string;
+    score: number;
+    weight: number;
+  }>;
 }
 
 export class ExportService {
@@ -139,7 +144,7 @@ export class ExportService {
             </div>
             <div class="metadata-item">
               <div class="metadata-label">Date</div>
-              <div class="metadata-value">${new Date(evaluation.createdAt || new Date()).toLocaleDateString('fr-FR')}</div>
+              <div class="metadata-value">${new Date(evaluation.createdAt || new Date()).toLocaleDateString("fr-FR")}</div>
             </div>
           </div>
 
@@ -147,8 +152,8 @@ export class ExportService {
             <div class="score-label">Score Global</div>
             <div class="score-value">${(evaluation.score || 0).toFixed(2)}/10</div>
             <div class="rating-info">
-              <div><strong>Rating:</strong> ${evaluation.rating || 'N/A'}</div>
-              <div><strong>Analyste:</strong> ${evaluation.analyst_name || 'N/A'}</div>
+              <div><strong>Rating:</strong> ${evaluation.rating || "N/A"}</div>
+              <div><strong>Analyste:</strong> ${evaluation.analyst_name || "N/A"}</div>
             </div>
           </div>
 
@@ -163,26 +168,34 @@ export class ExportService {
               </tr>
             </thead>
             <tbody>
-              ${(evaluation.domainScores || []).map(d => `
+              ${(evaluation.domainScores || [])
+                .map(
+                  (d) => `
                 <tr>
-                  <td>${d.domain_id || 'N/A'}: ${d.domain_name || 'N/A'}</td>
+                  <td>${d.domain_id || "N/A"}: ${d.domain_name || "N/A"}</td>
                   <td>${(d.score || 0).toFixed(2)}/10</td>
                   <td>${(d.weight || 0).toFixed(1)}%</td>
                   <td>${(((d.score || 0) * (d.weight || 0)) / 100).toFixed(2)}</td>
                 </tr>
-              `).join('')}
+              `
+                )
+                .join("")}
             </tbody>
           </table>
 
-          ${evaluation.recommendation ? `
+          ${
+            evaluation.recommendation
+              ? `
             <h2>Recommandation</h2>
             <div class="recommendation">
               ${evaluation.recommendation}
             </div>
-          ` : ''}
+          `
+              : ""
+          }
 
           <footer>
-            <p>Rapport généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</p>
+            <p>Rapport généré le ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}</p>
             <p>Conforme IFC, EBRD, Basel III et directives Bank Al-Maghrib</p>
           </footer>
         </div>
@@ -190,30 +203,40 @@ export class ExportService {
       </html>
     `;
 
-    return new Blob([html], { type: 'text/html;charset=utf-8;' });
+    return new Blob([html], { type: "text/html;charset=utf-8;" });
   }
 
   /**
    * Generate Excel export as CSV format (can be opened in Excel)
    */
   static generatePortfolioExcel(evaluations: Evaluation[]): Blob {
-    const headers = ['ID Évaluation', 'Projet', 'Score', 'Rating', 'Statut', 'Analyste', 'Date'];
-    const rows = evaluations.map(e => [
+    const headers = [
+      "ID Évaluation",
+      "Projet",
+      "Score",
+      "Rating",
+      "Statut",
+      "Analyste",
+      "Date",
+    ];
+    const rows = evaluations.map((e) => [
       e.evaluationId,
       e.projectId,
       (e.score || 0).toFixed(2),
-      e.rating || 'N/A',
-      e.status || 'N/A',
-      e.analyst_name || 'N/A',
-      e.createdAt ? new Date(e.createdAt).toLocaleDateString('fr-FR') : 'N/A',
+      e.rating || "N/A",
+      e.status || "N/A",
+      e.analyst_name || "N/A",
+      e.createdAt ? new Date(e.createdAt).toLocaleDateString("fr-FR") : "N/A",
     ]);
 
     const csvContent = [
-      headers.map(h => `"${h}"`).join(','),
-      ...rows.map(r => r.map(v => `"${v}"`).join(',')),
-    ].join('\n');
+      headers.map((h) => `"${h}"`).join(","),
+      ...rows.map((r) => r.map((v) => `"${v}"`).join(",")),
+    ].join("\n");
 
-    return new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    return new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
   }
 
   /**
@@ -267,14 +290,14 @@ export class ExportService {
         <div class="info-box">
           <p><strong>Évaluation:</strong> ${evaluation.evaluationId}</p>
           <p><strong>Projet:</strong> ${evaluation.projectId}</p>
-          <p><strong>Date:</strong> ${new Date(evaluation.createdAt || new Date()).toLocaleDateString('fr-FR')}</p>
-          <p><strong>Analyste:</strong> ${evaluation.analyst_name || 'Non spécifié'}</p>
+          <p><strong>Date:</strong> ${new Date(evaluation.createdAt || new Date()).toLocaleDateString("fr-FR")}</p>
+          <p><strong>Analyste:</strong> ${evaluation.analyst_name || "Non spécifié"}</p>
         </div>
 
         <h2>Score Global</h2>
         <p><span class="score-highlight">${(evaluation.score || 0).toFixed(2)}/10</span></p>
-        <p><strong>Rating:</strong> ${evaluation.rating || 'N/A'}</p>
-        <p><strong>Statut:</strong> ${evaluation.status || 'N/A'}</p>
+        <p><strong>Rating:</strong> ${evaluation.rating || "N/A"}</p>
+        <p><strong>Statut:</strong> ${evaluation.status || "N/A"}</p>
 
         <h2>Scores par Domaine</h2>
         <table>
@@ -284,56 +307,74 @@ export class ExportService {
             <th>Poids (%)</th>
             <th>Contribution</th>
           </tr>
-          ${(evaluation.domainScores || []).map(d => `
+          ${(evaluation.domainScores || [])
+            .map(
+              (d) => `
             <tr>
-              <td>${d.domain_id || 'N/A'}: ${d.domain_name || 'N/A'}</td>
+              <td>${d.domain_id || "N/A"}: ${d.domain_name || "N/A"}</td>
               <td>${(d.score || 0).toFixed(2)}</td>
               <td>${(d.weight || 0).toFixed(1)}</td>
               <td>${(((d.score || 0) * (d.weight || 0)) / 100).toFixed(2)}</td>
             </tr>
-          `).join('')}
+          `
+            )
+            .join("")}
         </table>
 
-        ${evaluation.recommendation ? `
+        ${
+          evaluation.recommendation
+            ? `
           <h2>Recommandation</h2>
           <div class="info-box">
             <p>${evaluation.recommendation}</p>
           </div>
-        ` : ''}
+        `
+            : ""
+        }
 
         <p style="margin-top: 24pt; color: #999; font-size: 10pt;">
-          Rapport généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}
+          Rapport généré le ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}
           <br/>Conforme IFC, EBRD, Basel III et directives Bank Al-Maghrib
         </p>
       </body>
       </html>
     `;
 
-    return new Blob([html], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8;' });
+    return new Blob([html], {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8;",
+    });
   }
 
   /**
    * Generate audit logs export as CSV
    */
   static generateAuditExport(logs: Array<any> = []): Blob {
-    const headers = ['Date', 'Utilisateur', 'Action', 'Module', 'Entité', 'Sévérité'];
-    const rows = logs.map(log => [
-      log.createdAt ? new Date(log.createdAt).toLocaleString('fr-FR') : '',
-      log.user_name || 'N/A',
-      log.action || 'N/A',
-      log.module || 'N/A',
-      log.entity_name || 'N/A',
-      log.severity || 'info',
+    const headers = [
+      "Date",
+      "Utilisateur",
+      "Action",
+      "Module",
+      "Entité",
+      "Sévérité",
+    ];
+    const rows = logs.map((log) => [
+      log.createdAt ? new Date(log.createdAt).toLocaleString("fr-FR") : "",
+      log.user_name || "N/A",
+      log.action || "N/A",
+      log.module || "N/A",
+      log.entity_name || "N/A",
+      log.severity || "info",
     ]);
 
     const csvContent = [
-      headers.map(h => `"${h}"`).join(','),
-      ...rows.map(r => r.map(v => `"${v}"`).join(',')),
-    ].join('\n');
+      headers.map((h) => `"${h}"`).join(","),
+      ...rows.map((r) => r.map((v) => `"${v}"`).join(",")),
+    ].join("\n");
 
-    return new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    return new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
   }
 }
 
 export default ExportService;
-

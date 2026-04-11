@@ -4,7 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, RefreshCw, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
 
 interface DiagnosticTest {
@@ -48,12 +54,16 @@ export default function DiagnosticPage() {
       }
 
       if (response.status === 403) {
-        setError("Accès refusé. Seuls les administrateurs peuvent accéder aux diagnostiques.");
+        setError(
+          "Accès refusé. Seuls les administrateurs peuvent accéder aux diagnostiques."
+        );
         return;
       }
 
       if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de la récupération des diagnostiques");
+        throw new Error(
+          data.error || "Erreur lors de la récupération des diagnostiques"
+        );
       }
 
       const diagnosticData = data as DiagnosticResponse;
@@ -64,7 +74,8 @@ export default function DiagnosticPage() {
         setEnvVars(diagnosticData.environment);
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       setError(errorMessage);
       setTests([
         {
@@ -92,7 +103,9 @@ export default function DiagnosticPage() {
       case "error":
         return <XCircle className="h-5 w-5 text-red-500" />;
       default:
-        return <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />;
+        return (
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+        );
     }
   };
 
@@ -121,9 +134,15 @@ export default function DiagnosticPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold">Diagnostic Système</h1>
-            <p className="text-slate-400">Tests de santé et configuration de l&apos;application</p>
+            <p className="text-slate-400">
+              Tests de santé et configuration de l&apos;application
+            </p>
           </div>
-          <Button onClick={runDiagnostics} disabled={loading} className="ml-auto">
+          <Button
+            onClick={runDiagnostics}
+            disabled={loading}
+            className="ml-auto"
+          >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Actualiser
           </Button>
@@ -144,14 +163,18 @@ export default function DiagnosticPage() {
 
         {/* Environment Variables */}
         <Card className="mb-6 border-slate-700 bg-slate-800 p-6">
-          <h2 className="mb-4 text-xl font-semibold">Variables d&apos;Environnement</h2>
+          <h2 className="mb-4 text-xl font-semibold">
+            Variables d&apos;Environnement
+          </h2>
           <div className="space-y-2">
             {envVars.length > 0 ? (
               envVars.map((env) => (
                 <div
                   key={env.name}
                   className={`flex items-center justify-between rounded-lg border p-3 ${
-                    env.defined ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5"
+                    env.defined
+                      ? "border-green-500/30 bg-green-500/5"
+                      : "border-red-500/30 bg-red-500/5"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -164,18 +187,24 @@ export default function DiagnosticPage() {
                       <p className="font-medium">{env.name}</p>
                       {env.value && env.defined && (
                         <p className="text-xs text-slate-400">
-                          {env.value.length > 50 ? `${env.value.substring(0, 50)}...` : env.value}
+                          {env.value.length > 50
+                            ? `${env.value.substring(0, 50)}...`
+                            : env.value}
                         </p>
                       )}
                     </div>
                   </div>
-                  <span className={`text-sm font-medium ${env.defined ? "text-green-400" : "text-red-400"}`}>
+                  <span
+                    className={`text-sm font-medium ${env.defined ? "text-green-400" : "text-red-400"}`}
+                  >
                     {env.defined ? "✓ Défini" : "✗ Manquant"}
                   </span>
                 </div>
               ))
             ) : (
-              <p className="text-slate-400">Aucune variable d&apos;environnement testée</p>
+              <p className="text-slate-400">
+                Aucune variable d&apos;environnement testée
+              </p>
             )}
           </div>
         </Card>
@@ -196,7 +225,9 @@ export default function DiagnosticPage() {
                     <p className="text-sm text-slate-300">{test.message}</p>
                     {test.details && (
                       <details className="mt-2 text-xs text-slate-400">
-                        <summary className="cursor-pointer hover:text-slate-300">Détails</summary>
+                        <summary className="cursor-pointer hover:text-slate-300">
+                          Détails
+                        </summary>
                         <pre className="mt-2 overflow-auto rounded bg-slate-900 p-2">
                           {JSON.stringify(test.details, null, 2)}
                         </pre>
@@ -218,12 +249,27 @@ export default function DiagnosticPage() {
         {/* Summary */}
         <div className="mt-6 grid grid-cols-4 gap-4">
           {[
-            { label: "Succès", count: tests.filter((t) => t.status === "success").length, color: "green" },
-            { label: "Avertissements", count: tests.filter((t) => t.status === "warning").length, color: "yellow" },
-            { label: "Erreurs", count: tests.filter((t) => t.status === "error").length, color: "red" },
+            {
+              label: "Succès",
+              count: tests.filter((t) => t.status === "success").length,
+              color: "green",
+            },
+            {
+              label: "Avertissements",
+              count: tests.filter((t) => t.status === "warning").length,
+              color: "yellow",
+            },
+            {
+              label: "Erreurs",
+              count: tests.filter((t) => t.status === "error").length,
+              color: "red",
+            },
             { label: "Total", count: tests.length, color: "blue" },
           ].map((item) => (
-            <Card key={item.label} className={`border-${item.color}-500/30 bg-${item.color}-500/5 p-4`}>
+            <Card
+              key={item.label}
+              className={`border-${item.color}-500/30 bg-${item.color}-500/5 p-4`}
+            >
               <p className={`text-sm text-${item.color}-400`}>{item.label}</p>
               <p className="text-2xl font-bold">{item.count}</p>
             </Card>

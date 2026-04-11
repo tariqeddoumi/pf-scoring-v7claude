@@ -1,28 +1,35 @@
-import prisma from '@/lib/prisma-client';
-import { createUserSchema, updateUserSchema, changeUserRoleSchema } from '@/lib/validation-schemas';
-import type { z } from 'zod';
+import prisma from "@/lib/prisma-client";
+import {
+  createUserSchema,
+  updateUserSchema,
+  changeUserRoleSchema,
+} from "@/lib/validation-schemas";
+import type { z } from "zod";
 
 export class UserService {
   /**
    * Create new user
    */
-  static async createUser(data: z.infer<typeof createUserSchema>, createdBy: string) {
+  static async createUser(
+    data: z.infer<typeof createUserSchema>,
+    createdBy: string
+  ) {
     const validated = createUserSchema.parse(data);
 
     const user = await prisma.user.create({
       data: {
         ...validated,
-        role: validated.role || 'analyst'
-      }
+        role: validated.role || "analyst",
+      },
     });
 
     // Log in BP_PF_audit_logs
     await prisma.auditLog.create({
       data: {
         utilisateurId: createdBy,
-        action: 'CREATE_USER',
-        details: JSON.stringify({ userId: user.id, email: user.email })
-      }
+        action: "CREATE_USER",
+        details: JSON.stringify({ userId: user.id, email: user.email }),
+      },
     });
 
     return user;
@@ -33,7 +40,7 @@ export class UserService {
    */
   static async getUserById(id: string) {
     return prisma.user.findUnique({
-      where: { id }
+      where: { id },
     });
   }
 
@@ -42,7 +49,7 @@ export class UserService {
    */
   static async getUserByEmail(email: string) {
     return prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
   }
 
@@ -56,7 +63,7 @@ export class UserService {
       prisma.user.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         select: {
           id: true,
           email: true,
@@ -64,10 +71,10 @@ export class UserService {
           prenom: true,
           role: true,
           avatar: true,
-          createdAt: true
-        }
+          createdAt: true,
+        },
       }),
-      prisma.user.count()
+      prisma.user.count(),
     ]);
 
     return {
@@ -76,28 +83,32 @@ export class UserService {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 
   /**
    * Update user
    */
-  static async updateUser(id: string, data: z.infer<typeof updateUserSchema>, updatedBy: string) {
+  static async updateUser(
+    id: string,
+    data: z.infer<typeof updateUserSchema>,
+    updatedBy: string
+  ) {
     const validated = updateUserSchema.parse(data);
 
     const user = await prisma.user.update({
       where: { id },
-      data: validated
+      data: validated,
     });
 
     await prisma.auditLog.create({
       data: {
         utilisateurId: updatedBy,
-        action: 'UPDATE_USER',
-        details: JSON.stringify({ userId: id })
-      }
+        action: "UPDATE_USER",
+        details: JSON.stringify({ userId: id }),
+      },
     });
 
     return user;
@@ -115,15 +126,15 @@ export class UserService {
 
     const user = await prisma.user.update({
       where: { id },
-      data: { role: validated.role }
+      data: { role: validated.role },
     });
 
     await prisma.auditLog.create({
       data: {
         utilisateurId: changedBy,
-        action: 'CHANGE_USER_ROLE',
-        details: JSON.stringify({ userId: id, newRole: validated.role })
-      }
+        action: "CHANGE_USER_ROLE",
+        details: JSON.stringify({ userId: id, newRole: validated.role }),
+      },
     });
 
     return user;
@@ -136,7 +147,7 @@ export class UserService {
     const user = await prisma.user.findUnique({ where: { id } });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     await prisma.user.delete({ where: { id } });
@@ -144,9 +155,9 @@ export class UserService {
     await prisma.auditLog.create({
       data: {
         utilisateurId: deletedBy,
-        action: 'DELETE_USER',
-        details: JSON.stringify({ userId: id, email: user.email })
-      }
+        action: "DELETE_USER",
+        details: JSON.stringify({ userId: id, email: user.email }),
+      },
     });
 
     return user;
@@ -163,8 +174,8 @@ export class UserService {
         email: true,
         nom: true,
         prenom: true,
-        role: true
-      }
+        role: true,
+      },
     });
   }
 }

@@ -5,7 +5,10 @@
 import { ScoringEngine } from "@/lib/scoring-engine-v7plus";
 import { RulesEngine } from "@/lib/scoring-rules-v7plus";
 import { DataValidator } from "@/lib/scoring-validators-v7plus";
-import { SOLAR_MAROC_FIXTURE, SOLAR_MAROC_EXPECTED } from "../fixtures/solar-maroc-case";
+import {
+  SOLAR_MAROC_FIXTURE,
+  SOLAR_MAROC_EXPECTED,
+} from "../fixtures/solar-maroc-case";
 
 describe("ScoringEngine", () => {
   let engine: ScoringEngine;

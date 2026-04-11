@@ -1,17 +1,20 @@
 # Guide d'Import dans Google Sheets
 
 ## Étape 1: Préparation du fichier
+
 Le fichier `PF_SCORING_SPECIFICATIONS_TRACKING.csv` est prêt à l'import.
 
 ## Étape 2: Import dans Google Sheets
 
 ### Option A: Importer depuis Google Drive
+
 1. Allez sur https://drive.google.com
 2. Cliquez "Nouveau" → "Google Sheets" → "À partir d'un fichier"
 3. Téléchargez le fichier CSV
 4. Google Sheets créera automatiquement les colonnes
 
 ### Option B: Import direct dans Google Sheets existant
+
 1. Ouvrez votre Google Sheet
 2. Menu "Fichier" → "Importer"
 3. Sélectionnez "Télécharger" ou "Google Drive"
@@ -20,6 +23,7 @@ Le fichier `PF_SCORING_SPECIFICATIONS_TRACKING.csv` est prêt à l'import.
    - ☐ "Ajouter à la feuille actuelle"
 
 ### Option C: Copy-paste
+
 1. Ouvrez le CSV dans Excel ou un editeur texte
 2. Sélectionnez tout (Ctrl+A)
 3. Copiez (Ctrl+C)
@@ -29,6 +33,7 @@ Le fichier `PF_SCORING_SPECIFICATIONS_TRACKING.csv` est prêt à l'import.
 ## Étape 3: Mise en Format (Formatting)
 
 ### En-têtes (Headers)
+
 ```
 BLOC | CATÉGORIE | ÉLÉMENT | DESCRIPTION | SPÉCIFICATION | STATUT | TYPE_CHANGEMENT | NOTES | COMPLÉTION_% | DATE_COMPLÉTION
 ```
@@ -36,6 +41,7 @@ BLOC | CATÉGORIE | ÉLÉMENT | DESCRIPTION | SPÉCIFICATION | STATUT | TYPE_CHA
 ### Formatage Personnalisé
 
 #### A. Colonne STATUT - Conditional Formatting
+
 1. Sélectionnez toute la colonne "STATUT"
 2. Format → Conditional formatting
 3. Règles:
@@ -44,29 +50,36 @@ BLOC | CATÉGORIE | ÉLÉMENT | DESCRIPTION | SPÉCIFICATION | STATUT | TYPE_CHA
    - **PLANIFIÉ** = Fond bleu (#4285F4), texte blanc
    - **AJOUT** = Fond cyan (#1D9E74), texte blanc
 
-#### B. Colonne COMPLÉTION_% - Barre de Progression
-1. Sélectionnez la colonne "COMPLÉTION_%"
+#### B. Colonne COMPLÉTION\_% - Barre de Progression
+
+1. Sélectionnez la colonne "COMPLÉTION\_%"
 2. Format → Conditional formatting
 3. Style: "Barre de données à color gradient"
 4. Couleur: Vert à Orange à Rouge (0-100%)
 
 #### C. Filtrage Automatique
+
 1. Sélectionnez la ligne d'en-têtes
 2. Données → Créer un filtre
 
 #### D. Triangles de Couleur (Triangle indicator)
+
 Dans la colonne "TYPE_CHANGEMENT":
+
 - 🔴 "AJOUT" = Highlight en rouge (NEW FEATURE)
 - 🟢 "FIX" = Highlight en vert (BUG FIX)
 - 🔵 "ENHANCEMENT" = Highlight en bleu (IMPROVEMENT)
 - ⚪ "" = Pas de changement (STANDARD)
 
 ### Groupage par Bloc
+
 1. Données → Grouper les lignes → Par colonne "BLOC"
 2. Cela créera des expandables (+/-) pour chaque bloc
 
 ### Largeur des Colonnes
+
 Largeur recommandée:
+
 - BLOC: 200px
 - CATÉGORIE: 150px
 - ÉLÉMENT: 180px
@@ -75,12 +88,13 @@ Largeur recommandée:
 - STATUT: 100px
 - TYPE_CHANGEMENT: 120px
 - NOTES: 250px
-- COMPLÉTION_%: 100px
+- COMPLÉTION\_%: 100px
 - DATE_COMPLÉTION: 120px
 
 ## Étape 4: Partage et Collaboration
 
 ### Permissions
+
 1. Cliquez "Partager" (coin supérieur droit)
 2. Ajouter des collaborateurs:
    - Product Manager: Peut éditer
@@ -88,11 +102,14 @@ Largeur recommandée:
    - Stakeholders: Peut visualiser (Viewer)
 
 ### Notifications
+
 2. ☑ "Notifier les personnes" = envoie email automatiquement
 3. Ajouter un commentaire pour contexte
 
 ### Audit Trail
+
 Google Sheets enregistre automatiquement:
+
 - Qui a changé quoi
 - Quand
 - Ancien et nouveau contenu
@@ -102,8 +119,9 @@ Voir l'historique: Menu → "Historique des versions"
 ## Étape 5: Maintenance Quotidienne
 
 ### Chaque jour de travail:
+
 1. Ouvrez le Google Sheet PMO
-2. Mettez à jour COMPLÉTION_%:
+2. Mettez à jour COMPLÉTION\_%:
    - 0% = Pas commencé
    - 25% = Planification en cours
    - 50% = Implémentation en cours
@@ -121,15 +139,15 @@ Voir l'historique: Menu → "Historique des versions"
 5. Mettez à jour DATE_COMPLÉTION quand % = 100%
 
 ### Hebdomadaire:
-1. Analyser les colonnes COMPLÉTION_%:
+
+1. Analyser les colonnes COMPLÉTION\_%:
    - Moyenne générale = Progress global
    - Identifiez les items bloquants (0% depuis >3 jours)
-   
 2. Créer un graphique d'avancement:
    - Insérer → Graphique
    - Type: "Colonne groupée" ou "Radar"
    - Axe X: BLOC
-   - Axe Y: COMPLÉTION_%
+   - Axe Y: COMPLÉTION\_%
 
 3. Status meeting: Présenter le graphique aux stakeholders
 
@@ -152,6 +170,7 @@ Créer un nouvel onglet "Résumé" avec les formules:
 ```
 
 ### Graphiques Recommandés:
+
 1. **Pie Chart**: % Intégré vs EN COURS vs PLANIFIÉ vs BLOQUÉ
 2. **Line Chart**: Complétion globale par jour (progress tracking)
 3. **Bar Chart**: Complétion par BLOC (par domaine de scoring)
@@ -162,6 +181,7 @@ Créer un nouvel onglet "Résumé" avec les formules:
 Si vous voulez un outil PMO plus robuste:
 
 ### 1. **Notion** (Recommandé pour agile/PMO)
+
 - Gratuit pour 10 utilisateurs
 - Database views (Table, Timeline, Kanban, Calendar)
 - Relations et roll-ups
@@ -169,13 +189,15 @@ Si vous voulez un outil PMO plus robuste:
 - https://notion.so
 
 ### 2. **Asana** (Enterprise PMO)
+
 - Timeline (Gantt)
-- Board (Kanban) 
+- Board (Kanban)
 - Workload balancing
 - Custom fields et workflows
 - https://asana.com
 
 ### 3. **Jira** (Si vous utilisez déjà GitHub/Dev Workflow)
+
 - Épics = Phases (0-10)
 - Stories = Spécifications
 - Tasks = Éléments détaillés
@@ -183,6 +205,7 @@ Si vous voulez un outil PMO plus robuste:
 - https://www.atlassian.com/software/jira
 
 ### 4. **Monday.com** (Visual Project Management)
+
 - No-code interface
 - Gantt, Kanban, Timeline views
 - Automation workflows
@@ -192,16 +215,19 @@ Si vous voulez un outil PMO plus robuste:
 ## Recommandation Finale
 
 **Pour un PMO bancaire strict** → Notion ou Excel (Google Sheets)
+
 - Simplicité
 - Traçabilité (audit trail)
 - Pas de dépendances externes
 
 **Pour un Scrum/Agile lean** → Jira + GitHub
+
 - Intégration dev workflow
 - Automatisation CI/CD
 - Burndown charts
 
 **Pour un vision complète multi-stakeholder** → Asana ou Monday.com
+
 - Timeline (Gantt) pour gouvernance
 - Resource allocation
 - Budget tracking
@@ -209,6 +235,7 @@ Si vous voulez un outil PMO plus robuste:
 ## Notes Importantes
 
 ⚠️ **N'oubliez pas:**
+
 1. Backuper le Google Sheet régulièrement (télécharger en Excel)
 2. Créer des versions snapshots chaque semaine (File → Save version)
 3. Partager l'accès READ-ONLY aux stakeholders externes

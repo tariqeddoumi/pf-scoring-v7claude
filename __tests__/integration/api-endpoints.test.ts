@@ -2,7 +2,10 @@
  * Integration Tests for API Endpoints
  */
 
-import { SOLAR_MAROC_FIXTURE, SOLAR_MAROC_EXPECTED } from "../fixtures/solar-maroc-case";
+import {
+  SOLAR_MAROC_FIXTURE,
+  SOLAR_MAROC_EXPECTED,
+} from "../fixtures/solar-maroc-case";
 import {
   ScoringRequestBody,
   ScoringResponseBody,
@@ -27,11 +30,14 @@ describe("API Endpoints - Scoring Calculation", () => {
       analystName: "Test Analyst",
     };
 
-    const response = await fetch(`${BASE_URL}/evaluations/${evaluationId}/score/calculate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/${evaluationId}/score/calculate`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      }
+    );
 
     expect(response.status).toBe(200);
 
@@ -43,11 +49,14 @@ describe("API Endpoints - Scoring Calculation", () => {
   });
 
   it("should handle invalid JSON gracefully", async () => {
-    const response = await fetch(`${BASE_URL}/evaluations/eval-test-002/score/calculate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: "invalid json",
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/eval-test-002/score/calculate`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "invalid json",
+      }
+    );
 
     expect(response.status).toBe(400);
     const data = await response.json();
@@ -66,11 +75,14 @@ describe("API Endpoints - Scoring Calculation", () => {
       analystName: "Test Analyst",
     };
 
-    const response = await fetch(`${BASE_URL}/evaluations/eval-test-003/score/calculate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/eval-test-003/score/calculate`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      }
+    );
 
     // Should either succeed with warnings or fail
     expect([200, 400]).toContain(response.status);
@@ -92,11 +104,14 @@ describe("API Endpoints - Stress Testing", () => {
       ] as any,
     };
 
-    const response = await fetch(`${BASE_URL}/evaluations/${evaluationId}/stress-test`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/${evaluationId}/stress-test`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      }
+    );
 
     expect(response.status).toBe(200);
 
@@ -112,11 +127,14 @@ describe("API Endpoints - Stress Testing", () => {
       scenarios: [] as any[],
     };
 
-    const response = await fetch(`${BASE_URL}/evaluations/${evaluationId}/stress-test`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/${evaluationId}/stress-test`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      }
+    );
 
     expect(response.status).toBe(400);
     const data = await response.json();
@@ -129,11 +147,14 @@ describe("API Endpoints - Stress Testing", () => {
       scenarios: ["REVENUE_DECLINE_10", "COST_INFLATION_5"] as any,
     };
 
-    const response = await fetch(`${BASE_URL}/evaluations/${evaluationId}/stress-test`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/${evaluationId}/stress-test`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      }
+    );
 
     expect(response.status).toBe(200);
 
@@ -149,10 +170,13 @@ describe("API Endpoints - Report Retrieval", () => {
   const evaluationId = "eval-test-005";
 
   it("GET /evaluations/[id]/report should retrieve saved evaluation", async () => {
-    const response = await fetch(`${BASE_URL}/evaluations/${evaluationId}/report`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/${evaluationId}/report`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
     expect([200, 404]).toContain(response.status);
 
@@ -164,9 +188,12 @@ describe("API Endpoints - Report Retrieval", () => {
   });
 
   it("should support JSON format (default)", async () => {
-    const response = await fetch(`${BASE_URL}/evaluations/${evaluationId}/report?format=json`, {
-      method: "GET",
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/${evaluationId}/report?format=json`,
+      {
+        method: "GET",
+      }
+    );
 
     expect([200, 404]).toContain(response.status);
     const contentType = response.headers.get("content-type");
@@ -174,11 +201,14 @@ describe("API Endpoints - Report Retrieval", () => {
   });
 
   it("POST /evaluations/[id]/report should queue report generation", async () => {
-    const response = await fetch(`${BASE_URL}/evaluations/${evaluationId}/report`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ format: "json" }),
-    });
+    const response = await fetch(
+      `${BASE_URL}/evaluations/${evaluationId}/report`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format: "json" }),
+      }
+    );
 
     expect(response.status).toBe(202); // 202 Accepted for async operation
     const data = await response.json();
@@ -196,11 +226,14 @@ describe("API Endpoints - End-to-End Flow", () => {
       analystName: "Integration Test User",
     };
 
-    const calcResponse = await fetch(`${BASE_URL}/evaluations/${evalId}/score/calculate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(calcRequest),
-    });
+    const calcResponse = await fetch(
+      `${BASE_URL}/evaluations/${evalId}/score/calculate`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(calcRequest),
+      }
+    );
 
     expect(calcResponse.status).toBe(200);
     const calcResult = await calcResponse.json();
@@ -216,20 +249,26 @@ describe("API Endpoints - End-to-End Flow", () => {
       ] as any,
     };
 
-    const stressResponse = await fetch(`${BASE_URL}/evaluations/${evalId}/stress-test`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(stressRequest),
-    });
+    const stressResponse = await fetch(
+      `${BASE_URL}/evaluations/${evalId}/stress-test`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(stressRequest),
+      }
+    );
 
     expect(stressResponse.status).toBe(200);
     const stressResult = await stressResponse.json();
     expect(stressResult.success).toBe(true);
 
     // Step 3: Retrieve report
-    const reportResponse = await fetch(`${BASE_URL}/evaluations/${evalId}/report`, {
-      method: "GET",
-    });
+    const reportResponse = await fetch(
+      `${BASE_URL}/evaluations/${evalId}/report`,
+      {
+        method: "GET",
+      }
+    );
 
     expect([200, 404]).toContain(reportResponse.status);
   });

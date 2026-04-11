@@ -16,7 +16,9 @@ try {
     });
   }
 } catch (error) {
-  console.warn("Notion client not available - @notionhq/client module not installed");
+  console.warn(
+    "Notion client not available - @notionhq/client module not installed"
+  );
 }
 
 export { notion };
@@ -128,9 +130,7 @@ export async function getTrackingItems() {
   const databaseId = process.env.NOTION_DATABASE_ID;
 
   if (!databaseId) {
-    console.error(
-      "NOTION_DATABASE_ID not configured. Create database first."
-    );
+    console.error("NOTION_DATABASE_ID not configured. Create database first.");
     return [];
   }
 
@@ -275,7 +275,8 @@ export async function getTrackingStats() {
     planned: items.filter((i: any) => i.statut === "PLANIFIÉ").length,
     blocked: items.filter((i: any) => i.statut === "BLOQUÉ").length,
     averageCompletion:
-      items.reduce((sum: number, i: any) => sum + i.completion, 0) / items.length || 0,
+      items.reduce((sum: number, i: any) => sum + i.completion, 0) /
+        items.length || 0,
     byBloc: {} as Record<string, any>,
   };
 
@@ -290,10 +291,8 @@ export async function getTrackingStats() {
       };
     }
     stats.byBloc[item.bloc].total++;
-    if (item.statut === "INTÉGRÉ")
-      stats.byBloc[item.bloc].integrated++;
-    if (item.statut === "EN COURS")
-      stats.byBloc[item.bloc].inProgress++;
+    if (item.statut === "INTÉGRÉ") stats.byBloc[item.bloc].integrated++;
+    if (item.statut === "EN COURS") stats.byBloc[item.bloc].inProgress++;
     stats.byBloc[item.bloc].completion += item.completion;
   });
 

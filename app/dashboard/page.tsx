@@ -1,8 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { TrendingUp, AlertCircle, BarChart3, PieChart, Activity, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  TrendingUp,
+  AlertCircle,
+  BarChart3,
+  PieChart,
+  Activity,
+  ArrowRight,
+} from "lucide-react";
 
 interface Project {
   id: string;
@@ -41,15 +48,15 @@ export default function DashboardPage() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [activities, setActivities] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [projRes, evalRes, auditRes] = await Promise.all([
-          fetch('/api/projects?limit=100'),
-          fetch('/api/evaluations?limit=100'),
-          fetch('/api/audit?limit=10'),
+          fetch("/api/projects?limit=100"),
+          fetch("/api/evaluations?limit=100"),
+          fetch("/api/audit?limit=10"),
         ]);
 
         if (projRes.ok) {
@@ -67,7 +74,7 @@ export default function DashboardPage() {
           setActivities(Array.isArray(auditData) ? auditData : []);
         }
       } catch (err: any) {
-        setError(err.message || 'Erreur de chargement');
+        setError(err.message || "Erreur de chargement");
       } finally {
         setLoading(false);
       }
@@ -83,8 +90,11 @@ export default function DashboardPage() {
           <p className="text-slate-400 mt-2">Chargement...</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="rounded-lg bg-slate-800 p-6 animate-pulse h-28" />
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="rounded-lg bg-slate-800 p-6 animate-pulse h-28"
+            />
           ))}
         </div>
       </div>
@@ -92,27 +102,33 @@ export default function DashboardPage() {
   }
 
   const totalProjects = projects.length;
-  const approvedProjects = projects.filter(p => p.status === 'approuve').length;
-  const scoredProjects = projects.filter(p => p.scoreGlobal != null);
-  const avgScore = scoredProjects.length > 0
-    ? (scoredProjects.reduce((sum, p) => sum + (p.scoreGlobal || 0), 0) / scoredProjects.length).toFixed(2)
-    : '—';
+  const approvedProjects = projects.filter(
+    (p) => p.status === "approuve"
+  ).length;
+  const scoredProjects = projects.filter((p) => p.scoreGlobal != null);
+  const avgScore =
+    scoredProjects.length > 0
+      ? (
+          scoredProjects.reduce((sum, p) => sum + (p.scoreGlobal || 0), 0) /
+          scoredProjects.length
+        ).toFixed(2)
+      : "—";
   const totalExposure = projects.reduce((sum, p) => sum + (p.montant || 0), 0);
 
   // Rating distribution from real project grades
   const ratingCounts: Record<string, number> = {};
-  projects.forEach(p => {
+  projects.forEach((p) => {
     if (p.grade) {
-      const base = p.grade.replace(/[+-]/, '');
+      const base = p.grade.replace(/[+-]/, "");
       ratingCounts[base] = (ratingCounts[base] || 0) + 1;
     }
   });
-  const ratingLabels = ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'D'];
+  const ratingLabels = ["AAA", "AA", "A", "BBB", "BB", "B", "CCC", "D"];
 
   // Sector exposure computed from real data
   const sectorMap: Record<string, number> = {};
-  projects.forEach(p => {
-    const sector = p.secteur || 'Autre';
+  projects.forEach((p) => {
+    const sector = p.secteur || "Autre";
     sectorMap[sector] = (sectorMap[sector] || 0) + (p.montant || 0);
   });
   const sectorExposure = Object.entries(sectorMap)
@@ -125,23 +141,26 @@ export default function DashboardPage() {
 
   // Status breakdown using DB enum values
   const statusBreakdown = {
-    approuve: projects.filter(p => p.status === 'approuve').length,
-    en_revue: projects.filter(p => p.status === 'en_revue').length,
-    en_cours: projects.filter(p => p.status === 'en_cours').length,
-    brouillon: projects.filter(p => p.status === 'brouillon').length,
-    rejete: projects.filter(p => p.status === 'rejete').length,
+    approuve: projects.filter((p) => p.status === "approuve").length,
+    en_revue: projects.filter((p) => p.status === "en_revue").length,
+    en_cours: projects.filter((p) => p.status === "en_cours").length,
+    brouillon: projects.filter((p) => p.status === "brouillon").length,
+    rejete: projects.filter((p) => p.status === "rejete").length,
   };
 
   // Alerts generated from real data
-  const alerts: { id: string; type: string; title: string; message: string }[] = [];
-  projects.forEach(p => {
-    if (p.status === 'brouillon' || p.status === 'en_cours') {
-      const hasEval = evaluations.some(e => e.projectId === p.id && e.status === 'valide');
+  const alerts: { id: string; type: string; title: string; message: string }[] =
+    [];
+  projects.forEach((p) => {
+    if (p.status === "brouillon" || p.status === "en_cours") {
+      const hasEval = evaluations.some(
+        (e) => e.projectId === p.id && e.status === "valide"
+      );
       if (!hasEval) {
         alerts.push({
           id: `alert-${p.id}`,
-          type: 'warning',
-          title: 'Évaluation manquante',
+          type: "warning",
+          title: "Évaluation manquante",
           message: `${p.nom} n'a pas d'évaluation validée`,
         });
       }
@@ -149,8 +168,8 @@ export default function DashboardPage() {
     if (p.scoreGlobal != null && p.scoreGlobal < 5) {
       alerts.push({
         id: `alert-score-${p.id}`,
-        type: 'error',
-        title: 'Score faible détecté',
+        type: "error",
+        title: "Score faible détecté",
         message: `${p.nom}: Score ${p.scoreGlobal.toFixed(2)} - À surveiller`,
       });
     }
@@ -158,37 +177,43 @@ export default function DashboardPage() {
 
   const getAlertIcon = (type: string) => {
     switch (type) {
-      case 'error': return '🔴';
-      case 'warning': return '⚠️';
-      default: return 'ℹ️';
+      case "error":
+        return "🔴";
+      case "warning":
+        return "⚠️";
+      default:
+        return "ℹ️";
     }
   };
 
   const getAlertBorder = (type: string) => {
     switch (type) {
-      case 'error': return 'border-red-500';
-      case 'warning': return 'border-yellow-500';
-      default: return 'border-blue-500';
+      case "error":
+        return "border-red-500";
+      case "warning":
+        return "border-yellow-500";
+      default:
+        return "border-blue-500";
     }
   };
 
   const getRatingColor = (rating: string) => {
-    if (rating.startsWith('AA')) return 'text-green-400';
-    if (rating.startsWith('A')) return 'text-blue-400';
-    if (rating.startsWith('BBB')) return 'text-cyan-400';
-    return 'text-yellow-400';
+    if (rating.startsWith("AA")) return "text-green-400";
+    if (rating.startsWith("A")) return "text-blue-400";
+    if (rating.startsWith("BBB")) return "text-cyan-400";
+    return "text-yellow-400";
   };
 
   const getRatingBarColor = (rating: string) => {
-    if (rating.startsWith('AA')) return 'bg-green-500';
-    if (rating.startsWith('A')) return 'bg-blue-500';
-    if (rating.startsWith('BBB')) return 'bg-cyan-500';
-    return 'bg-yellow-500';
+    if (rating.startsWith("AA")) return "bg-green-500";
+    if (rating.startsWith("A")) return "bg-blue-500";
+    if (rating.startsWith("BBB")) return "bg-cyan-500";
+    return "bg-yellow-500";
   };
 
   const formatDate = (dateStr: string) => {
     try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
+      return new Date(dateStr).toLocaleDateString("fr-FR");
     } catch {
       return dateStr;
     }
@@ -196,9 +221,12 @@ export default function DashboardPage() {
 
   const formatTime = (dateStr: string) => {
     try {
-      return new Date(dateStr).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return new Date(dateStr).toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } catch {
-      return '';
+      return "";
     }
   };
 
@@ -207,7 +235,9 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">Tableau de Bord</h1>
-        <p className="text-slate-400 mt-2">Vue d&apos;ensemble du portefeuille de projets</p>
+        <p className="text-slate-400 mt-2">
+          Vue d&apos;ensemble du portefeuille de projets
+        </p>
       </div>
 
       {error && (
@@ -221,14 +251,16 @@ export default function DashboardPage() {
         <div className="rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
           <p className="text-sm opacity-90 mb-2">Projets Total</p>
           <p className="text-3xl font-bold">{totalProjects}</p>
-          <p className="text-xs opacity-75 mt-2">{approvedProjects} approuvés</p>
+          <p className="text-xs opacity-75 mt-2">
+            {approvedProjects} approuvés
+          </p>
         </div>
 
         <div className="rounded-lg bg-gradient-to-br from-cyan-600 to-cyan-700 p-6 text-white">
           <p className="text-sm opacity-90 mb-2">Évaluations</p>
           <p className="text-3xl font-bold">{evaluations.length}</p>
           <p className="text-xs opacity-75 mt-2">
-            {evaluations.filter(e => e.status === 'valide').length} validées
+            {evaluations.filter((e) => e.status === "valide").length} validées
           </p>
         </div>
 
@@ -264,12 +296,19 @@ export default function DashboardPage() {
                 <p className="text-sm text-slate-400">Aucune alerte active</p>
               )}
               {alerts.slice(0, 5).map((alert) => (
-                <div key={alert.id} className={`bg-slate-700 rounded-lg p-3 border-l-4 ${getAlertBorder(alert.type)}`}>
+                <div
+                  key={alert.id}
+                  className={`bg-slate-700 rounded-lg p-3 border-l-4 ${getAlertBorder(alert.type)}`}
+                >
                   <div className="flex items-start space-x-2">
                     <span className="text-lg">{getAlertIcon(alert.type)}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white">{alert.title}</p>
-                      <p className="text-xs text-slate-400 mt-1">{alert.message}</p>
+                      <p className="text-sm font-semibold text-white">
+                        {alert.title}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {alert.message}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -289,28 +328,36 @@ export default function DashboardPage() {
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   <span className="text-sm text-slate-300">Approuvés</span>
                 </div>
-                <span className="text-lg font-bold text-white">{statusBreakdown.approuve}</span>
+                <span className="text-lg font-bold text-white">
+                  {statusBreakdown.approuve}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                   <span className="text-sm text-slate-300">En Révision</span>
                 </div>
-                <span className="text-lg font-bold text-white">{statusBreakdown.en_revue}</span>
+                <span className="text-lg font-bold text-white">
+                  {statusBreakdown.en_revue}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                   <span className="text-sm text-slate-300">En Cours</span>
                 </div>
-                <span className="text-lg font-bold text-white">{statusBreakdown.en_cours}</span>
+                <span className="text-lg font-bold text-white">
+                  {statusBreakdown.en_cours}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-slate-500"></div>
                   <span className="text-sm text-slate-300">Brouillon</span>
                 </div>
-                <span className="text-lg font-bold text-white">{statusBreakdown.brouillon}</span>
+                <span className="text-lg font-bold text-white">
+                  {statusBreakdown.brouillon}
+                </span>
               </div>
               {statusBreakdown.rejete > 0 && (
                 <div className="flex items-center justify-between">
@@ -318,7 +365,9 @@ export default function DashboardPage() {
                     <div className="w-3 h-3 rounded-full bg-red-500"></div>
                     <span className="text-sm text-slate-300">Rejetés</span>
                   </div>
-                  <span className="text-lg font-bold text-white">{statusBreakdown.rejete}</span>
+                  <span className="text-lg font-bold text-white">
+                    {statusBreakdown.rejete}
+                  </span>
                 </div>
               )}
             </div>
@@ -334,24 +383,37 @@ export default function DashboardPage() {
               <span>Distribution par Rating</span>
             </h2>
             <div className="space-y-3">
-              {ratingLabels.filter(r => (ratingCounts[r] || 0) > 0 || ['AAA', 'AA', 'A', 'BBB', 'B'].includes(r)).map((rating) => {
-                const count = ratingCounts[rating] || 0;
-                const percentage = totalProjects > 0 ? (count / totalProjects) * 100 : 0;
-                return (
-                  <div key={rating}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`font-semibold text-sm ${getRatingColor(rating)}`}>{rating}</span>
-                      <span className="text-xs text-slate-400">{count} projet{count !== 1 ? 's' : ''}</span>
+              {ratingLabels
+                .filter(
+                  (r) =>
+                    (ratingCounts[r] || 0) > 0 ||
+                    ["AAA", "AA", "A", "BBB", "B"].includes(r)
+                )
+                .map((rating) => {
+                  const count = ratingCounts[rating] || 0;
+                  const percentage =
+                    totalProjects > 0 ? (count / totalProjects) * 100 : 0;
+                  return (
+                    <div key={rating}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span
+                          className={`font-semibold text-sm ${getRatingColor(rating)}`}
+                        >
+                          {rating}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {count} projet{count !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-700 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full ${getRatingBarColor(rating)}`}
+                          style={{ width: `${Math.min(percentage, 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${getRatingBarColor(rating)}`}
-                        style={{ width: `${Math.min(percentage, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
 
@@ -362,20 +424,33 @@ export default function DashboardPage() {
               <span>Exposition par Secteur</span>
             </h2>
             {sectorExposure.length === 0 ? (
-              <p className="text-sm text-slate-400">Aucun projet avec secteur défini</p>
+              <p className="text-sm text-slate-400">
+                Aucun projet avec secteur défini
+              </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {sectorExposure.map((sector) => (
-                  <div key={sector.sector} className="bg-slate-700 rounded-lg p-3">
-                    <p className="text-sm font-semibold text-white truncate">{sector.sector}</p>
+                  <div
+                    key={sector.sector}
+                    className="bg-slate-700 rounded-lg p-3"
+                  >
+                    <p className="text-sm font-semibold text-white truncate">
+                      {sector.sector}
+                    </p>
                     <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-slate-400">{sector.percentage.toFixed(1)}%</p>
-                      <p className="text-sm font-bold text-cyan-400">{(sector.amount / 1000000).toFixed(0)}M</p>
+                      <p className="text-xs text-slate-400">
+                        {sector.percentage.toFixed(1)}%
+                      </p>
+                      <p className="text-sm font-bold text-cyan-400">
+                        {(sector.amount / 1000000).toFixed(0)}M
+                      </p>
                     </div>
                     <div className="w-full bg-slate-600 rounded-full h-1 mt-2">
                       <div
                         className="bg-cyan-500 h-1 rounded-full"
-                        style={{ width: `${Math.min(sector.percentage, 100)}%` }}
+                        style={{
+                          width: `${Math.min(sector.percentage, 100)}%`,
+                        }}
                       ></div>
                     </div>
                   </div>
@@ -397,19 +472,31 @@ export default function DashboardPage() {
             <p className="text-sm text-slate-400">Aucune activité récente</p>
           )}
           {activities.slice(0, 8).map((activity) => (
-            <div key={activity.id} className="flex items-start space-x-4 pb-3 border-b border-slate-700 last:border-b-0">
+            <div
+              key={activity.id}
+              className="flex items-start space-x-4 pb-3 border-b border-slate-700 last:border-b-0"
+            >
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-xs font-semibold text-cyan-400">{activity.action}</span>
+                  <span className="text-xs font-semibold text-cyan-400">
+                    {activity.action}
+                  </span>
                   <span className="text-xs text-slate-500">•</span>
-                  <span className="text-xs text-slate-400">{formatDate(activity.dateAction)} {formatTime(activity.dateAction)}</span>
+                  <span className="text-xs text-slate-400">
+                    {formatDate(activity.dateAction)}{" "}
+                    {formatTime(activity.dateAction)}
+                  </span>
                 </div>
                 <p className="text-sm text-white">
-                  {typeof activity.details === 'object' && activity.details
-                    ? activity.details.description || activity.details.message || JSON.stringify(activity.details)
+                  {typeof activity.details === "object" && activity.details
+                    ? activity.details.description ||
+                      activity.details.message ||
+                      JSON.stringify(activity.details)
                     : activity.details || activity.action}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">Par {activity.utilisateurId}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Par {activity.utilisateurId}
+                </p>
               </div>
               <ArrowRight size={16} className="text-slate-500 mt-1" />
             </div>
@@ -428,7 +515,10 @@ export default function DashboardPage() {
               <h3 className="font-semibold text-white mb-1">Projets</h3>
               <p className="text-sm text-slate-400">Gestion des projets</p>
             </div>
-            <ArrowRight size={20} className="text-slate-500 group-hover:text-cyan-400 transition-colors" />
+            <ArrowRight
+              size={20}
+              className="text-slate-500 group-hover:text-cyan-400 transition-colors"
+            />
           </div>
         </Link>
 
@@ -441,7 +531,10 @@ export default function DashboardPage() {
               <h3 className="font-semibold text-white mb-1">Évaluations</h3>
               <p className="text-sm text-slate-400">Suivi des scores</p>
             </div>
-            <ArrowRight size={20} className="text-slate-500 group-hover:text-cyan-400 transition-colors" />
+            <ArrowRight
+              size={20}
+              className="text-slate-500 group-hover:text-cyan-400 transition-colors"
+            />
           </div>
         </Link>
 
@@ -454,7 +547,10 @@ export default function DashboardPage() {
               <h3 className="font-semibold text-white mb-1">Clients</h3>
               <p className="text-sm text-slate-400">Base clients</p>
             </div>
-            <ArrowRight size={20} className="text-slate-500 group-hover:text-cyan-400 transition-colors" />
+            <ArrowRight
+              size={20}
+              className="text-slate-500 group-hover:text-cyan-400 transition-colors"
+            />
           </div>
         </Link>
       </div>

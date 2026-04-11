@@ -15,10 +15,20 @@ export default function MethodologyPage() {
         <Card className="p-6">
           <h2 className="text-xl font-bold mb-4">Conformités réglementaires</h2>
           <ul className="space-y-2 text-sm">
-            <li>✓ <strong>IFC</strong> - International Finance Corporation standards</li>
-            <li>✓ <strong>EBRD</strong> - European Bank for Reconstruction standards</li>
-            <li>✓ <strong>Basel III</strong> - International capital adequacy</li>
-            <li>✓ <strong>Bank Al-Maghrib</strong> - Central bank regulations</li>
+            <li>
+              ✓ <strong>IFC</strong> - International Finance Corporation
+              standards
+            </li>
+            <li>
+              ✓ <strong>EBRD</strong> - European Bank for Reconstruction
+              standards
+            </li>
+            <li>
+              ✓ <strong>Basel III</strong> - International capital adequacy
+            </li>
+            <li>
+              ✓ <strong>Bank Al-Maghrib</strong> - Central bank regulations
+            </li>
           </ul>
         </Card>
 

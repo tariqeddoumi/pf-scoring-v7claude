@@ -23,9 +23,7 @@ export class DataValidator {
   /**
    * Validate project data completeness
    */
-  public validateCompleteness(
-    projectData: ProjectData
-  ): DataCompletenessCheck {
+  public validateCompleteness(projectData: ProjectData): DataCompletenessCheck {
     const results: DataCompletenessCheck = {
       projectId: projectData.projectId,
       overall: DataCompletenesStatus.COMPLETE,
@@ -169,7 +167,11 @@ export class DataValidator {
     }
 
     // Negative amount validation
-    if (projectData.financial && projectData.financial.debtAmount && projectData.financial.debtAmount < 0) {
+    if (
+      projectData.financial &&
+      projectData.financial.debtAmount &&
+      projectData.financial.debtAmount < 0
+    ) {
       errors.push({
         field: "financial.debtAmount",
         value: projectData.financial.debtAmount,
@@ -198,7 +200,10 @@ export class DataValidator {
     if (totalFunding <= 0) {
       errors.push({
         field: "financial",
-        value: { debt: projectData.financial.debtAmount, equity: projectData.financial.equityAmount },
+        value: {
+          debt: projectData.financial.debtAmount,
+          equity: projectData.financial.equityAmount,
+        },
         message: "Total funding (debt + equity) must be positive",
         severity: "ERROR",
       });
@@ -274,7 +279,10 @@ export class ComplexIndicatorsCalculator {
     // Target: <30% debt = 10, >80% debt = 1
     const debtAmount = projectData.financial?.debtAmount ?? 0;
     const equityAmount = projectData.financial?.equityAmount ?? 0;
-    const debtRatio = (debtAmount + equityAmount > 0) ? debtAmount / (debtAmount + equityAmount) : 0;
+    const debtRatio =
+      debtAmount + equityAmount > 0
+        ? debtAmount / (debtAmount + equityAmount)
+        : 0;
     const leverageInverse = Math.max(2, 12 - debtRatio * 14);
 
     // Component 4: Sector Stability (placeholder, 0-10)

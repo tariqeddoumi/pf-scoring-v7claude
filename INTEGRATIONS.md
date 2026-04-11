@@ -3,6 +3,7 @@
 ## 1️⃣ Webhook System
 
 ### Auto-Events
+
 ```
 evaluation.submitted    → Email analyst
 evaluation.validated    → Email analyst
@@ -13,6 +14,7 @@ project.created        → Notification
 ```
 
 ### Usage
+
 ```ts
 import { webhookService } from '@/lib/webhook-service';
 
@@ -25,6 +27,7 @@ await webhookService.emit('evaluation.submitted', {
 ```
 
 ### API Endpoint
+
 ```
 POST /api/webhooks
 ```
@@ -34,12 +37,14 @@ POST /api/webhooks
 ## 2️⃣ Email Service
 
 ### Templates
+
 - `evaluation_submitted` - Notification soumission
 - `evaluation_validated` - Confirmation validation
 - `evaluation_rejected` - Rejection notice
 - `alert_critical` - Critical alerts
 
 ### Configuration
+
 ```env
 EMAIL_PROVIDER=sendgrid|mailgun|smtp
 EMAIL_API_KEY=your-key
@@ -47,13 +52,14 @@ EMAIL_FROM=noreply@pfscoring.ma
 ```
 
 ### Usage
+
 ```ts
-import { emailService } from '@/lib/email-service';
+import { emailService } from "@/lib/email-service";
 
 await emailService.sendEvaluationSubmitted(
-  'user@bank.ma',
-  'Ahmed Bennani',
-  'eval_123'
+  "user@bank.ma",
+  "Ahmed Bennani",
+  "eval_123"
 );
 ```
 
@@ -62,20 +68,23 @@ await emailService.sendEvaluationSubmitted(
 ## 3️⃣ PDF Generation
 
 ### Method 1: Print Dialog (Recommandé)
+
 ```ts
-import { PDFService } from '@/lib/pdf-service';
+import { PDFService } from "@/lib/pdf-service";
 
 PDFService.openPrintDialog(evaluation);
 // User: Ctrl+P → Save as PDF
 ```
 
 ### Method 2: Download Blob
+
 ```ts
 const blob = PDFService.generateEvaluationPDF(evaluation);
 // Download or send via email
 ```
 
 ### Features
+
 - Professional HTML layout
 - Print-optimized styles
 - Metadata & timestamps
@@ -89,6 +98,7 @@ const blob = PDFService.generateEvaluationPDF(evaluation);
 
 1. Dashboard → Database → Webhooks
 2. Create webhook for `evaluations` table:
+
    ```
    Events: INSERT, UPDATE
    URL: https://your-domain.vercel.app/api/webhooks
@@ -101,6 +111,7 @@ const blob = PDFService.generateEvaluationPDF(evaluation);
    ```
 
 ### B. Webhook Payload Example
+
 ```json
 {
   "type": "INSERT",

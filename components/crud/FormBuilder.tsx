@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ZodSchema } from 'zod';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ZodSchema } from "zod";
 import {
   Form,
   FormControl,
@@ -11,22 +11,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select';
+  type: "text" | "email" | "password" | "number" | "textarea" | "select";
   placeholder?: string;
   required?: boolean;
   options?: { label: string; value: string }[];
@@ -46,7 +46,7 @@ export function FormBuilder({
   schema,
   fields,
   onSubmit,
-  submitLabel = 'Submit',
+  submitLabel = "Submit",
   loading = false,
   error,
 }: FormBuilderProps) {
@@ -55,7 +55,7 @@ export function FormBuilder({
     defaultValues: fields.reduce(
       (acc, field) => ({
         ...acc,
-        [field.name]: field.defaultValue || '',
+        [field.name]: field.defaultValue || "",
       }),
       {}
     ),
@@ -65,8 +65,7 @@ export function FormBuilder({
     try {
       await onSubmit(data);
       form.reset();
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
   return (
@@ -85,9 +84,11 @@ export function FormBuilder({
             name={field.name as any}
             render={({ field: fieldProps }) => (
               <FormItem>
-                <FormLabel className="text-gray-700 font-medium">{field.label}</FormLabel>
+                <FormLabel className="text-gray-700 font-medium">
+                  {field.label}
+                </FormLabel>
                 <FormControl>
-                  {field.type === 'textarea' ? (
+                  {field.type === "textarea" ? (
                     <Textarea
                       {...fieldProps}
                       placeholder={field.placeholder}
@@ -95,7 +96,7 @@ export function FormBuilder({
                       className="resize-none"
                       rows={4}
                     />
-                  ) : field.type === 'select' ? (
+                  ) : field.type === "select" ? (
                     <Select
                       value={fieldProps.value}
                       onValueChange={fieldProps.onChange}
@@ -133,7 +134,7 @@ export function FormBuilder({
           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           disabled={loading}
         >
-          {loading ? 'Submitting...' : submitLabel}
+          {loading ? "Submitting..." : submitLabel}
         </Button>
       </form>
     </Form>

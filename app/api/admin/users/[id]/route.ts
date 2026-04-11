@@ -28,12 +28,12 @@ export async function PATCH(
           prenom: true,
           role: true,
           createdAt: true,
-        }
+        },
       });
 
       return NextResponse.json({
         success: true,
-        data: user
+        data: user,
       });
     } catch (error: any) {
       console.error("[ADMIN/USERS/[ID]] PATCH error:", error);
@@ -54,7 +54,7 @@ export async function DELETE(
       const { id } = await params;
 
       // Prevent deleting yourself
-      const authHeader = request.headers.get('authorization');
+      const authHeader = request.headers.get("authorization");
       if (authHeader) {
         // Optional: Add check to prevent self-deletion
       }
@@ -66,7 +66,7 @@ export async function DELETE(
           email: true,
           nom: true,
           prenom: true,
-        }
+        },
       });
 
       console.log(`[ADMIN/USERS] User deleted: ${user.email}`);
@@ -74,12 +74,12 @@ export async function DELETE(
       return NextResponse.json({
         success: true,
         data: user,
-        message: "Utilisateur supprimé avec succès"
+        message: "Utilisateur supprimé avec succès",
       });
     } catch (error: any) {
       console.error("[ADMIN/USERS/[ID]] DELETE error:", error);
-      
-      if (error.code === 'P2025') {
+
+      if (error.code === "P2025") {
         return NextResponse.json(
           { error: "Utilisateur non trouvé", errorCode: "BIZ_002" },
           { status: 404 }

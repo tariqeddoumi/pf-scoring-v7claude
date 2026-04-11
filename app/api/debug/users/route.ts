@@ -15,8 +15,11 @@ export async function GET() {
     });
     return NextResponse.json({ users });
   } catch (error: unknown) {
-    return NextResponse.json({
-      error: getErrorMessage(error),
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: getErrorMessage(error),
+      },
+      { status: 500 }
+    );
   }
 }

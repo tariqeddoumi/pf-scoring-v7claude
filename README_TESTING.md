@@ -9,6 +9,7 @@
 This project is **fully implemented and tested**. Choose your deployment path:
 
 ### ⚡ Quick Start (5 minutes)
+
 ```bash
 npm install
 npm run dev
@@ -17,15 +18,15 @@ npm run dev
 
 ### 📚 Choose Your Path
 
-| Goal | Time | Guide |
-|------|------|-------|
-| **Test Locally** | 5 min | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) Part 1-2 |
-| **Deploy Locally** | 20 min | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) Part 3.A |
-| **Deploy to Vercel** | 10 min | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) Part 3.B |
-| **Setup Supabase** | 15 min | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) Part 3.C |
-| **Understand API** | 15 min | [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) |
-| **Extend the System** | 30 min | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) |
-| **Deploy to Production** | 30 min | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) |
+| Goal                     | Time   | Guide                                                         |
+| ------------------------ | ------ | ------------------------------------------------------------- |
+| **Test Locally**         | 5 min  | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) Part 1-2 |
+| **Deploy Locally**       | 20 min | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) Part 3.A |
+| **Deploy to Vercel**     | 10 min | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) Part 3.B |
+| **Setup Supabase**       | 15 min | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) Part 3.C |
+| **Understand API**       | 15 min | [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)                |
+| **Extend the System**    | 30 min | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)                    |
+| **Deploy to Production** | 30 min | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)                  |
 
 ---
 
@@ -157,28 +158,33 @@ npm run test:coverage
 Choose **ONE** option based on your needs:
 
 ### Option 1️⃣: Local Development (5 minutes)
+
 Perfect for: Learning, testing, local development
 
 ```bash
 npm install && npm run dev
 # API at http://localhost:3000 ✅
 ```
+
 **→ See**: IMPLEMENTATION_GUIDE.md Part 1
 
 ---
 
 ### Option 2️⃣: Local Production with Docker (20 minutes)
+
 Perfect for: Testing in production-like environment
 
 ```bash
 docker-compose up --build
 # App at http://localhost:3000 ✅
 ```
+
 **→ See**: IMPLEMENTATION_GUIDE.md Part 3.A
 
 ---
 
 ### Option 3️⃣: Vercel (Recommended) (10 minutes)
+
 Perfect for: Easy cloud deployment, auto-scaling, CDN
 
 ```bash
@@ -186,11 +192,13 @@ npm install -g vercel
 vercel --prod
 # App at https://pf-scoring.vercel.app ✅
 ```
+
 **→ See**: IMPLEMENTATION_GUIDE.md Part 3.B
 
 ---
 
 ### Option 4️⃣: Full Stack (Vercel + Supabase) (30 minutes)
+
 Perfect for: Production with database persistence
 
 ```bash
@@ -198,6 +206,7 @@ Perfect for: Production with database persistence
 # 2. Deploy to Vercel: vercel --prod
 # 3. Connect database: Configure env vars
 ```
+
 **→ See**: IMPLEMENTATION_GUIDE.md Part 3.B-3.C
 
 ---
@@ -205,6 +214,7 @@ Perfect for: Production with database persistence
 ## 📊 API Endpoints (Test These First)
 
 ### 1. Calculate Score
+
 ```bash
 POST /api/evaluations/[id]/score/calculate
 # Input: ProjectData
@@ -212,6 +222,7 @@ POST /api/evaluations/[id]/score/calculate
 ```
 
 ### 2. Stress Testing
+
 ```bash
 POST /api/evaluations/[id]/stress-test
 # Input: 6 scenarios (Revenue, Cost, Rate, FX, Market, Combined)
@@ -219,12 +230,14 @@ POST /api/evaluations/[id]/stress-test
 ```
 
 ### 3. Generate Report
+
 ```bash
 GET /api/evaluations/[id]/report
 # Output: Complete evaluation report with audit trail
 ```
 
 ### 4. Queue Report
+
 ```bash
 POST /api/evaluations/[id]/report
 # Output: 202 Accepted (async generation)
@@ -237,26 +250,31 @@ POST /api/evaluations/[id]/report
 ## 🔍 What to Test
 
 ### Core Scoring Engine ✅
+
 - [x] All 9 domains calculate correctly
 - [x] Score transformation (1-10 → AAA-D)
 - [x] Rating matches expected range
 
 ### Business Rules ✅
+
 - [x] 21 NO-GO rules trigger correctly
 - [x] 19+ MALUS rules apply penalties
 - [x] Combined score reflects all rules
 
 ### API Endpoints ✅
+
 - [x] Calculate endpoint works
 - [x] Stress test endpoint works
 - [x] Report endpoint works
 
 ### Database ✅
+
 - [x] Evaluations saved to database
 - [x] Audit logs recorded
 - [x] Data persists after restart
 
 ### Real-World Case ✅
+
 - [x] Solar Maroc 50MW project → A rating, ~8.08 score
 
 ---
@@ -264,12 +282,14 @@ POST /api/evaluations/[id]/report
 ## 📋 Next Steps After Testing
 
 ### If Tests Pass ✅
+
 1. ✅ Read PROJECT_COMPLETION_REPORT.md (understand decisions)
 2. ✅ Deploy to your preferred platform (Option 1-4 above)
 3. ✅ Set up monitoring and alerts
 4. ✅ Start using the system in production
 
 ### If Issues Found ❌
+
 1. Check [TROUBLESHOOTING.md](#troubleshooting) below
 2. Run `npm run type-check` for TypeScript errors
 3. Check database connection
@@ -279,20 +299,21 @@ POST /api/evaluations/[id]/report
 
 ## ⚙️ Configuration Files Explained
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `.env.local` | Local environment variables | Create it |
-| `vercel.json` | Vercel deployment config | Ready |
-| `jest.config.js` | Test configuration | Ready |
-| `tsconfig.json` | TypeScript configuration | Ready |
-| `prisma/schema.prisma` | Database schema | Ready |
-| `.github/workflows/` | CI/CD pipeline | Ready |
+| File                   | Purpose                     | Status    |
+| ---------------------- | --------------------------- | --------- |
+| `.env.local`           | Local environment variables | Create it |
+| `vercel.json`          | Vercel deployment config    | Ready     |
+| `jest.config.js`       | Test configuration          | Ready     |
+| `tsconfig.json`        | TypeScript configuration    | Ready     |
+| `prisma/schema.prisma` | Database schema             | Ready     |
+| `.github/workflows/`   | CI/CD pipeline              | Ready     |
 
 ---
 
 ## 🆘 Troubleshooting
 
 ### "Cannot find module" Error
+
 ```bash
 rm -rf node_modules package-lock.json
 npm install
@@ -300,6 +321,7 @@ npm run build
 ```
 
 ### TypeScript Compilation Error
+
 ```bash
 npm run type-check
 # Fix reported errors, then:
@@ -307,6 +329,7 @@ npm run build
 ```
 
 ### API Returns 500 Error
+
 ```bash
 # Check logs
 npm run dev  # Look for error messages
@@ -317,6 +340,7 @@ psql $DATABASE_URL -c "SELECT 1"  # Should work
 ```
 
 ### Tests Failing
+
 ```bash
 # Run with verbose output
 npm test -- --verbose
@@ -332,13 +356,13 @@ npm install
 
 ## 📞 Support Resources
 
-| Need | Resource |
-|------|----------|
-| API Reference | [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) |
-| How to Extend | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) |
-| Deploy to Production | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) |
-| Implementation Steps | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md) |
-| Design Decisions | [PROJECT_COMPLETION_REPORT.md](./PROJECT_COMPLETION_REPORT.md) |
+| Need                 | Resource                                                       |
+| -------------------- | -------------------------------------------------------------- |
+| API Reference        | [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)                 |
+| How to Extend        | [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)                     |
+| Deploy to Production | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)                   |
+| Implementation Steps | [IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md)           |
+| Design Decisions     | [PROJECT_COMPLETION_REPORT.md](./PROJECT_COMPLETION_REPORT.md) |
 
 ---
 
@@ -361,24 +385,28 @@ Your testing is complete when:
 ## 🚀 Deployment Commands by Platform
 
 ### Local
+
 ```bash
 npm install && npm run dev
 # http://localhost:3000
 ```
 
 ### Docker
+
 ```bash
 docker-compose up --build
 # http://localhost:3000
 ```
 
 ### Vercel
+
 ```bash
 vercel --prod
 # https://your-app.vercel.app
 ```
 
 ### Traditional VPS
+
 ```bash
 npm install && npm run build
 NODE_ENV=production npm start
@@ -416,20 +444,20 @@ NODE_ENV=production npm start
 ✅ **Type Safe**: TypeScript strict mode, 0 compilation errors  
 ✅ **Tested**: Unit + Integration tests ready to run  
 ✅ **Documented**: 18,000+ words of professional documentation  
-✅ **Production Ready**: Deploy anywhere (local, Docker, Vercel, VPS)  
+✅ **Production Ready**: Deploy anywhere (local, Docker, Vercel, VPS)
 
 ---
 
 ## 📝 Summary
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| Code | ✅ Complete | 3,500+ lines, 0 TS errors |
-| Tests | ✅ Ready | Unit + Integration configured |
-| Documentation | ✅ Complete | 5 comprehensive guides |
-| API | ✅ Working | 4 endpoints, fully functional |
-| Database | ✅ Ready | Prisma schema prepared |
-| Deployment | ✅ Ready | 4 options available |
+| Aspect        | Status      | Notes                         |
+| ------------- | ----------- | ----------------------------- |
+| Code          | ✅ Complete | 3,500+ lines, 0 TS errors     |
+| Tests         | ✅ Ready    | Unit + Integration configured |
+| Documentation | ✅ Complete | 5 comprehensive guides        |
+| API           | ✅ Working  | 4 endpoints, fully functional |
+| Database      | ✅ Ready    | Prisma schema prepared        |
+| Deployment    | ✅ Ready    | 4 options available           |
 
 **Everything is ready to test and deploy!** 🚀
 
@@ -440,6 +468,7 @@ NODE_ENV=production npm start
 Choose an option above and follow the guide. If you hit any issues, check the troubleshooting section or refer to the detailed guides.
 
 **Questions?** See the appropriate guide:
+
 - Testing → IMPLEMENTATION_GUIDE.md
 - API usage → API_DOCUMENTATION.md
 - Extending → DEVELOPER_GUIDE.md

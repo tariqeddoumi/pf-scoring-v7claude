@@ -20,7 +20,9 @@ interface CountryRiskConfig {
 
 export default function CountryRiskPage() {
   const [countries, setCountries] = useState<Country[]>([]);
-  const [config, setConfig] = useState<CountryRiskConfig>({ mode: "AUTO_ASSIGN" });
+  const [config, setConfig] = useState<CountryRiskConfig>({
+    mode: "AUTO_ASSIGN",
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -147,8 +149,8 @@ export default function CountryRiskPage() {
               <div>
                 <p className="font-medium">Assignation Automatique</p>
                 <p className="text-sm text-muted-foreground">
-                  Le score de risque pays est automatiquement assigné basé sur le
-                  pays sélectionné lors de la création du projet
+                  Le score de risque pays est automatiquement assigné basé sur
+                  le pays sélectionné lors de la création du projet
                 </p>
               </div>
             </label>
@@ -166,8 +168,8 @@ export default function CountryRiskPage() {
               <div>
                 <p className="font-medium">Assignation Manuelle</p>
                 <p className="text-sm text-muted-foreground">
-                  Les évaluateurs doivent manuellement assigner le score de risque
-                  pays pendant l&apos;évaluation
+                  Les évaluateurs doivent manuellement assigner le score de
+                  risque pays pendant l&apos;évaluation
                 </p>
               </div>
             </label>
@@ -195,7 +197,9 @@ export default function CountryRiskPage() {
               >
                 <div>
                   <p className="font-medium">{country.label}</p>
-                  <p className="text-xs text-muted-foreground">{country.code}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {country.code}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-4">

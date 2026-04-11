@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma-client';
+import prisma from "@/lib/prisma-client";
 
 /**
  * Comprehensive audit trail service for scoring system
@@ -9,13 +9,13 @@ export class ScoringAuditService {
    */
   static async logModelChange(
     modelId: string,
-    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'PUBLISH' | 'ARCHIVE',
+    action: "CREATE" | "UPDATE" | "DELETE" | "PUBLISH" | "ARCHIVE",
     changedBy: string,
     details: any
   ) {
     await prisma.scoringChangeLog.create({
       data: {
-        entityType: 'ScoringModel',
+        entityType: "ScoringModel",
         entityId: modelId,
         modelId: modelId,
         action,
@@ -24,9 +24,9 @@ export class ScoringAuditService {
         comment: JSON.stringify({
           action,
           timestamp: new Date().toISOString(),
-          ...details
-        })
-      }
+          ...details,
+        }),
+      },
     });
   }
 
@@ -43,17 +43,17 @@ export class ScoringAuditService {
   ) {
     await prisma.scoringChangeLog.create({
       data: {
-        entityType: 'ScoringModelVersion',
+        entityType: "ScoringModelVersion",
         entityId: versionId,
         modelId,
         versionId,
-        action: 'STATUS_TRANSITION',
+        action: "STATUS_TRANSITION",
         changedBy: transitionedBy,
         changedAt: new Date(),
         oldValueJson: JSON.stringify({ status: fromStatus }),
         newValueJson: JSON.stringify({ status: toStatus }),
-        comment: reason || `Transitioned from ${fromStatus} to ${toStatus}`
-      }
+        comment: reason || `Transitioned from ${fromStatus} to ${toStatus}`,
+      },
     });
   }
 
@@ -64,14 +64,14 @@ export class ScoringAuditService {
     nodeId: string,
     modelId: string,
     versionId: string,
-    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'REORDER',
+    action: "CREATE" | "UPDATE" | "DELETE" | "REORDER",
     changedBy: string,
     oldValue?: any,
     newValue?: any
   ) {
     await prisma.scoringChangeLog.create({
       data: {
-        entityType: 'ScoringNode',
+        entityType: "ScoringNode",
         entityId: nodeId,
         modelId,
         versionId,
@@ -79,8 +79,8 @@ export class ScoringAuditService {
         changedBy,
         changedAt: new Date(),
         oldValueJson: oldValue ? JSON.stringify(oldValue) : null,
-        newValueJson: newValue ? JSON.stringify(newValue) : null
-      }
+        newValueJson: newValue ? JSON.stringify(newValue) : null,
+      },
     });
   }
 
@@ -91,14 +91,14 @@ export class ScoringAuditService {
     evaluationId: string,
     nodeId: string,
     modelId: string,
-    action: 'CREATE' | 'UPDATE',
+    action: "CREATE" | "UPDATE",
     changedBy: string,
     oldValue?: any,
     newValue?: any
   ) {
     await prisma.scoringChangeLog.create({
       data: {
-        entityType: 'ScoringEvaluationAnswer',
+        entityType: "ScoringEvaluationAnswer",
         entityId: `${evaluationId}:${nodeId}`,
         modelId,
         evaluationId,
@@ -106,8 +106,8 @@ export class ScoringAuditService {
         changedBy,
         changedAt: new Date(),
         oldValueJson: oldValue ? JSON.stringify(oldValue) : null,
-        newValueJson: newValue ? JSON.stringify(newValue) : null
-      }
+        newValueJson: newValue ? JSON.stringify(newValue) : null,
+      },
     });
   }
 
@@ -124,17 +124,17 @@ export class ScoringAuditService {
   ) {
     await prisma.scoringChangeLog.create({
       data: {
-        entityType: 'ScoringEvaluation',
+        entityType: "ScoringEvaluation",
         entityId: evaluationId,
         modelId,
         evaluationId,
-        action: 'STATUS_CHANGE',
+        action: "STATUS_CHANGE",
         changedBy,
         changedAt: new Date(),
         oldValueJson: JSON.stringify({ status: fromStatus }),
         newValueJson: JSON.stringify({ status: toStatus }),
-        comment: reason || `Status changed from ${fromStatus} to ${toStatus}`
-      }
+        comment: reason || `Status changed from ${fromStatus} to ${toStatus}`,
+      },
     });
   }
 
@@ -151,20 +151,20 @@ export class ScoringAuditService {
   ) {
     await prisma.scoringChangeLog.create({
       data: {
-        entityType: 'ScoringEvaluation',
+        entityType: "ScoringEvaluation",
         entityId: evaluationId,
         modelId,
         evaluationId,
-        action: 'SCORING_CALCULATED',
+        action: "SCORING_CALCULATED",
         changedBy: calculatedBy,
         changedAt: new Date(),
         comment: JSON.stringify({
           globalScore,
           nodeCount,
           rulesTriggered,
-          calculatedAt: new Date().toISOString()
-        })
-      }
+          calculatedAt: new Date().toISOString(),
+        }),
+      },
     });
   }
 
@@ -174,8 +174,8 @@ export class ScoringAuditService {
   static async getModelAuditTrail(modelId: string, limit: number = 100) {
     return prisma.scoringChangeLog.findMany({
       where: { modelId },
-      orderBy: { changedAt: 'desc' },
-      take: limit
+      orderBy: { changedAt: "desc" },
+      take: limit,
     });
   }
 
@@ -185,7 +185,7 @@ export class ScoringAuditService {
   static async getEvaluationAuditTrail(evaluationId: string) {
     return prisma.scoringChangeLog.findMany({
       where: { evaluationId },
-      orderBy: { changedAt: 'desc' }
+      orderBy: { changedAt: "desc" },
     });
   }
 
@@ -195,7 +195,7 @@ export class ScoringAuditService {
   static async getVersionAuditTrail(versionId: string) {
     return prisma.scoringChangeLog.findMany({
       where: { versionId },
-      orderBy: { changedAt: 'desc' }
+      orderBy: { changedAt: "desc" },
     });
   }
 
@@ -212,9 +212,9 @@ export class ScoringAuditService {
         modelId,
         changedAt: {
           gte: startDate,
-          lte: endDate
-        }
-      }
+          lte: endDate,
+        },
+      },
     });
 
     const actionCounts = logs.reduce(
@@ -241,7 +241,7 @@ export class ScoringAuditService {
       actionCounts,
       userActions,
       firstChange: logs[logs.length - 1]?.changedAt,
-      lastChange: logs[0]?.changedAt
+      lastChange: logs[0]?.changedAt,
     };
   }
 
@@ -263,16 +263,16 @@ export class ScoringAuditService {
 
     const logs = await prisma.scoringChangeLog.findMany({
       where,
-      orderBy: { changedAt: 'desc' }
+      orderBy: { changedAt: "desc" },
     });
 
     // CSV headers
-    let csv = 'Timestamp,Entity Type,Entity ID,Action,Changed By,Comment\n';
+    let csv = "Timestamp,Entity Type,Entity ID,Action,Changed By,Comment\n";
 
     // CSV rows
     for (const log of logs) {
       const timestamp = log.changedAt.toISOString();
-      const comment = (log.comment || '').replace(/"/g, '""');
+      const comment = (log.comment || "").replace(/"/g, '""');
       csv += `"${timestamp}","${log.entityType}","${log.entityId}","${log.action}","${log.changedBy}","${comment}"\n`;
     }
 

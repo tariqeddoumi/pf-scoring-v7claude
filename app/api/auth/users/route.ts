@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
 
     const payload = await verifyToken(token);
     if (!payload) {
-      return NextResponse.json(
-        { error: "Token invalide" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token invalide" }, { status: 401 });
     }
 
     // Seuls les admins peuvent voir tous les utilisateurs
@@ -88,10 +85,7 @@ export async function PUT(request: NextRequest) {
 
     const payload = await verifyToken(token);
     if (!payload) {
-      return NextResponse.json(
-        { error: "Token invalide" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token invalide" }, { status: 401 });
     }
 
     const { id, nom, prenom, password, role } = await request.json();

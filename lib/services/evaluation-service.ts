@@ -1,11 +1,11 @@
-import prisma from '@/lib/prisma-client';
+import prisma from "@/lib/prisma-client";
 import {
   createEvaluationSchema,
   submitEvaluationSchema,
   validateEvaluationSchema,
-  rejectEvaluationSchema
-} from '@/lib/validation-schemas';
-import type { z } from 'zod';
+  rejectEvaluationSchema,
+} from "@/lib/validation-schemas";
+import type { z } from "zod";
 
 export class EvaluationService {
   /**
@@ -19,11 +19,11 @@ export class EvaluationService {
 
     // Ensure project exists
     const project = await prisma.project.findUnique({
-      where: { id: validated.projectId }
+      where: { id: validated.projectId },
     });
 
     if (!project) {
-      throw new Error('Project not found');
+      throw new Error("Project not found");
     }
 
     const evaluation = await prisma.evaluation.create({
@@ -32,15 +32,15 @@ export class EvaluationService {
         analystId: createdBy,
         scoringResult: (validated.scoringResult || {}) as any,
         finalScore: validated.finalScore || 0,
-        rating: 'D',
-        recommendation: 'APPROVE',
+        rating: "D",
+        recommendation: "APPROVE",
         probabilityOfDefault: 0,
         triggeredNOGOs: [],
         appliedMALUS: [],
         malusTotal: 0,
-        status: 'brouillon',
-        version: '7.0'
-      }
+        status: "brouillon",
+        version: "7.0",
+      },
     });
 
     return evaluation;
@@ -54,12 +54,12 @@ export class EvaluationService {
       where: { id },
       include: {
         project: {
-          select: { id: true, nom: true, status: true }
+          select: { id: true, nom: true, status: true },
         },
         analyst: {
-          select: { id: true, email: true, nom: true, prenom: true }
-        }
-      }
+          select: { id: true, email: true, nom: true, prenom: true },
+        },
+      },
     });
 
     return evaluation;
@@ -68,7 +68,11 @@ export class EvaluationService {
   /**
    * Get all evaluations (paginated)
    */
-  static async getAllEvaluations(page: number = 1, limit: number = 50, filters?: any) {
+  static async getAllEvaluations(
+    page: number = 1,
+    limit: number = 50,
+    filters?: any
+  ) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -82,13 +86,13 @@ export class EvaluationService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           project: { select: { nom: true } },
-          analyst: { select: { nom: true, prenom: true } }
-        }
+          analyst: { select: { nom: true, prenom: true } },
+        },
       }),
-      prisma.evaluation.count({ where })
+      prisma.evaluation.count({ where }),
     ]);
 
     return {
@@ -97,8 +101,8 @@ export class EvaluationService {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 
@@ -115,17 +119,17 @@ export class EvaluationService {
     const oldEval = await prisma.evaluation.findUnique({ where: { id } });
 
     if (!oldEval) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
-    if (oldEval.status !== 'brouillon') {
-      throw new Error('Can only submit draft evaluations');
+    if (oldEval.status !== "brouillon") {
+      throw new Error("Can only submit draft evaluations");
     }
 
     const evaluation = await prisma.evaluation.update({
       where: { id },
       data: {
-        status: 'soumis',
+        status: "soumis",
         finalScore: validated.finalScore,
         rating: validated.rating,
         probabilityOfDefault: validated.probabilityOfDefault,
@@ -133,10 +137,9 @@ export class EvaluationService {
         appliedMALUS: validated.appliedMALUS as any,
         malusTotal: validated.malusTotal,
         notes: validated.notes,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
-
 
     return evaluation;
   }
@@ -154,33 +157,32 @@ export class EvaluationService {
     const oldEval = await prisma.evaluation.findUnique({ where: { id } });
 
     if (!oldEval) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
-    if (oldEval.status !== 'soumis') {
-      throw new Error('Can only validate submitted evaluations');
+    if (oldEval.status !== "soumis") {
+      throw new Error("Can only validate submitted evaluations");
     }
 
     const evaluation = await prisma.evaluation.update({
       where: { id },
       data: {
-        status: 'valide',
+        status: "valide",
         recommendation: validated.recommendation,
         notes: validated.notes,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     // Update project status and score
     await prisma.project.update({
       where: { id: evaluation.projectId },
       data: {
-        status: 'approuve',
+        status: "approuve",
         scoreGlobal: evaluation.finalScore,
-        grade: evaluation.rating
-      }
+        grade: evaluation.rating,
+      },
     });
-
 
     return evaluation;
   }
@@ -198,28 +200,27 @@ export class EvaluationService {
     const oldEval = await prisma.evaluation.findUnique({ where: { id } });
 
     if (!oldEval) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
-    if (!['soumis', 'valide'].includes(oldEval.status)) {
-      throw new Error('Can only reject submitted or validated evaluations');
+    if (!["soumis", "valide"].includes(oldEval.status)) {
+      throw new Error("Can only reject submitted or validated evaluations");
     }
 
     const evaluation = await prisma.evaluation.update({
       where: { id },
       data: {
-        status: 'rejete',
+        status: "rejete",
         notes: validated.notes,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     // Update project status
     await prisma.project.update({
       where: { id: evaluation.projectId },
-      data: { status: 'rejete' }
+      data: { status: "rejete" },
     });
-
 
     return evaluation;
   }
@@ -230,14 +231,18 @@ export class EvaluationService {
   static async getEvaluationsByProject(projectId: string) {
     return prisma.evaluation.findMany({
       where: { projectId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
   }
 
   /**
    * Get evaluations by analyst
    */
-  static async getEvaluationsByAnalyst(analystId: string, page: number = 1, limit: number = 50) {
+  static async getEvaluationsByAnalyst(
+    analystId: string,
+    page: number = 1,
+    limit: number = 50
+  ) {
     const skip = (page - 1) * limit;
 
     const [evaluations, total] = await Promise.all([
@@ -245,9 +250,9 @@ export class EvaluationService {
         where: { analystId },
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       }),
-      prisma.evaluation.count({ where: { analystId } })
+      prisma.evaluation.count({ where: { analystId } }),
     ]);
 
     return {
@@ -256,21 +261,25 @@ export class EvaluationService {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     };
   }
 
   /**
    * Create stress test result
    */
-  static async createStressTest(evaluationId: string, scenarioData: any, createdBy: string) {
+  static async createStressTest(
+    evaluationId: string,
+    scenarioData: any,
+    createdBy: string
+  ) {
     const evaluation = await prisma.evaluation.findUnique({
-      where: { id: evaluationId }
+      where: { id: evaluationId },
     });
 
     if (!evaluation) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
     const stressTest = await prisma.stressTestScenarioResult.create({
@@ -283,8 +292,8 @@ export class EvaluationService {
         llcrStress: scenarioData.llcrStress,
         status: scenarioData.status,
         margin: scenarioData.margin,
-        notes: scenarioData.notes
-      }
+        notes: scenarioData.notes,
+      },
     });
 
     return stressTest;
@@ -296,7 +305,7 @@ export class EvaluationService {
   static async getStressTests(evaluationId: string) {
     return prisma.stressTestScenarioResult.findMany({
       where: { evaluationId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
   }
 }

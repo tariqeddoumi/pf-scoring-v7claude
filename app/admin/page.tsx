@@ -130,7 +130,8 @@ export default function AdminPage() {
   }
 
   const visibleSections = ADMIN_SECTIONS.filter(
-    (s) => !s.requiredRole || s.requiredRole === user.role || user.role === "admin"
+    (s) =>
+      !s.requiredRole || s.requiredRole === user.role || user.role === "admin"
   );
 
   return (
@@ -146,7 +147,9 @@ export default function AdminPage() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold">Panneau d&apos;Administration</h1>
+              <h1 className="text-3xl font-bold">
+                Panneau d&apos;Administration
+              </h1>
               <p className="mt-2 text-muted-foreground">
                 Paramétrez tous les aspects de l&apos;application
               </p>

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Save, Plus, Trash2, Edit2, Info } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { ArrowLeft, Save, Plus, Trash2, Edit2, Info } from "lucide-react";
 
 interface ScoringCriteria {
   id: string;
@@ -20,23 +20,23 @@ export default function ScoringGridPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    category: 'Financier',
+    name: "",
+    category: "Financier",
     weight: 1,
     minScore: 0,
     maxScore: 100,
-    description: '',
+    description: "",
   });
 
   const categories = [
-    { label: 'Financier', value: 'Financier' },
-    { label: 'Technique', value: 'Technique' },
-    { label: 'Marché', value: 'Marché' },
-    { label: 'Environnemental', value: 'Environnemental' },
-    { label: 'Social', value: 'Social' },
-    { label: 'Gouvernance', value: 'Gouvernance' },
-    { label: 'Juridique', value: 'Juridique' },
-    { label: 'Pays', value: 'Pays' },
+    { label: "Financier", value: "Financier" },
+    { label: "Technique", value: "Technique" },
+    { label: "Marché", value: "Marché" },
+    { label: "Environnemental", value: "Environnemental" },
+    { label: "Social", value: "Social" },
+    { label: "Gouvernance", value: "Gouvernance" },
+    { label: "Juridique", value: "Juridique" },
+    { label: "Pays", value: "Pays" },
   ];
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function ScoringGridPage() {
       setCriteria([]);
       setError(null);
     } catch (err) {
-      setError('Erreur lors du chargement des critères');
+      setError("Erreur lors du chargement des critères");
       console.error(err);
     } finally {
       setLoading(false);
@@ -60,7 +60,7 @@ export default function ScoringGridPage() {
   const handleAddCriteria = async () => {
     try {
       if (!formData.name) {
-        setError('Le nom du critère est requis');
+        setError("Le nom du critère est requis");
         return;
       }
 
@@ -71,25 +71,25 @@ export default function ScoringGridPage() {
 
       setCriteria([...criteria, newCriteria]);
       setFormData({
-        name: '',
-        category: 'Financier',
+        name: "",
+        category: "Financier",
         weight: 1,
         minScore: 0,
         maxScore: 100,
-        description: '',
+        description: "",
       });
       setError(null);
     } catch (err) {
-      setError('Erreur lors de l\'ajout du critère');
+      setError("Erreur lors de l'ajout du critère");
       console.error(err);
     }
   };
 
   const handleDeleteCriteria = async (id: string) => {
     try {
-      setCriteria(criteria.filter(c => c.id !== id));
+      setCriteria(criteria.filter((c) => c.id !== id));
     } catch (err) {
-      setError('Erreur lors de la suppression');
+      setError("Erreur lors de la suppression");
       console.error(err);
     }
   };
@@ -98,9 +98,9 @@ export default function ScoringGridPage() {
     try {
       // Save to backend
       // await fetch('/api/admin/scoring-grid', { method: 'POST', body: JSON.stringify({ criteria }) })
-      alert('Grille de scoring sauvegardée avec succès!');
+      alert("Grille de scoring sauvegardée avec succès!");
     } catch (err) {
-      setError('Erreur lors de la sauvegarde');
+      setError("Erreur lors de la sauvegarde");
       console.error(err);
     }
   };
@@ -116,8 +116,12 @@ export default function ScoringGridPage() {
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white">Paramétrage des grilles de scoring</h1>
-          <p className="text-slate-400 mt-2">Configurez les critères et poids de scoring au niveau le plus fin</p>
+          <h1 className="text-3xl font-bold text-white">
+            Paramétrage des grilles de scoring
+          </h1>
+          <p className="text-slate-400 mt-2">
+            Configurez les critères et poids de scoring au niveau le plus fin
+          </p>
         </div>
       </div>
 
@@ -134,7 +138,11 @@ export default function ScoringGridPage() {
           <Info size={20} className="text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-400">
             <p className="font-semibold mb-2">Structure de scoring</p>
-            <p>Les critères sont organisés par catégorie (Financier, Technique, ESG, etc.) avec des poids définis pour chaque niveau de détail. Les scores vont de {formData.minScore} à {formData.maxScore}.</p>
+            <p>
+              Les critères sont organisés par catégorie (Financier, Technique,
+              ESG, etc.) avec des poids définis pour chaque niveau de détail.
+              Les scores vont de {formData.minScore} à {formData.maxScore}.
+            </p>
           </div>
         </div>
       </div>
@@ -151,7 +159,9 @@ export default function ScoringGridPage() {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               placeholder="Ex: Ratio d'endettement"
               className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />
@@ -163,11 +173,15 @@ export default function ScoringGridPage() {
             </label>
             <select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
               className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
             >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              {categories.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
               ))}
             </select>
           </div>
@@ -181,7 +195,9 @@ export default function ScoringGridPage() {
               min="0"
               max="10"
               value={formData.weight}
-              onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setFormData({ ...formData, weight: parseFloat(e.target.value) })
+              }
               className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
             />
           </div>
@@ -193,7 +209,12 @@ export default function ScoringGridPage() {
             <input
               type="number"
               value={formData.maxScore}
-              onChange={(e) => setFormData({ ...formData, maxScore: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  maxScore: parseFloat(e.target.value),
+                })
+              }
               className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
             />
           </div>
@@ -205,7 +226,9 @@ export default function ScoringGridPage() {
           </label>
           <textarea
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             placeholder="Description détaillée du critère..."
             className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
             rows={3}
@@ -223,7 +246,9 @@ export default function ScoringGridPage() {
 
       {/* Criteria List */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Critères définis ({criteria.length})</h2>
+        <h2 className="text-xl font-semibold text-white">
+          Critères définis ({criteria.length})
+        </h2>
 
         {criteria.length === 0 ? (
           <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 text-center text-slate-400">
@@ -232,10 +257,15 @@ export default function ScoringGridPage() {
         ) : (
           <div className="space-y-3">
             {criteria.map((item) => (
-              <div key={item.id} className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+              <div
+                key={item.id}
+                className="bg-slate-800 rounded-lg border border-slate-700 p-4"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white">{item.name}</h3>
+                    <h3 className="text-lg font-semibold text-white">
+                      {item.name}
+                    </h3>
                     <p className="text-sm text-slate-400">{item.description}</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -280,7 +310,8 @@ export default function ScoringGridPage() {
           Sauvegarder la grille
         </button>
         <p className="text-sm text-slate-400">
-          {criteria.length} critère{criteria.length !== 1 ? 's' : ''} défini{criteria.length !== 1 ? 's' : ''}
+          {criteria.length} critère{criteria.length !== 1 ? "s" : ""} défini
+          {criteria.length !== 1 ? "s" : ""}
         </p>
       </div>
     </div>

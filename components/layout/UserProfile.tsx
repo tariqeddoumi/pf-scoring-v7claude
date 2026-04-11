@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { LogOut, Settings, Users, BarChart3, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { LogOut, Settings, Users, BarChart3, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
   email: string;
   nom: string;
   prenom: string;
-  role: 'admin' | 'manager' | 'analyst' | 'viewer';
+  role: "admin" | "manager" | "analyst" | "viewer";
   avatar?: string;
   createdAt: string;
 }
@@ -24,15 +24,15 @@ export function UserProfile() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        const response = await fetch("/api/auth/me");
         if (response.ok) {
           const data = await response.json();
           setUser(data.data);
         } else {
-          console.log('Not authenticated');
+          console.log("Not authenticated");
         }
       } catch (error) {
-        console.error('Failed to fetch user:', error);
+        console.error("Failed to fetch user:", error);
       } finally {
         setLoading(false);
       }
@@ -43,17 +43,15 @@ export function UserProfile() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      router.push('/login');
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
   if (loading) {
-    return (
-      <div className="h-10 w-32 bg-slate-700 rounded animate-pulse"></div>
-    );
+    return <div className="h-10 w-32 bg-slate-700 rounded animate-pulse"></div>;
   }
 
   if (!user) {
@@ -68,17 +66,17 @@ export function UserProfile() {
   }
 
   const roleColors: Record<string, string> = {
-    admin: 'bg-red-500/20 text-red-400 border-red-500/30',
-    manager: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    analyst: 'bg-green-500/20 text-green-400 border-green-500/30',
-    viewer: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+    admin: "bg-red-500/20 text-red-400 border-red-500/30",
+    manager: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    analyst: "bg-green-500/20 text-green-400 border-green-500/30",
+    viewer: "bg-slate-500/20 text-slate-400 border-slate-500/30",
   };
 
   const roleLabelsFR: Record<string, string> = {
-    admin: 'Administrateur',
-    manager: 'Gestionnaire',
-    analyst: 'Analyste',
-    viewer: 'Lecteur',
+    admin: "Administrateur",
+    manager: "Gestionnaire",
+    analyst: "Analyste",
+    viewer: "Lecteur",
   };
 
   return (
@@ -91,11 +89,16 @@ export function UserProfile() {
           <div className="font-medium text-white">
             {user.prenom} {user.nom}
           </div>
-          <div className={`text-xs px-2 py-0.5 rounded border ${roleColors[user.role]}`}>
+          <div
+            className={`text-xs px-2 py-0.5 rounded border ${roleColors[user.role]}`}
+          >
             {roleLabelsFR[user.role]}
           </div>
         </div>
-        <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          size={16}
+          className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       {/* Dropdown Menu */}
@@ -108,7 +111,7 @@ export function UserProfile() {
           </div>
 
           {/* Admin Menu */}
-          {user.role === 'admin' && (
+          {user.role === "admin" && (
             <>
               <Link
                 href="/admin/users"

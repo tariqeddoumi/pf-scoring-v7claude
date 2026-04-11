@@ -1,24 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, hasMinimumRole } from '@/lib/auth-middleware';
-import { EvaluationService } from '@/lib/services/evaluation-service';
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import { EvaluationService } from "@/lib/services/evaluation-service";
 
 /**
  * POST /api/evaluations/validate - Validate evaluation (manager/admin)
  */
 async function handlePOST(request: NextRequest, user: any) {
   try {
-    if (!hasMinimumRole(user.role, 'manager')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!hasMinimumRole(user.role, "manager")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();
     const { id, ...validateData } = body;
 
     if (!id) {
-      return NextResponse.json({ error: 'Evaluation ID required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Evaluation ID required" },
+        { status: 400 }
+      );
     }
 
-    const evaluation = await EvaluationService.validateEvaluation(id, validateData, user.userId);
+    const evaluation = await EvaluationService.validateEvaluation(
+      id,
+      validateData,
+      user.userId
+    );
 
     return NextResponse.json(evaluation, { status: 200 });
   } catch (error: any) {

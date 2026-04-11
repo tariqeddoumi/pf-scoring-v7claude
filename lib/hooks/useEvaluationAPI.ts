@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { api } from '../api-client';
-import { Evaluation } from '@/types/database';
+import { useState, useEffect } from "react";
+import { api } from "../api-client";
+import { Evaluation } from "@/types/database";
 
 export function useEvaluationAPI() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -18,9 +18,9 @@ export function useEvaluationAPI() {
       setEvaluations(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch');
+      setError(err instanceof Error ? err.message : "Failed to fetch");
       // Fallback to localStorage if API fails
-      const stored = localStorage.getItem('pf_evaluations');
+      const stored = localStorage.getItem("pf_evaluations");
       if (stored) setEvaluations(JSON.parse(stored));
     } finally {
       setLoading(false);
@@ -40,12 +40,19 @@ export function useEvaluationAPI() {
   async function updateEvaluation(id: string, data: any) {
     try {
       const updated = await api.evaluations.update(id, data);
-      setEvaluations(evaluations.map(e => (e.id === id ? updated : e)));
+      setEvaluations(evaluations.map((e) => (e.id === id ? updated : e)));
       return updated;
     } catch (err) {
       throw err;
     }
   }
 
-  return { evaluations, loading, error, createEvaluation, updateEvaluation, fetchEvaluations };
+  return {
+    evaluations,
+    loading,
+    error,
+    createEvaluation,
+    updateEvaluation,
+    fetchEvaluations,
+  };
 }

@@ -41,7 +41,8 @@ export const SCORING_MODEL_V7 = {
               },
               redFlagThreshold: 4,
               noGoThreshold: 2,
-              source: "Financial statements, Credit rating, Internal bank database",
+              source:
+                "Financial statements, Credit rating, Internal bank database",
             },
             {
               id: "D1.1.2",
@@ -338,7 +339,11 @@ export const NO_GO_RULES = [
     type: "LEGAL",
     severity: "CRITICAL",
     description: "Absence of minimal security package",
-    condition: { field: "security_package_completeness", operator: "<", value: 0.6 },
+    condition: {
+      field: "security_package_completeness",
+      operator: "<",
+      value: 0.6,
+    },
     action: "BLOCK",
   },
 ];

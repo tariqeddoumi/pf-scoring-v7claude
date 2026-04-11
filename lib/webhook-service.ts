@@ -1,13 +1,13 @@
-import { emailService } from './email-service';
+import { emailService } from "./email-service";
 
 export type WebhookEvent =
-  | 'evaluation.created'
-  | 'evaluation.submitted'
-  | 'evaluation.validated'
-  | 'evaluation.rejected'
-  | 'alert.created'
-  | 'project.created'
-  | 'comment.created';
+  | "evaluation.created"
+  | "evaluation.submitted"
+  | "evaluation.validated"
+  | "evaluation.rejected"
+  | "alert.created"
+  | "project.created"
+  | "comment.created";
 
 interface WebhookPayload {
   event: WebhookEvent;
@@ -24,8 +24,8 @@ export class WebhookService {
 
   private registerDefaultHandlers() {
     // Evaluation workflows
-    this.on('evaluation.submitted', async (data: any) => {
-      console.log('📤 Evaluation submitted:', data.evaluationId);
+    this.on("evaluation.submitted", async (data: any) => {
+      console.log("📤 Evaluation submitted:", data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationSubmitted(
           data.analyst_email,
@@ -35,8 +35,8 @@ export class WebhookService {
       }
     });
 
-    this.on('evaluation.validated', async (data: any) => {
-      console.log('✅ Evaluation validated:', data.evaluationId);
+    this.on("evaluation.validated", async (data: any) => {
+      console.log("✅ Evaluation validated:", data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationValidated(
           data.analyst_email,
@@ -45,21 +45,21 @@ export class WebhookService {
       }
     });
 
-    this.on('evaluation.rejected', async (data: any) => {
-      console.log('❌ Evaluation rejected:', data.evaluationId);
+    this.on("evaluation.rejected", async (data: any) => {
+      console.log("❌ Evaluation rejected:", data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationRejected(
           data.analyst_email,
           data.evaluationId,
-          data.reason || 'N/A'
+          data.reason || "N/A"
         );
       }
     });
 
     // Alerts
-    this.on('alert.created', async (data: any) => {
-      if (data.severity === 'critical') {
-        console.log('🚨 Critical alert:', data.type);
+    this.on("alert.created", async (data: any) => {
+      if (data.severity === "critical") {
+        console.log("🚨 Critical alert:", data.type);
         // Send to manager email
         if (data.manager_email) {
           await emailService.sendAlertCritical(
@@ -84,7 +84,7 @@ export class WebhookService {
     console.log(`🔔 Event: ${event} (${handlers.length} handlers)`);
 
     const results = await Promise.allSettled(
-      handlers.map(handler => handler(data))
+      handlers.map((handler) => handler(data))
     );
 
     return results;

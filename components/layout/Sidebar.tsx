@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   BarChart3,
   Users,
@@ -23,7 +23,7 @@ import {
   Sliders,
   Menu,
   X,
-} from 'lucide-react';
+} from "lucide-react";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -32,99 +32,99 @@ export function Sidebar() {
   const menuItems = [
     {
       icon: BarChart3,
-      label: 'Tableau de bord',
-      href: '/dashboard',
-      description: 'Vue d\'ensemble',
+      label: "Tableau de bord",
+      href: "/dashboard",
+      description: "Vue d'ensemble",
     },
     {
       icon: Sliders,
-      label: 'Configurer Tableau',
-      href: '/dashboard-config',
-      description: 'Personnalisation',
+      label: "Configurer Tableau",
+      href: "/dashboard-config",
+      description: "Personnalisation",
     },
     {
       icon: Users,
-      label: 'Clients',
-      href: '/clients',
-      description: 'Gestion clients',
+      label: "Clients",
+      href: "/clients",
+      description: "Gestion clients",
     },
     {
       icon: Briefcase,
-      label: 'Projets',
-      href: '/projects',
-      description: 'Projet Finance',
+      label: "Projets",
+      href: "/projects",
+      description: "Projet Finance",
     },
     {
       icon: CheckCircle,
-      label: 'Évaluations',
-      href: '/evaluations',
-      description: 'Scorings',
+      label: "Évaluations",
+      href: "/evaluations",
+      description: "Scorings",
     },
     {
       icon: Search,
-      label: 'Recherche Avancée',
-      href: '/search',
-      description: 'Multi-critères',
+      label: "Recherche Avancée",
+      href: "/search",
+      description: "Multi-critères",
     },
     {
       icon: Bell,
-      label: 'Alertes',
-      href: '/alerts',
-      description: 'Centre d\'alertes',
+      label: "Alertes",
+      href: "/alerts",
+      description: "Centre d'alertes",
     },
     {
       icon: GitCompare,
-      label: 'Comparaison',
-      href: '/compare',
-      description: 'Projets côte à côte',
+      label: "Comparaison",
+      href: "/compare",
+      description: "Projets côte à côte",
     },
     {
       icon: TrendingUp,
-      label: 'Monitoring',
-      href: '/monitoring',
-      description: 'Performance post-clôture',
+      label: "Monitoring",
+      href: "/monitoring",
+      description: "Performance post-clôture",
     },
     {
       icon: Download,
-      label: 'Exportations',
-      href: '/exports',
-      description: 'PDF, Excel, Word',
+      label: "Exportations",
+      href: "/exports",
+      description: "PDF, Excel, Word",
     },
     {
       icon: FileText,
-      label: 'Documents',
-      href: '/documents',
-      description: 'Gestion centralisée',
+      label: "Documents",
+      href: "/documents",
+      description: "Gestion centralisée",
     },
     {
       icon: Shield,
-      label: 'Conformité',
-      href: '/compliance',
-      description: 'GDPR & Confidentialité',
+      label: "Conformité",
+      href: "/compliance",
+      description: "GDPR & Confidentialité",
     },
     {
       icon: LineChart,
-      label: 'Analytique',
-      href: '/analytics',
-      description: 'Tendances & Insights',
+      label: "Analytique",
+      href: "/analytics",
+      description: "Tendances & Insights",
     },
     {
       icon: Target,
-      label: 'Benchmarking',
-      href: '/benchmarking',
-      description: 'Comparaison secteur',
+      label: "Benchmarking",
+      href: "/benchmarking",
+      description: "Comparaison secteur",
     },
     {
       icon: BookOpen,
-      label: 'Méthodologie',
-      href: '/methodology',
-      description: 'Guides',
+      label: "Méthodologie",
+      href: "/methodology",
+      description: "Guides",
     },
     {
       icon: BookOpen,
-      label: 'Journal d\'audit',
-      href: '/audit',
-      description: 'Logs',
+      label: "Journal d'audit",
+      href: "/audit",
+      description: "Logs",
     },
   ];
 
@@ -147,15 +147,18 @@ export function Sidebar() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static w-64 bg-slate-900 border-r border-slate-700 min-h-screen flex flex-col transition-all z-40 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
+      <aside
+        className={`fixed md:static w-64 bg-slate-900 border-r border-slate-700 min-h-screen flex flex-col transition-all z-40 ${
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
         {/* Menu Principal */}
         <div className="flex-1 overflow-y-auto p-4 mt-12 md:mt-0">
           <div className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/");
 
               return (
                 <Link
@@ -164,8 +167,8 @@ export function Sidebar() {
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
+                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   }`}
                 >
                   <Icon size={20} />

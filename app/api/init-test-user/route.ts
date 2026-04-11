@@ -15,19 +15,18 @@ export async function POST(request: Request) {
     const expectedToken = process.env.INIT_TOKEN || "init-secret-token";
 
     if (authHeader !== `Bearer ${expectedToken}`) {
-      return NextResponse.json(
-        { error: "Non autorisé" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
     // Hash du mot de passe par défaut: Admin123!
     const hashedPassword = await hashPassword("Admin123!");
 
     // Vérifier si l'utilisateur existe déjà
-    let user = await prisma.user.findUnique({
-      where: { email: "admin@pf-scoring.ma" },
-    }).catch(() => null);
+    let user = await prisma.user
+      .findUnique({
+        where: { email: "admin@pf-scoring.ma" },
+      })
+      .catch(() => null);
 
     if (!user) {
       // Créer l'utilisateur avec Prisma
@@ -81,7 +80,7 @@ export async function GET() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer your-init-token",
+        Authorization: "Bearer your-init-token",
       },
       body: {},
     },

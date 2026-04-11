@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { ArrowRight, Zap, BarChart3, Users, CheckCircle } from 'lucide-react';
+import Link from "next/link";
+import { ArrowRight, Zap, BarChart3, Users, CheckCircle } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -13,7 +13,9 @@ export default function HomePage() {
             PF Scoring V7++
           </h1>
           <p className="text-xl text-slate-300 mb-8 max-w-2xl">
-            Système de scoring Project Finance professionnel. Évaluez les projets selon une méthodologie conforme IFC, EBRD, Basel et Bank Al-Maghrib.
+            Système de scoring Project Finance professionnel. Évaluez les
+            projets selon une méthodologie conforme IFC, EBRD, Basel et Bank
+            Al-Maghrib.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
@@ -36,10 +38,30 @@ export default function HomePage() {
       {/* Stats Section */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { icon: Users, label: 'Clients', value: '12', color: 'from-blue-600 to-blue-700' },
-          { icon: CheckCircle, label: 'Projets', value: '28', color: 'from-cyan-600 to-cyan-700' },
-          { icon: BarChart3, label: 'Évaluations', value: '45', color: 'from-purple-600 to-purple-700' },
-          { icon: Zap, label: 'Score moyen', value: '7.8/10', color: 'from-green-600 to-green-700' },
+          {
+            icon: Users,
+            label: "Clients",
+            value: "12",
+            color: "from-blue-600 to-blue-700",
+          },
+          {
+            icon: CheckCircle,
+            label: "Projets",
+            value: "28",
+            color: "from-cyan-600 to-cyan-700",
+          },
+          {
+            icon: BarChart3,
+            label: "Évaluations",
+            value: "45",
+            color: "from-purple-600 to-purple-700",
+          },
+          {
+            icon: Zap,
+            label: "Score moyen",
+            value: "7.8/10",
+            color: "from-green-600 to-green-700",
+          },
         ].map((stat, i) => {
           const Icon = stat.icon;
           return (
@@ -59,23 +81,28 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section>
-        <h2 className="text-2xl font-bold text-white mb-8">Fonctionnalités principales</h2>
+        <h2 className="text-2xl font-bold text-white mb-8">
+          Fonctionnalités principales
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
               icon: BarChart3,
-              title: '9 Domaines de scoring',
-              description: 'Évaluation complète avec 9 domaines et 40+ règles métier',
+              title: "9 Domaines de scoring",
+              description:
+                "Évaluation complète avec 9 domaines et 40+ règles métier",
             },
             {
               icon: CheckCircle,
-              title: 'Stress Testing',
-              description: '6 scénarios de stress testing pour évaluer la résilience',
+              title: "Stress Testing",
+              description:
+                "6 scénarios de stress testing pour évaluer la résilience",
             },
             {
               icon: Users,
-              title: 'Gestion clients',
-              description: 'Gérez vos clients et leurs projets en un seul endroit',
+              title: "Gestion clients",
+              description:
+                "Gérez vos clients et leurs projets en un seul endroit",
             },
           ].map((feature, i) => {
             const Icon = feature.icon;
@@ -85,7 +112,9 @@ export default function HomePage() {
                 className="rounded-lg bg-slate-800 border border-slate-700 p-6 hover:border-slate-600 transition-all"
               >
                 <Icon className="text-cyan-500 mb-4" size={32} />
-                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  {feature.title}
+                </h3>
                 <p className="text-slate-400">{feature.description}</p>
               </div>
             );
@@ -150,11 +179,17 @@ function QuickAccessCard({
           </h3>
           <p className="text-slate-400">{description}</p>
         </div>
-        <Icon className="text-slate-500 group-hover:text-cyan-500 transition-colors" size={24} />
+        <Icon
+          className="text-slate-500 group-hover:text-cyan-500 transition-colors"
+          size={24}
+        />
       </div>
       <div className="flex items-center text-cyan-500 text-sm font-medium">
         Accéder
-        <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+        <ArrowRight
+          size={16}
+          className="ml-2 group-hover:translate-x-1 transition-transform"
+        />
       </div>
     </Link>
   );

@@ -241,7 +241,7 @@ CMD ["npm", "start"]
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -315,6 +315,7 @@ vercel --prod
 #### Step 3: Configure Environment Variables
 
 **In Vercel Dashboard:**
+
 1. Go to Settings → Environment Variables
 2. Add:
    - `DATABASE_URL` = PostgreSQL connection string
@@ -429,17 +430,17 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
-      
+          node-version: "18"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Type check
         run: npm run type-check
-      
+
       - name: Lint
         run: npm run lint
-      
+
       - name: Test
         run: npm test
 
@@ -726,14 +727,14 @@ DATABASE_QUERY_CACHE=1 npm start
 
 ✅ **Everything is ready!**
 
-| Environment | Status | Time | Guide |
-|---|---|---|---|
-| Local Dev | ✅ Ready | 5 min | 1.2-1.5 |
-| Local Testing | ✅ Ready | 5 min | 2.1-2.5 |
-| Docker | ✅ Ready | 20 min | 3.A |
-| Vercel | ✅ Ready | 10 min | 3.B |
-| Supabase | ✅ Ready | 15 min | 3.C |
-| CI/CD | ✅ Ready | 10 min | 3.D |
+| Environment   | Status   | Time   | Guide   |
+| ------------- | -------- | ------ | ------- |
+| Local Dev     | ✅ Ready | 5 min  | 1.2-1.5 |
+| Local Testing | ✅ Ready | 5 min  | 2.1-2.5 |
+| Docker        | ✅ Ready | 20 min | 3.A     |
+| Vercel        | ✅ Ready | 10 min | 3.B     |
+| Supabase      | ✅ Ready | 15 min | 3.C     |
+| CI/CD         | ✅ Ready | 10 min | 3.D     |
 
 ---
 

@@ -15,6 +15,10 @@ export interface Client {
   description?: string;
   status: string;
   createdAt: string;
+  website?: string;
+  city?: string;
+  address?: string;
+  contact?: string;
 }
 
 // Project
@@ -29,6 +33,12 @@ export interface Project {
   countryCode?: string;
   status: string;
   createdAt: string;
+  region?: string;
+  city?: string;
+  sponsor?: string;
+  technology?: string;
+  capacity?: string;
+  totalCost?: string;
 }
 
 // User
@@ -37,7 +47,7 @@ export interface User {
   email: string;
   nom: string;
   prenom: string;
-  role: 'admin' | 'manager' | 'analyst' | 'viewer';
+  role: "admin" | "manager" | "analyst" | "viewer";
   avatar?: string;
   createdAt: string;
 }

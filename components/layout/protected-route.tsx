@@ -35,9 +35,7 @@ export function ProtectedRoute({
           viewer: 1,
         };
 
-        if (
-          roleHierarchy[user.role] >= roleHierarchy[requiredRole]
-        ) {
+        if (roleHierarchy[user.role] >= roleHierarchy[requiredRole]) {
           setIsAuthorized(true);
         } else {
           router.push("/dashboard");

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Menu } from 'lucide-react';
-import { useState } from 'react';
-import { UserProfile } from './UserProfile';
+import Link from "next/link";
+import { Menu } from "lucide-react";
+import { useState } from "react";
+import { UserProfile } from "./UserProfile";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

@@ -7,14 +7,17 @@ This guide explains how to generate COPIL (Steering Committee) presentations fro
 ## Files Included
 
 ### CSV Reports (Data Source)
+
 - **`COPIL_Status_Report.csv`** - Phase-by-phase status tracking
 - **`COPIL_Detailed_Metrics.csv`** - Detailed KPIs and metrics
 
 ### Python Script (Generator)
+
 - **`scripts/generate-copil-ppt-v2.py`** - New PowerPoint generator (Updated)
 - **`scripts/generate-copil-ppt.py`** - Original Notion-based generator
 
 ### Documentation
+
 - **`COPIL_Executive_Summary.md`** - Executive summary of Phase 6
 
 ---
@@ -43,6 +46,7 @@ python scripts/generate-copil-ppt-v2.py --date 2026-04-07
 ### 3. Output
 
 The script creates a PowerPoint file with:
+
 - **Title Slide** - Project name and date
 - **Status Summary** - Overall completion and KPIs
 - **Timeline** - Phase progression and completion %
@@ -56,23 +60,27 @@ The script creates a PowerPoint file with:
 ## Features
 
 ### Automatic Data Reading
+
 ✅ Reads CSV files for current data  
 ✅ No manual data entry required  
 ✅ Easy to update by modifying CSV files
 
 ### Professional Formatting
+
 ✅ Banking-grade color scheme (blue/orange)  
 ✅ Consistent styling across slides  
 ✅ Readable fonts and layouts  
 ✅ Progress bars and status indicators
 
 ### Dynamic Content
+
 ✅ Auto-calculated completion percentages  
 ✅ Color-coded status (✅ Green = Complete, ⏳ Orange = Pending)  
 ✅ Metrics automatically formatted
 ✅ Timeline shows all phases
 
 ### Easy Customization
+
 ✅ Modify CSV files to update presentation  
 ✅ Change colors in Python code  
 ✅ Add/remove slides by editing the script  
@@ -85,11 +93,13 @@ The script creates a PowerPoint file with:
 ### Method 1: Update CSV Files (Recommended)
 
 1. **Update Status Report**
+
    ```csv
    Phase,Component,Status,Completion %,Owner,Notes
    ```
 
 2. **Update Metrics**
+
    ```csv
    Metric Category,Metric Name,Value,Status
    ```
@@ -102,6 +112,7 @@ The script creates a PowerPoint file with:
 ### Method 2: Modify Python Script
 
 Edit `scripts/generate-copil-ppt-v2.py` to:
+
 - Change color scheme (COLORS dictionary)
 - Modify slide layouts
 - Add new slide types
@@ -134,24 +145,28 @@ API Endpoints,Total Endpoints,25,count,✅ IMPLEMENTED,All working
 ## Script Usage Examples
 
 ### Example 1: Basic Generation
+
 ```bash
 python scripts/generate-copil-ppt-v2.py
 # Creates: COPIL_PF_Scoring_2026-04-07.pptx
 ```
 
 ### Example 2: Custom Output Name
+
 ```bash
 python scripts/generate-copil-ppt-v2.py --output COPIL_April_2026.pptx
 # Creates: COPIL_April_2026.pptx
 ```
 
 ### Example 3: Specific Date
+
 ```bash
 python scripts/generate-copil-ppt-v2.py --date 2026-04-15
 # Creates: COPIL_PF_Scoring_2026-04-15.pptx
 ```
 
 ### Example 4: Custom CSV Paths
+
 ```bash
 python scripts/generate-copil-ppt-v2.py \
   --status-csv path/to/status.csv \
@@ -164,11 +179,13 @@ python scripts/generate-copil-ppt-v2.py \
 ## Slide Descriptions
 
 ### Slide 1: Title Slide
+
 - Project name: "PF Scoring V7++"
 - Report date
 - Professional banking color scheme
 
 ### Slide 2: Status Summary
+
 - Overall completion percentage
 - 6 key metrics in colored boxes:
   - Core Backend status
@@ -179,30 +196,35 @@ python scripts/generate-copil-ppt-v2.py \
   - Documentation
 
 ### Slide 3: Timeline
+
 - Phase-by-phase progress
 - Visual progress bars
 - Color-coded status (Green = Done, Orange = Pending)
 - Completion percentages
 
 ### Slide 4: Deliverables
+
 - All completed items
 - Grouped by category
 - Description of each deliverable
 - Status indicator
 
 ### Slide 5: Metrics Dashboard
+
 - 6 key performance indicators
 - Organized in card layout
 - Color-coded values
 - Status badges
 
 ### Slide 6: Next Steps
+
 - 4 upcoming phases with dates
 - Timeline for each phase
 - Brief description
 - Numbered steps
 
 ### Slide 7: Conclusion
+
 - "Ready for Production" message
 - Key achievements
 - Report date
@@ -228,6 +250,7 @@ COLORS = {
 ### Add New Slide
 
 1. Create a method in the class:
+
 ```python
 def add_custom_slide(self):
     slide = self.add_content_slide("My Slide Title")
@@ -236,6 +259,7 @@ def add_custom_slide(self):
 ```
 
 2. Call it in the `generate()` method:
+
 ```python
 def generate(self):
     self.add_title_slide()
@@ -261,7 +285,9 @@ kpis = [
 ## Troubleshooting
 
 ### Issue: "No such file or directory: COPIL_Status_Report.csv"
+
 **Solution**: Ensure CSV files are in the same directory as the script, or specify their paths:
+
 ```bash
 python scripts/generate-copil-ppt-v2.py \
   --status-csv path/to/status.csv \
@@ -269,18 +295,23 @@ python scripts/generate-copil-ppt-v2.py \
 ```
 
 ### Issue: "No module named 'pptx'"
+
 **Solution**: Install python-pptx:
+
 ```bash
 pip install python-pptx
 ```
 
 ### Issue: Presentation looks broken
-**Solution**: 
+
+**Solution**:
+
 1. Check Python version (3.7+)
 2. Update python-pptx: `pip install --upgrade python-pptx`
 3. Verify CSV file format
 
 ### Issue: Text not appearing
+
 **Solution**: Check font size is not too large or coordinates not off-screen
 
 ---
@@ -326,6 +357,7 @@ python scripts/generate-copil-ppt-v2.py \
 ## Support
 
 For issues or enhancements:
+
 1. Check CSV file format
 2. Verify Python dependencies
 3. Review script logs
@@ -335,10 +367,10 @@ For issues or enhancements:
 
 ## Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| v2.0 | 2026-04-07 | CSV-based generation (Current) |
-| v1.0 | 2026-04-01 | Notion-based generation |
+| Version | Date       | Changes                        |
+| ------- | ---------- | ------------------------------ |
+| v2.0    | 2026-04-07 | CSV-based generation (Current) |
+| v1.0    | 2026-04-01 | Notion-based generation        |
 
 ---
 

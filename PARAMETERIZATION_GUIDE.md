@@ -11,11 +11,13 @@ L'application a été complètement restructurée pour supporter une architectur
 **Modèle de Données: `ScoreDomain`**
 
 Les domaines de scoring sont maintenant stockés dans la base de données et peuvent être:
+
 - ✅ Activés/désactivés dynamiquement
 - ✅ Leurs poids ajustés en temps réel
 - ✅ Réorganisés via `orderIndex`
 
 **Domaines par Défaut:**
+
 1. Risque Financier (25% weight)
 2. Risque Technique (15% weight)
 3. Risque de Marché (15% weight)
@@ -26,6 +28,7 @@ Les domaines de scoring sont maintenant stockés dans la base de données et peu
 8. Risque Pays (7% weight)
 
 **Configuration via Admin Panel:**
+
 ```
 /admin/scoring-config
 ```
@@ -38,16 +41,19 @@ Les domaines de scoring sont maintenant stockés dans la base de données et peu
 ### 2. Critères et Options de Notation
 
 **Modèles de Données:**
+
 - `ScoreCriterion` - Critères par domaine
 - `ScoreOption` - Options pour critères de type OPTION
 - `ScoreRange` - Plages pour critères de type RANGE
 
 **Types de Critères:**
+
 ```typescript
-type CriterionType = "OPTION" | "RANGE"
+type CriterionType = "OPTION" | "RANGE";
 ```
 
 **Exemple - Risque Financier:**
+
 - Critère: "Ratio d'endettement"
 - Type: RANGE
 - Plages:
@@ -58,6 +64,7 @@ type CriterionType = "OPTION" | "RANGE"
   - 5-10: Score 20 (Très élevé)
 
 **Exemple - Risque Technique:**
+
 - Critère: "Faisabilité technique"
 - Type: OPTION
 - Options:
@@ -74,6 +81,7 @@ type CriterionType = "OPTION" | "RANGE"
 Les scores de risque pays sont automatiquement assignés basés sur la sélection du pays lors de la création du projet.
 
 **Modèle de Données: `Country`**
+
 ```
 {
   code: "MA",
@@ -83,6 +91,7 @@ Les scores de risque pays sont automatiquement assignés basés sur la sélectio
 ```
 
 **Configuration:**
+
 ```
 /admin/country-risk
 ```
@@ -98,11 +107,13 @@ Les évaluateurs assignent manuellement le score de risque pays lors de l'évalu
 ### 4. Authentification Paramétrable
 
 **Configuration:**
+
 ```
 /admin/auth-settings
 ```
 
 **Paramètres Disponibles:**
+
 - Longueur minimale du mot de passe (6-32 caractères)
 - Délai d'expiration de session (15-1440 minutes)
 - Méthodes d'authentification:
@@ -112,6 +123,7 @@ Les évaluateurs assignent manuellement le score de risque pays lors de l'évalu
 
 **Stockage:**
 Tous les paramètres sont sauvegardés dans la table `pf_scoring_system_config`:
+
 ```
 {
   key: "PASSWORD_MIN_LENGTH",
@@ -123,6 +135,7 @@ Tous les paramètres sont sauvegardés dans la table `pf_scoring_system_config`:
 ## API Routes Admin
 
 ### Domaines
+
 ```
 GET  /api/admin/domains
      → Liste tous les domaines avec leurs paramètres
@@ -132,12 +145,14 @@ PATCH /api/admin/domains/:id
 ```
 
 ### Critères
+
 ```
 GET  /api/admin/domains/:domainId/criteria
      → Liste les critères d'un domaine avec options et plages
 ```
 
 ### Pays
+
 ```
 GET  /api/admin/countries
      → Liste tous les pays avec leurs scores de risque
@@ -147,6 +162,7 @@ PATCH /api/admin/countries/:id
 ```
 
 ### Configuration Système
+
 ```
 GET  /api/admin/config/country-risk-mode
      → Récupère le mode actuel (AUTO_ASSIGN ou MANUAL)
@@ -187,6 +203,7 @@ getCountryRiskMode(): Promise<"AUTO_ASSIGN" | "MANUAL">
 ### Seeder
 
 Le fichier `prisma/seed.ts` initialise la base de données avec:
+
 - 8 domaines de scoring avec poids par défaut
 - Critères pour chaque domaine
 - Options et plages de notation
@@ -212,6 +229,7 @@ npm run db:seed
 ## Panneau d'Administration
 
 ### Page Principale
+
 ```
 /admin
 ```
@@ -254,7 +272,9 @@ Accès centralisé à 6 sections:
 ## Sécurité et Conformité
 
 ### Audit Trail
+
 Toutes les modifications via l'admin panel sont enregistrées dans `pf_scoring_audit_logs`:
+
 ```
 {
   action: "DOMAIN_WEIGHT_UPDATED",
@@ -265,7 +285,9 @@ Toutes les modifications via l'admin panel sont enregistrées dans `pf_scoring_a
 ```
 
 ### Conformité Standards
+
 L'architecture maintient la conformité avec:
+
 - ✅ **IFC Performance Standards 2012** - Environnemental
 - ✅ **EBRD Environmental & Social Policy 2015** - Social
 - ✅ **Basel III Framework** - Grading System (AAA → D)
@@ -278,21 +300,27 @@ L'architecture maintient la conformité avec:
 Les routes API existantes doivent être mises à jour pour utiliser le nouvel engine:
 
 **Avant (hardcoded):**
+
 ```typescript
-import { calculateScoringResult } from "@/lib/scoring-engine"
+import { calculateScoringResult } from "@/lib/scoring-engine";
 ```
 
 **Après (paramétrable):**
-```typescript
-import { calculateGlobalScoreV2, isCountryRiskActive } from "@/lib/scoring-engine-v2"
 
-const result = await calculateGlobalScoreV2(composantes)
-const countryRiskActive = await isCountryRiskActive()
+```typescript
+import {
+  calculateGlobalScoreV2,
+  isCountryRiskActive,
+} from "@/lib/scoring-engine-v2";
+
+const result = await calculateGlobalScoreV2(composantes);
+const countryRiskActive = await isCountryRiskActive();
 ```
 
 ### Formulaire de Création de Projet
 
 Le formulaire de création doit maintenant inclure:
+
 ```typescript
 countryCode?: string  // Pour AUTO_ASSIGN du risque pays
 ```
@@ -300,6 +328,7 @@ countryCode?: string  // Pour AUTO_ASSIGN du risque pays
 ### Formulaire d'Évaluation
 
 Le formulaire d'évaluation doit:
+
 1. Récupérer les domaines actifs via `getActiveDomains()`
 2. Afficher uniquement les critères des domaines actifs
 3. Si AUTO_ASSIGN et countryCode fourni → pré-remplir le risque pays
@@ -402,11 +431,13 @@ model EvaluationAnswer {
 ## Fichiers Modifiés/Créés
 
 ### Modifiés
+
 - `prisma/schema.prisma` - Ajout des nouveaux modèles
 - `package.json` - Ajout des scripts DB et tsx
 - `components/layout/navigation.tsx` - Lien vers admin panel
 
 ### Créés
+
 - `lib/scoring-engine-v2.ts` - Moteur de scoring paramétrable
 - `prisma/seed.ts` - Initialisation de la base de données
 - `app/admin/page.tsx` - Dashboard admin principal

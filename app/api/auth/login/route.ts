@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { verifyPassword, createToken } from "@/lib/auth";
-import { createErrorResponse, handleError, getErrorMessage } from "@/lib/error-handler";
+import {
+  createErrorResponse,
+  handleError,
+  getErrorMessage,
+} from "@/lib/error-handler";
 
 import prisma from "@/lib/prisma-client";
 
@@ -22,13 +26,15 @@ export async function POST(request: Request) {
         where: { email },
       });
     } catch (dbError: unknown) {
-      const dbErrorMsg = dbError instanceof Error ? dbError.message : String(dbError);
+      const dbErrorMsg =
+        dbError instanceof Error ? dbError.message : String(dbError);
       console.error(`[LOGIN] Database error for ${email}:`, dbErrorMsg);
       return NextResponse.json(
         {
           error: "Impossible de se connecter à la base de données",
           errorCode: "ERR_DB_001",
-          details: process.env.NODE_ENV === "development" ? dbErrorMsg : undefined
+          details:
+            process.env.NODE_ENV === "development" ? dbErrorMsg : undefined,
         },
         { status: 503 }
       );
@@ -55,9 +61,15 @@ export async function POST(request: Request) {
     try {
       passwordValid = await verifyPassword(password, hashedPassword);
     } catch (pwError: unknown) {
-      console.error(`[LOGIN] Password verification error for ${email}:`, pwError);
+      console.error(
+        `[LOGIN] Password verification error for ${email}:`,
+        pwError
+      );
       return NextResponse.json(
-        { error: "Erreur lors de la vérification du mot de passe", errorCode: "ERR_AUTH_002" },
+        {
+          error: "Erreur lors de la vérification du mot de passe",
+          errorCode: "ERR_AUTH_002",
+        },
         { status: 500 }
       );
     }
@@ -105,7 +117,8 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     console.error("[LOGIN] Unexpected error:", error);
     const errorCode = handleError(error);
-    const errorMessage = getErrorMessage(error) || "Erreur lors de la connexion";
+    const errorMessage =
+      getErrorMessage(error) || "Erreur lors de la connexion";
 
     return NextResponse.json(
       { error: errorMessage, errorCode, timestamp: new Date().toISOString() },

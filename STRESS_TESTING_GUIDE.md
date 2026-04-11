@@ -2,7 +2,7 @@
 
 **Purpose:** Validate project viability under adverse scenarios  
 **Frequency:** Mandatory for all projects scoring > 6.0  
-**Audience:** Risk managers, financial analysts, credit committees  
+**Audience:** Risk managers, financial analysts, credit committees
 
 ---
 
@@ -21,6 +21,7 @@
 ### Why Stress Testing?
 
 In Project Finance, we cannot rely on base-case assumptions alone:
+
 - ✅ Markets change (demand, pricing)
 - ✅ Costs increase unexpectedly
 - ✅ Construction delays occur
@@ -53,12 +54,14 @@ TIER 3: Perfect Storm (extreme combined stress)
 **Assumption:** Offtaker demand drops / marché deteriorates / volume reduction
 
 **Trigger:**
+
 - PPA volume decrease
 - Market downturn
 - Offtaker cash problems
 - Demand lower than forecast
 
 **Calculation:**
+
 ```
 Base Case Revenue = €100M/year
 Stress Case Revenue = €100M × 0.90 = €90M/year
@@ -77,6 +80,7 @@ DSCR_stress = 1.45 × 0.90 = 1.31x ✓ PASS (if > 1.25x)
 | > 1.30x | > 1.25x | > 1.10x |
 
 **Output:**
+
 ```json
 {
   "scenario": "Revenue -10%",
@@ -87,6 +91,7 @@ DSCR_stress = 1.45 × 0.90 = 1.31x ✓ PASS (if > 1.25x)
 ```
 
 **Impact on Score:**
+
 - Pass > 1.25x: No penalty
 - Pass 1.10-1.25x: MALUS -2 pts
 - Fail < 1.10x: NOGO_7A (reject)
@@ -98,12 +103,14 @@ DSCR_stress = 1.45 × 0.90 = 1.31x ✓ PASS (if > 1.25x)
 **Assumption:** Operating costs increase (labor, materials, utilities)
 
 **Trigger:**
+
 - General inflation
 - Supplier price increases
 - Labor cost escalation
 - Energy cost rise
 
 **Calculation:**
+
 ```
 Base Case OPEX = €20M/year
 Stress Case OPEX = €20M × 1.05 = €21M/year
@@ -128,6 +135,7 @@ DSCR_stress = 1.45 - 0.10 = 1.35x ✓ PASS
 | Cost +15% | DSCR > 1.10x |
 
 **Impact on Score:**
+
 - Pass > 1.20x: No penalty
 - Pass 1.10-1.20x: MALUS -2 pts
 - Fail < 1.10x: NOGO (reject)
@@ -139,12 +147,14 @@ DSCR_stress = 1.45 - 0.10 = 1.35x ✓ PASS
 **Assumption:** Project commissioning delayed 6 months
 
 **Trigger:**
+
 - EPC execution delays
 - Permit delays
 - Technical issues
 - Weather/force majeure
 
 **Calculation:**
+
 ```
 Base Case: COD Year 1, Revenue Year 1 = €100M full year
 Stress Case: COD Year 1.5, Revenue Year 1.5 = €50M (half year)
@@ -163,6 +173,7 @@ DSCR_Year2_stress > 1.15x (must recover after ramp)
 ```
 
 **Pass Threshold:**
+
 ```
 Delay 3-6 months: Year 2 DSCR > 1.15x
 Delay 6-12 months: Year 2 DSCR > 1.10x (or refinance)
@@ -176,12 +187,14 @@ Delay > 12 months: NOGO (refinancing risk critical)
 **Assumption:** Floating rate debt increases 2% (or fixed-rate refinance at higher rates)
 
 **Trigger:**
+
 - Central bank rate hikes
 - Spread widening (risk premium)
 - Refinancing at higher rates
 - Floating rate exposure
 
 **Calculation:**
+
 ```
 Base Case Debt Service = Interest @ 5% + Principal repayment
 Stress Case Debt Service = Interest @ 7% + Principal repayment
@@ -201,6 +214,7 @@ DSCR_stress = 1.45 - 0.10 = 1.35x (larger impact)
 ```
 
 **Pass Threshold:**
+
 ```
 Hedged > 80%: +200bps → DSCR > 1.25x
 Hedged 50-80%: +200bps → DSCR > 1.20x
@@ -208,6 +222,7 @@ Unhedged < 50%: +200bps → DSCR > 1.30x base (stringent!)
 ```
 
 **Red Flag:**
+
 - ❌ Unhedged floating > 50% of debt + DSCR_stress < 1.25x → MALUS -2 pts
 - ❌ Unhedged floating > 50% of debt + no hedging plan → MALUS -3 pts
 
@@ -218,6 +233,7 @@ Unhedged < 50%: +200bps → DSCR > 1.30x base (stringent!)
 **Assumption:** Local currency depreciates 10% vs. financing currency (USD/EUR)
 
 **Trigger:**
+
 - Central bank intervention / inflation
 - External shocks (commodity prices, political risk)
 - Carry trade unwinding
@@ -225,6 +241,7 @@ Unhedged < 50%: +200bps → DSCR > 1.30x base (stringent!)
 **Applies to:** Projects with FX mismatch (revenues in local, debt in foreign)
 
 **Calculation:**
+
 ```
 Base Case:
 • Revenue: €100M/year (in MAD, convert at 11 MAD/EUR)
@@ -240,6 +257,7 @@ DSCR_stress = DSCR_base × (1 - 10%) = 1.43 × 0.90 = 1.29x
 ```
 
 **Pass Threshold:**
+
 ```
 Unhedged FX exposure:
 • FX -10%: DSCR > 1.30x (stringent)
@@ -254,6 +272,7 @@ Fully hedged (100%):
 ```
 
 **Red Flags:**
+
 - ❌ Unhedged FX > 50% + revenues in local currency → MALUS -3 pts
 - ❌ FX mismatch 90%+ + DSCR_base < 1.35x → NOGO_6A (FX risk)
 
@@ -264,11 +283,13 @@ Fully hedged (100%):
 **Assumption:** Underlying market demand declines 2% annually (vs. base case growth of +2%)
 
 **Trigger:**
+
 - Structural market decline (tech substitution, secular trends)
 - Competition increases
 - Consumer behavior shift
 
 **Calculation:**
+
 ```
 Base Case: Revenue growing +2% CAGR
 Year 1: €100M
@@ -280,7 +301,7 @@ Year 1: €100M
 Year 10: €100M × 0.98^9 = €83M
 Year 20: €100M × 0.98^19 = €66M
 
-Gap accumulation: 
+Gap accumulation:
 By year 20, revenue is 66% of base case (vs 146%)!
 
 LLCR Impact (Long-term coverage):
@@ -289,6 +310,7 @@ LLCR_stress = 1.15x (weak) → refinancing risk!
 ```
 
 **Pass Threshold:**
+
 ```
 Decay -2% CAGR:
 • LLCR_stress > 1.25x → PASS
@@ -297,6 +319,7 @@ Decay -2% CAGR:
 ```
 
 **Testing Requirement:**
+
 - Calculate LLCR for stress scenario
 - Verify debt can be refinanced (check market conditions)
 - Flag if refinancing risk becomes critical
@@ -386,14 +409,14 @@ ELSE:
 
 ### Summary Table
 
-| Scenario | Pass Threshold | Fail Threshold | MALUS |
-|----------|---|---|---|
-| Revenue -10% | > 1.25x | < 1.10x | -2 to -4 pts |
-| Cost +5% | > 1.20x | < 1.10x | -2 to -3 pts |
-| Delay 6m | Year2 > 1.15x | < 1.10x | -3 to -5 pts |
-| Rate +200bps | > 1.20-1.30x | < 1.10x | -2 to -4 pts |
-| FX -10% | > 1.20-1.30x | < 1.10x | -3 pts |
-| Market -2% CAGR | LLCR > 1.25x | LLCR < 1.15x | -3 pts |
+| Scenario        | Pass Threshold | Fail Threshold | MALUS        |
+| --------------- | -------------- | -------------- | ------------ |
+| Revenue -10%    | > 1.25x        | < 1.10x        | -2 to -4 pts |
+| Cost +5%        | > 1.20x        | < 1.10x        | -2 to -3 pts |
+| Delay 6m        | Year2 > 1.15x  | < 1.10x        | -3 to -5 pts |
+| Rate +200bps    | > 1.20-1.30x   | < 1.10x        | -2 to -4 pts |
+| FX -10%         | > 1.20-1.30x   | < 1.10x        | -3 pts       |
+| Market -2% CAGR | LLCR > 1.25x   | LLCR < 1.15x   | -3 pts       |
 
 ---
 
@@ -403,42 +426,48 @@ ELSE:
 
 ```markdown
 # STRESS TEST REPORT
+
 **Project:** [Name]  
 **Date:** [Date]  
-**Analyst:** [Name]  
+**Analyst:** [Name]
 
 ## BASE CASE METRICS
-| Metric | Value |
-|--------|-------|
+
+| Metric       | Value |
+| ------------ | ----- |
 | DSCR Average | 1.45x |
 | DSCR Minimum | 1.35x |
-| LLCR | 1.55x |
-| Rating | A |
+| LLCR         | 1.55x |
+| Rating       | A     |
 
 ## STRESS RESULTS
 
 ### Scenario 1: Revenue Decline -10%
-| Year | DSCR_base | DSCR_stress | Status |
-|------|-----------|-------------|--------|
-| 1-5 | 1.50x | 1.35x | ✓ PASS |
-| 6-20 | 1.40x | 1.26x | ✓ PASS |
-| **Conclusion** | - | - | **PASS** |
+
+| Year           | DSCR_base | DSCR_stress | Status   |
+| -------------- | --------- | ----------- | -------- |
+| 1-5            | 1.50x     | 1.35x       | ✓ PASS   |
+| 6-20           | 1.40x     | 1.26x       | ✓ PASS   |
+| **Conclusion** | -         | -           | **PASS** |
 
 ### Scenario 2: Cost Inflation +5%
-| Year | DSCR_base | DSCR_stress | Status |
-|------|-----------|-------------|--------|
-| 1-20 | 1.45x | 1.35x | ✓ PASS |
-| **Conclusion** | - | - | **PASS** |
+
+| Year           | DSCR_base | DSCR_stress | Status   |
+| -------------- | --------- | ----------- | -------- |
+| 1-20           | 1.45x     | 1.35x       | ✓ PASS   |
+| **Conclusion** | -         | -           | **PASS** |
 
 ...
 
 ## COMBINED STRESS
 ```
+
 Scenario: Revenue -8% + Cost +3% + Delay 3m + Rate +150bps
 
 DSCR_combined_stress = 1.05x
 Status: ⚠️ MARGINAL (below 1.10x minimum)
 Recommendation: Monitor closely / increase DSRA
+
 ```
 
 ## SUMMARY
@@ -448,8 +477,8 @@ Recommendation: Monitor closely / increase DSRA
 - ✓ Scenario 5: PASS (margin 0.05x)
 - ⚠️ Combined: CRITICAL (DSCR = 1.05x)
 
-**Overall Assessment:** Project resilient under single-variable stress, but combined scenarios pose risk.  
-**Recommendation:** Approve with enhanced monitoring + potential DSRA increase.  
+**Overall Assessment:** Project resilient under single-variable stress, but combined scenarios pose risk.
+**Recommendation:** Approve with enhanced monitoring + potential DSRA increase.
 **Malus Applied:** -3 pts (combined stress risk)
 ```
 
@@ -492,4 +521,3 @@ Column J: Notes
 **Document version:** 1.0  
 **Last updated:** April 2026  
 **Next review:** Q3 2026
-

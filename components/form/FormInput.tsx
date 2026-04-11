@@ -18,7 +18,7 @@ interface FormInputProps {
 export function FormInput({
   label,
   name,
-  type = 'text',
+  type = "text",
   value,
   onChange,
   error,
@@ -30,7 +30,7 @@ export function FormInput({
     <div>
       <label className="block text-sm font-semibold text-white mb-2">
         {label}
-        {required && ' *'}
+        {required && " *"}
       </label>
       <input
         type={type}
@@ -41,7 +41,7 @@ export function FormInput({
         required={required}
         disabled={disabled}
         className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50 ${
-          error ? 'border-red-500' : 'border-slate-600'
+          error ? "border-red-500" : "border-slate-600"
         }`}
       />
       {error && <p className="mt-1 text-sm text-red-400">{error}</p>}

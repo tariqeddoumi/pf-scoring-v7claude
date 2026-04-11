@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Code, Users, Mail } from 'lucide-react';
+import { Code, Users, Mail } from "lucide-react";
 
 export function Footer() {
   return (
@@ -11,7 +11,8 @@ export function Footer() {
           <div>
             <h3 className="text-white font-bold mb-4">PF Scoring V7++</h3>
             <p className="text-slate-400 text-sm">
-              Système de scoring Project Finance conforme IFC, EBRD, Basel et Bank Al-Maghrib.
+              Système de scoring Project Finance conforme IFC, EBRD, Basel et
+              Bank Al-Maghrib.
             </p>
           </div>
 
@@ -19,10 +20,26 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Navigation</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="/dashboard" className="hover:text-white transition">Tableau de bord</a></li>
-              <li><a href="/clients" className="hover:text-white transition">Clients</a></li>
-              <li><a href="/projects" className="hover:text-white transition">Projets</a></li>
-              <li><a href="/methodology" className="hover:text-white transition">Méthodologie</a></li>
+              <li>
+                <a href="/dashboard" className="hover:text-white transition">
+                  Tableau de bord
+                </a>
+              </li>
+              <li>
+                <a href="/clients" className="hover:text-white transition">
+                  Clients
+                </a>
+              </li>
+              <li>
+                <a href="/projects" className="hover:text-white transition">
+                  Projets
+                </a>
+              </li>
+              <li>
+                <a href="/methodology" className="hover:text-white transition">
+                  Méthodologie
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -30,10 +47,26 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Documentation</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-white transition">API Docs</a></li>
-              <li><a href="#" className="hover:text-white transition">Developer Guide</a></li>
-              <li><a href="#" className="hover:text-white transition">Support</a></li>
-              <li><a href="#" className="hover:text-white transition">FAQ</a></li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  API Docs
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Developer Guide
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  Support
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-white transition">
+                  FAQ
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -41,13 +74,25 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Contact</h4>
             <div className="flex space-x-4">
-              <a href="#" className="text-slate-400 hover:text-white transition" title="Email">
+              <a
+                href="#"
+                className="text-slate-400 hover:text-white transition"
+                title="Email"
+              >
                 <Mail size={20} />
               </a>
-              <a href="#" className="text-slate-400 hover:text-white transition" title="GitHub">
+              <a
+                href="#"
+                className="text-slate-400 hover:text-white transition"
+                title="GitHub"
+              >
                 <Code size={20} />
               </a>
-              <a href="#" className="text-slate-400 hover:text-white transition" title="LinkedIn">
+              <a
+                href="#"
+                className="text-slate-400 hover:text-white transition"
+                title="LinkedIn"
+              >
                 <Users size={20} />
               </a>
             </div>
@@ -60,9 +105,15 @@ export function Footer() {
             © 2026 PF Scoring V7++. Tous droits réservés.
           </p>
           <div className="flex space-x-6 text-sm text-slate-400">
-            <a href="#" className="hover:text-white transition">Confidentialité</a>
-            <a href="#" className="hover:text-white transition">Conditions</a>
-            <a href="#" className="hover:text-white transition">Cookies</a>
+            <a href="#" className="hover:text-white transition">
+              Confidentialité
+            </a>
+            <a href="#" className="hover:text-white transition">
+              Conditions
+            </a>
+            <a href="#" className="hover:text-white transition">
+              Cookies
+            </a>
           </div>
         </div>
       </div>

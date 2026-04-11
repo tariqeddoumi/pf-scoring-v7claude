@@ -14,18 +14,21 @@ export async function GET(request: NextRequest) {
           role: true,
           createdAt: true,
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
 
       return NextResponse.json({
         success: true,
         data: users,
-        count: users.length
+        count: users.length,
       });
     } catch (error: any) {
       console.error("[ADMIN/USERS] GET error:", error);
       return NextResponse.json(
-        { error: "Erreur lors de la récupération des utilisateurs", errorCode: "SRV_001" },
+        {
+          error: "Erreur lors de la récupération des utilisateurs",
+          errorCode: "SRV_001",
+        },
         { status: 500 }
       );
     }
@@ -37,10 +40,7 @@ export async function POST(request: Request) {
     const { email, nom, prenom, role } = await request.json();
 
     if (!email) {
-      return NextResponse.json(
-        { error: "Email requis" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email requis" }, { status: 400 });
     }
 
     const user = await prisma.user.create({

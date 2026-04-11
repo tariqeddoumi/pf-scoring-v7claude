@@ -7,6 +7,7 @@
 ## Domaines reçus ✅
 
 ### D1 – Project Fundamentals (20%)
+
 **Status:** ✅ COMPLÈTEMENT SPÉCIFIÉ  
 **Sous-domaines:** 3  
 **Critères:** 9  
@@ -30,6 +31,7 @@
 ---
 
 ### D2 – Host Country (10%)
+
 **Status:** ✅ COMPLÈTEMENT SPÉCIFIÉ  
 **Sous-domaines:** 3  
 **Critères:** 9  
@@ -55,30 +57,37 @@
 ## Domaines en attente de spécification 📋
 
 ### D3 – Construction Phase (15%)
+
 **Status:** ⏳ EN ATTENTE  
 **Sujets couverts:** EPC completion risk, interfaces, insurance, stress testing
 
 ### D4 – Market Risk (10%)
+
 **Status:** ⏳ EN ATTENTE  
 **Sujets couverts:** Revenue stability, offtake, market exposure
 
 ### D5 – Operational Risk (10%)
+
 **Status:** ⏳ EN ATTENTE  
 **Sujets couverts:** O&M, technology reliability, maintenance
 
 ### D6 – Counterparty Risk (10%)
+
 **Status:** ⏳ EN ATTENTE  
 **Sujets couverts:** EPC contractor, O&M operator, offtaker quality
 
 ### D7 – Financial Structure & Cash Flow (15%)
+
 **Status:** ⏳ EN ATTENTE  
 **Sujets couverts:** DSCR, LLCR, leverage, hedging, waterfall
 
 ### D8 – Legal & Documentation (10%)
+
 **Status:** ⏳ EN ATTENTE  
 **Sujets couverts:** Security package, covenants, step-in rights
 
 ### D9 – ESG & Climate (10%)
+
 **Status:** ⏳ EN ATTENTE  
 **Sujets couverts:** Environmental, social, governance, climate risk
 
@@ -87,20 +96,24 @@
 ## Plan d'Intégration Proposé
 
 ### Phase A – Domaines 1 & 2 (Fondations)
+
 **Durée:** Semaine 1-2  
 **Domaines:** D1, D2  
 **Actions:**
+
 1. Implémenter structure complète D1 dans config
 2. Implémenter structure complète D2 dans config
 3. Créer formulaires saisie D1 & D2
 4. Tester calculs scores
 
 ### Phase B – Domaines 3-5 (Risques Opérationnels)
+
 **Durée:** Semaine 3  
 **Domaines:** D3, D4, D5  
 **Pré-requis:** Recevoir spécifications complètes
 
 ### Phase C – Domaines 6-9 (Risques Financiers & Structurels)
+
 **Durée:** Semaine 4  
 **Domaines:** D6, D7, D8, D9  
 **Pré-requis:** Recevoir spécifications complètes
@@ -142,17 +155,26 @@ DOMAINE X – [Intitulé]
 
 ```typescript
 export const DOMAINS = {
-  D1: { /* Domaine 1 complet */ },
-  D2: { /* Domaine 2 complet */ },
-  D3: { /* Domaine 3 (à recevoir) */ },
+  D1: {
+    /* Domaine 1 complet */
+  },
+  D2: {
+    /* Domaine 2 complet */
+  },
+  D3: {
+    /* Domaine 3 (à recevoir) */
+  },
   // ...
-  D9: { /* Domaine 9 (à recevoir) */ }
-}
+  D9: {
+    /* Domaine 9 (à recevoir) */
+  },
+};
 ```
 
 ### Fichier : `lib/scoring-domains/`
 
 Structure proposée :
+
 ```
 lib/scoring-domains/
 ├── d1-project-fundamentals.ts
@@ -167,6 +189,7 @@ lib/scoring-domains/
 ```
 
 Chaque fichier exports :
+
 - Configuration domaine
 - Types associés
 - Calculateurs de score

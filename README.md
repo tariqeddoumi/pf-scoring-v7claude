@@ -6,15 +6,15 @@ Conforme: IFC | EBRD | Basel III | Bank Al-Maghrib
 
 ## 🚀 Status Phases
 
-| Phase | Status |
-|-------|--------|
-| 1. Core | ✅ |
-| 2A. Workflow | ✅ |
-| 2B. Governance | ✅ |
-| 3. Advanced | ✅ |
-| 4. Export & Compliance | ✅ |
-| 5. Analytics & Benchmarking | ✅ |
-| 6. Backend & API | 🔄 |
+| Phase                       | Status |
+| --------------------------- | ------ |
+| 1. Core                     | ✅     |
+| 2A. Workflow                | ✅     |
+| 2B. Governance              | ✅     |
+| 3. Advanced                 | ✅     |
+| 4. Export & Compliance      | ✅     |
+| 5. Analytics & Benchmarking | ✅     |
+| 6. Backend & API            | 🔄     |
 
 ## 🛠️ Tech Stack
 

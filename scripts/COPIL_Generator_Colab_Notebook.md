@@ -54,13 +54,14 @@ files.download("COPIL_Presentation.pptx")
 
 Le fichier CSV doit contenir les colonnes suivantes:
 
-| ÉLÉMENT | BLOC | STATUT | COMPLÉTION_% | DESCRIPTION |
-|---------|------|--------|--------------|-------------|
-| Feature 1 | Module A | INTÉGRÉ | 100% | Description |
-| Feature 2 | Module A | EN COURS | 75% | Description |
-| Feature 3 | Module B | PLANIFIÉ | 0% | Description |
+| ÉLÉMENT   | BLOC     | STATUT   | COMPLÉTION\_% | DESCRIPTION |
+| --------- | -------- | -------- | ------------- | ----------- |
+| Feature 1 | Module A | INTÉGRÉ  | 100%          | Description |
+| Feature 2 | Module A | EN COURS | 75%           | Description |
+| Feature 3 | Module B | PLANIFIÉ | 0%            | Description |
 
 **Valeurs STATUT acceptées:**
+
 - INTÉGRÉ (100% complété)
 - EN COURS (en développement)
 - PLANIFIÉ (prévu)
@@ -69,16 +70,19 @@ Le fichier CSV doit contenir les colonnes suivantes:
 ## Données Générées par l'API
 
 ### Utilisateurs (Users)
+
 - Récupère le nombre total d'utilisateurs
 - Compte par rôle: admin, manager, analyst, guest, viewer
 - Génère un graphique de distribution par rôle
 
 ### Projets (Projects)
+
 - Récupère le nombre total de projets
 - Compte par statut: draft, in_review, approved, rejected
 - Génère un graphique de distribution par statut
 
 ### Évaluations (Evaluations)
+
 - Récupère le nombre total d'évaluations
 - Compte par statut du flux de travail:
   - Draft (Brouillon)
@@ -91,6 +95,7 @@ Le fichier CSV doit contenir les colonnes suivantes:
 ## Slides Générées
 
 ### Option 1 (API)
+
 1. **Titre** - Couverture du rapport
 2. **Gestion des Utilisateurs** - Distribution par rôle
 3. **Gestion des Projets** - Distribution par statut
@@ -98,6 +103,7 @@ Le fichier CSV doit contenir les colonnes suivantes:
 5. **Prochaines Étapes** - Phases futures (9-12)
 
 ### Option 2 (CSV)
+
 1. **Titre** - Couverture du rapport
 2. **Résumé Exécutif** - KPIs généraux
 3. **Avancement par Bloc** - Graphique de complétude
@@ -108,11 +114,13 @@ Le fichier CSV doit contenir les colonnes suivantes:
 ## Authentification API
 
 ### Sans Authentification (données publiques)
+
 ```python
 main(api_url="https://votre-app.vercel.app", auth_token=None)
 ```
 
 ### Avec JWT Token (données sécurisées)
+
 ```python
 # Récupérer un token JWT depuis votre application
 auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -122,6 +130,7 @@ main(api_url="https://votre-app.vercel.app", auth_token=auth_token)
 ## Personnalisation
 
 ### Changer les couleurs
+
 Modifiez les variables RGB dans le script:
 
 ```python
@@ -132,6 +141,7 @@ RED = RGBColor(244, 67, 54)
 ```
 
 ### Ajouter des slides personnalisées
+
 Créez une nouvelle fonction et appelez-la dans `create_presentation()`:
 
 ```python
@@ -147,15 +157,18 @@ add_custom_slide(prs, stats)
 ## Dépannage
 
 ### Erreur: "API Error"
+
 - Vérifiez que l'URL est correcte et accessible
 - Vérifiez que le token JWT est valide
 - Vérifiez que l'API retourne du JSON
 
 ### Erreur: "CSV file not found"
+
 - Assurez-vous d'avoir téléchargé le fichier CSV
 - Vérifiez que le nom du fichier est correct
 
 ### Erreur: "Module not found"
+
 - Installez python-pptx: `!pip install python-pptx`
 - Installez requests: `!pip install requests` (pour API)
 
@@ -168,6 +181,7 @@ add_custom_slide(prs, stats)
 ## Support
 
 Pour les questions ou problèmes:
+
 1. Vérifiez les logs de sortie (messages avec 📥, ✅, ❌)
 2. Consultez les exemples ci-dessus
 3. Modifiez le script selon vos besoins

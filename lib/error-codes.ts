@@ -44,7 +44,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.NETWORK,
     message: "Impossible de se connecter au serveur",
     httpStatus: 503,
-    description: "La connexion au serveur a échoué. Vérifiez votre connexion Internet.",
+    description:
+      "La connexion au serveur a échoué. Vérifiez votre connexion Internet.",
   },
 
   ERR_NET_002: {
@@ -60,7 +61,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.NETWORK,
     message: "Service indisponible",
     httpStatus: 503,
-    description: "Le service est temporairement indisponible. Réessayez plus tard.",
+    description:
+      "Le service est temporairement indisponible. Réessayez plus tard.",
   },
 
   // ==================== BASE DE DONNÉES ====================
@@ -69,7 +71,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.DATABASE,
     message: "Erreur de connexion à la base de données",
     httpStatus: 503,
-    description: "Impossible de se connecter à la base de données. Vérifiez les paramètres de connexion.",
+    description:
+      "Impossible de se connecter à la base de données. Vérifiez les paramètres de connexion.",
   },
 
   ERR_DB_002: {
@@ -101,7 +104,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.DATABASE,
     message: "Erreur de contrainte de base de données",
     httpStatus: 409,
-    description: "Les données fournis violent une contrainte de la base de données.",
+    description:
+      "Les données fournis violent une contrainte de la base de données.",
   },
 
   // ==================== AUTHENTIFICATION ====================
@@ -110,7 +114,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.AUTH,
     message: "Token d'authentification manquant",
     httpStatus: 401,
-    description: "Aucun token d'authentification trouvé. Veuillez vous connecter.",
+    description:
+      "Aucun token d'authentification trouvé. Veuillez vous connecter.",
   },
 
   ERR_AUTH_002: {
@@ -118,7 +123,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.AUTH,
     message: "Token d'authentification invalide",
     httpStatus: 401,
-    description: "Le token d'authentification est invalide ou expiré. Veuillez vous reconnecter.",
+    description:
+      "Le token d'authentification est invalide ou expiré. Veuillez vous reconnecter.",
   },
 
   ERR_AUTH_003: {
@@ -150,7 +156,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.AUTH,
     message: "Permissions insuffisantes",
     httpStatus: 403,
-    description: "Vous n'avez pas les permissions nécessaires pour accéder à cette ressource.",
+    description:
+      "Vous n'avez pas les permissions nécessaires pour accéder à cette ressource.",
   },
 
   ERR_AUTH_007: {
@@ -167,7 +174,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.VALIDATION,
     message: "Données invalides",
     httpStatus: 400,
-    description: "Les données fournis ne sont pas valides. Vérifiez les champs obligatoires.",
+    description:
+      "Les données fournis ne sont pas valides. Vérifiez les champs obligatoires.",
   },
 
   ERR_VAL_002: {
@@ -183,7 +191,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.VALIDATION,
     message: "Mot de passe faible",
     httpStatus: 400,
-    description: "Le mot de passe ne respecte pas les critères de sécurité minimum.",
+    description:
+      "Le mot de passe ne respecte pas les critères de sécurité minimum.",
   },
 
   ERR_VAL_004: {
@@ -257,7 +266,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.BUSINESS,
     message: "Erreur lors de la création du projet",
     httpStatus: 500,
-    description: "Impossible de créer le projet. Vérifiez les données fournies.",
+    description:
+      "Impossible de créer le projet. Vérifiez les données fournies.",
   },
 
   ERR_BUS_005: {
@@ -274,7 +284,8 @@ export const ERROR_CODES: Record<string, ErrorCode> = {
     category: ErrorCategory.SERVER,
     message: "Erreur interne du serveur",
     httpStatus: 500,
-    description: "Une erreur interne s'est produite. Veuillez réessayer plus tard.",
+    description:
+      "Une erreur interne s'est produite. Veuillez réessayer plus tard.",
   },
 
   ERR_SRV_002: {

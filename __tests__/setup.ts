@@ -24,7 +24,7 @@ expect.extend({
 });
 
 // Mock environment variables for tests
-Object.defineProperty(process.env, 'NODE_ENV', {
-  value: 'test',
+Object.defineProperty(process.env, "NODE_ENV", {
+  value: "test",
   writable: false,
 });

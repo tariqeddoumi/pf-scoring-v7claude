@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 import {
   Table,
   TableBody,
@@ -8,9 +8,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Trash2, Edit2, Eye } from 'lucide-react';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Trash2, Edit2, Eye } from "lucide-react";
 
 interface Column<T> {
   key: keyof T;
@@ -35,7 +35,7 @@ export function DataTable<T extends { id: string }>({
   onEdit,
   onDelete,
   loading = false,
-  emptyMessage = 'No data available',
+  emptyMessage = "No data available",
 }: DataTableProps<T>) {
   if (loading) {
     return <div className="text-center py-8">Loading...</div>;
@@ -51,21 +51,31 @@ export function DataTable<T extends { id: string }>({
         <TableHeader>
           <TableRow className="bg-gray-50">
             {columns.map((column) => (
-              <TableHead key={String(column.key)} className="text-gray-700 font-semibold">
+              <TableHead
+                key={String(column.key)}
+                className="text-gray-700 font-semibold"
+              >
                 {column.label}
               </TableHead>
             ))}
             {(onView || onEdit || onDelete) && (
-              <TableHead className="text-gray-700 font-semibold">Actions</TableHead>
+              <TableHead className="text-gray-700 font-semibold">
+                Actions
+              </TableHead>
             )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((row, idx) => (
-            <TableRow key={row.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <TableRow
+              key={row.id}
+              className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+            >
               {columns.map((column) => (
                 <TableCell key={String(column.key)} className="py-3 px-4">
-                  {column.render ? column.render(row[column.key], row) : String(row[column.key] || '')}
+                  {column.render
+                    ? column.render(row[column.key], row)
+                    : String(row[column.key] || "")}
                 </TableCell>
               ))}
               {(onView || onEdit || onDelete) && (

@@ -1,5 +1,5 @@
-import prisma from '@/lib/prisma-client';
-import { ScoringEngine } from './scoring-engine';
+import prisma from "@/lib/prisma-client";
+import { ScoringEngine } from "./scoring-engine";
 
 export class ScoringEvaluationService {
   /**
@@ -12,11 +12,11 @@ export class ScoringEvaluationService {
     evaluatedBy: string;
   }) {
     const version = await prisma.scoringModelVersion.findUnique({
-      where: { id: data.modelVersionId }
+      where: { id: data.modelVersionId },
     });
 
     if (!version) {
-      throw new Error('Scoring model version not found');
+      throw new Error("Scoring model version not found");
     }
 
     const evaluation = await prisma.scoringEvaluation.create({
@@ -25,11 +25,11 @@ export class ScoringEvaluationService {
         modelId: data.modelId,
         modelVersionId: data.modelVersionId,
         analystId: data.evaluatedBy,
-        status: 'brouillon'
+        status: "brouillon",
       },
       include: {
-        answers: true
-      }
+        answers: true,
+      },
     });
 
     return evaluation;
@@ -50,31 +50,31 @@ export class ScoringEvaluationService {
     recordedBy: string;
   }) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
-      where: { id: data.evaluationId }
+      where: { id: data.evaluationId },
     });
 
     if (!evaluation) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
-    if (evaluation.status !== 'brouillon') {
-      throw new Error('Can only record answers on draft evaluations');
+    if (evaluation.status !== "brouillon") {
+      throw new Error("Can only record answers on draft evaluations");
     }
 
     const node = await prisma.scoringNode.findUnique({
-      where: { id: data.nodeId }
+      where: { id: data.nodeId },
     });
 
     if (!node) {
-      throw new Error('Node not found');
+      throw new Error("Node not found");
     }
 
     // Check if answer already exists
     const existingAnswer = await prisma.scoringEvaluationAnswer.findFirst({
       where: {
         evaluationId: data.evaluationId,
-        nodeId: data.nodeId
-      }
+        nodeId: data.nodeId,
+      },
     });
 
     let answer;
@@ -90,8 +90,8 @@ export class ScoringEvaluationService {
           valueDate: data.valueDate,
           manualScore: data.manualScore,
           comment: data.comment,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     } else {
       // Create new answer
@@ -99,14 +99,14 @@ export class ScoringEvaluationService {
         data: {
           evaluationId: data.evaluationId,
           nodeId: data.nodeId,
-          answerType: node.answerType || 'TEXT',
+          answerType: node.answerType || "TEXT",
           valueString: data.valueString,
           valueNumber: data.valueNumber,
           valueBoolean: data.valueBoolean,
           valueDate: data.valueDate,
           manualScore: data.manualScore,
-          comment: data.comment
-        }
+          comment: data.comment,
+        },
       });
     }
 
@@ -120,28 +120,25 @@ export class ScoringEvaluationService {
     return prisma.scoringEvaluationAnswer.findMany({
       where: { evaluationId },
       include: {
-        node: true
-      }
+        node: true,
+      },
     });
   }
 
   /**
    * Submit evaluation for review
    */
-  static async submitEvaluation(
-    evaluationId: string,
-    submittedBy: string
-  ) {
+  static async submitEvaluation(evaluationId: string, submittedBy: string) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
-      where: { id: evaluationId }
+      where: { id: evaluationId },
     });
 
     if (!evaluation) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
-    if (evaluation.status !== 'brouillon') {
-      throw new Error('Only draft evaluations can be submitted');
+    if (evaluation.status !== "brouillon") {
+      throw new Error("Only draft evaluations can be submitted");
     }
 
     // Calculate scores
@@ -150,9 +147,9 @@ export class ScoringEvaluationService {
     const updated = await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
       data: {
-        status: 'soumis',
-        submittedAt: new Date()
-      }
+        status: "soumis",
+        submittedAt: new Date(),
+      },
     });
 
     return updated;
@@ -161,28 +158,25 @@ export class ScoringEvaluationService {
   /**
    * Approve evaluation
    */
-  static async approveEvaluation(
-    evaluationId: string,
-    approvedBy: string
-  ) {
+  static async approveEvaluation(evaluationId: string, approvedBy: string) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
-      where: { id: evaluationId }
+      where: { id: evaluationId },
     });
 
     if (!evaluation) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
-    if (evaluation.status !== 'soumis') {
-      throw new Error('Only submitted evaluations can be approved');
+    if (evaluation.status !== "soumis") {
+      throw new Error("Only submitted evaluations can be approved");
     }
 
     const updated = await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
       data: {
-        status: 'valide',
-        validatedAt: new Date()
-      }
+        status: "valide",
+        validatedAt: new Date(),
+      },
     });
 
     return updated;
@@ -197,24 +191,24 @@ export class ScoringEvaluationService {
     rejectedBy: string
   ) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
-      where: { id: evaluationId }
+      where: { id: evaluationId },
     });
 
     if (!evaluation) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
-    if (!['soumis', 'valide'].includes(evaluation.status)) {
-      throw new Error('Can only reject submitted or validated evaluations');
+    if (!["soumis", "valide"].includes(evaluation.status)) {
+      throw new Error("Can only reject submitted or validated evaluations");
     }
 
     // Reset to draft for corrections
     const updated = await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
       data: {
-        status: 'brouillon',
-        notes: reason
-      }
+        status: "brouillon",
+        notes: reason,
+      },
     });
 
     return updated;
@@ -226,11 +220,11 @@ export class ScoringEvaluationService {
   static async calculateScores(evaluationId: string) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },
-      select: { modelVersionId: true }
+      select: { modelVersionId: true },
     });
 
     if (!evaluation) {
-      throw new Error('Evaluation not found');
+      throw new Error("Evaluation not found");
     }
 
     // Use the generic scoring engine
@@ -245,8 +239,8 @@ export class ScoringEvaluationService {
         where: {
           evaluationId_nodeId: {
             evaluationId,
-            nodeId
-          }
+            nodeId,
+          },
         },
         create: {
           evaluationId,
@@ -260,8 +254,8 @@ export class ScoringEvaluationService {
           traceJson: JSON.stringify({
             weight: score.weight,
             method: score.aggregationMethod,
-            ruleCount: score.ruleImpacts.length
-          })
+            ruleCount: score.ruleImpacts.length,
+          }),
         },
         update: {
           rawScore: score.rawScore,
@@ -273,9 +267,9 @@ export class ScoringEvaluationService {
           traceJson: JSON.stringify({
             weight: score.weight,
             method: score.aggregationMethod,
-            ruleCount: score.ruleImpacts.length
-          })
-        }
+            ruleCount: score.ruleImpacts.length,
+          }),
+        },
       });
     }
 
@@ -289,8 +283,8 @@ export class ScoringEvaluationService {
     await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
       data: {
-        finalScore: finalScores.globalScore
-      }
+        finalScore: finalScores.globalScore,
+      },
     });
 
     return { nodeResults, finalScores };
@@ -305,20 +299,20 @@ export class ScoringEvaluationService {
       include: {
         answers: {
           include: {
-            node: true
-          }
+            node: true,
+          },
         },
         nodeResults: {
           include: {
-            node: true
-          }
+            node: true,
+          },
         },
         version: {
           include: {
-            nodes: true
-          }
-        }
-      }
+            nodes: true,
+          },
+        },
+      },
     });
   }
 
@@ -333,12 +327,12 @@ export class ScoringEvaluationService {
           select: {
             versionNumber: true,
             model: {
-              select: { label: true }
-            }
-          }
-        }
+              select: { label: true },
+            },
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
   }
 }

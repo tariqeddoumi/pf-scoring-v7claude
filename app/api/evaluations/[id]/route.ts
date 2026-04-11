@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, hasMinimumRole } from '@/lib/auth-middleware';
-import { EvaluationService } from '@/lib/services/evaluation-service';
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import { EvaluationService } from "@/lib/services/evaluation-service";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -11,10 +11,16 @@ interface RouteParams {
  */
 async function handleGET(request: NextRequest, user: any, params: any) {
   try {
-    const evaluation = await EvaluationService.getEvaluationById(params.id, user.userId);
+    const evaluation = await EvaluationService.getEvaluationById(
+      params.id,
+      user.userId
+    );
 
     if (!evaluation) {
-      return NextResponse.json({ error: 'Evaluation not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Evaluation not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(evaluation, { status: 200 });
