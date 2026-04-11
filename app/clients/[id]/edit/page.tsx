@@ -23,11 +23,6 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
     type: '',
     description: '',
     status: 'Actif',
-    // Additional fields for full client profile
-    website: '',
-    city: '',
-    address: '',
-    contact: '',
   });
 
   // Resolve params and fetch client data
@@ -274,67 +269,6 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
             rows={4}
             className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
             placeholder="Description du client..."
-          />
-        </div>
-
-
-        {/* Website */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Site Web
-          </label>
-          <input
-            type="url"
-            name="website"
-            value={formData.website || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="https://exemple.com"
-          />
-        </div>
-
-        {/* Ville */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Ville
-          </label>
-          <input
-            type="text"
-            name="city"
-            value={formData.city || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Casablanca"
-          />
-        </div>
-
-        {/* Adresse */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Adresse
-          </label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Adresse complète"
-          />
-        </div>
-
-        {/* Personne de contact */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Personne de Contact
-          </label>
-          <input
-            type="text"
-            name="contact"
-            value={formData.contact || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Nom du contact"
           />
         </div>
 

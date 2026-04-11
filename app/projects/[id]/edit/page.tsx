@@ -21,14 +21,8 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
     pays: 'Maroc',
     montant: '',
     devise: 'MAD',
+    countryCode: '',
     status: 'Actif',
-    // Additional project fields
-    region: '',
-    city: '',
-    sponsor: '',
-    technology: '',
-    capacity: '',
-    totalCost: '',
   });
 
   // Fetch project data on mount
@@ -262,97 +256,6 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
             <option value="Suspendu">Suspendu</option>
             <option value="Terminé">Terminé</option>
           </select>
-        </div>
-
-
-        {/* Region */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Région
-          </label>
-          <input
-            type="text"
-            name="region"
-            value={formData.region || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Grand Casablanca"
-          />
-        </div>
-
-        {/* City */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Ville
-          </label>
-          <input
-            type="text"
-            name="city"
-            value={formData.city || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Casablanca"
-          />
-        </div>
-
-        {/* Sponsor */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Sponsor
-          </label>
-          <input
-            type="text"
-            name="sponsor"
-            value={formData.sponsor || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Nom du sponsor"
-          />
-        </div>
-
-        {/* Technology */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Technologie
-          </label>
-          <input
-            type="text"
-            name="technology"
-            value={formData.technology || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Énergie Solaire, Éolienne"
-          />
-        </div>
-
-        {/* Capacity */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Capacité
-          </label>
-          <input
-            type="text"
-            name="capacity"
-            value={formData.capacity || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: 100 MW"
-          />
-        </div>
-
-        {/* Total Cost */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Coût Total
-          </label>
-          <input
-            type="text"
-            name="totalCost"
-            value={formData.totalCost || ''}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Montant total"
-          />
         </div>
 
         {/* Buttons */}
