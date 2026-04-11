@@ -4,14 +4,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-
-interface User {
-  id: string;
-  email: string;
-  nom: string;
-  prenom: string;
-  role: 'admin' | 'manager' | 'analyst' | 'viewer';
-}
+import { User } from '@/lib/types/models';
+import { FormInput } from '@/components/form/FormInput';
+import { RoleSelect } from '@/components/form/RoleSelect';
 
 export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -145,83 +140,45 @@ export default function EditUserPage({ params }: { params: Promise<{ id: string 
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6">
+        <FormInput
+          label="Nom"
+          name="nom"
+          type="text"
+          value={formData.nom || ''}
+          onChange={handleChange}
+          placeholder="Nom"
+          error={fieldErrors.nom}
+          required
+        />
 
-        {/* Nom */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Nom *
-          </label>
-          <input
-            type="text"
-            name="nom"
-            value={formData.nom || ''}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-              fieldErrors.nom ? 'border-red-500' : 'border-slate-600'
-            }`}
-            placeholder="Nom"
-            required
-          />
-          {fieldErrors.nom && <p className="mt-1 text-sm text-red-400">{fieldErrors.nom}</p>}
-        </div>
+        <FormInput
+          label="Prénom"
+          name="prenom"
+          type="text"
+          value={formData.prenom || ''}
+          onChange={handleChange}
+          placeholder="Prénom"
+          error={fieldErrors.prenom}
+          required
+        />
 
-        {/* Prénom */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Prénom *
-          </label>
-          <input
-            type="text"
-            name="prenom"
-            value={formData.prenom || ''}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-              fieldErrors.prenom ? 'border-red-500' : 'border-slate-600'
-            }`}
-            placeholder="Prénom"
-            required
-          />
-          {fieldErrors.prenom && <p className="mt-1 text-sm text-red-400">{fieldErrors.prenom}</p>}
-        </div>
+        <FormInput
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email || ''}
+          onChange={handleChange}
+          placeholder="email@example.com"
+          error={fieldErrors.email}
+          required
+        />
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Email *
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email || ''}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-              fieldErrors.email ? 'border-red-500' : 'border-slate-600'
-            }`}
-            placeholder="email@example.com"
-            required
-          />
-          {fieldErrors.email && <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>}
-        </div>
-
-        {/* Role */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Rôle *
-          </label>
-          <select
-            name="role"
-            value={formData.role || 'analyst'}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            required
-          >
-            <option value="viewer">Lecteur</option>
-            <option value="analyst">Analyste</option>
-            <option value="manager">Gestionnaire</option>
-            <option value="admin">Administrateur</option>
-          </select>
-          {fieldErrors.role && <p className="mt-1 text-sm text-red-400">{fieldErrors.role}</p>}
-        </div>
+        <RoleSelect
+          value={formData.role || 'analyst'}
+          onChange={handleChange}
+          error={fieldErrors.role}
+          required
+        />
 
         {/* Buttons */}
         <div className="flex gap-4 pt-4">
