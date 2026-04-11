@@ -316,6 +316,7 @@ export default function EditClientPage({
               </div>
             </div>
           </AccordionItem>
+        </Accordion>
 
         {/* Buttons */}
         <div className="flex gap-4 pt-4">
