@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
@@ -12,11 +12,17 @@ interface Responses {
   [criteriaId: string]: string | number;
 }
 
+interface Project {
+  id: string;
+  nom: string;
+}
+
 export default function NewEvaluationPage() {
   const router = useRouter();
   const { createEvaluation } = useEvaluationWorkflow();
 
-  const [projectId, setProjectId] = useState('p1');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectId, setProjectId] = useState('');
   const [evaluationType, setEvaluationType] = useState('Initiale');
   const [analyst, setAnalyst] = useState('');
   const [expandedDomains, setExpandedDomains] = useState<string[]>(['D1']);
@@ -24,6 +30,29 @@ export default function NewEvaluationPage() {
   const [financialData] = useState({ dscr: 1.35, equity: 20, hasGuarantees: true, contractsSigned: true });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [projectsLoading, setProjectsLoading] = useState(true);
+
+  // Load projects from API on mount
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/projects');
+        if (!response.ok) throw new Error('Failed to fetch projects');
+        const data = await response.json();
+        const projectList = data.data || [];
+        setProjects(projectList);
+        if (projectList.length > 0) {
+          setProjectId(projectList[0].id);
+        }
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setError('Impossible de charger les projets');
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const toggleDomain = (domainId: string) => {
     setExpandedDomains((prev) =>
@@ -99,9 +128,21 @@ export default function NewEvaluationPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="text-sm font-semibold text-white block mb-2">Projet</label>
-            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white">
-              <option value="p1">Parc Éolien Taourirt</option>
-              <option value="p2">Centrale Solaire Ouarzazate</option>
+            <select 
+              value={projectId} 
+              onChange={(e) => setProjectId(e.target.value)} 
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
+              disabled={projectsLoading}
+            >
+              {projectsLoading ? (
+                <option>Chargement des projets...</option>
+              ) : projects.length > 0 ? (
+                projects.map((project) => (
+                  <option key={project.id} value={project.id}>{project.nom}</option>
+                ))
+              ) : (
+                <option>Aucun projet disponible</option>
+              )}
             </select>
           </div>
           <div>
