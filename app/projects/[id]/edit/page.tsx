@@ -3,8 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Zap,
+  Users,
+  Shield,
+} from "lucide-react";
 import { Project } from "@/lib/types/models";
+import { Tabs, TabPane } from "@/components/ui/TabsCustom";
 
 export default function EditProjectPage({
   params,
@@ -156,217 +166,288 @@ export default function EditProjectPage({
         </div>
       )}
 
-      {/* Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6"
-      >
-        {/* Nom */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Nom du projet *
-          </label>
-          <input
-            type="text"
-            name="nom"
-            value={formData.nom || ""}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-              fieldErrors.nom ? "border-red-500" : "border-slate-600"
-            }`}
-            placeholder="Nom du projet"
-            required
-          />
-          {fieldErrors.nom && (
-            <p className="mt-1 text-sm text-red-400">{fieldErrors.nom}</p>
-          )}
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={formData.description || ""}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
-            placeholder="Description du projet..."
-          />
-        </div>
-
-        {/* Secteur */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Secteur
-          </label>
-          <input
-            type="text"
-            name="secteur"
-            value={formData.secteur || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Energie, Transport, Santé"
-          />
-        </div>
-
-        {/* Pays */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Pays
-          </label>
-          <input
-            type="text"
-            name="pays"
-            value={formData.pays || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Maroc"
-          />
-        </div>
-
-        {/* Montant et Devise */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-white mb-2">
-              Montant
-            </label>
-            <input
-              type="text"
-              name="montant"
-              value={formData.montant || ""}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              placeholder="Ex: 100,000,000"
-            />
+      {/* Form with Tabs */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
+            <p className="font-semibold">{error}</p>
+            {Object.keys(fieldErrors).length > 0 && (
+              <ul className="mt-2 ml-4 list-disc">
+                {Object.entries(fieldErrors).map(([field, message]) => (
+                  <li key={field} className="text-sm">
+                    {message}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-white mb-2">
-              Devise
-            </label>
-            <select
-              name="devise"
-              value={formData.devise || "MAD"}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="MAD">MAD (Dirham marocain)</option>
-              <option value="EUR">EUR (Euro)</option>
-              <option value="USD">USD (Dollar américain)</option>
-              <option value="GBP">GBP (Livre sterling)</option>
-            </select>
-          </div>
-        </div>
+        )}
 
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Statut
-          </label>
-          <select
-            name="status"
-            value={formData.status || "Actif"}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="Actif">Actif</option>
-            <option value="Inactif">Inactif</option>
-            <option value="Suspendu">Suspendu</option>
-            <option value="Terminé">Terminé</option>
-          </select>
-        </div>
+        {/* Tabs Navigation */}
+        <Tabs
+          items={[
+            {
+              label: "Identification",
+              value: "identification",
+              icon: <Briefcase size={18} />,
+            },
+            {
+              label: "Localisation",
+              value: "location",
+              icon: <MapPin size={18} />,
+            },
+            {
+              label: "Finances",
+              value: "finances",
+              icon: <DollarSign size={18} />,
+            },
+            { label: "Technique", value: "technical", icon: <Zap size={18} /> },
+            {
+              label: "Parties Prenantes",
+              value: "stakeholders",
+              icon: <Users size={18} />,
+            },
+          ]}
+          defaultValue="identification"
+        >
+          {/* Tab 1: Identification */}
+          <TabPane value="identification">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+              {/* Nom */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Nom du projet *
+                </label>
+                <input
+                  type="text"
+                  name="nom"
+                  value={formData.nom || ""}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
+                    fieldErrors.nom ? "border-red-500" : "border-slate-600"
+                  }`}
+                  placeholder="Nom du projet"
+                  required
+                />
+                {fieldErrors.nom && (
+                  <p className="mt-1 text-sm text-red-400">{fieldErrors.nom}</p>
+                )}
+              </div>
 
-        {/* Region */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Région
-          </label>
-          <input
-            type="text"
-            name="region"
-            value={formData.region || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Grand Casablanca"
-          />
-        </div>
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description || ""}
+                  onChange={handleChange}
+                  rows={4}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  placeholder="Description du projet..."
+                />
+              </div>
 
-        {/* City */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Ville
-          </label>
-          <input
-            type="text"
-            name="city"
-            value={formData.city || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Casablanca"
-          />
-        </div>
+              {/* Secteur et Status */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Secteur
+                  </label>
+                  <input
+                    type="text"
+                    name="secteur"
+                    value={formData.secteur || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Ex: Energie, Transport"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Statut
+                  </label>
+                  <select
+                    name="status"
+                    value={formData.status || "Actif"}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="Actif">Actif</option>
+                    <option value="Inactif">Inactif</option>
+                    <option value="Suspendu">Suspendu</option>
+                    <option value="Terminé">Terminé</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </TabPane>
 
-        {/* Sponsor */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Sponsor
-          </label>
-          <input
-            type="text"
-            name="sponsor"
-            value={formData.sponsor || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Nom du sponsor"
-          />
-        </div>
+          {/* Tab 2: Localisation */}
+          <TabPane value="location">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Pays */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Pays
+                  </label>
+                  <input
+                    type="text"
+                    name="pays"
+                    value={formData.pays || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Ex: Maroc"
+                  />
+                </div>
 
-        {/* Technology */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Technologie
-          </label>
-          <input
-            type="text"
-            name="technology"
-            value={formData.technology || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Énergie Solaire, Éolienne"
-          />
-        </div>
+                {/* Région */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Région
+                  </label>
+                  <input
+                    type="text"
+                    name="region"
+                    value={formData.region || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Ex: Grand Casablanca"
+                  />
+                </div>
 
-        {/* Capacity */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Capacité
-          </label>
-          <input
-            type="text"
-            name="capacity"
-            value={formData.capacity || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: 100 MW"
-          />
-        </div>
+                {/* Ville */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Ville
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Ex: Casablanca"
+                  />
+                </div>
+              </div>
+            </div>
+          </TabPane>
 
-        {/* Total Cost */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Coût Total
-          </label>
-          <input
-            type="text"
-            name="totalCost"
-            value={formData.totalCost || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Montant total"
-          />
-        </div>
+          {/* Tab 3: Finances */}
+          <TabPane value="finances">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Montant */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Montant
+                  </label>
+                  <input
+                    type="text"
+                    name="montant"
+                    value={formData.montant || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Ex: 100,000,000"
+                  />
+                </div>
+
+                {/* Devise */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Devise
+                  </label>
+                  <select
+                    name="devise"
+                    value={formData.devise || "MAD"}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="MAD">MAD (Dirham marocain)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="USD">USD (Dollar américain)</option>
+                    <option value="GBP">GBP (Livre sterling)</option>
+                  </select>
+                </div>
+
+                {/* Total Cost */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Coût Total
+                  </label>
+                  <input
+                    type="text"
+                    name="totalCost"
+                    value={formData.totalCost || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Montant total du projet"
+                  />
+                </div>
+              </div>
+            </div>
+          </TabPane>
+
+          {/* Tab 4: Technique */}
+          <TabPane value="technical">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Technologie */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Technologie
+                  </label>
+                  <input
+                    type="text"
+                    name="technology"
+                    value={formData.technology || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Ex: Énergie Solaire"
+                  />
+                </div>
+
+                {/* Capacité */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Capacité
+                  </label>
+                  <input
+                    type="text"
+                    name="capacity"
+                    value={formData.capacity || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Ex: 100 MW"
+                  />
+                </div>
+              </div>
+            </div>
+          </TabPane>
+
+          {/* Tab 5: Parties Prenantes */}
+          <TabPane value="stakeholders">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Sponsor
+                </label>
+                <input
+                  type="text"
+                  name="sponsor"
+                  value={formData.sponsor || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Nom du sponsor"
+                />
+              </div>
+            </div>
+          </TabPane>
+        </Tabs>
 
         {/* Buttons */}
         <div className="flex gap-4 pt-4">

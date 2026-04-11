@@ -7,6 +7,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 import { SCORING_MODEL } from "@/lib/scoring-model";
 import { calculateEvaluation } from "@/lib/scoring-engine";
 import { useEvaluationWorkflow } from "@/lib/evaluation-context";
+import { Wizard } from "@/components/ui/Wizard";
 
 interface Responses {
   [criteriaId: string]: string | number;
@@ -25,7 +26,6 @@ export default function NewEvaluationPage() {
   const [projectId, setProjectId] = useState("");
   const [evaluationType, setEvaluationType] = useState("Initiale");
   const [analyst, setAnalyst] = useState("");
-  const [expandedDomains, setExpandedDomains] = useState<string[]>(["D1"]);
   const [responses, setResponses] = useState<Responses>({});
   const [financialData] = useState({
     dscr: 1.35,
@@ -36,6 +36,34 @@ export default function NewEvaluationPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [projectsLoading, setProjectsLoading] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // Grouper les domaines par étapes
+  const domainGroups = [
+    { name: "Domaines Financiers", ids: ["D1", "D2", "D3"] },
+    { name: "Domaines Risques ESG", ids: ["D4", "D5", "D6"] },
+    { name: "Domaines Légaux & Pays", ids: ["D7", "D8"] },
+  ];
+
+  const wizardSteps = [
+    {
+      id: "info",
+      label: "Informations Générales",
+      description: "Projet, Type et Analyste",
+    },
+    {
+      id: "financial",
+      label: "Domaines Financiers",
+      description: "D1, D2, D3",
+    },
+    { id: "esg", label: "Domaines ESG", description: "D4, D5, D6" },
+    { id: "legal", label: "Domaines Légaux", description: "D7, D8" },
+    {
+      id: "summary",
+      label: "Synthèse & Conclusion",
+      description: "Résumé et validation",
+    },
+  ];
 
   // Load projects from API on mount
   useEffect(() => {
@@ -59,30 +87,48 @@ export default function NewEvaluationPage() {
     fetchProjects();
   }, []);
 
-  const toggleDomain = (domainId: string) => {
-    setExpandedDomains((prev) =>
-      prev.includes(domainId)
-        ? prev.filter((d) => d !== domainId)
-        : [...prev, domainId]
-    );
-  };
-
   const handleResponseChange = (criteriaId: string, value: string | number) => {
     setResponses((prev) => ({ ...prev, [criteriaId]: value }));
   };
 
-  const handleSubmit = async () => {
+  const validateStep = (step: number): boolean => {
+    setError("");
+
+    if (step === 0) {
+      // Validate info step
+      if (!projectId) {
+        setError("Veuillez sélectionner un projet");
+        return false;
+      }
+      if (!analyst.trim()) {
+        setError("Veuillez indiquer le nom de l'analyste");
+        return false;
+      }
+      return true;
+    }
+
+    // Other steps are optional
+    return true;
+  };
+
+  const handleStepChange = (newStep: number) => {
+    if (newStep > currentStep && !validateStep(currentStep)) {
+      return;
+    }
+    setCurrentStep(newStep);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateStep(currentStep)) {
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     try {
-      // Validation
-      if (!analyst.trim()) {
-        setError("Veuillez indiquer le nom de l'analyste");
-        setLoading(false);
-        return;
-      }
-
       // Calculate score
       const allResponses = Object.entries(responses).map(
         ([criteriaId, value]) => ({
@@ -115,6 +161,183 @@ export default function NewEvaluationPage() {
     }
   };
 
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        // Info Générales
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-semibold text-white block mb-2">
+                Projet *
+              </label>
+              <select
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                disabled={projectsLoading}
+              >
+                <option value="">-- Sélectionner un projet --</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.nom}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-white block mb-2">
+                Type d'Évaluation
+              </label>
+              <select
+                value={evaluationType}
+                onChange={(e) => setEvaluationType(e.target.value)}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+              >
+                <option>Initiale</option>
+                <option>Annuelle</option>
+                <option>Ad hoc</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-white block mb-2">
+                Analyste *
+              </label>
+              <input
+                type="text"
+                value={analyst}
+                onChange={(e) => setAnalyst(e.target.value)}
+                placeholder="Nom de l'analyste"
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+              />
+            </div>
+          </div>
+        );
+
+      case 1:
+      case 2:
+      case 3:
+        // Domain steps
+        const groupIndex = currentStep - 1;
+        const domainIds = domainGroups[groupIndex].ids;
+        return (
+          <div className="space-y-4">
+            {SCORING_MODEL.filter((d) => domainIds.includes(d.id)).map(
+              (domain) => (
+                <div
+                  key={domain.id}
+                  className="border border-slate-700 rounded-lg p-4 space-y-3"
+                >
+                  <div>
+                    <h4 className="text-lg font-semibold text-cyan-400 mb-2">
+                      {domain.id} - {domain.name}
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      Poids: {domain.weight}%
+                    </p>
+                  </div>
+                  {domain.subCriteria.map((sub) => (
+                    <div
+                      key={sub.id}
+                      className="bg-slate-700/50 rounded p-3 space-y-2"
+                    >
+                      <h5 className="text-sm font-medium text-slate-300">
+                        {sub.label}
+                      </h5>
+                      {sub.criteria.map((crit) => (
+                        <div key={crit.id} className="space-y-1">
+                          <label className="text-xs text-slate-400 block">
+                            {crit.label}
+                          </label>
+                          {crit.scale === "qualitative" ? (
+                            <select
+                              value={responses[crit.id] || ""}
+                              onChange={(e) =>
+                                handleResponseChange(crit.id, e.target.value)
+                              }
+                              className="w-full bg-slate-600 border border-slate-500 rounded px-3 py-1.5 text-white text-sm"
+                            >
+                              <option value="">-- Sélectionner --</option>
+                              {crit.options?.map((opt) => (
+                                <option key={opt.label} value={opt.label}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={responses[crit.id] || ""}
+                              onChange={(e) =>
+                                handleResponseChange(crit.id, e.target.value)
+                              }
+                              className="w-full bg-slate-600 border border-slate-500 rounded px-3 py-1.5 text-white text-sm"
+                              placeholder="Valeur"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
+          </div>
+        );
+
+      case 4:
+        // Summary
+        return (
+          <div className="space-y-4">
+            <div className="bg-slate-700/50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-white mb-3">
+                Récapitulatif
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-slate-400">Projet:</span>
+                  <span className="text-white ml-2">
+                    {projects.find((p) => p.id === projectId)?.nom || "N/A"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Type:</span>
+                  <span className="text-white ml-2">{evaluationType}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Analyste:</span>
+                  <span className="text-white ml-2">{analyst}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Domaines complétés:</span>
+                  <span className="text-cyan-400 ml-2">
+                    {
+                      SCORING_MODEL.filter((d) =>
+                        d.subCriteria.some((s) =>
+                          s.criteria.some((c) => c.id in responses)
+                        )
+                      ).length
+                    }
+                    /{SCORING_MODEL.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+              <p className="text-sm text-blue-300">
+                Cliquez sur "Valider" pour calculer le score et créer
+                l'évaluation.
+              </p>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
@@ -127,7 +350,7 @@ export default function NewEvaluationPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Nouvelle Évaluation</h1>
           <p className="text-slate-400 mt-2">
-            9 domaines • 27 sous-critères • Modèle V7++
+            Interface guidée étape par étape
           </p>
         </div>
       </div>
@@ -142,154 +365,17 @@ export default function NewEvaluationPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 space-y-4">
-        <h2 className="text-xl font-bold text-white">Paramètres</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-sm font-semibold text-white block mb-2">
-              Projet
-            </label>
-            <select
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
-              disabled={projectsLoading}
-            >
-              {projectsLoading ? (
-                <option>Chargement des projets...</option>
-              ) : projects.length > 0 ? (
-                projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.nom}
-                  </option>
-                ))
-              ) : (
-                <option>Aucun projet disponible</option>
-              )}
-            </select>
-          </div>
-          <div>
-            <label className="text-sm font-semibold text-white block mb-2">
-              Type
-            </label>
-            <select
-              value={evaluationType}
-              onChange={(e) => setEvaluationType(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
-            >
-              <option>Initiale</option>
-              <option>Annuelle</option>
-              <option>Ad hoc</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm font-semibold text-white block mb-2">
-              Analyste
-            </label>
-            <input
-              type="text"
-              value={analyst}
-              onChange={(e) => setAnalyst(e.target.value)}
-              placeholder="Nom"
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {SCORING_MODEL.map((domain) => (
-          <div
-            key={domain.id}
-            className="rounded-lg border border-slate-700 bg-slate-800 overflow-hidden"
-          >
-            <button
-              onClick={() => toggleDomain(domain.id)}
-              className="w-full flex items-center justify-between p-4 hover:bg-slate-700 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-lg font-bold text-cyan-400">
-                  {domain.id}
-                </span>
-                <span className="font-semibold text-white">{domain.name}</span>
-                <span className="text-xs text-slate-400">
-                  ({domain.weight}%)
-                </span>
-              </div>
-              {expandedDomains.includes(domain.id) ? (
-                <ChevronUp size={20} />
-              ) : (
-                <ChevronDown size={20} />
-              )}
-            </button>
-
-            {expandedDomains.includes(domain.id) && (
-              <div className="border-t border-slate-700 p-4 space-y-4">
-                {domain.subCriteria.map((sub) => (
-                  <div
-                    key={sub.id}
-                    className="bg-slate-700 rounded-lg p-3 space-y-3"
-                  >
-                    <h4 className="font-semibold text-white text-sm">
-                      {sub.label}
-                    </h4>
-                    {sub.criteria.map((crit) => (
-                      <div key={crit.id} className="flex flex-col space-y-1">
-                        <label className="text-xs text-slate-300">
-                          {crit.label}
-                        </label>
-                        {crit.scale === "qualitative" ? (
-                          <select
-                            value={responses[crit.id] || ""}
-                            onChange={(e) =>
-                              handleResponseChange(crit.id, e.target.value)
-                            }
-                            className="bg-slate-600 border border-slate-500 rounded px-2 py-1 text-white text-sm"
-                          >
-                            <option value="">-- Sélectionner --</option>
-                            {crit.options?.map((opt) => (
-                              <option key={opt.label} value={opt.label}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={responses[crit.id] || ""}
-                            onChange={(e) =>
-                              handleResponseChange(crit.id, e.target.value)
-                            }
-                            className="bg-slate-600 border border-slate-500 rounded px-2 py-1 text-white text-sm"
-                            placeholder="Valeur"
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex gap-4">
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-lg transition-all"
+      <form onSubmit={handleSubmit}>
+        <Wizard
+          steps={wizardSteps}
+          currentStep={currentStep}
+          onStepChange={handleStepChange}
+          canGoNext={true}
+          isSubmitting={loading}
         >
-          {loading ? "⏳ Création en cours..." : "✓ Calculer & Créer"}
-        </button>
-        <Link
-          href="/evaluations"
-          className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-6 py-3 rounded-lg transition-all text-center"
-        >
-          Annuler
-        </Link>
-      </div>
+          {renderStepContent()}
+        </Wizard>
+      </form>
     </div>
   );
 }

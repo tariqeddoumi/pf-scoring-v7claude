@@ -4,7 +4,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Client } from "@/lib/types/models";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  User,
+  MapPin,
+  Briefcase,
+  FileText,
+  Shield,
+} from "lucide-react";
+import { Accordion, AccordionItem } from "@/components/ui/Accordion";
 
 export default function EditClientPage({
   params,
@@ -156,202 +165,251 @@ export default function EditClientPage({
       )}
 
       {/* Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-6"
-      >
-        {/* Nom */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Nom du client *
-          </label>
-          <input
-            type="text"
-            name="nom"
-            value={formData.nom || ""}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-              fieldErrors.nom ? "border-red-500" : "border-slate-600"
-            }`}
-            placeholder="Nom du client"
-            required
-          />
-          {fieldErrors.nom && (
-            <p className="mt-1 text-sm text-red-400">{fieldErrors.nom}</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Email
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email || ""}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-              fieldErrors.email ? "border-red-500" : "border-slate-600"
-            }`}
-            placeholder="email@example.com"
-          />
-          {fieldErrors.email && (
-            <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
-          )}
-        </div>
-
-        {/* Téléphone */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Téléphone
-          </label>
-          <input
-            type="tel"
-            name="telephone"
-            value={formData.telephone || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="+212 5XX XXX XXX"
-          />
-        </div>
-
-        {/* Secteur */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Secteur
-          </label>
-          <input
-            type="text"
-            name="secteur"
-            value={formData.secteur || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Energie, Banque, Retail"
-          />
-        </div>
-
-        {/* Pays */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Pays
-          </label>
-          <input
-            type="text"
-            name="pays"
-            value={formData.pays || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Maroc"
-          />
-        </div>
-
-        {/* Type */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Type
-          </label>
-          <input
-            type="text"
-            name="type"
-            value={formData.type || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Entreprise, PME"
-          />
-        </div>
-
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Statut
-          </label>
-          <select
-            name="status"
-            value={formData.status || "Actif"}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Accordion>
+          {/* Section 1: Informations Générales */}
+          <AccordionItem
+            title="Informations Générales"
+            defaultOpen={true}
+            icon={<User size={18} />}
           >
-            <option value="Actif">Actif</option>
-            <option value="Inactif">Inactif</option>
-            <option value="Suspendu">Suspendu</option>
-          </select>
-        </div>
+            <div className="space-y-4">
+              {/* Nom */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Nom du client *
+                </label>
+                <input
+                  type="text"
+                  name="nom"
+                  value={formData.nom || ""}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
+                    fieldErrors.nom ? "border-red-500" : "border-slate-600"
+                  }`}
+                  placeholder="Nom du client"
+                  required
+                />
+                {fieldErrors.nom && (
+                  <p className="mt-1 text-sm text-red-400">{fieldErrors.nom}</p>
+                )}
+              </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={formData.description || ""}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
-            placeholder="Description du client..."
-          />
-        </div>
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email || ""}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
+                    fieldErrors.email ? "border-red-500" : "border-slate-600"
+                  }`}
+                  placeholder="email@example.com"
+                />
+                {fieldErrors.email && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {fieldErrors.email}
+                  </p>
+                )}
+              </div>
 
-        {/* Website */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Site Web
-          </label>
-          <input
-            type="url"
-            name="website"
-            value={formData.website || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="https://exemple.com"
-          />
-        </div>
+              {/* Téléphone */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Téléphone
+                </label>
+                <input
+                  type="tel"
+                  name="telephone"
+                  value={formData.telephone || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="+212 5XX XXX XXX"
+                />
+              </div>
+            </div>
+          </AccordionItem>
 
-        {/* Ville */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Ville
-          </label>
-          <input
-            type="text"
-            name="city"
-            value={formData.city || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Ex: Casablanca"
-          />
-        </div>
+          {/* Section 2: Localisation */}
+          <AccordionItem title="Localisation" icon={<MapPin size={18} />}>
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Pays */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Pays
+                </label>
+                <input
+                  type="text"
+                  name="pays"
+                  value={formData.pays || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Ex: Maroc"
+                />
+              </div>
 
-        {/* Adresse */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Adresse
-          </label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Adresse complète"
-          />
-        </div>
+              {/* Ville */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Ville
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Ex: Casablanca"
+                />
+              </div>
 
-        {/* Personne de contact */}
-        <div>
-          <label className="block text-sm font-semibold text-white mb-2">
-            Personne de Contact
-          </label>
-          <input
-            type="text"
-            name="contact"
-            value={formData.contact || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Nom du contact"
-          />
-        </div>
+              {/* Adresse */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Adresse
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Adresse complète"
+                />
+              </div>
+            </div>
+          </AccordionItem>
+
+          {/* Section 3: Secteur d'Activité */}
+          <AccordionItem
+            title="Secteur d'Activité"
+            icon={<Briefcase size={18} />}
+          >
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Secteur */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Secteur
+                </label>
+                <input
+                  type="text"
+                  name="secteur"
+                  value={formData.secteur || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Ex: Energie, Banque, Retail"
+                />
+              </div>
+
+              {/* Type */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Type
+                </label>
+                <input
+                  type="text"
+                  name="type"
+                  value={formData.type || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Ex: Entreprise, PME"
+                />
+              </div>
+            </div>
+          </AccordionItem>
+
+          {/* Section 4: Détails Additionnels */}
+          <AccordionItem
+            title="Détails Additionnels"
+            icon={<FileText size={18} />}
+          >
+            <div className="space-y-4">
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description || ""}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  placeholder="Description du client..."
+                />
+              </div>
+
+              {/* Website */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Site Web
+                </label>
+                <input
+                  type="url"
+                  name="website"
+                  value={formData.website || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="https://exemple.com"
+                />
+              </div>
+
+              {/* Personne de contact */}
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Personne de Contact
+                </label>
+                <input
+                  type="text"
+                  name="contact"
+                  value={formData.contact || ""}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Nom du contact"
+                />
+              </div>
+            </div>
+          </AccordionItem>
+
+          {/* Section 5: Administration */}
+          <AccordionItem title="Administration" icon={<Shield size={18} />}>
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">
+                Statut
+              </label>
+              <select
+                name="status"
+                value={formData.status || "Actif"}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="Actif">Actif</option>
+                <option value="Inactif">Inactif</option>
+                <option value="Suspendu">Suspendu</option>
+              </select>
+            </div>
+          </AccordionItem>
+        </Accordion>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
+            <p className="font-semibold">{error}</p>
+            {Object.keys(fieldErrors).length > 0 && (
+              <ul className="mt-2 ml-4 list-disc">
+                {Object.entries(fieldErrors).map(([field, message]) => (
+                  <li key={field} className="text-sm">
+                    {message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* Buttons */}
         <div className="flex gap-4 pt-4">
