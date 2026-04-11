@@ -28,19 +28,14 @@ export default function EditClientPage({
   const [clientId, setClientId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<Partial<Client>>({
-    nom: "",
-    email: "",
-    telephone: "",
-    secteur: "",
-    pays: "Maroc",
-    type: "",
-    description: "",
-    status: "Actif",
-    // Additional fields for full client profile
-    website: "",
-    city: "",
-    address: "",
-    contact: "",
+    nom: '',
+    email: '',
+    telephone: '',
+    secteur: '',
+    pays: 'Maroc',
+    type: '',
+    description: '',
+    status: 'Actif',
   });
 
   // Resolve params and fetch client data
@@ -321,95 +316,6 @@ export default function EditClientPage({
               </div>
             </div>
           </AccordionItem>
-
-          {/* Section 4: Détails Additionnels */}
-          <AccordionItem
-            title="Détails Additionnels"
-            icon={<FileText size={18} />}
-          >
-            <div className="space-y-4">
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description || ""}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
-                  placeholder="Description du client..."
-                />
-              </div>
-
-              {/* Website */}
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Site Web
-                </label>
-                <input
-                  type="url"
-                  name="website"
-                  value={formData.website || ""}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  placeholder="https://exemple.com"
-                />
-              </div>
-
-              {/* Personne de contact */}
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Personne de Contact
-                </label>
-                <input
-                  type="text"
-                  name="contact"
-                  value={formData.contact || ""}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  placeholder="Nom du contact"
-                />
-              </div>
-            </div>
-          </AccordionItem>
-
-          {/* Section 5: Administration */}
-          <AccordionItem title="Administration" icon={<Shield size={18} />}>
-            <div>
-              <label className="block text-sm font-semibold text-white mb-2">
-                Statut
-              </label>
-              <select
-                name="status"
-                value={formData.status || "Actif"}
-                onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="Actif">Actif</option>
-                <option value="Inactif">Inactif</option>
-                <option value="Suspendu">Suspendu</option>
-              </select>
-            </div>
-          </AccordionItem>
-        </Accordion>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
-            <p className="font-semibold">{error}</p>
-            {Object.keys(fieldErrors).length > 0 && (
-              <ul className="mt-2 ml-4 list-disc">
-                {Object.entries(fieldErrors).map(([field, message]) => (
-                  <li key={field} className="text-sm">
-                    {message}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
 
         {/* Buttons */}
         <div className="flex gap-4 pt-4">

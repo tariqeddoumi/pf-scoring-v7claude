@@ -28,21 +28,15 @@ export default function EditProjectPage({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<Partial<Project>>({
-    nom: "",
-    description: "",
-    secteur: "",
-    pays: "Maroc",
-    montant: "",
-    devise: "MAD",
-    status: "Actif",
-    // Additional project fields
-    region: "",
-    city: "",
-    sponsor: "",
-    technology: "",
-    capacity: "",
-    totalCost: "",
+    const [formData, setFormData] = useState<Partial<Project>>({
+    nom: '',
+    description: '',
+    secteur: '',
+    pays: 'Maroc',
+    montant: '',
+    devise: 'MAD',
+    countryCode: '',
+    status: 'Actif',
   });
 
   // Fetch project data on mount
@@ -336,118 +330,6 @@ export default function EditProjectPage({
               </div>
             </div>
           </TabPane>
-
-          {/* Tab 3: Finances */}
-          <TabPane value="finances">
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Montant */}
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Montant
-                  </label>
-                  <input
-                    type="text"
-                    name="montant"
-                    value={formData.montant || ""}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ex: 100,000,000"
-                  />
-                </div>
-
-                {/* Devise */}
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Devise
-                  </label>
-                  <select
-                    name="devise"
-                    value={formData.devise || "MAD"}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="MAD">MAD (Dirham marocain)</option>
-                    <option value="EUR">EUR (Euro)</option>
-                    <option value="USD">USD (Dollar américain)</option>
-                    <option value="GBP">GBP (Livre sterling)</option>
-                  </select>
-                </div>
-
-                {/* Total Cost */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Coût Total
-                  </label>
-                  <input
-                    type="text"
-                    name="totalCost"
-                    value={formData.totalCost || ""}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Montant total du projet"
-                  />
-                </div>
-              </div>
-            </div>
-          </TabPane>
-
-          {/* Tab 4: Technique */}
-          <TabPane value="technical">
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Technologie */}
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Technologie
-                  </label>
-                  <input
-                    type="text"
-                    name="technology"
-                    value={formData.technology || ""}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ex: Énergie Solaire"
-                  />
-                </div>
-
-                {/* Capacité */}
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Capacité
-                  </label>
-                  <input
-                    type="text"
-                    name="capacity"
-                    value={formData.capacity || ""}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Ex: 100 MW"
-                  />
-                </div>
-              </div>
-            </div>
-          </TabPane>
-
-          {/* Tab 5: Parties Prenantes */}
-          <TabPane value="stakeholders">
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-white mb-2">
-                  Sponsor
-                </label>
-                <input
-                  type="text"
-                  name="sponsor"
-                  value={formData.sponsor || ""}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  placeholder="Nom du sponsor"
-                />
-              </div>
-            </div>
-          </TabPane>
-        </Tabs>
 
         {/* Buttons */}
         <div className="flex gap-4 pt-4">
