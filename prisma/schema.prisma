@@ -45,47 +45,89 @@ model User {
 }
 
 model Client {
-  id            String    @id @default(uuid())
-  nom           String
-  email         String?   @unique
-  telephone     String?
-  secteur       String?
-  pays          String?
-  type          String?   @default("Entreprise")
-  description   String?
-  status        String    @default("Actif")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                      String    @id @default(uuid())
+  nom                     String
+  email                   String?   @unique
+  telephone               String?
+  secteur                 String?
+  pays                    String?
+  type                    String?   @default("Entreprise")
+  description             String?
+  status                  String    @default("Actif")
+  // Extended fields
+  raisonSociale           String?
+  nomCommercial           String?
+  typeClient              String?   @default("Entreprise")
+  formeJuridique          String?
+  segmentClientele        String?
+  ratingInterne           String?
+  statutBancaire          String?   @default("Prospect")
+  statusKYC               String?   @default("En attente")
+  statusConformite        String?   @default("En attente")
+  effectifs               Int?
+  capitalSocial           Float?
+  chiffreAffaires         Float?
+  adresse                 String?
+  codePostal              String?
+  ville                   String?
+  website                 String?
+  centreAffaires          String?
+  gestionnaire            String?
+  dateRelation            DateTime?
+  exposition              Float?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
-  projects      Project[]
+  projects                Project[]
 
   @@map("BP_PF_clients")
 }
 
 model Project {
-  id            String        @id @default(uuid())
-  nom           String
-  description   String
-  secteur       String
-  montant       Float
-  devise        String        @default("MAD")
-  status        ProjectStatus @default(brouillon)
-  scoreGlobal   Float?
-  grade         String?
-  creePar       String        @db.Uuid
-  countryCode   String?
-  clientId      String?
-  dateCreation  DateTime      @default(now())
-  dateMiseAJour DateTime      @updatedAt
+  id                          String        @id @default(uuid())
+  nom                         String
+  description                 String
+  secteur                     String
+  montant                     Float
+  devise                      String        @default("MAD")
+  status                      ProjectStatus @default(brouillon)
+  scoreGlobal                 Float?
+  grade                       String?
+  creePar                     String        @db.Uuid
+  countryCode                 String?
+  clientId                    String?
+  dateCreation                DateTime      @default(now())
+  dateMiseAJour               DateTime      @updatedAt
+  // Extended fields
+  sponsorPrincipal            String?
+  nomSPV                      String?
+  constructeurEPC             String?
+  operateurOM                 String?
+  technologie                 String?
+  capaciteInstallee           Float?
+  debutConstruction           DateTime?
+  finConstruction             DateTime?
+  coutTotal                   Float?
+  financement                 Float?
+  apportPropre                Float?
+  structureCapitalePrincipale String?
+  dureeCredit                 Int?
+  taux                        Float?
+  typeCredit                  String?
+  dureeProjet                 Int?
+  periodeAmorce               Int?
+  periodeRemboursement        Int?
+  tauxCouverture              Float?
+  ratio                       Float?
 
-  user      User       @relation(fields: [creePar], references: [id], onDelete: Cascade)
-  client    Client?    @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  scorings  Scoring[]
-  auditLogs AuditLog[]
-  evaluations Evaluation[]  @relation("ProjectEvaluations")
+  user                        User       @relation(fields: [creePar], references: [id], onDelete: Cascade)
+  client                      Client?    @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  scorings                    Scoring[]
+  auditLogs                   AuditLog[]
+  evaluations                 Evaluation[]  @relation("ProjectEvaluations")
 
   // New relationships for scoring
-  scoringEvaluations ScoringEvaluation[] @relation("ScoringProject")
+  scoringEvaluations          ScoringEvaluation[] @relation("ScoringProject")
 
   @@index([creePar])
   @@index([clientId])
@@ -261,28 +303,42 @@ model EvaluationAnswer {
 }
 
 model Evaluation {
-  id                String              @id @default(uuid())
-  projectId         String
-  analystId         String
-  scoringResult     Json                // ScoringResult object
-  stressTestResult  Json?               // StressTestResult object (optional)
-  rating            String              // AAA, AA, A, BBB, BB, B, CCC, D
-  finalScore        Float
-  recommendation    String              // APPROVE, APPROVE_WITH_CONDITIONS, REJECT
-  probabilityOfDefault Float
-  triggeredNOGOs    Json                // Array of NO-GO rule IDs
-  appliedMALUS      Json                // Array of MALUS penalties
-  malusTotal        Float
-  notes             String?
-  status            EvaluationStatus    @default(brouillon)
-  version           String              @default("7.0")
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  id                          String              @id @default(uuid())
+  projectId                   String
+  analystId                   String
+  scoringResult               Json                // ScoringResult object
+  stressTestResult            Json?               // StressTestResult object (optional)
+  rating                      String              // AAA, AA, A, BBB, BB, B, CCC, D
+  finalScore                  Float
+  recommendation              String              // APPROVE, APPROVE_WITH_CONDITIONS, REJECT
+  probabilityOfDefault        Float
+  triggeredNOGOs              Json                // Array of NO-GO rule IDs
+  appliedMALUS                Json                // Array of MALUS penalties
+  malusTotal                  Float
+  notes                       String?
+  status                      EvaluationStatus    @default(brouillon)
+  version                     String              @default("7.0")
+  // Extended fields
+  scoreFinancier              Float?
+  scoreTechnique              Float?
+  scoreMarche                 Float?
+  scoreEnvironnemental        Float?
+  scoreSocial                 Float?
+  scoreGouvenance             Float?
+  scoreJuridique              Float?
+  scorePays                   Float?
+  approvedBy                  String?
+  approvedAt                  DateTime?
+  rejectedBy                  String?
+  rejectedAt                  DateTime?
+  rejectionReason             String?
+  createdAt                   DateTime            @default(now())
+  updatedAt                   DateTime            @updatedAt
 
-  project           Project             @relation("ProjectEvaluations", fields: [projectId], references: [id], onDelete: Cascade)
-  analyst           User                @relation("AnalystEvaluations", fields: [analystId], references: [id], onDelete: SetNull)
-  stressTestResults StressTestScenarioResult[]
-  auditLogs         ScoringAuditLog[]
+  project                     Project             @relation("ProjectEvaluations", fields: [projectId], references: [id], onDelete: Cascade)
+  analyst                     User                @relation("AnalystEvaluations", fields: [analystId], references: [id], onDelete: SetNull)
+  stressTestResults           StressTestScenarioResult[]
+  auditLogs                   ScoringAuditLog[]
 
   @@index([projectId])
   @@index([analystId])
@@ -983,4 +1039,150 @@ enum RuleType {
   VISIBILITY
   MANDATORY_IF
   BLOCK_PUBLICATION
+}
+
+// ============================================================================
+// PARAMETRIZATION MODELS FOR DROPDOWNS AND REFERENCE DATA
+// ============================================================================
+
+model Sector {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  subsectors      Subsector[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_sectors")
+}
+
+model Subsector {
+  id              String        @id @default(uuid())
+  sectorId        String
+  code            String
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  sector          Sector        @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId])
+  @@index([code])
+  @@map("BP_PF_subsectors")
+}
+
+model ClientType {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_client_types")
+}
+
+model LegalForm {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_legal_forms")
+}
+
+model ClientSegment {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_client_segments")
+}
+
+model BankStatus {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_bank_statuses")
+}
+
+model InternalRating {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  score           Float?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_internal_ratings")
+}
+
+model KycStatus {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_kyc_statuses")
+}
+
+model ComplianceStatus {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_compliance_statuses")
 }

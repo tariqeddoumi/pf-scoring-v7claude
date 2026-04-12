@@ -53,8 +53,16 @@ export default function NewUserPage() {
         throw new Error("Les mots de passe ne correspondent pas");
       }
 
-      if (formData.password.length < 6) {
-        throw new Error("Le mot de passe doit contenir au moins 6 caractères");
+      if (formData.password.length < 8) {
+        throw new Error("Le mot de passe doit contenir au moins 8 caractères");
+      }
+
+      if (!/[A-Z]/.test(formData.password)) {
+        throw new Error("Le mot de passe doit contenir au moins une lettre majuscule");
+      }
+
+      if (!/[0-9]/.test(formData.password)) {
+        throw new Error("Le mot de passe doit contenir au moins un chiffre");
       }
 
       const response = await fetch("/api/users", {
@@ -177,7 +185,7 @@ export default function NewUserPage() {
                     value={formData.password}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                    placeholder="Min 6 caractères"
+                    placeholder="Min 8 caractères (1 majuscule + 1 chiffre)"
                     required
                   />
                 </div>
