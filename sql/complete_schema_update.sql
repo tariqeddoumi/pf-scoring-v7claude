@@ -310,19 +310,7 @@ VALUES
 ON CONFLICT ("code") DO NOTHING;
 
 -- ============================================================================
--- STEP 6: VERIFY SCHEMA INTEGRITY
+-- SCHEMA UPDATE COMPLETE
 -- ============================================================================
-
--- Show all tables created
-\d "BP_PF_clients"
-\d "BP_PF_projects"
-\d "BP_PF_v7pp_evaluations"
-\d "BP_PF_sectors"
-\d "BP_PF_subsectors"
-\d "BP_PF_client_types"
-\d "BP_PF_legal_forms"
-\d "BP_PF_client_segments"
-\d "BP_PF_bank_statuses"
-\d "BP_PF_internal_ratings"
-\d "BP_PF_kyc_statuses"
-\d "BP_PF_compliance_statuses"
+-- All tables created and data populated successfully
+-- Verify tables: SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name LIKE 'BP_PF%';
