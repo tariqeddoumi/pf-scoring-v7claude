@@ -819,6 +819,116 @@ model FormPreset {
   @@map("BP_PF_form_presets")
 }
 
+// ============================================================================
+// SCORING GRID CONFIGURATION MODELS
+// ============================================================================
+
+/// ScoringCriterion represents a single scoring criterion (e.g., "Leverage", "Coverage")
+model ScoringCriterion {
+  id            String    @id @default(uuid())
+  code          String    @unique // "leverage", "coverage", "dscr", etc.
+  label         String    // "Leverage", "Couverture de la dette", etc.
+  description   String?
+  category      String    // "Financial", "Technical", "Market", "Environmental", "Social", "Governance", "Legal", "Country"
+  weight        Float     // 0.0 to 1.0 (e.g., 0.125 for 12.5%)
+  minScore      Float     @default(0)    // Minimum possible score
+  maxScore      Float     @default(100)  // Maximum possible score
+  scoreType     String    @default("NUMERIC") // "NUMERIC", "OPTION", "BOOLEAN", "FORMULA"
+  formula       String?   // For calculated fields: "A + B * 0.5"
+  isActive      Boolean   @default(true)
+  orderIndex    Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String?   // userId
+  updatedBy     String?   // userId
+
+  thresholds    ScoringThreshold[] @relation("CriterionThresholds")
+  options       ScoringOption[]    @relation("CriterionOptions")
+
+  @@index([category])
+  @@index([isActive])
+  @@index([orderIndex])
+  @@map("BP_PF_scoring_criteria")
+}
+
+/// ScoringThreshold defines score ranges for a criterion
+model ScoringThreshold {
+  id              String    @id @default(uuid())
+  criterionId     String
+  minValue        Float
+  maxValue        Float
+  score           Float     // Score assigned for this range
+  label           String?   // "Excellent", "Good", "Fair", "Poor"
+  description     String?
+  orderIndex      Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  criterion       ScoringCriterion @relation("CriterionThresholds", fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@index([orderIndex])
+  @@map("BP_PF_scoring_thresholds")
+}
+
+/// ScoringOption represents predefined options for option-based criteria
+model ScoringOption {
+  id            String    @id @default(uuid())
+  criterionId   String
+  label         String    // "Excellent", "Good", "Fair", "Poor"
+  score         Float     // Score value (e.g., 90, 70, 50, 30)
+  description   String?
+  orderIndex    Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  criterion     ScoringCriterion @relation("CriterionOptions", fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@index([orderIndex])
+  @@map("BP_PF_scoring_options")
+}
+
+/// ScoringGrille represents a complete scoring configuration/template
+model ScoringGrille {
+  id              String    @id @default(uuid())
+  code            String    @unique // "PF_STANDARD", "PF_GREEN", etc.
+  label           String    // "PF Standard", "Green Energy", etc.
+  description     String?
+  version         String    @default("1.0")
+  status          String    @default("DRAFT") // DRAFT, PUBLISHED, DEPRECATED
+  businessSegment String?   // "General", "Renewables", "SME", etc.
+  projectType     String?   // "Brownfield", "Greenfield", "Refinance"
+  isActive        Boolean   @default(true)
+  isDefault       Boolean   @default(false)
+  criteriaWeightTotal Float @default(1.0) // Should sum to 1.0
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  publishedAt     DateTime?
+  createdBy       String?   // userId
+  publishedBy     String?   // userId
+
+  @@index([status])
+  @@index([isActive])
+  @@index([isDefault])
+  @@map("BP_PF_scoring_grilles")
+}
+
+/// ScoringWeightingRule represents rules for calculating weights
+model ScoringWeightingRule {
+  id            String    @id @default(uuid())
+  grilleCode    String    // Reference to ScoringGrille
+  criterionCode String    // Reference to ScoringCriterion
+  weight        Float     // Weight for this combination
+  applicableToId String?   // Optional: client segment, project type
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([grilleCode, criterionCode])
+  @@index([grilleCode])
+  @@map("BP_PF_scoring_weighting_rules")
+}
+
 enum ScoringModelStatus {
   DRAFT
   IN_VALIDATION
