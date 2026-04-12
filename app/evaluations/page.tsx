@@ -9,6 +9,7 @@ import {
   RATING_COLORS,
 } from "@/lib/ui-constants";
 import { usePermission } from "@/lib/hooks/usePermission";
+import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
 
 interface EvaluationRow {
   id: string;

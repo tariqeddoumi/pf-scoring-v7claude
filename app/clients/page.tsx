@@ -8,6 +8,7 @@ import { Client } from "@/lib/types/models";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 import LoadingSkeleton from "@/components/common/LoadingSkeleton";
 import { usePermission } from "@/lib/hooks/usePermission";
+import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -27,6 +28,20 @@ export default function ClientsPage() {
   useEffect(() => {
     fetchClients();
   }, []);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: "Escape",
+      callback: () => setDeleteConfirm(null),
+      enabled: deleteConfirm !== null,
+    },
+    {
+      key: "Enter",
+      callback: () => deleteConfirm && handleDelete(deleteConfirm),
+      enabled: deleteConfirm !== null && !deleting,
+    },
+  ]);
 
   const fetchClients = async () => {
     try {

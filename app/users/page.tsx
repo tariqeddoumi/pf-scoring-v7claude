@@ -5,6 +5,7 @@ import { Plus, Search, Eye, Edit2, Trash2, Filter, X, Lock } from "lucide-react"
 import { useState, useEffect, useMemo } from "react";
 import LoadingSkeleton from "@/components/common/LoadingSkeleton";
 import { usePermission } from "@/lib/hooks/usePermission";
+import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
 
 interface User {
   id: string;
@@ -28,6 +29,20 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: "Escape",
+      callback: () => setDeleteConfirm(null),
+      enabled: deleteConfirm !== null,
+    },
+    {
+      key: "Enter",
+      callback: () => deleteConfirm && handleDelete(deleteConfirm),
+      enabled: deleteConfirm !== null && !deleting,
+    },
+  ]);
 
   const fetchUsers = async () => {
     try {

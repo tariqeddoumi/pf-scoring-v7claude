@@ -8,6 +8,7 @@ import { Project } from "@/lib/types/models";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 import LoadingSkeleton from "@/components/common/LoadingSkeleton";
 import { usePermission } from "@/lib/hooks/usePermission";
+import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -25,6 +26,20 @@ export default function ProjectsPage() {
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: "Escape",
+      callback: () => setDeleteConfirm(null),
+      enabled: deleteConfirm !== null,
+    },
+    {
+      key: "Enter",
+      callback: () => deleteConfirm && handleDelete(deleteConfirm),
+      enabled: deleteConfirm !== null && !deleting,
+    },
+  ]);
 
   const fetchProjects = async () => {
     try {
