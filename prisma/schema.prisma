@@ -738,6 +738,87 @@ enum EvaluationStatus {
   rejete     // Rejected - Needs revision
 }
 
+// ============================================================================
+// FIELD CONFIGURATION & PARAMETERIZATION MODELS
+// ============================================================================
+
+/// FormSection represents a section/tab/accordion in forms
+model FormSection {
+  id          String    @id @default(uuid())
+  entity      String    // "client", "project", "evaluation", "user"
+  title       String    // "Informations Générales", "Localisation", etc.
+  icon        String?   // Icon name or SVG
+  description String?
+  columns     Int       @default(2) // 1 or 2 column layout
+  orderIndex  Int
+  visible     Boolean   @default(true)
+  layout      String    @default("accordion") // "accordion", "tabs", "grid"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  fields      FieldConfiguration[] @relation("SectionFields")
+
+  @@unique([entity, title])
+  @@index([entity])
+  @@index([orderIndex])
+  @@map("BP_PF_form_sections")
+}
+
+/// FieldConfiguration represents a single form field
+model FieldConfiguration {
+  id              String    @id @default(uuid())
+  entity          String    // "client", "project", "evaluation", "user"
+  sectionId       String?
+  fieldName       String    // Internal field name (camelCase)
+  label           String    // Display label
+  fieldType       String    // "text", "email", "tel", "number", "date", "select", "textarea", "checkbox", "radio"
+  required        Boolean   @default(false)
+  placeholder     String?
+  helpText        String?
+  validation      String?   // Regex pattern or validation rule
+  minLength       Int?
+  maxLength       Int?
+  min             Float?
+  max             Float?
+  step            String?   // For number/date inputs
+  orderIndex      Int
+  visible         Boolean   @default(true)
+  editable        Boolean   @default(true)
+  customOptions   Json?     // For select/radio fields: [{label: "...", value: "..."}, ...]
+  defaultValue    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       String?   // userId who created this field
+  updatedBy       String?   // userId who last updated this field
+
+  section         FormSection? @relation("SectionFields", fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@unique([entity, fieldName])
+  @@index([entity])
+  @@index([sectionId])
+  @@index([visible])
+  @@index([orderIndex])
+  @@map("BP_PF_field_configurations")
+}
+
+/// FormPreset allows users to save and load field configurations
+model FormPreset {
+  id          String    @id @default(uuid())
+  entity      String    // "client", "project", "evaluation", "user"
+  name        String    // "Default Layout", "Minimal", "Full Details", etc.
+  description String?
+  fieldIds    String[]  // Array of visible field IDs
+  isDefault   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?   // userId
+
+  @@unique([entity, name])
+  @@index([entity])
+  @@index([isDefault])
+  @@map("BP_PF_form_presets")
+}
+
 enum ScoringModelStatus {
   DRAFT
   IN_VALIDATION
