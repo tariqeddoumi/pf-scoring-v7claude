@@ -162,21 +162,6 @@ export default function EditProjectPage({
 
       {/* Form with Tabs */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
-            <p className="font-semibold">{error}</p>
-            {Object.keys(fieldErrors).length > 0 && (
-              <ul className="mt-2 ml-4 list-disc">
-                {Object.entries(fieldErrors).map(([field, message]) => (
-                  <li key={field} className="text-sm">
-                    {message}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
 
         {/* Tabs Navigation */}
         <Tabs
@@ -298,6 +283,21 @@ export default function EditProjectPage({
                   />
                 </div>
 
+                {/* Code Pays */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Code Pays
+                  </label>
+                  <input
+                    type="text"
+                    name="countryCode"
+                    value={formData.countryCode || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Ex: MA"
+                  />
+                </div>
+
                 {/* Région */}
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2">
@@ -314,7 +314,7 @@ export default function EditProjectPage({
                 </div>
 
                 {/* Ville */}
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-semibold text-white mb-2">
                     Ville
                   </label>
@@ -327,6 +327,74 @@ export default function EditProjectPage({
                     placeholder="Ex: Casablanca"
                   />
                 </div>
+              </div>
+            </div>
+          </TabPane>
+
+          {/* Tab 3: Finances */}
+          <TabPane value="finances">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Montant */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Montant
+                  </label>
+                  <input
+                    type="number"
+                    name="montant"
+                    value={formData.montant || ""}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                {/* Devise */}
+                <div>
+                  <label className="block text-sm font-semibold text-white mb-2">
+                    Devise
+                  </label>
+                  <select
+                    name="devise"
+                    value={formData.devise || "MAD"}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="MAD">MAD (Dirham marocain)</option>
+                    <option value="USD">USD (Dollar américain)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="GBP">GBP (Livre sterling)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </TabPane>
+
+          {/* Tab 4: Technique */}
+          <TabPane value="technical">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Informations Techniques
+                </label>
+                <p className="text-sm text-slate-400 mb-4">
+                  Aucun champ technique supplémentaire défini pour ce projet
+                </p>
+              </div>
+            </div>
+          </TabPane>
+
+          {/* Tab 5: Parties Prenantes */}
+          <TabPane value="stakeholders">
+            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-white mb-2">
+                  Parties Prenantes
+                </label>
+                <p className="text-sm text-slate-400 mb-4">
+                  Les parties prenantes seront gérées à partir de la page de détail du projet
+                </p>
               </div>
             </div>
           </TabPane>
