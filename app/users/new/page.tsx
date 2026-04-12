@@ -1,68 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowLeft, Loader2, Shield } from "lucide-react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { ArrowLeft, Loader2, Shield, Mail } from "lucide-react";
 import { Accordion, AccordionItem } from "@/components/ui/Accordion";
 
-interface User {
-  id: string;
-  email: string;
-  nom: string;
-  prenom: string;
-  role: "admin" | "manager" | "analyst" | "viewer";
-  createdAt: string;
-}
-
-export default function EditUserPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function NewUserPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [userId, setUserId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<Partial<User> & { password?: string; confirmPassword?: string }>({
+  const [formData, setFormData] = useState({
     nom: "",
     prenom: "",
     email: "",
-    role: "analyst",
     password: "",
     confirmPassword: "",
+    role: "analyst",
   });
-
-  useEffect(() => {
-    const resolveAndFetch = async () => {
-      try {
-        const { id } = await params;
-        setUserId(id);
-        const response = await fetch(`/api/users/${id}`);
-        if (!response.ok) throw new Error("Échec du chargement de l'utilisateur");
-        const data = await response.json();
-        const user = data.data || data;
-        setFormData({
-          nom: user.nom || "",
-          prenom: user.prenom || "",
-          email: user.email || "",
-          role: user.role || "analyst",
-          password: "",
-          confirmPassword: "",
-        });
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || "Échec du chargement");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    resolveAndFetch();
-  }, [params]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -83,79 +40,63 @@ export default function EditUserPage({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
+    setLoading(true);
     setError(null);
     setFieldErrors({});
 
     try {
-      if (!userId) throw new Error("ID utilisateur non trouvé");
-
-      const updateData: any = {
-        nom: formData.nom,
-        prenom: formData.prenom,
-        email: formData.email,
-        role: formData.role,
-      };
-
-      if (formData.password && formData.password.length > 0) {
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error("Les mots de passe ne correspondent pas");
-        }
-        if (formData.password.length < 6) {
-          throw new Error("Le mot de passe doit contenir au moins 6 caractères");
-        }
-        updateData.password = formData.password;
+      if (!formData.nom || !formData.prenom || !formData.email) {
+        throw new Error("Veuillez remplir tous les champs obligatoires");
       }
 
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "PUT",
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error("Les mots de passe ne correspondent pas");
+      }
+
+      if (formData.password.length < 6) {
+        throw new Error("Le mot de passe doit contenir au moins 6 caractères");
+      }
+
+      const response = await fetch("/api/users", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({
+          nom: formData.nom,
+          prenom: formData.prenom,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.errors && Array.isArray(data.errors)) {
-          const errors: Record<string, string> = {};
-          data.errors.forEach((err: any) => {
-            errors[err.field] = err.message;
-          });
-          setFieldErrors(errors);
-        }
-        throw new Error(data.error || "Échec de la mise à jour");
+        throw new Error(data.error || "Erreur lors de la création");
       }
 
-      router.push(`/users/${userId}`);
+      router.push(`/users/${data.data.id}`);
     } catch (err: any) {
-      setError(err.message || "Échec de la mise à jour");
+      setError(err.message || "Erreur lors de la création");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-slate-400">Chargement de l'utilisateur...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
         <Link
-          href={userId ? `/users/${userId}` : "/users"}
+          href="/users"
           className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
         >
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white">Modifier l'utilisateur</h1>
-          <p className="text-slate-400 mt-1">{formData.prenom} {formData.nom}</p>
+          <h1 className="text-3xl font-bold text-white">Créer un nouvel utilisateur</h1>
+          <p className="text-slate-400 mt-1">Ajouter un nouvel utilisateur au système</p>
         </div>
       </div>
 
@@ -168,16 +109,17 @@ export default function EditUserPage({
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <Accordion>
-            <AccordionItem title="Informations Personnelles" defaultOpen={true} icon={<Mail size={18} />}>
+            <AccordionItem title="Informations Personnelles" defaultOpen={true}>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2">Nom *</label>
                   <input
                     type="text"
                     name="nom"
-                    value={formData.nom || ""}
+                    value={formData.nom}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    placeholder="Dupont"
                     required
                   />
                 </div>
@@ -187,9 +129,10 @@ export default function EditUserPage({
                   <input
                     type="text"
                     name="prenom"
-                    value={formData.prenom || ""}
+                    value={formData.prenom}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    placeholder="Jean"
                     required
                   />
                 </div>
@@ -199,9 +142,10 @@ export default function EditUserPage({
                   <input
                     type="email"
                     name="email"
-                    value={formData.email || ""}
+                    value={formData.email}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    placeholder="jean.dupont@example.com"
                     required
                   />
                 </div>
@@ -214,7 +158,7 @@ export default function EditUserPage({
                   <label className="block text-sm font-semibold text-white mb-2">Rôle *</label>
                   <select
                     name="role"
-                    value={formData.role || "analyst"}
+                    value={formData.role}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   >
@@ -225,31 +169,29 @@ export default function EditUserPage({
                   </select>
                 </div>
 
-                <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-sm text-slate-300">
-                  Laissez vides pour ne pas changer le mot de passe
-                </div>
-
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">Mot de passe</label>
+                  <label className="block text-sm font-semibold text-white mb-2">Mot de passe *</label>
                   <input
                     type="password"
                     name="password"
-                    value={formData.password || ""}
+                    value={formData.password}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                     placeholder="Min 6 caractères"
+                    required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">Confirmer</label>
+                  <label className="block text-sm font-semibold text-white mb-2">Confirmer *</label>
                   <input
                     type="password"
                     name="confirmPassword"
-                    value={formData.confirmPassword || ""}
+                    value={formData.confirmPassword}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                    placeholder="Confirmer"
+                    placeholder="Confirmer le mot de passe"
+                    required
                   />
                 </div>
               </div>
@@ -258,23 +200,23 @@ export default function EditUserPage({
 
           <div className="flex gap-3 pt-6 border-t border-slate-700">
             <Link
-              href={userId ? `/users/${userId}` : "/users"}
+              href="/users"
               className="flex-1 px-6 py-2 border border-slate-600 rounded-lg text-slate-400 hover:text-white text-center"
             >
               Annuler
             </Link>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={loading}
               className="flex-1 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-medium rounded-lg flex items-center justify-center gap-2"
             >
-              {submitting ? (
+              {loading ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  Mise à jour...
+                  Création...
                 </>
               ) : (
-                "Mettre à jour"
+                "Créer l'utilisateur"
               )}
             </button>
           </div>
