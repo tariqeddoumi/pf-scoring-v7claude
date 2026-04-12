@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Plus, Eye, Edit2, Download } from "lucide-react";
+import { Search, Plus, Eye, Edit2, Download, Lock } from "lucide-react";
 import {
   STATUS_COLORS,
   STATUS_LABELS,
   RATING_COLORS,
 } from "@/lib/ui-constants";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 interface EvaluationRow {
   id: string;
@@ -21,6 +22,7 @@ interface EvaluationRow {
 }
 
 export default function EvaluationsPage() {
+  const { can } = usePermission();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedRating, setSelectedRating] = useState("");
@@ -107,13 +109,20 @@ export default function EvaluationsPage() {
             Gestion et suivi des évaluations de risque
           </p>
         </div>
-        <Link
-          href="/evaluations/new"
-          className="inline-flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
-        >
-          <Plus size={20} />
-          <span>Nouvelle Évaluation</span>
-        </Link>
+        {can("evaluation", "create") ? (
+          <Link
+            href="/evaluations/new"
+            className="inline-flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+          >
+            <Plus size={20} />
+            <span>Nouvelle Évaluation</span>
+          </Link>
+        ) : (
+          <div className="inline-flex items-center space-x-2 bg-slate-700/50 text-slate-400 font-semibold px-4 py-2 rounded-lg" title="Vous n'avez pas la permission de créer des évaluations">
+            <Lock size={20} />
+            <span>Nouvelle Évaluation</span>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -247,7 +256,7 @@ export default function EvaluationsPage() {
                       >
                         <Eye size={16} />
                       </Link>
-                      {ev.status === "brouillon" && (
+                      {ev.status === "brouillon" && can("evaluation", "update") && (
                         <Link
                           href={`/evaluations/${ev.id}/edit`}
                           className="p-2 text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
@@ -256,12 +265,14 @@ export default function EvaluationsPage() {
                           <Edit2 size={16} />
                         </Link>
                       )}
-                      <button
-                        className="p-2 text-green-400 hover:bg-slate-700 rounded-lg transition-colors"
-                        title="Exporter"
-                      >
-                        <Download size={16} />
-                      </button>
+                      {can("evaluation", "export") && (
+                        <button
+                          className="p-2 text-green-400 hover:bg-slate-700 rounded-lg transition-colors"
+                          title="Exporter"
+                        >
+                          <Download size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

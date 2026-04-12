@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Eye, Edit2, Trash2, Filter, X } from "lucide-react";
+import { Plus, Search, Eye, Edit2, Trash2, Filter, X, Lock } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Project } from "@/lib/types/models";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 import LoadingSkeleton from "@/components/common/LoadingSkeleton";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 export default function ProjectsPage() {
   const router = useRouter();
+  const { can } = usePermission();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,13 +79,20 @@ export default function ProjectsPage() {
             Gérez les projets et leur suivi
           </p>
         </div>
-        <Link
-          href="/projects/new"
-          className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all w-full md:w-auto justify-center md:justify-start"
-        >
-          <Plus size={20} />
-          <span>Nouveau projet</span>
-        </Link>
+        {can("project", "create") ? (
+          <Link
+            href="/projects/new"
+            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all w-full md:w-auto justify-center md:justify-start"
+          >
+            <Plus size={20} />
+            <span>Nouveau projet</span>
+          </Link>
+        ) : (
+          <div className="inline-flex items-center space-x-2 bg-slate-700/50 text-slate-400 font-semibold px-4 py-2 rounded-lg w-full md:w-auto justify-center md:justify-start" title="Vous n'avez pas la permission de créer des projets">
+            <Lock size={20} />
+            <span>Nouveau projet</span>
+          </div>
+        )}
       </div>
 
       {/* Search Bar + Filter Toggle */}
@@ -229,23 +238,30 @@ export default function ProjectsPage() {
                       <button
                         onClick={() => router.push(`/projects/${project.id}`)}
                         className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors"
+                        title="Consulter"
                       >
                         <Eye size={16} className="md:w-5 md:h-5" />
                       </button>
-                      <button
-                        onClick={() =>
-                          router.push(`/projects/${project.id}/edit`)
-                        }
-                        className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
-                      >
-                        <Edit2 size={16} className="md:w-5 md:h-5" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(project.id)}
-                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={16} className="md:w-5 md:h-5" />
-                      </button>
+                      {can("project", "update") && (
+                        <button
+                          onClick={() =>
+                            router.push(`/projects/${project.id}/edit`)
+                          }
+                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
+                          title="Modifier"
+                        >
+                          <Edit2 size={16} className="md:w-5 md:h-5" />
+                        </button>
+                      )}
+                      {can("project", "delete") && (
+                        <button
+                          onClick={() => setDeleteConfirm(project.id)}
+                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
+                          title="Supprimer"
+                        >
+                          <Trash2 size={16} className="md:w-5 md:h-5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

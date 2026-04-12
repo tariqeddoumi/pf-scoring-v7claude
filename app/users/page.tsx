@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Eye, Edit2, Trash2, Filter, X } from "lucide-react";
+import { Plus, Search, Eye, Edit2, Trash2, Filter, X, Lock } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import LoadingSkeleton from "@/components/common/LoadingSkeleton";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 interface User {
   id: string;
@@ -15,6 +16,7 @@ interface User {
 }
 
 export default function UsersPage() {
+  const { can } = usePermission();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,13 +99,20 @@ export default function UsersPage() {
             Gérez les utilisateurs et leurs rôles
           </p>
         </div>
-        <Link
-          href="/users/new"
-          className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all w-full md:w-auto justify-center md:justify-start"
-        >
-          <Plus size={20} />
-          <span>Nouvel utilisateur</span>
-        </Link>
+        {can("user", "create") ? (
+          <Link
+            href="/users/new"
+            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all w-full md:w-auto justify-center md:justify-start"
+          >
+            <Plus size={20} />
+            <span>Nouvel utilisateur</span>
+          </Link>
+        ) : (
+          <div className="inline-flex items-center space-x-2 bg-slate-700/50 text-slate-400 font-semibold px-4 py-2 rounded-lg w-full md:w-auto justify-center md:justify-start" title="Vous n'avez pas la permission de créer des utilisateurs">
+            <Lock size={20} />
+            <span>Nouvel utilisateur</span>
+          </div>
+        )}
       </div>
 
       {/* Search Bar + Role Filter */}
@@ -199,20 +208,24 @@ export default function UsersPage() {
                       >
                         <Eye size={18} />
                       </Link>
-                      <Link
-                        href={`/users/${user.id}/edit`}
-                        className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                        title="Modifier"
-                      >
-                        <Edit2 size={18} />
-                      </Link>
-                      <button
-                        onClick={() => setDeleteConfirm(user.id)}
-                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded transition-colors"
-                        title="Supprimer"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      {can("user", "update") && (
+                        <Link
+                          href={`/users/${user.id}/edit`}
+                          className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                          title="Modifier"
+                        >
+                          <Edit2 size={18} />
+                        </Link>
+                      )}
+                      {can("user", "delete") && (
+                        <button
+                          onClick={() => setDeleteConfirm(user.id)}
+                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded transition-colors"
+                          title="Supprimer"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
