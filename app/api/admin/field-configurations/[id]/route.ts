@@ -20,7 +20,7 @@ async function handler(
   if (request.method === 'GET') {
     try {
       // Try as field first
-      let result = await prisma.fieldConfiguration.findUnique({
+      let result: any = await prisma.fieldConfiguration.findUnique({
         where: { id },
       });
 

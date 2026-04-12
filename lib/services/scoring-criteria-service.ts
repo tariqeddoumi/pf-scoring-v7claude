@@ -103,7 +103,7 @@ export const createScoringCriterion = async (
       data: {
         ...data,
         id: require('crypto').randomUUID(),
-      },
+      } as any,
     });
 
     clearScoringCache();

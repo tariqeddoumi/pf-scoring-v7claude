@@ -130,11 +130,13 @@ export const createFieldConfig = async (
   data: Omit<FieldConfiguration, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<FieldConfiguration> => {
   try {
+    const { customOptions, ...rest } = data;
     const field = await prisma.fieldConfiguration.create({
       data: {
-        ...data,
+        ...rest,
         id: require('crypto').randomUUID(),
-      },
+        customOptions: customOptions ? JSON.parse(typeof customOptions === 'string' ? customOptions : JSON.stringify(customOptions)) : undefined,
+      } as any,
     });
 
     // Clear cache to force refresh
@@ -155,12 +157,18 @@ export const updateFieldConfig = async (
   data: Partial<FieldConfiguration>
 ): Promise<FieldConfiguration> => {
   try {
+    const { customOptions, ...rest } = data;
+    const updateData: any = {
+      ...rest,
+      updatedAt: new Date(),
+    };
+    if (customOptions !== undefined) {
+      updateData.customOptions = customOptions ? JSON.parse(typeof customOptions === 'string' ? customOptions : JSON.stringify(customOptions)) : null;
+    }
+
     const updated = await prisma.fieldConfiguration.update({
       where: { id },
-      data: {
-        ...data,
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
 
     // Clear cache to force refresh
@@ -397,23 +405,26 @@ export const initializeFieldConfigurationsFromCode = async (): Promise<void> => 
 
       // Create fields for this section
       for (const field of section.fields) {
+        const fieldData: any = {
+          id: require('crypto').randomUUID(),
+          entity: 'client',
+          sectionId: createdSection.id,
+          fieldName: field.name,
+          label: field.label,
+          fieldType: field.type,
+          required: field.required || false,
+          placeholder: field.placeholder,
+          helpText: field.help,
+          validation: field.validation,
+          orderIndex: section.fields.indexOf(field),
+          visible: true,
+          editable: true,
+        };
+        if (field.options) {
+          fieldData.customOptions = JSON.stringify(field.options);
+        }
         await prisma.fieldConfiguration.create({
-          data: {
-            id: require('crypto').randomUUID(),
-            entity: 'client',
-            sectionId: createdSection.id,
-            fieldName: field.name,
-            label: field.label,
-            fieldType: field.type,
-            required: field.required || false,
-            placeholder: field.placeholder,
-            helpText: field.help,
-            validation: field.validation,
-            orderIndex: section.fields.indexOf(field),
-            customOptions: field.options ? JSON.stringify(field.options) : null,
-            visible: true,
-            editable: true,
-          },
+          data: fieldData,
         });
       }
     }
@@ -436,23 +447,26 @@ export const initializeFieldConfigurationsFromCode = async (): Promise<void> => 
 
       // Create fields for this section
       for (const field of section.fields) {
+        const fieldData: any = {
+          id: require('crypto').randomUUID(),
+          entity: 'project',
+          sectionId: createdSection.id,
+          fieldName: field.name,
+          label: field.label,
+          fieldType: field.type,
+          required: field.required || false,
+          placeholder: field.placeholder,
+          helpText: field.help,
+          validation: field.validation,
+          orderIndex: section.fields.indexOf(field),
+          visible: true,
+          editable: true,
+        };
+        if (field.options) {
+          fieldData.customOptions = JSON.stringify(field.options);
+        }
         await prisma.fieldConfiguration.create({
-          data: {
-            id: require('crypto').randomUUID(),
-            entity: 'project',
-            sectionId: createdSection.id,
-            fieldName: field.name,
-            label: field.label,
-            fieldType: field.type,
-            required: field.required || false,
-            placeholder: field.placeholder,
-            helpText: field.help,
-            validation: field.validation,
-            orderIndex: section.fields.indexOf(field),
-            customOptions: field.options ? JSON.stringify(field.options) : null,
-            visible: true,
-            editable: true,
-          },
+          data: fieldData,
         });
       }
     }
