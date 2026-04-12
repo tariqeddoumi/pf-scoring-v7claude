@@ -23,6 +23,7 @@ interface EvaluationRow {
 export default function EvaluationsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedRating, setSelectedRating] = useState("");
   const [evaluations, setEvaluations] = useState<EvaluationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -59,7 +60,8 @@ export default function EvaluationsPage() {
   const filtered = evaluations.filter(
     (ev) =>
       ev.projectName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (!selectedStatus || ev.status === selectedStatus)
+      (!selectedStatus || ev.status === selectedStatus) &&
+      (!selectedRating || ev.rating === selectedRating)
   );
 
   const getRatingColor = (rating: string | null) => {
@@ -146,7 +148,28 @@ export default function EvaluationsPage() {
             <option value="valide">Validé</option>
             <option value="rejete">Rejeté</option>
           </select>
+          <select
+            value={selectedRating}
+            onChange={(e) => setSelectedRating(e.target.value)}
+            className="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none appearance-none cursor-pointer"
+          >
+            <option value="">Tous les ratings</option>
+            <option value="AAA">AAA</option>
+            <option value="AA">AA</option>
+            <option value="A">A</option>
+            <option value="BBB">BBB</option>
+            <option value="BB">BB</option>
+            <option value="B">B</option>
+            <option value="CCC">CCC</option>
+            <option value="D">D</option>
+          </select>
         </div>
+
+        {/* Results Count */}
+        <p className="text-sm text-slate-400 mb-4">
+          {filtered.length} évaluation{filtered.length !== 1 ? "s" : ""} trouvée{filtered.length !== 1 ? "s" : ""}
+          {(searchTerm || selectedStatus || selectedRating) && ` sur ${evaluations.length}`}
+        </p>
 
         <div className="overflow-x-auto">
           <table className="w-full">

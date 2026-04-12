@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Eye, Edit2, Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Plus, Search, Eye, Edit2, Trash2, Filter, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import LoadingSkeleton from "@/components/common/LoadingSkeleton";
 
 interface User {
   id: string;
@@ -20,6 +21,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [filterRole, setFilterRole] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -57,12 +59,17 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => users.filter(
+    (user) => {
+      const matchesSearch =
+        !searchTerm ||
+        user.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = !filterRole || user.role === filterRole;
+      return matchesSearch && matchesRole;
+    }
+  ), [users, searchTerm, filterRole]);
 
   const roleColors: Record<string, string> = {
     admin: "bg-red-500/20 text-red-400",
@@ -99,16 +106,29 @@ export default function UsersPage() {
         </Link>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-3 text-slate-500" size={20} />
-        <input
-          type="text"
-          placeholder="Rechercher par nom, prénom ou email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
-        />
+      {/* Search Bar + Role Filter */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 text-slate-500" size={20} />
+          <input
+            type="text"
+            placeholder="Rechercher par nom, prénom ou email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
+          />
+        </div>
+        <select
+          value={filterRole}
+          onChange={(e) => setFilterRole(e.target.value)}
+          className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none appearance-none cursor-pointer text-sm md:text-base"
+        >
+          <option value="">Tous les rôles</option>
+          <option value="admin">Admin</option>
+          <option value="manager">Manager</option>
+          <option value="analyst">Analyste</option>
+          <option value="viewer">Lecteur</option>
+        </select>
       </div>
 
       {/* Error Message */}
@@ -118,12 +138,16 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Loading State */}
-      {loading && (
-        <div className="rounded-lg border border-slate-700 p-8 text-center">
-          <p className="text-slate-400">Chargement des utilisateurs...</p>
-        </div>
+      {/* Results Count */}
+      {!loading && (
+        <p className="text-sm text-slate-400">
+          {filteredUsers.length} utilisateur{filteredUsers.length !== 1 ? "s" : ""} trouvé{filteredUsers.length !== 1 ? "s" : ""}
+          {(searchTerm || filterRole) && ` sur ${users.length}`}
+        </p>
       )}
+
+      {/* Loading State */}
+      {loading && <LoadingSkeleton rows={6} columns={5} />}
 
       {/* Users Table */}
       {!loading && filteredUsers.length > 0 && (

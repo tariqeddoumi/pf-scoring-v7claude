@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Eye, Edit2, Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Plus, Search, Eye, Edit2, Trash2, Filter, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Client } from "@/lib/types/models";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
+import LoadingSkeleton from "@/components/common/LoadingSkeleton";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -15,6 +16,11 @@ export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterSecteur, setFilterSecteur] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterPays, setFilterPays] = useState("");
 
   useEffect(() => {
     fetchClients();
@@ -52,11 +58,31 @@ export default function ClientsPage() {
     }
   };
 
-  const filteredClients = clients.filter(
-    (client) =>
+  // Extract unique values for filter dropdowns
+  const uniqueSecteurs = useMemo(() => [...new Set(clients.map((c) => c.secteur).filter(Boolean))].sort(), [clients]);
+  const uniqueTypes = useMemo(() => [...new Set(clients.map((c) => c.type).filter(Boolean))].sort(), [clients]);
+  const uniquePays = useMemo(() => [...new Set(clients.map((c) => c.pays).filter(Boolean))].sort(), [clients]);
+
+  const activeFilterCount = [filterStatus, filterSecteur, filterType, filterPays].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setFilterStatus("");
+    setFilterSecteur("");
+    setFilterType("");
+    setFilterPays("");
+  };
+
+  const filteredClients = useMemo(() => clients.filter((client) => {
+    const matchesSearch =
+      !searchTerm ||
       client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      client.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = !filterStatus || client.status === filterStatus;
+    const matchesSecteur = !filterSecteur || client.secteur === filterSecteur;
+    const matchesType = !filterType || client.type === filterType;
+    const matchesPays = !filterPays || client.pays === filterPays;
+    return matchesSearch && matchesStatus && matchesSecteur && matchesType && matchesPays;
+  }), [clients, searchTerm, filterStatus, filterSecteur, filterType, filterPays]);
 
   return (
     <div className="space-y-6">
@@ -77,17 +103,92 @@ export default function ClientsPage() {
         </Link>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-3 text-slate-500" size={20} />
-        <input
-          type="text"
-          placeholder="Rechercher par nom ou email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
-        />
+      {/* Search Bar + Filter Toggle */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 text-slate-500" size={20} />
+          <input
+            type="text"
+            placeholder="Rechercher par nom ou email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
+          />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+            showFilters || activeFilterCount > 0
+              ? "bg-blue-600 text-white"
+              : "bg-slate-800 border border-slate-700 text-slate-400 hover:text-white"
+          }`}
+        >
+          <Filter size={16} />
+          <span className="hidden sm:inline">Filtres</span>
+          {activeFilterCount > 0 && (
+            <span className="px-1.5 py-0.5 bg-white/20 text-xs rounded-full">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
       </div>
+
+      {/* Advanced Filters Panel */}
+      {showFilters && (
+        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-white">Filtres avancés</h3>
+            {activeFilterCount > 0 && (
+              <button onClick={clearFilters} className="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+                <X size={12} /> Réinitialiser
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Statut</label>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:border-blue-500">
+                <option value="">Tous</option>
+                <option value="Actif">Actif</option>
+                <option value="Inactif">Inactif</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Secteur</label>
+              <select value={filterSecteur} onChange={(e) => setFilterSecteur(e.target.value)}
+                className="w-full px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:border-blue-500">
+                <option value="">Tous</option>
+                {uniqueSecteurs.map((s) => (<option key={s} value={s}>{s}</option>))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Type</label>
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
+                className="w-full px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:border-blue-500">
+                <option value="">Tous</option>
+                {uniqueTypes.map((t) => (<option key={t} value={t}>{t}</option>))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Pays</label>
+              <select value={filterPays} onChange={(e) => setFilterPays(e.target.value)}
+                className="w-full px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:border-blue-500">
+                <option value="">Tous</option>
+                {uniquePays.map((p) => (<option key={p} value={p}>{p}</option>))}
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Results Count */}
+      {!loading && (
+        <p className="text-sm text-slate-400">
+          {filteredClients.length} client{filteredClients.length !== 1 ? "s" : ""} trouvé{filteredClients.length !== 1 ? "s" : ""}
+          {(searchTerm || activeFilterCount > 0) && ` sur ${clients.length}`}
+        </p>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -97,11 +198,7 @@ export default function ClientsPage() {
       )}
 
       {/* Loading State */}
-      {loading && (
-        <div className="rounded-lg border border-slate-700 p-8 text-center">
-          <p className="text-slate-400">Chargement des clients...</p>
-        </div>
-      )}
+      {loading && <LoadingSkeleton rows={6} columns={7} />}
 
       {/* Table View - Desktop */}
       {!loading && filteredClients.length > 0 && (
