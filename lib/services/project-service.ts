@@ -15,12 +15,18 @@ export class ProjectService {
   ) {
     const validated = createProjectSchema.parse(data);
 
+    const { debutConstruction, finConstruction, clientId, ...rest } = validated as any;
+    const createData: any = {
+      ...rest,
+      creePar: createdBy,
+      status: validated.status || "brouillon",
+    };
+    if (debutConstruction) createData.debutConstruction = new Date(debutConstruction);
+    if (finConstruction) createData.finConstruction = new Date(finConstruction);
+    if (clientId) createData.clientId = clientId;
+
     const project = await prisma.project.create({
-      data: {
-        ...validated,
-        creePar: createdBy,
-        status: "brouillon",
-      },
+      data: createData,
     });
 
     // Only log audit if createdBy is valid
@@ -127,12 +133,16 @@ export class ProjectService {
   ) {
     const validated = updateProjectSchema.parse(data);
 
+    // Extract date strings and convert to Date objects; remove undefined fields
+    const { debutConstruction, finConstruction, clientId, ...rest } = validated as any;
+    const updateData: any = { ...rest, dateMiseAJour: new Date() };
+    if (debutConstruction !== undefined) updateData.debutConstruction = debutConstruction ? new Date(debutConstruction) : null;
+    if (finConstruction !== undefined) updateData.finConstruction = finConstruction ? new Date(finConstruction) : null;
+    if (clientId !== undefined) updateData.clientId = clientId || null;
+
     const project = await prisma.project.update({
       where: { id },
-      data: {
-        ...validated,
-        dateMiseAJour: new Date(),
-      },
+      data: updateData,
     });
 
     // Only log audit if updatedBy is valid

@@ -64,31 +64,54 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 // PROJECT SCHEMAS
 // ============================================================================
 
+const numberOrString = (defaultVal: number | null = null) =>
+  z.union([
+    z.number().nullable(),
+    z.string().transform(v => v === "" ? defaultVal : parseFloat(v)).pipe(z.number().nullable()),
+  ]).nullable().optional();
+
+const intOrString = (defaultVal: number | null = null) =>
+  z.union([
+    z.number().int().nullable(),
+    z.string().transform(v => v === "" ? defaultVal : parseInt(v)).pipe(z.number().nullable()),
+  ]).nullable().optional();
+
 export const createProjectSchema = z.object({
   nom: z
     .string()
     .min(3, "Le nom du projet doit contenir au moins 3 caractères")
     .max(200),
-  description: z.string().max(5000).default("Projet de financement"),
-  secteur: z.string().min(1, "Le secteur est requis").max(100),
-  montant: z
-    .union([
-      z
-        .number()
-        .min(0, "Le montant doit être positif")
-        .max(1e12, "Montant trop élevé"),
-      z.string().transform((val) => {
-        if (!val || val.trim() === "") return 0;
-        const num = parseFloat(val);
-        if (isNaN(num))
-          throw new Error("Le montant doit être un nombre valide");
-        return num;
-      }),
-    ])
-    .default(0),
+  description: z.string().max(5000).optional().default(""),
+  secteur: z.string().max(100).optional().default(""),
+  montant: numberOrString(0),
   devise: z.string().length(3).default("MAD"),
-  countryCode: z.string().max(5).optional(),
-  clientId: z.string().uuid("ID client invalide"),
+  countryCode: z.string().max(5).optional().nullable(),
+  clientId: z.string().uuid("ID client invalide").optional().nullable(),
+  status: z.string().optional(),
+  // Extended fields
+  pays: z.string().trim().max(100).nullable().optional(),
+  sponsorPrincipal: z.string().trim().max(200).nullable().optional(),
+  nomSPV: z.string().trim().max(200).nullable().optional(),
+  constructeurEPC: z.string().trim().max(200).nullable().optional(),
+  operateurOM: z.string().trim().max(200).nullable().optional(),
+  technologie: z.string().trim().max(200).nullable().optional(),
+  capaciteInstallee: numberOrString(),
+  debutConstruction: z.string().nullable().optional(),
+  finConstruction: z.string().nullable().optional(),
+  coutTotal: numberOrString(),
+  financement: numberOrString(),
+  apportPropre: numberOrString(),
+  structureCapitalePrincipale: z.string().trim().max(500).nullable().optional(),
+  dureeCredit: intOrString(),
+  taux: numberOrString(),
+  typeCredit: z.string().trim().max(100).nullable().optional(),
+  dureeProjet: intOrString(),
+  periodeAmorce: intOrString(),
+  periodeRemboursement: intOrString(),
+  tauxCouverture: numberOrString(),
+  ratio: numberOrString(),
+  scoreGlobal: numberOrString(),
+  grade: z.string().max(10).nullable().optional(),
 });
 
 export const updateProjectSchema = createProjectSchema.partial();
@@ -137,6 +160,28 @@ export const createClientSchema = z.object({
   pays: z.string().trim().max(100).nullable().optional(),
   type: z.string().max(50).optional().default("Entreprise"),
   description: z.string().trim().max(5000).nullable().optional(),
+  // Extended fields
+  raisonSociale: z.string().trim().max(200).nullable().optional(),
+  nomCommercial: z.string().trim().max(200).nullable().optional(),
+  typeClient: z.string().max(50).nullable().optional(),
+  formeJuridique: z.string().max(50).nullable().optional(),
+  segmentClientele: z.string().max(100).nullable().optional(),
+  effectifs: z.union([z.number().int().min(0), z.string().transform(v => v === "" ? null : parseInt(v)).pipe(z.number().nullable())]).nullable().optional(),
+  capitalSocial: z.union([z.number().min(0), z.string().transform(v => v === "" ? null : parseFloat(v)).pipe(z.number().nullable())]).nullable().optional(),
+  chiffreAffaires: z.union([z.number().min(0), z.string().transform(v => v === "" ? null : parseFloat(v)).pipe(z.number().nullable())]).nullable().optional(),
+  ville: z.string().trim().max(100).nullable().optional(),
+  adresse: z.string().trim().max(500).nullable().optional(),
+  codePostal: z.string().trim().max(20).nullable().optional(),
+  website: z.string().trim().max(500).nullable().optional(),
+  centreAffaires: z.string().trim().max(200).nullable().optional(),
+  gestionnaire: z.string().trim().max(200).nullable().optional(),
+  ratingInterne: z.string().max(10).nullable().optional(),
+  statutBancaire: z.string().max(50).nullable().optional(),
+  dateRelation: z.string().nullable().optional(),
+  exposition: z.union([z.number().min(0), z.string().transform(v => v === "" ? null : parseFloat(v)).pipe(z.number().nullable())]).nullable().optional(),
+  statusKYC: z.string().max(50).nullable().optional(),
+  statusConformite: z.string().max(50).nullable().optional(),
+  status: z.string().max(50).nullable().optional(),
 });
 
 export const updateClientSchema = createClientSchema.partial();
