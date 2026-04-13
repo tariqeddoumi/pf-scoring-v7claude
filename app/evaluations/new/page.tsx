@@ -48,50 +48,32 @@ interface Project {
 
 export default function NewEvaluationPage() {
   const router = useRouter();
-  const { createEvaluation } = useEvaluationWorkflow();
-
   const [projects, setProjects] = useState<Project[]>([]);
-  const [projectId, setProjectId] = useState("");
-  const [evaluationType, setEvaluationType] = useState("Initiale");
-  const [analyst, setAnalyst] = useState("");
-  const [responses, setResponses] = useState<Responses>({});
-  const [financialData] = useState({
-    dscr: 1.35,
-    equity: 20,
-    hasGuarantees: true,
-    contractsSigned: true,
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const [formData, setFormData] = useState<Partial<Evaluation>>({
+    projectId: "",
+    recommendation: "APPROVE",
+    notes: "",
+    status: "brouillon",
+    rating: "",
+    finalScore: undefined,
+    scoreFinancier: undefined,
+    scoreTechnique: undefined,
+    scoreMarche: undefined,
+    scoreEnvironnemental: undefined,
+    scoreSocial: undefined,
+    scoreGouvenance: undefined,
+    scoreJuridique: undefined,
+    scorePays: undefined,
+    probabilityOfDefault: undefined,
+    malusTotal: undefined,
+    approvedBy: "",
+    rejectedBy: "",
+    rejectionReason: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [projectsLoading, setProjectsLoading] = useState(true);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  // Grouper les domaines par étapes
-  const domainGroups = [
-    { name: "Domaines Financiers", ids: ["D1", "D2", "D3"] },
-    { name: "Domaines Risques ESG", ids: ["D4", "D5", "D6"] },
-    { name: "Domaines Légaux & Pays", ids: ["D7", "D8"] },
-  ];
-
-  const wizardSteps = [
-    {
-      id: "info",
-      label: "Informations Générales",
-      description: "Projet, Type et Analyste",
-    },
-    {
-      id: "financial",
-      label: "Domaines Financiers",
-      description: "D1, D2, D3",
-    },
-    { id: "esg", label: "Domaines ESG", description: "D4, D5, D6" },
-    { id: "legal", label: "Domaines Légaux", description: "D7, D8" },
-    {
-      id: "summary",
-      label: "Synthèse & Conclusion",
-      description: "Résumé et validation",
-    },
-  ];
 
   // Load projects from API on mount
   useEffect(() => {
@@ -102,108 +84,86 @@ export default function NewEvaluationPage() {
         const data = await response.json();
         const projectList = data.data || [];
         setProjects(projectList);
-        if (projectList.length > 0) {
-          setProjectId(projectList[0].id);
-        }
       } catch (err) {
         console.error("Error fetching projects:", err);
         setError("Impossible de charger les projets");
-      } finally {
-        setProjectsLoading(false);
       }
     };
     fetchProjects();
   }, []);
 
-  const handleResponseChange = (criteriaId: string, value: string | number) => {
-    setResponses((prev) => ({ ...prev, [criteriaId]: value }));
-  };
-
-  const validateStep = (step: number): boolean => {
-    setError("");
-
-    if (step === 0) {
-      // Validate info step
-      if (!projectId) {
-        setError("Veuillez sélectionner un projet");
-        return false;
-      }
-      if (!analyst.trim()) {
-        setError("Veuillez indiquer le nom de l'analyste");
-        return false;
-      }
-      return true;
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
-
-    // Other steps are optional
-    return true;
-  };
-
-  const handleStepChange = (newStep: number) => {
-    if (newStep > currentStep && !validateStep(currentStep)) {
-      return;
-    }
-    setCurrentStep(newStep);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateStep(currentStep)) {
-      return;
-    }
-
-    setError("");
-    setLoading(true);
+    setSubmitting(true);
+    setError(null);
+    setFieldErrors({});
 
     try {
-      // Calculate score
-      const allResponses = Object.entries(responses).map(
-        ([criteriaId, value]) => ({
-          criteriaId,
-          value: typeof value === "string" ? parseFloat(value) || value : value,
-          comment: "",
-        })
-      );
+      if (!formData.projectId) {
+        throw new Error("Veuillez sélectionner un projet");
+      }
 
-      const result = calculateEvaluation(
-        projectId,
-        allResponses,
-        financialData
-      );
-      console.log("Évaluation calculée:", result);
+      const response = await fetch("/api/evaluations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-      // Create workflow
-      const workflow = createEvaluation(projectId, analyst);
-      console.log("Workflow créé:", workflow.id);
+      const data = await response.json();
 
-      // Redirect to detail page
-      setTimeout(() => {
-        router.push(`/evaluations/${workflow.id}`);
-      }, 500);
-    } catch (err) {
-      setError("Erreur lors de la création de l'évaluation");
-      console.error(err);
+      if (!response.ok) {
+        setError(data.error || "Failed to create evaluation");
+        if (data.errors && Array.isArray(data.errors)) {
+          const errors: Record<string, string> = {};
+          data.errors.forEach((err: any) => {
+            errors[err.field] = err.message;
+          });
+          setFieldErrors(errors);
+        }
+        return;
+      }
+
+      router.push(`/evaluations/${data.data?.id || ""}`);
+    } catch (err: any) {
+      setError(err.message || "Failed to create evaluation");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 0:
-        // Info Générales
-        return (
-          <div className="space-y-4">
+  const tabs = [
+    {
+      id: "general",
+      label: "Générale",
+      icon: <FileText size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-semibold text-white block mb-2">
-                Projet *
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Projet
               </label>
               <select
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
-                disabled={projectsLoading}
+                name="projectId"
+                value={formData.projectId || ""}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.projectId ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
               >
                 <option value="">-- Sélectionner un projet --</option>
                 {projects.map((project) => (
@@ -212,197 +172,364 @@ export default function NewEvaluationPage() {
                   </option>
                 ))}
               </select>
+              {fieldErrors.projectId && (
+                <p className="text-red-400 text-sm mt-1">{fieldErrors.projectId}</p>
+              )}
             </div>
             <div>
-              <label className="text-sm font-semibold text-white block mb-2">
-                Type d'Évaluation
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Statut
               </label>
               <select
-                value={evaluationType}
-                onChange={(e) => setEvaluationType(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                name="status"
+                value={formData.status || "brouillon"}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
               >
-                <option>Initiale</option>
-                <option>Annuelle</option>
-                <option>Ad hoc</option>
+                <option value="brouillon">Brouillon</option>
+                <option value="soumis">Soumis</option>
+                <option value="valide">Validé</option>
+                <option value="rejete">Rejeté</option>
               </select>
             </div>
             <div>
-              <label className="text-sm font-semibold text-white block mb-2">
-                Analyste *
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Rating
+              </label>
+              <select
+                name="rating"
+                value={formData.rating || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Sélectionner</option>
+                <option value="AAA">AAA</option>
+                <option value="AA">AA</option>
+                <option value="A">A</option>
+                <option value="BBB">BBB</option>
+                <option value="BB">BB</option>
+                <option value="B">B</option>
+                <option value="CCC">CCC</option>
+                <option value="D">D</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Recommandation
+              </label>
+              <select
+                name="recommendation"
+                value={formData.recommendation || "APPROVE"}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="APPROVE">Approuvé</option>
+                <option value="APPROVE_WITH_CONDITIONS">
+                  Approuvé avec conditions
+                </option>
+                <option value="REJECT">Rejeté</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Notes
+            </label>
+            <textarea
+              name="notes"
+              value={formData.notes || ""}
+              onChange={handleChange}
+              rows={4}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "scores",
+      label: "Scores",
+      icon: <BarChart3 size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score final
               </label>
               <input
-                type="text"
-                value={analyst}
-                onChange={(e) => setAnalyst(e.target.value)}
-                placeholder="Nom de l'analyste"
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                type="number"
+                name="finalScore"
+                value={formData.finalScore || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Probabilité de défaut (%)
+              </label>
+              <input
+                type="number"
+                name="probabilityOfDefault"
+                value={formData.probabilityOfDefault || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score financier
+              </label>
+              <input
+                type="number"
+                name="scoreFinancier"
+                value={formData.scoreFinancier || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score technique
+              </label>
+              <input
+                type="number"
+                name="scoreTechnique"
+                value={formData.scoreTechnique || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score marché
+              </label>
+              <input
+                type="number"
+                name="scoreMarche"
+                value={formData.scoreMarche || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score environnemental
+              </label>
+              <input
+                type="number"
+                name="scoreEnvironnemental"
+                value={formData.scoreEnvironnemental || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score social
+              </label>
+              <input
+                type="number"
+                name="scoreSocial"
+                value={formData.scoreSocial || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score gouvernance
+              </label>
+              <input
+                type="number"
+                name="scoreGouvenance"
+                value={formData.scoreGouvenance || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score juridique
+              </label>
+              <input
+                type="number"
+                name="scoreJuridique"
+                value={formData.scoreJuridique || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Score pays
+              </label>
+              <input
+                type="number"
+                name="scorePays"
+                value={formData.scorePays || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Total malus
+              </label>
+              <input
+                type="number"
+                name="malusTotal"
+                value={formData.malusTotal || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                step="0.01"
               />
             </div>
           </div>
-        );
-
-      case 1:
-      case 2:
-      case 3:
-        // Domain steps
-        const groupIndex = currentStep - 1;
-        const domainIds = domainGroups[groupIndex].ids;
-        return (
-          <div className="space-y-4">
-            {SCORING_MODEL.filter((d) => domainIds.includes(d.id)).map(
-              (domain) => (
-                <div
-                  key={domain.id}
-                  className="border border-slate-700 rounded-lg p-4 space-y-3"
-                >
-                  <div>
-                    <h4 className="text-lg font-semibold text-cyan-400 mb-2">
-                      {domain.id} - {domain.name}
-                    </h4>
-                    <p className="text-xs text-slate-400">
-                      Poids: {domain.weight}%
-                    </p>
-                  </div>
-                  {domain.subCriteria.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="bg-slate-700/50 rounded p-3 space-y-2"
-                    >
-                      <h5 className="text-sm font-medium text-slate-300">
-                        {sub.label}
-                      </h5>
-                      {sub.criteria.map((crit) => (
-                        <div key={crit.id} className="space-y-1">
-                          <label className="text-xs text-slate-400 block">
-                            {crit.label}
-                          </label>
-                          {crit.scale === "qualitative" ? (
-                            <select
-                              value={responses[crit.id] || ""}
-                              onChange={(e) =>
-                                handleResponseChange(crit.id, e.target.value)
-                              }
-                              className="w-full bg-slate-600 border border-slate-500 rounded px-3 py-1.5 text-white text-sm"
-                            >
-                              <option value="">-- Sélectionner --</option>
-                              {crit.options?.map((opt) => (
-                                <option key={opt.label} value={opt.label}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <input
-                              type="number"
-                              step="0.1"
-                              value={responses[crit.id] || ""}
-                              onChange={(e) =>
-                                handleResponseChange(crit.id, e.target.value)
-                              }
-                              className="w-full bg-slate-600 border border-slate-500 rounded px-3 py-1.5 text-white text-sm"
-                              placeholder="Valeur"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )
-            )}
-          </div>
-        );
-
-      case 4:
-        // Summary
-        return (
-          <div className="space-y-4">
-            <div className="bg-slate-700/50 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-white mb-3">
-                Récapitulatif
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-slate-400">Projet:</span>
-                  <span className="text-white ml-2">
-                    {projects.find((p) => p.id === projectId)?.nom || "N/A"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Type:</span>
-                  <span className="text-white ml-2">{evaluationType}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Analyste:</span>
-                  <span className="text-white ml-2">{analyst}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Domaines complétés:</span>
-                  <span className="text-cyan-400 ml-2">
-                    {
-                      SCORING_MODEL.filter((d) =>
-                        d.subCriteria.some((s) =>
-                          s.criteria.some((c) => c.id in responses)
-                        )
-                      ).length
-                    }
-                    /{SCORING_MODEL.length}
-                  </span>
-                </div>
-              </div>
+        </div>
+      ),
+    },
+    {
+      id: "approval",
+      label: "Approbation",
+      icon: <CheckCircle size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Approuvé par
+              </label>
+              <input
+                type="text"
+                name="approvedBy"
+                value={formData.approvedBy || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              />
             </div>
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-              <p className="text-sm text-blue-300">
-                Cliquez sur "Valider" pour calculer le score et créer
-                l'évaluation.
-              </p>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Date d'approbation
+              </label>
+              <input
+                type="date"
+                value={
+                  formData.approvedAt
+                    ? formData.approvedAt.toString().split("T")[0]
+                    : ""
+                }
+                disabled
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-400 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Rejeté par
+              </label>
+              <input
+                type="text"
+                name="rejectedBy"
+                value={formData.rejectedBy || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Date de rejet
+              </label>
+              <input
+                type="date"
+                value={
+                  formData.rejectedAt
+                    ? formData.rejectedAt.toString().split("T")[0]
+                    : ""
+                }
+                disabled
+                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-400 cursor-not-allowed"
+              />
             </div>
           </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Raison du rejet
+            </label>
+            <textarea
+              name="rejectionReason"
+              value={formData.rejectionReason || ""}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+            />
+          </div>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Créer une nouvelle évaluation</h1>
+          <p className="text-slate-400 mt-1">Remplissez les informations de l'évaluation</p>
+        </div>
         <Link
           href="/evaluations"
-          className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg"
+          className="inline-flex items-center space-x-2 text-slate-400 hover:text-slate-300 transition-colors"
         >
           <ArrowLeft size={20} />
+          <span>Retour</span>
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-white">Nouvelle Évaluation</h1>
-          <p className="text-slate-400 mt-2">
-            Interface guidée étape par étape
-          </p>
-        </div>
       </div>
 
+      {/* Error Message */}
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 flex items-start space-x-3">
-          <AlertCircle
-            size={20}
-            className="text-red-400 flex-shrink-0 mt-0.5"
-          />
-          <p className="text-red-400">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
+          {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <Wizard
-          steps={wizardSteps}
-          currentStep={currentStep}
-          onStepChange={handleStepChange}
-          canGoNext={true}
-          isSubmitting={loading}
-        >
-          {renderStepContent()}
-        </Wizard>
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+        <Tabs tabs={tabs} defaultTab="general" />
+
+        {/* Form Actions */}
+        <div className="flex gap-3 mt-8 pt-6 border-t border-slate-700">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
+          >
+            {submitting ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                <span>Création...</span>
+              </>
+            ) : (
+              <span>Créer l'évaluation</span>
+            )}
+          </button>
+          <Link
+            href="/evaluations"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
+          >
+            Annuler
+          </Link>
+        </div>
       </form>
     </div>
   );
