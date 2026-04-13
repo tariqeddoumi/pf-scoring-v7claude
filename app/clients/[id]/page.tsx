@@ -3,7 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Edit2, Mail, Phone, MapPin, Building } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit2,
+  Loader2,
+  Building2,
+  MapPin,
+  Briefcase,
+  Shield,
+  Users,
+  BarChart3,
+} from "lucide-react";
+import { Tabs } from "@/components/ui/Tabs";
 
 interface Client {
   id: string;
@@ -16,6 +27,27 @@ interface Client {
   description?: string;
   status: string;
   createdAt: string;
+  // Extended fields
+  raisonSociale?: string;
+  nomCommercial?: string;
+  typeClient?: string;
+  formeJuridique?: string;
+  segmentClientele?: string;
+  effectifs?: number;
+  capitalSocial?: number;
+  chiffreAffaires?: number;
+  ville?: string;
+  adresse?: string;
+  codePostal?: string;
+  website?: string;
+  centreAffaires?: string;
+  gestionnaire?: string;
+  ratingInterne?: string;
+  statutBancaire?: string;
+  dateRelation?: string;
+  exposition?: number;
+  statusKYC?: string;
+  statusConformite?: string;
 }
 
 export default function ClientDetailPage({
@@ -53,7 +85,7 @@ export default function ClientDetailPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-slate-400">Chargement du client...</p>
+        <Loader2 className="animate-spin text-blue-400" size={40} />
       </div>
     );
   }
@@ -75,8 +107,255 @@ export default function ClientDetailPage({
     );
   }
 
+  const renderFieldValue = (value: any) => {
+    if (value === null || value === undefined || value === "") {
+      return <span className="text-slate-500 italic">Non renseigné</span>;
+    }
+    if (typeof value === "object" && value.toLocaleDateString) {
+      return new Date(value).toLocaleDateString("fr-FR");
+    }
+    return value;
+  };
+
+  const tabs = [
+    {
+      id: "identity",
+      label: "Identité & Admin",
+      icon: <Building2 size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Nom du client
+              </label>
+              <p className="text-white">{renderFieldValue(client.nom)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Raison sociale
+              </label>
+              <p className="text-white">{renderFieldValue(client.raisonSociale)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Nom commercial
+              </label>
+              <p className="text-white">{renderFieldValue(client.nomCommercial)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Type de client
+              </label>
+              <p className="text-white">{renderFieldValue(client.typeClient)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Forme juridique
+              </label>
+              <p className="text-white">{renderFieldValue(client.formeJuridique)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Statut
+              </label>
+              <span className={`inline-block px-3 py-1 rounded-full text-sm ${
+                client.status === "Actif"
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-yellow-500/20 text-yellow-400"
+              }`}>
+                {renderFieldValue(client.status)}
+              </span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "organisation",
+      label: "Organisation & Secteur",
+      icon: <Briefcase size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Secteur
+              </label>
+              <p className="text-white">{renderFieldValue(client.secteur)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Segment clientèle
+              </label>
+              <p className="text-white">{renderFieldValue(client.segmentClientele)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Effectifs
+              </label>
+              <p className="text-white">{renderFieldValue(client.effectifs)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Capital social (MAD)
+              </label>
+              <p className="text-white">{client.capitalSocial ? client.capitalSocial.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Chiffre d&apos;affaires (MAD)
+              </label>
+              <p className="text-white">{client.chiffreAffaires ? client.chiffreAffaires.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              Description / Activités
+            </label>
+            <p className="text-white whitespace-pre-wrap">{renderFieldValue(client.description)}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "localisation",
+      label: "Localisation",
+      icon: <MapPin size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Pays
+              </label>
+              <p className="text-white">{renderFieldValue(client.pays)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Ville
+              </label>
+              <p className="text-white">{renderFieldValue(client.ville)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Code postal
+              </label>
+              <p className="text-white">{renderFieldValue(client.codePostal)}</p>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              Adresse
+            </label>
+            <p className="text-white whitespace-pre-wrap">{renderFieldValue(client.adresse)}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "contact",
+      label: "Contact",
+      icon: <Users size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Email
+              </label>
+              <p className="text-white break-all">{renderFieldValue(client.email)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Téléphone
+              </label>
+              <p className="text-white">{renderFieldValue(client.telephone)}</p>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Site web
+              </label>
+              <p className="text-white break-all">{renderFieldValue(client.website)}</p>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "banking",
+      label: "Relations Bancaires",
+      icon: <BarChart3 size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Centre d&apos;affaires
+              </label>
+              <p className="text-white">{renderFieldValue(client.centreAffaires)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Gestionnaire
+              </label>
+              <p className="text-white">{renderFieldValue(client.gestionnaire)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Rating interne
+              </label>
+              <p className="text-white">{renderFieldValue(client.ratingInterne)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Statut bancaire
+              </label>
+              <p className="text-white">{renderFieldValue(client.statutBancaire)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Date du début de relation
+              </label>
+              <p className="text-white">{client.dateRelation ? new Date(client.dateRelation).toLocaleDateString("fr-FR") : renderFieldValue(null)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Exposition (MAD)
+              </label>
+              <p className="text-white">{client.exposition ? client.exposition.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "kyc",
+      label: "KYC & Conformité",
+      icon: <Shield size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Statut KYC
+              </label>
+              <p className="text-white">{renderFieldValue(client.statusKYC)}</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+                Statut conformité
+              </label>
+              <p className="text-white">{renderFieldValue(client.statusConformite)}</p>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center space-x-4">
@@ -100,122 +379,30 @@ export default function ClientDetailPage({
         </button>
       </div>
 
-      {/* Info Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Status */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase">
-            Statut
-          </p>
-          <p className="mt-2 text-lg font-semibold text-white">
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-sm ${
-                client.status === "Actif"
-                  ? "bg-green-500/20 text-green-400"
-                  : "bg-yellow-500/20 text-yellow-400"
-              }`}
-            >
-              {client.status}
-            </span>
-          </p>
-        </div>
-
-        {/* Type */}
-        {client.type && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <p className="text-xs font-semibold text-slate-400 uppercase">
-              Type
-            </p>
-            <p className="mt-2 text-lg font-semibold text-white">
-              {client.type}
-            </p>
-          </div>
-        )}
-
-        {/* Secteur */}
-        {client.secteur && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <Building size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">
-                Secteur
-              </p>
-            </div>
-            <p className="mt-2 text-lg font-semibold text-white">
-              {client.secteur}
-            </p>
-          </div>
-        )}
-
-        {/* Pays */}
-        {client.pays && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <MapPin size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">
-                Pays
-              </p>
-            </div>
-            <p className="mt-2 text-lg font-semibold text-white">
-              {client.pays}
-            </p>
-          </div>
-        )}
-
-        {/* Email */}
-        {client.email && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <Mail size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">
-                Email
-              </p>
-            </div>
-            <p className="mt-2 text-white break-all">{client.email}</p>
-          </div>
-        )}
-
-        {/* Téléphone */}
-        {client.telephone && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <Phone size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">
-                Téléphone
-              </p>
-            </div>
-            <p className="mt-2 text-white">{client.telephone}</p>
-          </div>
-        )}
-
-        {/* Date de création */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase">
-            Créé le
-          </p>
-          <p className="mt-2 text-white">
-            {new Date(client.createdAt).toLocaleDateString("fr-FR")}
-          </p>
-        </div>
+      {/* Tabs Content */}
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+        <Tabs tabs={tabs} defaultTab="identity" />
       </div>
 
-      {/* Description */}
-      {client.description && (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Description</h2>
-          <p className="text-slate-300">{client.description}</p>
+      {/* Meta Information */}
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Informations système</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              Créé le
+            </label>
+            <p className="text-white">
+              {new Date(client.createdAt).toLocaleDateString("fr-FR")}
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              Identifiant
+            </label>
+            <p className="text-white font-mono text-sm">{client.id}</p>
+          </div>
         </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex gap-4">
-        <Link
-          href="/clients"
-          className="inline-flex items-center space-x-2 px-4 py-2 border border-slate-700 rounded-lg text-slate-400 hover:text-white hover:border-slate-600 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span>Retour</span>
-        </Link>
       </div>
     </div>
   );

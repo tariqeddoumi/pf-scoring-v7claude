@@ -6,11 +6,15 @@ import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Edit2,
+  Loader2,
+  FileText,
   MapPin,
-  Briefcase,
   DollarSign,
-  TrendingUp,
+  Zap,
+  Users,
+  BarChart3,
 } from "lucide-react";
+import { Tabs } from "@/components/ui/Tabs";
 
 interface Project {
   id: string;
@@ -22,6 +26,42 @@ interface Project {
   devise?: string;
   status: string;
   createdAt: string;
+  countryCode?: string;
+  coutTotal?: string;
+  financement?: string;
+  apportPropre?: string;
+  taux?: string;
+  dureeCredit?: string;
+  typeCredit?: string;
+  tauxCouverture?: string;
+  ratio?: string;
+  sponsorPrincipal?: string;
+  nomSPV?: string;
+  constructeurEPC?: string;
+  operateurOM?: string;
+  technologie?: string;
+  capaciteInstallee?: string;
+  dureeProjet?: string;
+  periodeAmorce?: string;
+  periodeRemboursement?: string;
+  debutConstruction?: string;
+  finConstruction?: string;
+  structureCapitalePrincipale?: string;
+  scoreGlobal?: string;
+  grade?: string;
+}
+
+function ReadOnlyField({ label, value }: { label: string; value?: string }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-300 mb-2">
+        {label}
+      </label>
+      <div className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300">
+        {value || "-"}
+      </div>
+    </div>
+  );
 }
 
 export default function ProjectDetailPage({
@@ -59,7 +99,7 @@ export default function ProjectDetailPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-slate-400">Chargement du projet...</p>
+        <Loader2 className="animate-spin text-blue-400" size={40} />
       </div>
     );
   }
@@ -81,8 +121,127 @@ export default function ProjectDetailPage({
     );
   }
 
+  const tabs = [
+    {
+      id: "identification",
+      label: "Identification",
+      icon: <FileText size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <ReadOnlyField label="Nom du projet" value={project.nom} />
+            </div>
+            <div className="md:col-span-2">
+              <ReadOnlyField label="Description" value={project.description} />
+            </div>
+            <ReadOnlyField label="Secteur" value={project.secteur} />
+            <ReadOnlyField
+              label="Statut"
+              value={project.status}
+            />
+            <ReadOnlyField label="Code pays" value={project.countryCode} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "localisation",
+      label: "Localisation",
+      icon: <MapPin size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ReadOnlyField label="Pays" value={project.pays} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "finances",
+      label: "Finances",
+      icon: <DollarSign size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ReadOnlyField label="Montant (MAD)" value={project.montant?.toString()} />
+            <ReadOnlyField label="Devise" value={project.devise} />
+            <ReadOnlyField label="Coût total (MAD)" value={project.coutTotal?.toString()} />
+            <ReadOnlyField label="Financement (MAD)" value={project.financement?.toString()} />
+            <ReadOnlyField label="Apport propre (MAD)" value={project.apportPropre?.toString()} />
+            <ReadOnlyField label="Taux (%)" value={project.taux?.toString()} />
+            <ReadOnlyField label="Type de crédit" value={project.typeCredit} />
+            <ReadOnlyField label="Durée du crédit (ans)" value={project.dureeCredit?.toString()} />
+            <ReadOnlyField label="Taux de couverture (%)" value={project.tauxCouverture?.toString()} />
+            <ReadOnlyField label="Ratio" value={project.ratio?.toString()} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "technique",
+      label: "Technique",
+      icon: <Zap size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ReadOnlyField label="Sponsor principal" value={project.sponsorPrincipal} />
+            <ReadOnlyField label="Nom du SPV" value={project.nomSPV} />
+            <ReadOnlyField label="Constructeur EPC" value={project.constructeurEPC} />
+            <ReadOnlyField label="Opérateur O&M" value={project.operateurOM} />
+            <ReadOnlyField label="Technologie" value={project.technologie} />
+            <ReadOnlyField label="Capacité installée (MW)" value={project.capaciteInstallee?.toString()} />
+            <ReadOnlyField label="Durée du projet (ans)" value={project.dureeProjet?.toString()} />
+            <ReadOnlyField label="Période d'amorce (ans)" value={project.periodeAmorce?.toString()} />
+            <ReadOnlyField label="Période de remboursement (ans)" value={project.periodeRemboursement?.toString()} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "dates",
+      label: "Calendrier",
+      icon: <FileText size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ReadOnlyField label="Début de construction" value={project.debutConstruction} />
+            <ReadOnlyField label="Fin de construction" value={project.finConstruction} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "structure",
+      label: "Structure Capital",
+      icon: <Users size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <ReadOnlyField label="Structure capitaleprincipale" value={project.structureCapitalePrincipale} />
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "evaluation",
+      label: "Évaluation",
+      icon: <BarChart3 size={18} />,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ReadOnlyField label="Score global" value={project.scoreGlobal?.toString()} />
+            <ReadOnlyField label="Grade" value={project.grade} />
+          </div>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center space-x-4">
@@ -108,89 +267,10 @@ export default function ProjectDetailPage({
         </button>
       </div>
 
-      {/* Info Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Status */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase">
-            Statut
-          </p>
-          <p className="mt-2 text-lg font-semibold text-white">
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-sm ${
-                project.status === "Actif"
-                  ? "bg-green-500/20 text-green-400"
-                  : "bg-yellow-500/20 text-yellow-400"
-              }`}
-            >
-              {project.status}
-            </span>
-          </p>
-        </div>
-
-        {/* Secteur */}
-        {project.secteur && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <Briefcase size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">
-                Secteur
-              </p>
-            </div>
-            <p className="mt-2 text-lg font-semibold text-white">
-              {project.secteur}
-            </p>
-          </div>
-        )}
-
-        {/* Pays */}
-        {project.pays && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <MapPin size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">
-                Pays
-              </p>
-            </div>
-            <p className="mt-2 text-lg font-semibold text-white">
-              {project.pays}
-            </p>
-          </div>
-        )}
-
-        {/* Montant */}
-        {project.montant && (
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <DollarSign size={16} className="text-slate-400" />
-              <p className="text-xs font-semibold text-slate-400 uppercase">
-                Montant
-              </p>
-            </div>
-            <p className="mt-2 text-lg font-semibold text-white">
-              {project.montant} {project.devise || "MAD"}
-            </p>
-          </div>
-        )}
-
-        {/* Date de création */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase">
-            Créé le
-          </p>
-          <p className="mt-2 text-white">
-            {new Date(project.createdAt).toLocaleDateString("fr-FR")}
-          </p>
-        </div>
+      {/* Tabs */}
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+        <Tabs tabs={tabs} defaultTab="identification" />
       </div>
-
-      {/* Description */}
-      {project.description && (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Description</h2>
-          <p className="text-slate-300">{project.description}</p>
-        </div>
-      )}
 
       {/* Actions */}
       <div className="flex gap-4">
