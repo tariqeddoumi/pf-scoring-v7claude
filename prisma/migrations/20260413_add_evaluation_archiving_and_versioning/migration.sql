@@ -1,7 +1,7 @@
 -- Add archiving and versioning support to evaluations
 ALTER TABLE "BP_PF_v7pp_evaluations" ADD COLUMN "isArchived" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "BP_PF_v7pp_evaluations" ADD COLUMN "versionNumber" INTEGER NOT NULL DEFAULT 1;
-ALTER TABLE "BP_PF_v7pp_evaluations" ADD COLUMN "parentEvaluationId" TEXT;
+ALTER TABLE "BP_PF_v7pp_evaluations" ADD COLUMN "parentEvaluationId" UUID;
 ALTER TABLE "BP_PF_v7pp_evaluations" ADD COLUMN "archivedAt" TIMESTAMP(3);
 ALTER TABLE "BP_PF_v7pp_evaluations" ADD COLUMN "archivedBy" TEXT;
 
