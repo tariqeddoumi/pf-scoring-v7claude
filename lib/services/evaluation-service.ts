@@ -80,6 +80,7 @@ export class EvaluationService {
     if (filters?.projectId) where.projectId = filters.projectId;
     if (filters?.analystId) where.analystId = filters.analystId;
     if (filters?.rating) where.rating = filters.rating;
+    if (typeof filters?.isArchived === "boolean") where.isArchived = filters.isArchived;
 
     const [evaluations, total] = await Promise.all([
       prisma.evaluation.findMany({
@@ -307,5 +308,144 @@ export class EvaluationService {
       where: { evaluationId },
       orderBy: { createdAt: "desc" },
     });
+  }
+
+  /**
+   * Update evaluation
+   */
+  static async updateEvaluation(
+    id: string,
+    data: any,
+    updatedBy: string
+  ) {
+    const evaluation = await prisma.evaluation.findUnique({
+      where: { id },
+    });
+
+    if (!evaluation) {
+      throw new Error("Evaluation not found");
+    }
+
+    // Only draft evaluations can be fully edited
+    if (evaluation.status !== "brouillon") {
+      throw new Error("Can only edit draft evaluations");
+    }
+
+    const updatedEvaluation = await prisma.evaluation.update({
+      where: { id },
+      data: {
+        finalScore: data.finalScore ?? evaluation.finalScore,
+        rating: data.rating ?? evaluation.rating,
+        recommendation: data.recommendation ?? evaluation.recommendation,
+        probabilityOfDefault: data.probabilityOfDefault ?? evaluation.probabilityOfDefault,
+        scoreFinancier: data.scoreFinancier ?? evaluation.scoreFinancier,
+        scoreTechnique: data.scoreTechnique ?? evaluation.scoreTechnique,
+        scoreMarche: data.scoreMarche ?? evaluation.scoreMarche,
+        scoreEnvironnemental: data.scoreEnvironnemental ?? evaluation.scoreEnvironnemental,
+        scoreSocial: data.scoreSocial ?? evaluation.scoreSocial,
+        scoreGouvenance: data.scoreGouvenance ?? evaluation.scoreGouvenance,
+        scoreJuridique: data.scoreJuridique ?? evaluation.scoreJuridique,
+        scorePays: data.scorePays ?? evaluation.scorePays,
+        malusTotal: data.malusTotal ?? evaluation.malusTotal,
+        notes: data.notes ?? evaluation.notes,
+        status: data.status ?? evaluation.status,
+        triggeredNOGOs: data.triggeredNOGOs ?? evaluation.triggeredNOGOs,
+        appliedMALUS: data.appliedMALUS ?? evaluation.appliedMALUS,
+        updatedAt: new Date(),
+      },
+      include: {
+        project: {
+          select: { id: true, nom: true, status: true },
+        },
+        analyst: {
+          select: { id: true, email: true, nom: true, prenom: true },
+        },
+      },
+    });
+
+    return updatedEvaluation;
+  }
+
+  /**
+   * Delete evaluation
+   */
+  static async deleteEvaluation(id: string) {
+    const evaluation = await prisma.evaluation.findUnique({
+      where: { id },
+    });
+
+    if (!evaluation) {
+      throw new Error("Evaluation not found");
+    }
+
+    await prisma.evaluation.delete({
+      where: { id },
+    });
+
+    return { success: true, id };
+  }
+
+  /**
+   * Archive evaluation
+   */
+  static async archiveEvaluation(id: string, archivedBy: string) {
+    const evaluation = await prisma.evaluation.findUnique({
+      where: { id },
+    });
+
+    if (!evaluation) {
+      throw new Error("Evaluation not found");
+    }
+
+    const archivedEvaluation = await prisma.evaluation.update({
+      where: { id },
+      data: {
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy,
+      },
+      include: {
+        project: {
+          select: { id: true, nom: true, status: true },
+        },
+        analyst: {
+          select: { id: true, email: true, nom: true, prenom: true },
+        },
+      },
+    });
+
+    return archivedEvaluation;
+  }
+
+  /**
+   * Restore archived evaluation
+   */
+  static async restoreEvaluation(id: string) {
+    const evaluation = await prisma.evaluation.findUnique({
+      where: { id },
+    });
+
+    if (!evaluation) {
+      throw new Error("Evaluation not found");
+    }
+
+    const restoredEvaluation = await prisma.evaluation.update({
+      where: { id },
+      data: {
+        isArchived: false,
+        archivedAt: null,
+        archivedBy: null,
+      },
+      include: {
+        project: {
+          select: { id: true, nom: true, status: true },
+        },
+        analyst: {
+          select: { id: true, email: true, nom: true, prenom: true },
+        },
+      },
+    });
+
+    return restoredEvaluation;
   }
 }
