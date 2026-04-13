@@ -332,6 +332,12 @@ model Evaluation {
   rejectedBy                  String?
   rejectedAt                  DateTime?
   rejectionReason             String?
+  // Archiving & Versioning
+  isArchived                  Boolean             @default(false)
+  versionNumber               Int                 @default(1)
+  parentEvaluationId          String?             // For version history
+  archivedAt                  DateTime?
+  archivedBy                  String?
   createdAt                   DateTime            @default(now())
   updatedAt                   DateTime            @updatedAt
 
@@ -339,11 +345,15 @@ model Evaluation {
   analyst                     User                @relation("AnalystEvaluations", fields: [analystId], references: [id], onDelete: SetNull)
   stressTestResults           StressTestScenarioResult[]
   auditLogs                   ScoringAuditLog[]
+  parentEvaluation            Evaluation?         @relation("EvaluationVersions", fields: [parentEvaluationId], references: [id], onDelete: SetNull)
+  versionedEvaluations        Evaluation[]        @relation("EvaluationVersions")
 
   @@index([projectId])
   @@index([analystId])
   @@index([rating])
   @@index([createdAt])
+  @@index([isArchived])
+  @@index([parentEvaluationId])
   @@map("BP_PF_v7pp_evaluations")
 }
 
