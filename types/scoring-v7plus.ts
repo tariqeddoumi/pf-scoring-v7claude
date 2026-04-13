@@ -9,15 +9,15 @@
 // ============================================================================
 
 export enum DomainCode {
-  D1 = "D1", // Project Fundamentals
-  D2 = "D2", // Host Country
-  D3 = "D3", // Construction Phase
-  D4 = "D4", // Operation Phase
-  D5 = "D5", // Revenue & Market
-  D6 = "D6", // Financial Structure
-  D7 = "D7", // Financial Structure & Cash Flow
-  D8 = "D8", // Legal & Documentation
-  D9 = "D9", // ESG & Climate
+  D1 = "D1", // Sponsor & Shareholders (10%)
+  D2 = "D2", // Project Characteristics (10%)
+  D3 = "D3", // Construction Risk (15%)
+  D4 = "D4", // Market Risk (10%)
+  D5 = "D5", // Operational Risk (10%)
+  D6 = "D6", // Counterparty Risk (10%)
+  D7 = "D7", // Financial Structure & Cash Flow (15%)
+  D8 = "D8", // Legal & Documentation (10%)
+  D9 = "D9", // ESG & Climate Risk (10%)
 }
 
 export enum RatingScale {
@@ -126,7 +126,7 @@ export interface ScoringResult {
   projectId: string;
   projectName: string;
 
-  // Domain scores (all 9)
+  // Domain scores (all 7)
   domains: {
     [key in DomainCode]?: DomainScore;
   };

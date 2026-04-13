@@ -44,16 +44,17 @@ async function main() {
 
     console.log(`✅ Created initial version: v${initialVersion.versionNumber}`);
 
-    // Create 8 domain nodes
+    // Create 9 domain nodes (V7++ Model)
     const domainCodes = [
-      { code: "D1", label: "Financial Analysis", weight: 0.25 },
-      { code: "D2", label: "Technical Analysis", weight: 0.2 },
-      { code: "D3", label: "Market & Revenue", weight: 0.2 },
-      { code: "D4", label: "Environmental (IFC)", weight: 0.1 },
-      { code: "D5", label: "Social (EBRD)", weight: 0.1 },
-      { code: "D6", label: "Governance", weight: 0.05 },
-      { code: "D7", label: "Legal & Regulatory", weight: 0.05 },
-      { code: "D8", label: "Country Risk", weight: 0.05 },
+      { code: "D1", label: "Sponsor & Shareholders", weight: 0.10 },
+      { code: "D2", label: "Project Characteristics", weight: 0.10 },
+      { code: "D3", label: "Construction Risk", weight: 0.15 },
+      { code: "D4", label: "Market Risk", weight: 0.10 },
+      { code: "D5", label: "Operational Risk", weight: 0.10 },
+      { code: "D6", label: "Counterparty Risk", weight: 0.10 },
+      { code: "D7", label: "Financial Structure & Cash Flow", weight: 0.15 },
+      { code: "D8", label: "Legal & Documentation", weight: 0.10 },
+      { code: "D9", label: "ESG & Climate Risk", weight: 0.10 },
     ];
 
     for (let i = 0; i < domainCodes.length; i++) {
@@ -86,7 +87,7 @@ async function main() {
       });
     }
 
-    console.log(`✅ Created 8 domain nodes`);
+    console.log(`✅ Created 9 domain nodes`);
     console.log("\n✨ Database seed completed successfully!");
   } catch (error) {
     console.error("❌ Error during seed:", error);

@@ -1,6 +1,6 @@
 /**
  * PF Scoring V7++ - Scoring Engine
- * Core calculation logic for all 9 domains
+ * Core calculation logic for all 7 domains
  * Strict TypeScript implementation
  */
 
@@ -23,15 +23,15 @@ import {
 // ============================================================================
 
 const DOMAIN_WEIGHTS: Record<DomainCode, number> = {
-  [DomainCode.D1]: 0.1, // Project Fundamentals (10%)
-  [DomainCode.D2]: 0.1, // Host Country (10%)
-  [DomainCode.D3]: 0.15, // Construction Phase (15%)
-  [DomainCode.D4]: 0.1, // Operation Phase (10%)
-  [DomainCode.D5]: 0.1, // Revenue & Market (10%)
-  [DomainCode.D6]: 0.1, // Financial Structure (10%)
+  [DomainCode.D1]: 0.10, // Sponsor & Shareholders (10%)
+  [DomainCode.D2]: 0.10, // Project Characteristics (10%)
+  [DomainCode.D3]: 0.15, // Construction Risk (15%)
+  [DomainCode.D4]: 0.10, // Market Risk (10%)
+  [DomainCode.D5]: 0.10, // Operational Risk (10%)
+  [DomainCode.D6]: 0.10, // Counterparty Risk (10%)
   [DomainCode.D7]: 0.15, // Financial Structure & Cash Flow (15%)
-  [DomainCode.D8]: 0.1, // Legal & Documentation (10%)
-  [DomainCode.D9]: 0.1, // ESG & Climate (10%)
+  [DomainCode.D8]: 0.10, // Legal & Documentation (10%)
+  [DomainCode.D9]: 0.10, // ESG & Climate Risk (10%)
   // TOTAL: 100%
 };
 
@@ -40,14 +40,14 @@ const NORMALIZATION_FACTOR = 100 / (TOTAL_WEIGHTS * 100);
 
 // Rating transformation thresholds
 const SCORE_TO_RATING_THRESHOLDS: Array<[number, RatingScale, number]> = [
-  [8.5, RatingScale.AAA, 0.005],
-  [8.0, RatingScale.AA, 0.01],
-  [7.5, RatingScale.A, 0.015],
-  [7.0, RatingScale.BBB, 0.025],
-  [6.5, RatingScale.BB, 0.04],
-  [6.0, RatingScale.B, 0.065],
-  [5.5, RatingScale.CCC, 0.12],
-  [0, RatingScale.D, 0.25],
+  [8.5, RatingScale.AAA, 0.003],  // PD: 0.01-0.05%
+  [7.5, RatingScale.AA, 0.008],   // PD: 0.05-0.10%
+  [6.5, RatingScale.A, 0.02],     // PD: 0.10-0.30%
+  [5.5, RatingScale.BBB, 0.04],   // PD: 0.30-0.80%
+  [4.5, RatingScale.BB, 0.07],    // PD: 1.20-3.50%
+  [3.5, RatingScale.B, 0.10],     // PD: 3.50-8.00%
+  [2.0, RatingScale.CCC, 0.15],   // PD: 8.00-15.00%
+  [0, RatingScale.D, 0.25],       // PD: >15.00%
 ];
 
 // ============================================================================
