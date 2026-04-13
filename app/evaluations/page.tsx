@@ -99,13 +99,17 @@ export default function EvaluationsPage() {
     if (activeTab === "creer" && projects.length === 0) {
       const fetchProjects = async () => {
         try {
-          const res = await fetch("/api/projects?limit=100");
-          if (res.ok) {
-            const data = await res.json();
-            setProjects(data.data || []);
+          const res = await fetch("/api/projects");
+          if (!res.ok) {
+            throw new Error("Impossible de charger les projets");
           }
+          const data = await res.json();
+          // data retourne { data: projects, pagination: {...} }
+          const projectsList = data.data || data || [];
+          setProjects(Array.isArray(projectsList) ? projectsList : []);
         } catch (err) {
-          console.error("Erreur lors du chargement des projets");
+          console.error("Erreur lors du chargement des projets:", err);
+          setCreateError("Erreur lors du chargement des projets");
         }
       };
       fetchProjects();
@@ -338,192 +342,92 @@ export default function EvaluationsPage() {
 
   // Contenu de l'onglet Créer
   const creerContent = (
-    <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 max-w-2xl">
-      <h2 className="text-xl font-bold text-white mb-6">Créer une nouvelle évaluation</h2>
+    <div className="space-y-6">
+      <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 max-w-2xl">
+        <h2 className="text-xl font-bold text-white mb-2">Nouvelle Évaluation</h2>
+        <p className="text-slate-400 text-sm mb-6">Créez une nouvelle évaluation de risque pour un projet</p>
 
-      {createError && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
-          {createError}
-        </div>
-      )}
+        {createError && (
+          <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
+            {createError}
+          </div>
+        )}
 
-      <form
-        className="space-y-6"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setCreatingEvaluation(true);
-          setCreateError("");
-          try {
-            const res = await fetch("/api/evaluations", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(createFormData),
-            });
-            if (!res.ok) {
-              const error = await res.json();
-              throw new Error(error.error || "Erreur lors de la création");
-            }
-            const newEval = await res.json();
-            setEvaluations([
-              ...evaluations,
-              {
-                id: newEval.data.id,
-                projectId: newEval.data.projectId,
-                projectName: newEval.data.project?.nom || "Projet inconnu",
-                analyst: "N/A",
-                status: newEval.data.status,
-                finalScore: null,
-                rating: null,
-                createdAt: new Date().toISOString(),
-              },
-            ]);
-            setCreateFormData({
-              projectId: "",
-              recommendation: "APPROVE",
-              notes: "",
-              status: "brouillon",
-            });
-            setActiveTab("visualiser");
-          } catch (err: any) {
-            setCreateError(err.message);
-          } finally {
-            setCreatingEvaluation(false);
-          }
-        }}
-      >
-        <div>
-          <label className="block text-sm font-semibold text-slate-300 mb-2">Projet *</label>
-          <select
-            value={createFormData.projectId || ""}
-            onChange={(e) => setCreateFormData({ ...createFormData, projectId: e.target.value })}
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
-            required
-          >
-            <option value="">Sélectionner un projet</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nom}
-              </option>
-            ))}
-          </select>
-        </div>
+        {projects.length === 0 && !createError && (
+          <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/30 p-4 text-yellow-400 text-sm mb-6">
+            Aucun projet trouvé. Veuillez créer un projet d'abord.
+          </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-300 mb-2">Recommandation</label>
-          <select
-            value={createFormData.recommendation || "APPROVE"}
-            onChange={(e) => setCreateFormData({ ...createFormData, recommendation: e.target.value })}
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
-          >
-            <option value="APPROVE">Approuver</option>
-            <option value="REJECT">Rejeter</option>
-            <option value="PENDING">En attente</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-slate-300 mb-2">Notes</label>
-          <textarea
-            value={createFormData.notes || ""}
-            onChange={(e) => setCreateFormData({ ...createFormData, notes: e.target.value })}
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
-            rows={4}
-            placeholder="Ajouter des notes..."
-          />
-        </div>
-
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={creatingEvaluation || !createFormData.projectId}
-            className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 text-white font-semibold px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2"
-          >
-            {creatingEvaluation && <Loader2 size={16} className="animate-spin" />}
-            Créer l'évaluation
-          </button>
-          <button
-            type="button"
-            onClick={() => {
+        <form
+          className="space-y-6"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setCreatingEvaluation(true);
+            setCreateError("");
+            try {
+              const res = await fetch("/api/evaluations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(createFormData),
+              });
+              if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || "Erreur lors de la création");
+              }
+              const newEval = await res.json();
+              setEvaluations([
+                ...evaluations,
+                {
+                  id: newEval.data.id,
+                  projectId: newEval.data.projectId,
+                  projectName: newEval.data.project?.nom || "Projet inconnu",
+                  analyst: "N/A",
+                  status: newEval.data.status,
+                  finalScore: null,
+                  rating: null,
+                  createdAt: new Date().toISOString(),
+                },
+              ]);
               setCreateFormData({
                 projectId: "",
                 recommendation: "APPROVE",
                 notes: "",
                 status: "brouillon",
               });
-              setCreateError("");
-            }}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
-          >
-            Réinitialiser
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-
-  // Contenu de l'onglet Modifier
-  const modifierContent = (
-    <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 max-w-2xl">
-      <h2 className="text-xl font-bold text-white mb-6">Modifier une évaluation</h2>
-
-      {editError && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
-          {editError}
-        </div>
-      )}
-
-      <div className="mb-6">
-        <label className="block text-sm font-semibold text-slate-300 mb-2">Sélectionner une évaluation</label>
-        <select
-          value={selectedEvaluationId || ""}
-          onChange={(e) => setSelectedEvaluationId(e.target.value)}
-          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
-        >
-          <option value="">-- Choisir une évaluation --</option>
-          {evaluations.map((ev) => (
-            <option key={ev.id} value={ev.id}>
-              {ev.projectName} - {ev.status}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {selectedEvaluation && (
-        <form
-          className="space-y-6"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setEditingEvaluation(true);
-            setEditError("");
-            try {
-              const res = await fetch(`/api/evaluations/${selectedEvaluationId}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(selectedEvaluation),
-              });
-              if (!res.ok) {
-                const error = await res.json();
-                throw new Error(error.error || "Erreur lors de la modification");
-              }
-              setEvaluations(
-                evaluations.map((e) => (e.id === selectedEvaluationId ? { ...e, ...selectedEvaluation } : e))
-              );
-              setSelectedEvaluationId(null);
-              setSelectedEvaluation(null);
               setActiveTab("visualiser");
             } catch (err: any) {
-              setEditError(err.message);
+              setCreateError(err.message);
             } finally {
-              setEditingEvaluation(false);
+              setCreatingEvaluation(false);
             }
           }}
         >
           <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2">Recommandation</label>
+            <label className="block text-sm font-semibold text-slate-300 mb-3">Sélectionner un projet *</label>
             <select
-              value={selectedEvaluation.recommendation || "APPROVE"}
-              onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, recommendation: e.target.value })}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+              value={createFormData.projectId || ""}
+              onChange={(e) => setCreateFormData({ ...createFormData, projectId: e.target.value })}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none transition-colors"
+              required
+              disabled={projects.length === 0}
+            >
+              <option value="">-- Choisir un projet --</option>
+              {projects.map((p: any) => (
+                <option key={p.id} value={p.id}>
+                  {p.nom}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500 mt-1">{projects.length} projet{projects.length !== 1 ? "s" : ""} disponible{projects.length !== 1 ? "s" : ""}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-300 mb-3">Recommandation</label>
+            <select
+              value={createFormData.recommendation || "APPROVE"}
+              onChange={(e) => setCreateFormData({ ...createFormData, recommendation: e.target.value })}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none transition-colors"
             >
               <option value="APPROVE">Approuver</option>
               <option value="REJECT">Rejeter</option>
@@ -532,53 +436,186 @@ export default function EvaluationsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2">Statut</label>
-            <select
-              value={selectedEvaluation.status || "brouillon"}
-              onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, status: e.target.value })}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
-            >
-              <option value="brouillon">Brouillon</option>
-              <option value="soumis">Soumis</option>
-              <option value="valide">Validé</option>
-              <option value="rejete">Rejeté</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2">Notes</label>
+            <label className="block text-sm font-semibold text-slate-300 mb-3">Notes</label>
             <textarea
-              value={selectedEvaluation.notes || ""}
-              onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, notes: e.target.value })}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+              value={createFormData.notes || ""}
+              onChange={(e) => setCreateFormData({ ...createFormData, notes: e.target.value })}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none transition-colors"
               rows={4}
-              placeholder="Ajouter des notes..."
+              placeholder="Ajouter des notes ou commentaires..."
             />
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              disabled={editingEvaluation}
-              className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 text-white font-semibold px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+              disabled={creatingEvaluation || !createFormData.projectId || projects.length === 0}
+              className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
             >
-              {editingEvaluation && <Loader2 size={16} className="animate-spin" />}
-              Enregistrer les modifications
+              {creatingEvaluation ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Création en cours...
+                </>
+              ) : (
+                <>
+                  <Plus size={16} />
+                  Créer l'évaluation
+                </>
+              )}
             </button>
             <button
               type="button"
               onClick={() => {
-                setSelectedEvaluationId(null);
-                setSelectedEvaluation(null);
-                setEditError("");
+                setCreateFormData({
+                  projectId: "",
+                  recommendation: "APPROVE",
+                  notes: "",
+                  status: "brouillon",
+                });
+                setCreateError("");
               }}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
+              className="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
             >
-              Annuler
+              Réinitialiser
             </button>
           </div>
         </form>
-      )}
+      </div>
+    </div>
+  );
+
+  // Contenu de l'onglet Modifier
+  const modifierContent = (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 max-w-2xl">
+        <h2 className="text-xl font-bold text-white mb-2">Modifier une Évaluation</h2>
+        <p className="text-slate-400 text-sm mb-6">Mettez à jour les détails d'une évaluation existante</p>
+
+        {editError && (
+          <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
+            {editError}
+          </div>
+        )}
+
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-slate-300 mb-3">Sélectionner une évaluation *</label>
+          <select
+            value={selectedEvaluationId || ""}
+            onChange={(e) => setSelectedEvaluationId(e.target.value)}
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none transition-colors"
+          >
+            <option value="">-- Choisir une évaluation --</option>
+            {evaluations.map((ev) => (
+              <option key={ev.id} value={ev.id}>
+                {ev.projectName} ({getStatusLabel(ev.status)})
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-slate-500 mt-1">{evaluations.length} évaluation{evaluations.length !== 1 ? "s" : ""} disponible{evaluations.length !== 1 ? "s" : ""}</p>
+        </div>
+
+        {selectedEvaluation && (
+          <form
+            className="space-y-6"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setEditingEvaluation(true);
+              setEditError("");
+              try {
+                const res = await fetch(`/api/evaluations/${selectedEvaluationId}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(selectedEvaluation),
+                });
+                if (!res.ok) {
+                  const error = await res.json();
+                  throw new Error(error.error || "Erreur lors de la modification");
+                }
+                setEvaluations(
+                  evaluations.map((e) => (e.id === selectedEvaluationId ? { ...e, ...selectedEvaluation } : e))
+                );
+                setSelectedEvaluationId(null);
+                setSelectedEvaluation(null);
+                setActiveTab("visualiser");
+              } catch (err: any) {
+                setEditError(err.message);
+              } finally {
+                setEditingEvaluation(false);
+              }
+            }}
+          >
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-3">Recommandation</label>
+              <select
+                value={selectedEvaluation.recommendation || "APPROVE"}
+                onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, recommendation: e.target.value })}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none transition-colors"
+              >
+                <option value="APPROVE">Approuver</option>
+                <option value="REJECT">Rejeter</option>
+                <option value="PENDING">En attente</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-3">Statut</label>
+              <select
+                value={selectedEvaluation.status || "brouillon"}
+                onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, status: e.target.value })}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none transition-colors"
+              >
+                <option value="brouillon">Brouillon</option>
+                <option value="soumis">Soumis</option>
+                <option value="valide">Validé</option>
+                <option value="rejete">Rejeté</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-3">Notes</label>
+              <textarea
+                value={selectedEvaluation.notes || ""}
+                onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, notes: e.target.value })}
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none transition-colors"
+                rows={4}
+                placeholder="Ajouter des notes ou commentaires..."
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="submit"
+                disabled={editingEvaluation}
+                className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+              >
+                {editingEvaluation ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <Edit2 size={16} />
+                    Enregistrer les modifications
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedEvaluationId(null);
+                  setSelectedEvaluation(null);
+                  setEditError("");
+                }}
+                className="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 
