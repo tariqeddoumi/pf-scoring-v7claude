@@ -94,31 +94,31 @@ export default function EvaluationsPage() {
     fetchEvaluations();
   }, []);
 
-  // Charger les projets quand l'onglet créer est actif
+  // Charger les projets au montage du composant (pas dépendant de l'onglet actif)
   useEffect(() => {
-    if (activeTab === "creer" && projects.length === 0) {
-      const fetchProjects = async () => {
-        try {
-          const res = await fetch("/api/projects");
-          if (!res.ok) {
-            throw new Error("Impossible de charger les projets");
-          }
-          const data = await res.json();
-          // data retourne { data: projects, pagination: {...} }
-          const projectsList = data.data || data || [];
-          setProjects(Array.isArray(projectsList) ? projectsList : []);
-        } catch (err) {
-          console.error("Erreur lors du chargement des projets:", err);
-          setCreateError("Erreur lors du chargement des projets");
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch("/api/projects");
+        if (!res.ok) {
+          throw new Error("Impossible de charger les projets");
         }
-      };
-      fetchProjects();
-    }
-  }, [activeTab, projects.length]);
+        const data = await res.json();
+        // data retourne { data: projects, pagination: {...} }
+        const projectsList = data.data || data || [];
+        console.log("Projets chargés:", projectsList);
+        setProjects(Array.isArray(projectsList) ? projectsList : []);
+      } catch (err) {
+        console.error("Erreur lors du chargement des projets:", err);
+        setCreateError("Erreur lors du chargement des projets");
+      }
+    };
+    fetchProjects();
+  }, []); // Charger une seule fois au montage
+
 
   // Charger l'évaluation sélectionnée pour la modification
   useEffect(() => {
-    if (activeTab === "modifier" && selectedEvaluationId) {
+    if (selectedEvaluationId) {
       const fetchEvaluation = async () => {
         try {
           const res = await fetch(`/api/evaluations/${selectedEvaluationId}`);
@@ -132,7 +132,7 @@ export default function EvaluationsPage() {
       };
       fetchEvaluation();
     }
-  }, [selectedEvaluationId, activeTab]);
+  }, [selectedEvaluationId]);
 
   const filtered = evaluations.filter(
     (ev) =>
