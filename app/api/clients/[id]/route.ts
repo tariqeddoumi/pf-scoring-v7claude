@@ -66,9 +66,6 @@ async function handlePUT(
       throw validationError;
     }
 
-    const { nom, email, telephone, secteur, pays, type, description } =
-      validated;
-
     // Check if client exists
     const existingClient = await prisma.client.findUnique({
       where: { id: params.id },
@@ -79,9 +76,9 @@ async function handlePUT(
     }
 
     // Check if email is taken by another client
-    if (email && email !== existingClient.email) {
+    if (validated.email && validated.email !== existingClient.email) {
       const emailExists = await prisma.client.findUnique({
-        where: { email },
+        where: { email: validated.email },
       });
 
       if (emailExists) {
@@ -101,17 +98,39 @@ async function handlePUT(
       }
     }
 
-    // Update client
+    // Update client with all fields
     const updatedClient = await prisma.client.update({
       where: { id: params.id },
       data: {
-        nom,
-        email: email || null,
-        telephone: telephone || null,
-        secteur: secteur || null,
-        pays: pays || null,
-        type: type || null,
-        description: description || null,
+        nom: validated.nom,
+        email: validated.email ?? null,
+        telephone: validated.telephone ?? null,
+        secteur: validated.secteur ?? null,
+        pays: validated.pays ?? null,
+        type: validated.type ?? null,
+        description: validated.description ?? null,
+        status: validated.status ?? undefined,
+        // Extended fields
+        raisonSociale: validated.raisonSociale ?? null,
+        nomCommercial: validated.nomCommercial ?? null,
+        typeClient: validated.typeClient ?? null,
+        formeJuridique: validated.formeJuridique ?? null,
+        segmentClientele: validated.segmentClientele ?? null,
+        effectifs: (validated.effectifs as number | null) ?? null,
+        capitalSocial: (validated.capitalSocial as number | null) ?? null,
+        chiffreAffaires: (validated.chiffreAffaires as number | null) ?? null,
+        ville: validated.ville ?? null,
+        adresse: validated.adresse ?? null,
+        codePostal: validated.codePostal ?? null,
+        website: validated.website ?? null,
+        centreAffaires: validated.centreAffaires ?? null,
+        gestionnaire: validated.gestionnaire ?? null,
+        ratingInterne: validated.ratingInterne ?? null,
+        statutBancaire: validated.statutBancaire ?? null,
+        dateRelation: validated.dateRelation ? new Date(validated.dateRelation) : null,
+        exposition: (validated.exposition as number | null) ?? null,
+        statusKYC: validated.statusKYC ?? null,
+        statusConformite: validated.statusConformite ?? null,
       },
       include: {
         projects: {

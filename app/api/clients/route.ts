@@ -60,22 +60,10 @@ async function handlePOST(request: NextRequest, user: any) {
       throw validationError;
     }
 
-    const { nom, email, telephone, secteur, pays, type, description } =
-      validated;
-    console.log("[CLIENTS] Validated data:", {
-      nom,
-      email,
-      telephone,
-      secteur,
-      pays,
-      type,
-      description,
-    });
-
     // Vérifier si email existe déjà (si fourni)
-    if (email) {
+    if (validated.email) {
       const existingClient = await prisma.client.findUnique({
-        where: { email },
+        where: { email: validated.email },
       });
 
       if (existingClient) {
@@ -95,26 +83,37 @@ async function handlePOST(request: NextRequest, user: any) {
       }
     }
 
-    console.log("[CLIENTS] Creating client with data:", {
-      nom,
-      email,
-      telephone,
-      secteur,
-      pays,
-      type,
-      description,
-    });
-
     const client = await prisma.client.create({
       data: {
-        nom,
-        email: email || null,
-        telephone: telephone || null,
-        secteur: secteur || null,
-        pays: pays || null,
-        type: type || "Entreprise",
-        description: description || null,
-        status: "Actif",
+        nom: validated.nom,
+        email: validated.email ?? null,
+        telephone: validated.telephone ?? null,
+        secteur: validated.secteur ?? null,
+        pays: validated.pays ?? null,
+        type: validated.type ?? "Entreprise",
+        description: validated.description ?? null,
+        status: validated.status ?? "Actif",
+        // Extended fields
+        raisonSociale: validated.raisonSociale ?? null,
+        nomCommercial: validated.nomCommercial ?? null,
+        typeClient: validated.typeClient ?? null,
+        formeJuridique: validated.formeJuridique ?? null,
+        segmentClientele: validated.segmentClientele ?? null,
+        effectifs: (validated.effectifs as number | null) ?? null,
+        capitalSocial: (validated.capitalSocial as number | null) ?? null,
+        chiffreAffaires: (validated.chiffreAffaires as number | null) ?? null,
+        ville: validated.ville ?? null,
+        adresse: validated.adresse ?? null,
+        codePostal: validated.codePostal ?? null,
+        website: validated.website ?? null,
+        centreAffaires: validated.centreAffaires ?? null,
+        gestionnaire: validated.gestionnaire ?? null,
+        ratingInterne: validated.ratingInterne ?? null,
+        statutBancaire: validated.statutBancaire ?? null,
+        dateRelation: validated.dateRelation ? new Date(validated.dateRelation) : null,
+        exposition: (validated.exposition as number | null) ?? null,
+        statusKYC: validated.statusKYC ?? null,
+        statusConformite: validated.statusConformite ?? null,
       },
     });
 
