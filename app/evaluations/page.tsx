@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Plus, Eye, Edit2, Download, Lock } from "lucide-react";
+import { Search, Plus, Eye, Edit2, Download, Loader2 } from "lucide-react";
 import {
   STATUS_COLORS,
   STATUS_LABELS,
-  RATING_COLORS,
 } from "@/lib/ui-constants";
 import { usePermission } from "@/lib/hooks/usePermission";
-import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
+import { Tabs } from "@/components/ui/Tabs";
 
 interface EvaluationRow {
   id: string;
@@ -22,6 +21,23 @@ interface EvaluationRow {
   createdAt: string;
 }
 
+interface Evaluation {
+  id: string;
+  projectId: string;
+  project?: { nom: string };
+  analystId?: string;
+  rating?: string;
+  finalScore?: number;
+  recommendation: string;
+  notes?: string;
+  status: string;
+}
+
+interface Project {
+  id: string;
+  nom: string;
+}
+
 export default function EvaluationsPage() {
   const { can } = usePermission();
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,6 +46,24 @@ export default function EvaluationsPage() {
   const [evaluations, setEvaluations] = useState<EvaluationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Pour créer une nouvelle évaluation
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [creatingEvaluation, setCreatingEvaluation] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createFormData, setCreateFormData] = useState<Partial<Evaluation>>({
+    projectId: "",
+    recommendation: "APPROVE",
+    notes: "",
+    status: "brouillon",
+  });
+
+  // Pour modifier une évaluation
+  const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
+  const [selectedEvaluation, setSelectedEvaluation] = useState<any>(null);
+  const [editingEvaluation, setEditingEvaluation] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [activeTab, setActiveTab] = useState("visualiser");
 
   useEffect(() => {
     const fetchEvaluations = async () => {
@@ -59,6 +93,42 @@ export default function EvaluationsPage() {
     };
     fetchEvaluations();
   }, []);
+
+  // Charger les projets quand l'onglet créer est actif
+  useEffect(() => {
+    if (activeTab === "creer" && projects.length === 0) {
+      const fetchProjects = async () => {
+        try {
+          const res = await fetch("/api/projects?limit=100");
+          if (res.ok) {
+            const data = await res.json();
+            setProjects(data.data || []);
+          }
+        } catch (err) {
+          console.error("Erreur lors du chargement des projets");
+        }
+      };
+      fetchProjects();
+    }
+  }, [activeTab, projects.length]);
+
+  // Charger l'évaluation sélectionnée pour la modification
+  useEffect(() => {
+    if (activeTab === "modifier" && selectedEvaluationId) {
+      const fetchEvaluation = async () => {
+        try {
+          const res = await fetch(`/api/evaluations/${selectedEvaluationId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setSelectedEvaluation(data.data);
+          }
+        } catch (err) {
+          setEditError("Erreur lors du chargement de l'évaluation");
+        }
+      };
+      fetchEvaluation();
+    }
+  }, [selectedEvaluationId, activeTab]);
 
   const filtered = evaluations.filter(
     (ev) =>
@@ -101,31 +171,9 @@ export default function EvaluationsPage() {
     );
   }
 
-  return (
+  // Contenu de l'onglet Visualiser
+  const visualiserContent = (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Évaluations</h1>
-          <p className="text-slate-400 mt-2">
-            Gestion et suivi des évaluations de risque
-          </p>
-        </div>
-        {can("evaluation", "create") ? (
-          <Link
-            href="/evaluations/new"
-            className="inline-flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
-          >
-            <Plus size={20} />
-            <span>Nouvelle Évaluation</span>
-          </Link>
-        ) : (
-          <div className="inline-flex items-center space-x-2 bg-slate-700/50 text-slate-400 font-semibold px-4 py-2 rounded-lg" title="Vous n'avez pas la permission de créer des évaluations">
-            <Lock size={20} />
-            <span>Nouvelle Évaluation</span>
-          </div>
-        )}
-      </div>
-
       {error && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm">
           {error}
@@ -175,7 +223,6 @@ export default function EvaluationsPage() {
           </select>
         </div>
 
-        {/* Results Count */}
         <p className="text-sm text-slate-400 mb-4">
           {filtered.length} évaluation{filtered.length !== 1 ? "s" : ""} trouvée{filtered.length !== 1 ? "s" : ""}
           {(searchTerm || selectedStatus || selectedRating) && ` sur ${evaluations.length}`}
@@ -185,69 +232,41 @@ export default function EvaluationsPage() {
           <table className="w-full">
             <thead className="border-b border-slate-700">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
-                  Projet
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
-                  Analyste
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
-                  Score
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
-                  Rating
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
-                  Statut
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
-                  Actions
-                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Projet</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Analyste</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Score</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Rating</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Statut</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Date</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
               {filtered.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-8 text-center text-slate-400"
-                  >
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                     Aucune évaluation trouvée
                   </td>
                 </tr>
               )}
               {filtered.map((ev) => (
-                <tr
-                  key={ev.id}
-                  className="hover:bg-slate-700 transition-colors"
-                >
-                  <td className="px-4 py-3 font-semibold text-white">
-                    {ev.projectName}
-                  </td>
+                <tr key={ev.id} className="hover:bg-slate-700 transition-colors">
+                  <td className="px-4 py-3 font-semibold text-white">{ev.projectName}</td>
                   <td className="px-4 py-3 text-slate-300">{ev.analyst}</td>
                   <td className="px-4 py-3 font-bold text-cyan-400">
                     {ev.finalScore != null ? ev.finalScore.toFixed(2) : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getRatingColor(ev.rating)}`}
-                    >
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRatingColor(ev.rating)}`}>
                       {ev.rating || "—"}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(ev.status)}`}
-                    >
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(ev.status)}`}>
                       {getStatusLabel(ev.status)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-400 text-sm">
-                    {formatDate(ev.createdAt)}
-                  </td>
+                  <td className="px-4 py-3 text-slate-400 text-sm">{formatDate(ev.createdAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center space-x-2">
                       <Link
@@ -258,13 +277,16 @@ export default function EvaluationsPage() {
                         <Eye size={16} />
                       </Link>
                       {ev.status === "brouillon" && can("evaluation", "update") && (
-                        <Link
-                          href={`/evaluations/${ev.id}/edit`}
+                        <button
+                          onClick={() => {
+                            setSelectedEvaluationId(ev.id);
+                            setActiveTab("modifier");
+                          }}
                           className="p-2 text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
                           title="Modifier"
                         >
                           <Edit2 size={16} />
-                        </Link>
+                        </button>
                       )}
                       {can("evaluation", "export") && (
                         <button
@@ -311,6 +333,292 @@ export default function EvaluationsPage() {
             .length.toString()}
         />
       </div>
+    </div>
+  );
+
+  // Contenu de l'onglet Créer
+  const creerContent = (
+    <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 max-w-2xl">
+      <h2 className="text-xl font-bold text-white mb-6">Créer une nouvelle évaluation</h2>
+
+      {createError && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
+          {createError}
+        </div>
+      )}
+
+      <form
+        className="space-y-6"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setCreatingEvaluation(true);
+          setCreateError("");
+          try {
+            const res = await fetch("/api/evaluations", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(createFormData),
+            });
+            if (!res.ok) {
+              const error = await res.json();
+              throw new Error(error.error || "Erreur lors de la création");
+            }
+            const newEval = await res.json();
+            setEvaluations([
+              ...evaluations,
+              {
+                id: newEval.data.id,
+                projectId: newEval.data.projectId,
+                projectName: newEval.data.project?.nom || "Projet inconnu",
+                analyst: "N/A",
+                status: newEval.data.status,
+                finalScore: null,
+                rating: null,
+                createdAt: new Date().toISOString(),
+              },
+            ]);
+            setCreateFormData({
+              projectId: "",
+              recommendation: "APPROVE",
+              notes: "",
+              status: "brouillon",
+            });
+            setActiveTab("visualiser");
+          } catch (err: any) {
+            setCreateError(err.message);
+          } finally {
+            setCreatingEvaluation(false);
+          }
+        }}
+      >
+        <div>
+          <label className="block text-sm font-semibold text-slate-300 mb-2">Projet *</label>
+          <select
+            value={createFormData.projectId || ""}
+            onChange={(e) => setCreateFormData({ ...createFormData, projectId: e.target.value })}
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+            required
+          >
+            <option value="">Sélectionner un projet</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nom}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-300 mb-2">Recommandation</label>
+          <select
+            value={createFormData.recommendation || "APPROVE"}
+            onChange={(e) => setCreateFormData({ ...createFormData, recommendation: e.target.value })}
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+          >
+            <option value="APPROVE">Approuver</option>
+            <option value="REJECT">Rejeter</option>
+            <option value="PENDING">En attente</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-slate-300 mb-2">Notes</label>
+          <textarea
+            value={createFormData.notes || ""}
+            onChange={(e) => setCreateFormData({ ...createFormData, notes: e.target.value })}
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+            rows={4}
+            placeholder="Ajouter des notes..."
+          />
+        </div>
+
+        <div className="flex gap-4">
+          <button
+            type="submit"
+            disabled={creatingEvaluation || !createFormData.projectId}
+            className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 text-white font-semibold px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+          >
+            {creatingEvaluation && <Loader2 size={16} className="animate-spin" />}
+            Créer l'évaluation
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCreateFormData({
+                projectId: "",
+                recommendation: "APPROVE",
+                notes: "",
+                status: "brouillon",
+              });
+              setCreateError("");
+            }}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
+          >
+            Réinitialiser
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+
+  // Contenu de l'onglet Modifier
+  const modifierContent = (
+    <div className="rounded-lg border border-slate-700 bg-slate-800 p-6 max-w-2xl">
+      <h2 className="text-xl font-bold text-white mb-6">Modifier une évaluation</h2>
+
+      {editError && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
+          {editError}
+        </div>
+      )}
+
+      <div className="mb-6">
+        <label className="block text-sm font-semibold text-slate-300 mb-2">Sélectionner une évaluation</label>
+        <select
+          value={selectedEvaluationId || ""}
+          onChange={(e) => setSelectedEvaluationId(e.target.value)}
+          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+        >
+          <option value="">-- Choisir une évaluation --</option>
+          {evaluations.map((ev) => (
+            <option key={ev.id} value={ev.id}>
+              {ev.projectName} - {ev.status}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {selectedEvaluation && (
+        <form
+          className="space-y-6"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setEditingEvaluation(true);
+            setEditError("");
+            try {
+              const res = await fetch(`/api/evaluations/${selectedEvaluationId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(selectedEvaluation),
+              });
+              if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || "Erreur lors de la modification");
+              }
+              setEvaluations(
+                evaluations.map((e) => (e.id === selectedEvaluationId ? { ...e, ...selectedEvaluation } : e))
+              );
+              setSelectedEvaluationId(null);
+              setSelectedEvaluation(null);
+              setActiveTab("visualiser");
+            } catch (err: any) {
+              setEditError(err.message);
+            } finally {
+              setEditingEvaluation(false);
+            }
+          }}
+        >
+          <div>
+            <label className="block text-sm font-semibold text-slate-300 mb-2">Recommandation</label>
+            <select
+              value={selectedEvaluation.recommendation || "APPROVE"}
+              onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, recommendation: e.target.value })}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+            >
+              <option value="APPROVE">Approuver</option>
+              <option value="REJECT">Rejeter</option>
+              <option value="PENDING">En attente</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-300 mb-2">Statut</label>
+            <select
+              value={selectedEvaluation.status || "brouillon"}
+              onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, status: e.target.value })}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+            >
+              <option value="brouillon">Brouillon</option>
+              <option value="soumis">Soumis</option>
+              <option value="valide">Validé</option>
+              <option value="rejete">Rejeté</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-300 mb-2">Notes</label>
+            <textarea
+              value={selectedEvaluation.notes || ""}
+              onChange={(e) => setSelectedEvaluation({ ...selectedEvaluation, notes: e.target.value })}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+              rows={4}
+              placeholder="Ajouter des notes..."
+            />
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={editingEvaluation}
+              className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 text-white font-semibold px-4 py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+            >
+              {editingEvaluation && <Loader2 size={16} className="animate-spin" />}
+              Enregistrer les modifications
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedEvaluationId(null);
+                setSelectedEvaluation(null);
+                setEditError("");
+              }}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
+            >
+              Annuler
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+
+  // Construire les onglets
+  const tabs = [
+    {
+      id: "visualiser",
+      label: "Visualiser",
+      icon: <Eye size={20} />,
+      content: visualiserContent,
+    },
+  ];
+
+  if (can("evaluation", "create")) {
+    tabs.push({
+      id: "creer",
+      label: "Créer",
+      icon: <Plus size={20} />,
+      content: creerContent,
+    });
+  }
+
+  tabs.push({
+    id: "modifier",
+    label: "Modifier",
+    icon: <Edit2 size={20} />,
+    content: modifierContent,
+  });
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-white">Évaluations</h1>
+        <p className="text-slate-400 mt-2">Gestion et suivi des évaluations de risque</p>
+      </div>
+
+      <Tabs
+        tabs={tabs}
+        defaultTab={activeTab}
+      />
     </div>
   );
 }
