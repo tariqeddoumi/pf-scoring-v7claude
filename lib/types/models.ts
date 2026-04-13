@@ -19,6 +19,26 @@ export interface Client {
   city?: string;
   address?: string;
   contact?: string;
+  // Extended fields
+  raisonSociale?: string;
+  nomCommercial?: string;
+  typeClient?: string;
+  formeJuridique?: string;
+  segmentClientele?: string;
+  effectifs?: number;
+  capitalSocial?: number;
+  chiffreAffaires?: number;
+  ville?: string;
+  adresse?: string;
+  codePostal?: string;
+  centreAffaires?: string;
+  gestionnaire?: string;
+  ratingInterne?: string;
+  statutBancaire?: string;
+  dateRelation?: string;
+  exposition?: number;
+  statusKYC?: string;
+  statusConformite?: string;
 }
 
 // Project
@@ -39,6 +59,29 @@ export interface Project {
   technology?: string;
   capacity?: string;
   totalCost?: string;
+  // Extended fields
+  sponsorPrincipal?: string;
+  nomSPV?: string;
+  constructeurEPC?: string;
+  operateurOM?: string;
+  technologie?: string;
+  capaciteInstallee?: number;
+  debutConstruction?: string;
+  finConstruction?: string;
+  coutTotal?: number;
+  financement?: number;
+  apportPropre?: number;
+  structureCapitalePrincipale?: string;
+  dureeCredit?: number;
+  taux?: number;
+  typeCredit?: string;
+  dureeProjet?: number;
+  periodeAmorce?: number;
+  periodeRemboursement?: number;
+  tauxCouverture?: number;
+  ratio?: number;
+  scoreGlobal?: number;
+  grade?: string;
 }
 
 // User
@@ -66,6 +109,22 @@ export interface Evaluation {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  // Extended fields
+  scoreFinancier?: number;
+  scoreTechnique?: number;
+  scoreMarche?: number;
+  scoreEnvironnemental?: number;
+  scoreSocial?: number;
+  scoreGouvenance?: number;
+  scoreJuridique?: number;
+  scorePays?: number;
+  probabilityOfDefault?: number;
+  malusTotal?: number;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
 }
 
 // Generic API Response
