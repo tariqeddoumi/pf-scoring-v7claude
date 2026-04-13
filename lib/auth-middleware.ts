@@ -40,7 +40,7 @@ export async function withAuth(
   if (!user) {
     // Allow requests without auth in development or with default mock user
     const mockUser: AuthPayload = {
-      userId: "mock-user-001",
+      userId: "550e8400-e29b-41d4-a716-446655440000", // Valid UUID v4
       email: "mock@example.com",
       role: "admin",
     };

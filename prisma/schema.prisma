@@ -305,7 +305,7 @@ model EvaluationAnswer {
 model Evaluation {
   id                          String              @id @default(uuid())
   projectId                   String
-  analystId                   String
+  analystId                   String?
   scoringResult               Json                // ScoringResult object
   stressTestResult            Json?               // StressTestResult object (optional)
   rating                      String              // AAA, AA, A, BBB, BB, B, CCC, D
