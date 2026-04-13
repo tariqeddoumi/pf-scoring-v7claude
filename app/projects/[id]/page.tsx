@@ -13,6 +13,7 @@ import {
   Zap,
   Users,
   BarChart3,
+  Calendar,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
 
@@ -22,47 +23,53 @@ interface Project {
   description?: string;
   secteur?: string;
   pays?: string;
-  montant?: string;
+  montant?: number;
   devise?: string;
   status: string;
-  createdAt: string;
+  dateCreation?: string;
+  createdAt?: string;
   countryCode?: string;
-  coutTotal?: string;
-  financement?: string;
-  apportPropre?: string;
-  taux?: string;
-  dureeCredit?: string;
+  coutTotal?: number;
+  financement?: number;
+  apportPropre?: number;
+  taux?: number;
+  dureeCredit?: number;
   typeCredit?: string;
-  tauxCouverture?: string;
-  ratio?: string;
+  tauxCouverture?: number;
+  ratio?: number;
   sponsorPrincipal?: string;
   nomSPV?: string;
   constructeurEPC?: string;
   operateurOM?: string;
   technologie?: string;
-  capaciteInstallee?: string;
-  dureeProjet?: string;
-  periodeAmorce?: string;
-  periodeRemboursement?: string;
+  capaciteInstallee?: number;
+  dureeProjet?: number;
+  periodeAmorce?: number;
+  periodeRemboursement?: number;
   debutConstruction?: string;
   finConstruction?: string;
   structureCapitalePrincipale?: string;
-  scoreGlobal?: string;
+  scoreGlobal?: number;
   grade?: string;
 }
 
-function ReadOnlyField({ label, value }: { label: string; value?: string }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-slate-300 mb-2">
-        {label}
-      </label>
-      <div className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-300">
-        {value || "-"}
-      </div>
-    </div>
-  );
-}
+const Field = ({ label, value }: { label: string; value?: string | number | null }) => (
+  <div>
+    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
+      {label}
+    </label>
+    <p className="text-white">
+      {value !== null && value !== undefined && value !== "" ? value : (
+        <span className="text-slate-500 italic">Non renseigné</span>
+      )}
+    </p>
+  </div>
+);
+
+const formatDate = (d?: string | null) =>
+  d ? new Date(d).toLocaleDateString("fr-FR") : null;
+const formatNum = (n?: number | null) =>
+  n !== null && n !== undefined ? n.toLocaleString("fr-FR") : null;
 
 export default function ProjectDetailPage({
   params,
@@ -92,7 +99,6 @@ export default function ProjectDetailPage({
         setLoading(false);
       }
     };
-
     resolveAndFetch();
   }, [params]);
 
@@ -107,10 +113,7 @@ export default function ProjectDetailPage({
   if (error || !project) {
     return (
       <div className="space-y-6">
-        <Link
-          href="/projects"
-          className="inline-flex items-center space-x-2 text-slate-400 hover:text-white"
-        >
+        <Link href="/projects" className="inline-flex items-center space-x-2 text-slate-400 hover:text-white">
           <ArrowLeft size={20} />
           <span>Retour aux projets</span>
         </Link>
@@ -121,26 +124,33 @@ export default function ProjectDetailPage({
     );
   }
 
+  const statusColors: Record<string, string> = {
+    brouillon: "bg-slate-500/20 text-slate-400",
+    en_cours: "bg-blue-500/20 text-blue-400",
+    en_revue: "bg-yellow-500/20 text-yellow-400",
+    approuve: "bg-green-500/20 text-green-400",
+    rejete: "bg-red-500/20 text-red-400",
+  };
+
   const tabs = [
     {
       id: "identification",
       label: "Identification",
       icon: <FileText size={18} />,
       content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <ReadOnlyField label="Nom du projet" value={project.nom} />
-            </div>
-            <div className="md:col-span-2">
-              <ReadOnlyField label="Description" value={project.description} />
-            </div>
-            <ReadOnlyField label="Secteur" value={project.secteur} />
-            <ReadOnlyField
-              label="Statut"
-              value={project.status}
-            />
-            <ReadOnlyField label="Code pays" value={project.countryCode} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Nom du projet" value={project.nom} />
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Statut</label>
+            <span className={`inline-block px-3 py-1 rounded-full text-sm ${statusColors[project.status] || "bg-slate-500/20 text-slate-400"}`}>
+              {project.status}
+            </span>
+          </div>
+          <Field label="Secteur" value={project.secteur} />
+          <Field label="Code pays" value={project.countryCode} />
+          <div className="md:col-span-2">
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
+            <p className="text-white whitespace-pre-wrap">{project.description || <span className="text-slate-500 italic">Non renseigné</span>}</p>
           </div>
         </div>
       ),
@@ -150,10 +160,8 @@ export default function ProjectDetailPage({
       label: "Localisation",
       icon: <MapPin size={18} />,
       content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ReadOnlyField label="Pays" value={project.pays} />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Pays" value={project.pays} />
         </div>
       ),
     },
@@ -162,19 +170,17 @@ export default function ProjectDetailPage({
       label: "Finances",
       icon: <DollarSign size={18} />,
       content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ReadOnlyField label="Montant (MAD)" value={project.montant?.toString()} />
-            <ReadOnlyField label="Devise" value={project.devise} />
-            <ReadOnlyField label="Coût total (MAD)" value={project.coutTotal?.toString()} />
-            <ReadOnlyField label="Financement (MAD)" value={project.financement?.toString()} />
-            <ReadOnlyField label="Apport propre (MAD)" value={project.apportPropre?.toString()} />
-            <ReadOnlyField label="Taux (%)" value={project.taux?.toString()} />
-            <ReadOnlyField label="Type de crédit" value={project.typeCredit} />
-            <ReadOnlyField label="Durée du crédit (ans)" value={project.dureeCredit?.toString()} />
-            <ReadOnlyField label="Taux de couverture (%)" value={project.tauxCouverture?.toString()} />
-            <ReadOnlyField label="Ratio" value={project.ratio?.toString()} />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Montant (MAD)" value={formatNum(project.montant)} />
+          <Field label="Devise" value={project.devise} />
+          <Field label="Coût total (MAD)" value={formatNum(project.coutTotal)} />
+          <Field label="Financement (MAD)" value={formatNum(project.financement)} />
+          <Field label="Apport propre (MAD)" value={formatNum(project.apportPropre)} />
+          <Field label="Taux (%)" value={project.taux !== null && project.taux !== undefined ? `${project.taux}%` : null} />
+          <Field label="Durée crédit (ans)" value={project.dureeCredit} />
+          <Field label="Type de crédit" value={project.typeCredit} />
+          <Field label="Taux de couverture" value={project.tauxCouverture} />
+          <Field label="Ratio" value={project.ratio} />
         </div>
       ),
     },
@@ -183,31 +189,27 @@ export default function ProjectDetailPage({
       label: "Technique",
       icon: <Zap size={18} />,
       content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ReadOnlyField label="Sponsor principal" value={project.sponsorPrincipal} />
-            <ReadOnlyField label="Nom du SPV" value={project.nomSPV} />
-            <ReadOnlyField label="Constructeur EPC" value={project.constructeurEPC} />
-            <ReadOnlyField label="Opérateur O&M" value={project.operateurOM} />
-            <ReadOnlyField label="Technologie" value={project.technologie} />
-            <ReadOnlyField label="Capacité installée (MW)" value={project.capaciteInstallee?.toString()} />
-            <ReadOnlyField label="Durée du projet (ans)" value={project.dureeProjet?.toString()} />
-            <ReadOnlyField label="Période d'amorce (ans)" value={project.periodeAmorce?.toString()} />
-            <ReadOnlyField label="Période de remboursement (ans)" value={project.periodeRemboursement?.toString()} />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Sponsor principal" value={project.sponsorPrincipal} />
+          <Field label="Nom SPV" value={project.nomSPV} />
+          <Field label="Constructeur EPC" value={project.constructeurEPC} />
+          <Field label="Opérateur O&M" value={project.operateurOM} />
+          <Field label="Technologie" value={project.technologie} />
+          <Field label="Capacité installée (MW)" value={project.capaciteInstallee} />
+          <Field label="Durée du projet (ans)" value={project.dureeProjet} />
+          <Field label="Période amorce (mois)" value={project.periodeAmorce} />
+          <Field label="Période remboursement (mois)" value={project.periodeRemboursement} />
         </div>
       ),
     },
     {
-      id: "dates",
+      id: "calendrier",
       label: "Calendrier",
-      icon: <FileText size={18} />,
+      icon: <Calendar size={18} />,
       content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ReadOnlyField label="Début de construction" value={project.debutConstruction} />
-            <ReadOnlyField label="Fin de construction" value={project.finConstruction} />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Début construction" value={formatDate(project.debutConstruction)} />
+          <Field label="Fin construction" value={formatDate(project.finConstruction)} />
         </div>
       ),
     },
@@ -216,11 +218,14 @@ export default function ProjectDetailPage({
       label: "Structure Capital",
       icon: <Users size={18} />,
       content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <ReadOnlyField label="Structure capitaleprincipale" value={project.structureCapitalePrincipale} />
-            </div>
+        <div className="grid grid-cols-1 gap-6">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
+              Structure capitale principale
+            </label>
+            <p className="text-white whitespace-pre-wrap">
+              {project.structureCapitalePrincipale || <span className="text-slate-500 italic">Non renseigné</span>}
+            </p>
           </div>
         </div>
       ),
@@ -230,11 +235,9 @@ export default function ProjectDetailPage({
       label: "Évaluation",
       icon: <BarChart3 size={18} />,
       content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ReadOnlyField label="Score global" value={project.scoreGlobal?.toString()} />
-            <ReadOnlyField label="Grade" value={project.grade} />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Score global" value={project.scoreGlobal} />
+          <Field label="Grade" value={project.grade} />
         </div>
       ),
     },
@@ -257,9 +260,7 @@ export default function ProjectDetailPage({
           </div>
         </div>
         <button
-          onClick={() =>
-            projectId && router.push(`/projects/${projectId}/edit`)
-          }
+          onClick={() => projectId && router.push(`/projects/${projectId}/edit`)}
           className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
         >
           <Edit2 size={20} />
@@ -272,15 +273,16 @@ export default function ProjectDetailPage({
         <Tabs tabs={tabs} defaultTab="identification" />
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-4">
-        <Link
-          href="/projects"
-          className="inline-flex items-center space-x-2 px-4 py-2 border border-slate-700 rounded-lg text-slate-400 hover:text-white hover:border-slate-600 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span>Retour</span>
-        </Link>
+      {/* Meta */}
+      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Informations système</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Créé le" value={formatDate(project.dateCreation || project.createdAt)} />
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Identifiant</label>
+            <p className="text-white font-mono text-sm">{project.id}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
