@@ -1,18 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import {
-  ArrowLeft,
-  Loader2,
-  FileText,
-  CheckCircle,
-  BarChart3,
-  AlertCircle,
-  TrendingUp,
-} from "lucide-react";
-import { Tabs } from "@/components/ui/Tabs";
+import Link from "next/link";
+import { useRouter, useParams } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 interface Evaluation {
   id: string;
