@@ -3,14 +3,42 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
-import { SCORING_MODEL } from "@/lib/scoring-model";
-import { calculateEvaluation } from "@/lib/scoring-engine";
-import { useEvaluationWorkflow } from "@/lib/evaluation-context";
-import { Wizard } from "@/components/ui/Wizard";
+import {
+  ArrowLeft,
+  Loader2,
+  FileText,
+  CheckCircle,
+  BarChart3,
+  AlertCircle,
+  TrendingUp,
+} from "lucide-react";
+import { Tabs } from "@/components/ui/Tabs";
 
-interface Responses {
-  [criteriaId: string]: string | number;
+interface Evaluation {
+  id: string;
+  projectId: string;
+  project?: { nom: string };
+  analystId?: string;
+  rating?: string;
+  finalScore?: number;
+  recommendation: string;
+  notes?: string;
+  status: string;
+  scoreFinancier?: number;
+  scoreTechnique?: number;
+  scoreMarche?: number;
+  scoreEnvironnemental?: number;
+  scoreSocial?: number;
+  scoreGouvenance?: number;
+  scoreJuridique?: number;
+  scorePays?: number;
+  probabilityOfDefault?: number;
+  malusTotal?: number;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
 }
 
 interface Project {
