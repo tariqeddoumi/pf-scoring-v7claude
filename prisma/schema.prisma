@@ -342,7 +342,7 @@ model Evaluation {
   updatedAt                   DateTime            @updatedAt
 
   project                     Project             @relation("ProjectEvaluations", fields: [projectId], references: [id], onDelete: Cascade)
-  analyst                     User                @relation("AnalystEvaluations", fields: [analystId], references: [id], onDelete: SetNull)
+  analyst                     User?               @relation("AnalystEvaluations", fields: [analystId], references: [id], onDelete: SetNull)
   stressTestResults           StressTestScenarioResult[]
   auditLogs                   ScoringAuditLog[]
   parentEvaluation            Evaluation?         @relation("EvaluationVersions", fields: [parentEvaluationId], references: [id], onDelete: SetNull)
