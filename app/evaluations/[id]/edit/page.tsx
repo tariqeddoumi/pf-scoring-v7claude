@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, FileText, BarChart3, CheckCircle } from "lucide-react";
+import { Tabs } from "@/components/ui/Tabs";
 
 interface Evaluation {
   id: string;
