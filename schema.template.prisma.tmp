@@ -16,46 +16,24 @@ datasource db {
 // ============================================================================
 
 model User {
-  /// User ID (UUID)
   id              String   @id @default(uuid())
-  /// Email unique (login)
   email           String   @unique
-  /// Hashed password (null for OAuth users)
   password        String?
-  /// Family name
   nom             String
-  /// First name
   prenom          String
-  /// User role: admin, manager, analyst, viewer
   role            UserRole @default(analyst)
-  /// OAuth provider (google, etc.)
   oauthProvider   String?
-  /// OAuth provider user ID
   oauthId         String?
-  /// Avatar URL
   avatar          String?
-
-  /// Account status: true = active, false = soft deleted
-  isActive        Boolean  @default(true)
-  /// Force password change on next login
-  mustChangePassword Boolean @default(false)
-  /// Last successful login timestamp
-  lastLoginAt     DateTime?
-  /// Soft delete timestamp (null = not deleted)
-  deletedAt       DateTime?
-
-  /// Record creation timestamp
   createdAt       DateTime @default(now())
-  /// Record last update timestamp
   updatedAt       DateTime @updatedAt
 
-  // Relationships
   projectsCreated Project[]
   auditLogs       AuditLog[]
   evaluations     Evaluation[]        @relation("AnalystEvaluations")
   scoringAudits   ScoringAuditLog[]   @relation("ScoringAuditLogs")
 
-  // Scoring governance relationships
+  // New relationships for scoring governance
   modelsOwned     ScoringModel[]      @relation("OwnerBusiness")
   versionsCreated ScoringModelVersion[] @relation("CreatedBy")
   versionsValidated ScoringModelVersion[] @relation("ValidatedBy")
@@ -63,52 +41,7 @@ model User {
   scoringEvaluations ScoringEvaluation[] @relation("ScoringAnalyst")
   changeLogs      ScoringChangeLog[]  @relation("ChangedBy")
 
-  // User management relationships
-  auditedBy       UserAuditLog[]      @relation("AuditedUser")
-  auditedActions  UserAuditLog[]      @relation("ActionBy")
-
-  // Indexes for performance
-  @@index([email])
-  @@index([isActive])
-  @@index([role])
-  @@index([createdAt])
-  @@index([deletedAt])
-  @@map("__TABLE_PREFIX___users")
-}
-
-/// User audit log for tracking permission changes and sensitive actions
-model UserAuditLog {
-  /// Audit log ID
-  id              String   @id @default(uuid())
-  /// User being audited
-  userId          String
-  /// User performing the action
-  performedById   String
-  /// Action type: LOGIN, LOGOUT, ROLE_CHANGE, DEACTIVATE, PASSWORD_RESET, PERMISSION_GRANT, PERMISSION_REVOKE
-  action          String
-  /// Old value (for changes)
-  oldValue        String?
-  /// New value (for changes)
-  newValue        String?
-  /// Reason/comment
-  reason          String?
-  /// IP address
-  ipAddress       String?
-  /// User agent
-  userAgent       String?
-  /// Timestamp
-  createdAt       DateTime @default(now())
-
-  // Relationships
-  auditedUser     User     @relation("AuditedUser", fields: [userId], references: [id], onDelete: Cascade)
-  performedBy     User     @relation("ActionBy", fields: [performedById], references: [id], onDelete: Cascade)
-
-  // Indexes
-  @@index([userId])
-  @@index([performedById])
-  @@index([action])
-  @@index([createdAt])
-  @@map("__TABLE_PREFIX___user_audit_logs")
+  @@map("BP_PF_users")
 }
 
 model Client {

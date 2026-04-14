@@ -16,46 +16,24 @@ datasource db {
 // ============================================================================
 
 model User {
-  /// User ID (UUID)
   id              String   @id @default(uuid())
-  /// Email unique (login)
   email           String   @unique
-  /// Hashed password (null for OAuth users)
   password        String?
-  /// Family name
   nom             String
-  /// First name
   prenom          String
-  /// User role: admin, manager, analyst, viewer
   role            UserRole @default(analyst)
-  /// OAuth provider (google, etc.)
   oauthProvider   String?
-  /// OAuth provider user ID
   oauthId         String?
-  /// Avatar URL
   avatar          String?
-
-  /// Account status: true = active, false = soft deleted
-  isActive        Boolean  @default(true)
-  /// Force password change on next login
-  mustChangePassword Boolean @default(false)
-  /// Last successful login timestamp
-  lastLoginAt     DateTime?
-  /// Soft delete timestamp (null = not deleted)
-  deletedAt       DateTime?
-
-  /// Record creation timestamp
   createdAt       DateTime @default(now())
-  /// Record last update timestamp
   updatedAt       DateTime @updatedAt
 
-  // Relationships
   projectsCreated Project[]
   auditLogs       AuditLog[]
   evaluations     Evaluation[]        @relation("AnalystEvaluations")
   scoringAudits   ScoringAuditLog[]   @relation("ScoringAuditLogs")
 
-  // Scoring governance relationships
+  // New relationships for scoring governance
   modelsOwned     ScoringModel[]      @relation("OwnerBusiness")
   versionsCreated ScoringModelVersion[] @relation("CreatedBy")
   versionsValidated ScoringModelVersion[] @relation("ValidatedBy")
@@ -63,52 +41,7 @@ model User {
   scoringEvaluations ScoringEvaluation[] @relation("ScoringAnalyst")
   changeLogs      ScoringChangeLog[]  @relation("ChangedBy")
 
-  // User management relationships
-  auditedBy       UserAuditLog[]      @relation("AuditedUser")
-  auditedActions  UserAuditLog[]      @relation("ActionBy")
-
-  // Indexes for performance
-  @@index([email])
-  @@index([isActive])
-  @@index([role])
-  @@index([createdAt])
-  @@index([deletedAt])
   @@map("__TABLE_PREFIX___users")
-}
-
-/// User audit log for tracking permission changes and sensitive actions
-model UserAuditLog {
-  /// Audit log ID
-  id              String   @id @default(uuid())
-  /// User being audited
-  userId          String
-  /// User performing the action
-  performedById   String
-  /// Action type: LOGIN, LOGOUT, ROLE_CHANGE, DEACTIVATE, PASSWORD_RESET, PERMISSION_GRANT, PERMISSION_REVOKE
-  action          String
-  /// Old value (for changes)
-  oldValue        String?
-  /// New value (for changes)
-  newValue        String?
-  /// Reason/comment
-  reason          String?
-  /// IP address
-  ipAddress       String?
-  /// User agent
-  userAgent       String?
-  /// Timestamp
-  createdAt       DateTime @default(now())
-
-  // Relationships
-  auditedUser     User     @relation("AuditedUser", fields: [userId], references: [id], onDelete: Cascade)
-  performedBy     User     @relation("ActionBy", fields: [performedById], references: [id], onDelete: Cascade)
-
-  // Indexes
-  @@index([userId])
-  @@index([performedById])
-  @@index([action])
-  @@index([createdAt])
-  @@map("__TABLE_PREFIX___user_audit_logs")
 }
 
 model Client {
@@ -147,7 +80,7 @@ model Client {
 
   projects                Project[]
 
-  @@map("BP_PF_clients")
+  @@map("__TABLE_PREFIX___clients")
 }
 
 model Project {
@@ -198,7 +131,7 @@ model Project {
 
   @@index([creePar])
   @@index([clientId])
-  @@map("BP_PF_projects")
+  @@map("__TABLE_PREFIX___projects")
 }
 
 model Scoring {
@@ -214,7 +147,7 @@ model Scoring {
   evaluationDomainScores EvaluationDomainScore[]
   evaluationAnswers     EvaluationAnswer[]
 
-  @@map("BP_PF_scorings")
+  @@map("__TABLE_PREFIX___scorings")
 }
 
 model AuditLog {
@@ -231,7 +164,7 @@ model AuditLog {
   @@index([projectId])
   @@index([utilisateurId])
   @@index([dateAction])
-  @@map("BP_PF_audit_logs")
+  @@map("__TABLE_PREFIX___audit_logs")
 }
 
 // Legacy scoring tables (being migrated to new model)
@@ -252,7 +185,7 @@ model ScoreDomain {
   // Migration reference to new model
   migratedToNodeId String?
 
-  @@map("BP_PF_domains")
+  @@map("__TABLE_PREFIX___domains")
 }
 
 model ScoreCriterion {
@@ -278,7 +211,7 @@ model ScoreCriterion {
 
   @@unique([domainId, code])
   @@index([domainId])
-  @@map("BP_PF_criteria")
+  @@map("__TABLE_PREFIX___criteria")
 }
 
 model ScoreOption {
@@ -293,7 +226,7 @@ model ScoreOption {
   criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
 
   @@index([criterionId])
-  @@map("BP_PF_options")
+  @@map("__TABLE_PREFIX___options")
 }
 
 model ScoreRange {
@@ -310,7 +243,7 @@ model ScoreRange {
   criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
 
   @@index([criterionId])
-  @@map("BP_PF_ranges")
+  @@map("__TABLE_PREFIX___ranges")
 }
 
 model Country {
@@ -321,7 +254,7 @@ model Country {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  @@map("BP_PF_countries")
+  @@map("__TABLE_PREFIX___countries")
 }
 
 model SystemConfig {
@@ -331,7 +264,7 @@ model SystemConfig {
   description     String?
   updatedAt       DateTime        @updatedAt
 
-  @@map("BP_PF_system_config")
+  @@map("__TABLE_PREFIX___system_config")
 }
 
 model EvaluationDomainScore {
@@ -348,7 +281,7 @@ model EvaluationDomainScore {
   @@unique([domainId, scoringId])
   @@index([domainId])
   @@index([scoringId])
-  @@map("BP_PF_evaluation_domain_scores")
+  @@map("__TABLE_PREFIX___evaluation_domain_scores")
 }
 
 model EvaluationAnswer {
@@ -366,7 +299,7 @@ model EvaluationAnswer {
 
   @@index([criterionId])
   @@index([scoringId])
-  @@map("BP_PF_evaluation_answers")
+  @@map("__TABLE_PREFIX___evaluation_answers")
 }
 
 model Evaluation {
@@ -421,7 +354,7 @@ model Evaluation {
   @@index([createdAt])
   @@index([isArchived])
   @@index([parentEvaluationId])
-  @@map("BP_PF_v7pp_evaluations")
+  @@map("__TABLE_PREFIX___v7pp_evaluations")
 }
 
 model StressTestScenarioResult {
@@ -440,7 +373,7 @@ model StressTestScenarioResult {
   evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
 
   @@index([evaluationId])
-  @@map("BP_PF_v7pp_stress_results")
+  @@map("__TABLE_PREFIX___v7pp_stress_results")
 }
 
 model ScoringAuditLog {
@@ -459,7 +392,7 @@ model ScoringAuditLog {
   @@index([evaluationId])
   @@index([userId])
   @@index([timestamp])
-  @@map("BP_PF_v7pp_audit_logs")
+  @@map("__TABLE_PREFIX___v7pp_audit_logs")
 }
 
 // ============================================================================
@@ -488,7 +421,7 @@ model ScoringModel {
   evaluations       ScoringEvaluation[] @relation("ModelUsed")
   changeLogs        ScoringChangeLog[]
 
-  @@map("BP_PF_v7pp_scoring_models")
+  @@map("__TABLE_PREFIX___v7pp_scoring_models")
 }
 
 /// ScoringModelVersion represents a governed version of a scoring model
@@ -525,7 +458,7 @@ model ScoringModelVersion {
   @@index([modelId])
   @@index([status])
   @@index([isPublished])
-  @@map("BP_PF_v7pp_scoring_versions")
+  @@map("__TABLE_PREFIX___v7pp_scoring_versions")
 }
 
 /// ScoringNode is the universal hierarchical unit representing any level:
@@ -582,7 +515,7 @@ model ScoringNode {
   @@index([nodeType])
   @@index([isActive])
   @@index([depth])
-  @@map("BP_PF_v7pp_scoring_nodes")
+  @@map("__TABLE_PREFIX___v7pp_scoring_nodes")
 }
 
 /// ScoringNodeOption represents a single option/choice for a node
@@ -606,7 +539,7 @@ model ScoringNodeOption {
 
   @@unique([nodeId, code])
   @@index([nodeId])
-  @@map("BP_PF_v7pp_scoring_options")
+  @@map("__TABLE_PREFIX___v7pp_scoring_options")
 }
 
 /// ScoringNodeRange represents a range/bracket for numeric answers
@@ -628,7 +561,7 @@ model ScoringNodeRange {
   node              ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@index([nodeId])
-  @@map("BP_PF_v7pp_scoring_ranges")
+  @@map("__TABLE_PREFIX___v7pp_scoring_ranges")
 }
 
 /// ScoringNodeFormula represents a parameterized formula for score calculation
@@ -649,7 +582,7 @@ model ScoringNodeFormula {
   node              ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@unique([nodeId])
-  @@map("BP_PF_v7pp_scoring_formulas")
+  @@map("__TABLE_PREFIX___v7pp_scoring_formulas")
 }
 
 /// ScoringNodeRule represents business rules (NO-GO, hard stop, malus, warning)
@@ -679,7 +612,7 @@ model ScoringNodeRule {
   @@index([nodeId])
   @@index([versionId])
   @@index([ruleType])
-  @@map("BP_PF_v7pp_scoring_rules")
+  @@map("__TABLE_PREFIX___v7pp_scoring_rules")
 }
 
 /// ScoringNodeApplicabilityRule determines if a node should be shown/required/hidden
@@ -695,7 +628,7 @@ model ScoringNodeApplicabilityRule {
   node                  ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@index([nodeId])
-  @@map("BP_PF_v7pp_applicability_rules")
+  @@map("__TABLE_PREFIX___v7pp_applicability_rules")
 }
 
 /// ScoringNodeDocumentRequirement specifies documents expected for a node
@@ -715,7 +648,7 @@ model ScoringNodeDocumentRequirement {
   node                  ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@index([nodeId])
-  @@map("BP_PF_v7pp_document_requirements")
+  @@map("__TABLE_PREFIX___v7pp_document_requirements")
 }
 
 // ============================================================================
@@ -758,7 +691,7 @@ model ScoringEvaluation {
   @@index([modelVersionId])
   @@index([analystId])
   @@index([status])
-  @@map("BP_PF_v7pp_scoring_evaluations")
+  @@map("__TABLE_PREFIX___v7pp_scoring_evaluations")
 }
 
 /// ScoringEvaluationAnswer represents an answer provided by the user for a node
@@ -784,7 +717,7 @@ model ScoringEvaluationAnswer {
   @@unique([evaluationId, nodeId])
   @@index([evaluationId])
   @@index([nodeId])
-  @@map("BP_PF_v7pp_evaluation_answers")
+  @@map("__TABLE_PREFIX___v7pp_evaluation_answers")
 }
 
 /// ScoringEvaluationNodeResult represents the calculated score for a node
@@ -807,7 +740,7 @@ model ScoringEvaluationNodeResult {
   @@unique([evaluationId, nodeId])
   @@index([evaluationId])
   @@index([nodeId])
-  @@map("BP_PF_v7pp_evaluation_node_results")
+  @@map("__TABLE_PREFIX___v7pp_evaluation_node_results")
 }
 
 // ============================================================================
@@ -842,7 +775,7 @@ model ScoringChangeLog {
   @@index([evaluationId])
   @@index([changedBy])
   @@index([changedAt])
-  @@map("BP_PF_v7pp_change_logs")
+  @@map("__TABLE_PREFIX___v7pp_change_logs")
 }
 
 // ============================================================================
@@ -894,7 +827,7 @@ model FormSection {
   @@unique([entity, title])
   @@index([entity])
   @@index([orderIndex])
-  @@map("BP_PF_form_sections")
+  @@map("__TABLE_PREFIX___form_sections")
 }
 
 /// FieldConfiguration represents a single form field
@@ -931,7 +864,7 @@ model FieldConfiguration {
   @@index([sectionId])
   @@index([visible])
   @@index([orderIndex])
-  @@map("BP_PF_field_configurations")
+  @@map("__TABLE_PREFIX___field_configurations")
 }
 
 /// FormPreset allows users to save and load field configurations
@@ -949,7 +882,7 @@ model FormPreset {
   @@unique([entity, name])
   @@index([entity])
   @@index([isDefault])
-  @@map("BP_PF_form_presets")
+  @@map("__TABLE_PREFIX___form_presets")
 }
 
 // ============================================================================
@@ -981,7 +914,7 @@ model ScoringCriterion {
   @@index([category])
   @@index([isActive])
   @@index([orderIndex])
-  @@map("BP_PF_scoring_criteria")
+  @@map("__TABLE_PREFIX___scoring_criteria")
 }
 
 /// ScoringThreshold defines score ranges for a criterion
@@ -1001,7 +934,7 @@ model ScoringThreshold {
 
   @@index([criterionId])
   @@index([orderIndex])
-  @@map("BP_PF_scoring_thresholds")
+  @@map("__TABLE_PREFIX___scoring_thresholds")
 }
 
 /// ScoringOption represents predefined options for option-based criteria
@@ -1019,7 +952,7 @@ model ScoringOption {
 
   @@index([criterionId])
   @@index([orderIndex])
-  @@map("BP_PF_scoring_options")
+  @@map("__TABLE_PREFIX___scoring_options")
 }
 
 /// ScoringGrille represents a complete scoring configuration/template
@@ -1044,7 +977,7 @@ model ScoringGrille {
   @@index([status])
   @@index([isActive])
   @@index([isDefault])
-  @@map("BP_PF_scoring_grilles")
+  @@map("__TABLE_PREFIX___scoring_grilles")
 }
 
 /// ScoringWeightingRule represents rules for calculating weights
@@ -1059,7 +992,7 @@ model ScoringWeightingRule {
 
   @@unique([grilleCode, criterionCode])
   @@index([grilleCode])
-  @@map("BP_PF_scoring_weighting_rules")
+  @@map("__TABLE_PREFIX___scoring_weighting_rules")
 }
 
 enum ScoringModelStatus {
@@ -1136,7 +1069,7 @@ model Sector {
 
   @@index([code])
   @@index([isActive])
-  @@map("BP_PF_sectors")
+  @@map("__TABLE_PREFIX___sectors")
 }
 
 model Subsector {
@@ -1155,7 +1088,7 @@ model Subsector {
   @@unique([sectorId, code])
   @@index([sectorId])
   @@index([code])
-  @@map("BP_PF_subsectors")
+  @@map("__TABLE_PREFIX___subsectors")
 }
 
 model ClientType {
@@ -1170,7 +1103,7 @@ model ClientType {
 
   @@index([code])
   @@index([isActive])
-  @@map("BP_PF_client_types")
+  @@map("__TABLE_PREFIX___client_types")
 }
 
 model LegalForm {
@@ -1185,7 +1118,7 @@ model LegalForm {
 
   @@index([code])
   @@index([isActive])
-  @@map("BP_PF_legal_forms")
+  @@map("__TABLE_PREFIX___legal_forms")
 }
 
 model ClientSegment {
@@ -1200,7 +1133,7 @@ model ClientSegment {
 
   @@index([code])
   @@index([isActive])
-  @@map("BP_PF_client_segments")
+  @@map("__TABLE_PREFIX___client_segments")
 }
 
 model BankStatus {
@@ -1215,7 +1148,7 @@ model BankStatus {
 
   @@index([code])
   @@index([isActive])
-  @@map("BP_PF_bank_statuses")
+  @@map("__TABLE_PREFIX___bank_statuses")
 }
 
 model InternalRating {
@@ -1231,7 +1164,7 @@ model InternalRating {
 
   @@index([code])
   @@index([isActive])
-  @@map("BP_PF_internal_ratings")
+  @@map("__TABLE_PREFIX___internal_ratings")
 }
 
 model KycStatus {
@@ -1246,7 +1179,7 @@ model KycStatus {
 
   @@index([code])
   @@index([isActive])
-  @@map("BP_PF_kyc_statuses")
+  @@map("__TABLE_PREFIX___kyc_statuses")
 }
 
 model ComplianceStatus {
@@ -1261,5 +1194,5 @@ model ComplianceStatus {
 
   @@index([code])
   @@index([isActive])
-  @@map("BP_PF_compliance_statuses")
+  @@map("__TABLE_PREFIX___compliance_statuses")
 }
