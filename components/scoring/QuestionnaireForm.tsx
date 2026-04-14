@@ -79,7 +79,7 @@ export function QuestionnaireForm({
     return "bg-slate-800/30";
   };
 
-  const renderNode = (node: QuestionnaireNode, depth: number = 0): JSX.Element => {
+  const renderNode = (node: QuestionnaireNode, depth: number = 0): React.JSX.Element => {
     const isParent = node.children && node.children.length > 0;
     const isExpanded = expandedNodes.has(node.id);
     const nodeAnswer = answers[node.id];

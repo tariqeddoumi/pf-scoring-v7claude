@@ -25,7 +25,7 @@ export class UserManagementService {
       where.deletedAt = null;
     }
 
-    return prisma.user.findUnique({
+    return prisma.user.findFirst({
       where,
       select: {
         id: true,
@@ -94,7 +94,7 @@ export class UserManagementService {
     });
 
     // Audit
-    await this.auditAction(userId, userId, "LOGIN", null, null, null, ipAddress, userAgent);
+    await this.auditAction(userId, userId, "LOGIN", null, null, undefined, ipAddress, userAgent);
 
     return user;
   }
@@ -181,7 +181,7 @@ export class UserManagementService {
       userId,
       performedById,
       "ROLE_CHANGE",
-      currentUser?.role,
+      currentUser?.role ?? null,
       newRole,
       reason
     );
