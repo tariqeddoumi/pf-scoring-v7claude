@@ -591,15 +591,20 @@ export class GenericScoringEngine {
         nodeId: result.nodeId,
         rawScore: result.rawScore,
         normalizedScore: result.normalizedScore,
-        weight: result.weight,
-        appliedRulesJson: JSON.stringify(result.appliedRules),
+        weightedScore: result.rawScore * result.weight,
+        aggregationMethod: result.aggregationMethod,
+        ruleImpactJson: JSON.stringify(result.appliedRules),
         explanation: result.explanation,
+        traceJson: JSON.stringify({ weight: result.weight }),
       },
       update: {
         rawScore: result.rawScore,
         normalizedScore: result.normalizedScore,
-        appliedRulesJson: JSON.stringify(result.appliedRules),
+        weightedScore: result.rawScore * result.weight,
+        aggregationMethod: result.aggregationMethod,
+        ruleImpactJson: JSON.stringify(result.appliedRules),
         explanation: result.explanation,
+        traceJson: JSON.stringify({ weight: result.weight }),
       },
     });
   }
