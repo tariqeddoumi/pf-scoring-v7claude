@@ -1,0 +1,1198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL") // Optional for production/serverless
+}
+
+// ============================================================================
+// EXISTING MODELS (PRESERVED FOR BACKWARD COMPATIBILITY)
+// ============================================================================
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String?
+  nom             String
+  prenom          String
+  role            UserRole @default(analyst)
+  oauthProvider   String?
+  oauthId         String?
+  avatar          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  projectsCreated Project[]
+  auditLogs       AuditLog[]
+  evaluations     Evaluation[]        @relation("AnalystEvaluations")
+  scoringAudits   ScoringAuditLog[]   @relation("ScoringAuditLogs")
+
+  // New relationships for scoring governance
+  modelsOwned     ScoringModel[]      @relation("OwnerBusiness")
+  versionsCreated ScoringModelVersion[] @relation("CreatedBy")
+  versionsValidated ScoringModelVersion[] @relation("ValidatedBy")
+  versionsPublished ScoringModelVersion[] @relation("PublishedBy")
+  scoringEvaluations ScoringEvaluation[] @relation("ScoringAnalyst")
+  changeLogs      ScoringChangeLog[]  @relation("ChangedBy")
+
+  @@map("BP_PF_users")
+}
+
+model Client {
+  id                      String    @id @default(uuid())
+  nom                     String
+  email                   String?   @unique
+  telephone               String?
+  secteur                 String?
+  pays                    String?
+  type                    String?   @default("Entreprise")
+  description             String?
+  status                  String    @default("Actif")
+  // Extended fields
+  raisonSociale           String?
+  nomCommercial           String?
+  typeClient              String?   @default("Entreprise")
+  formeJuridique          String?
+  segmentClientele        String?
+  ratingInterne           String?
+  statutBancaire          String?   @default("Prospect")
+  statusKYC               String?   @default("En attente")
+  statusConformite        String?   @default("En attente")
+  effectifs               Int?
+  capitalSocial           Float?
+  chiffreAffaires         Float?
+  adresse                 String?
+  codePostal              String?
+  ville                   String?
+  website                 String?
+  centreAffaires          String?
+  gestionnaire            String?
+  dateRelation            DateTime?
+  exposition              Float?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  projects                Project[]
+
+  @@map("BP_PF_clients")
+}
+
+model Project {
+  id                          String        @id @default(uuid())
+  nom                         String
+  description                 String
+  secteur                     String
+  montant                     Float
+  devise                      String        @default("MAD")
+  status                      ProjectStatus @default(brouillon)
+  scoreGlobal                 Float?
+  grade                       String?
+  creePar                     String        @db.Uuid
+  countryCode                 String?
+  clientId                    String?
+  dateCreation                DateTime      @default(now())
+  dateMiseAJour               DateTime      @updatedAt
+  // Extended fields
+  sponsorPrincipal            String?
+  nomSPV                      String?
+  constructeurEPC             String?
+  operateurOM                 String?
+  technologie                 String?
+  capaciteInstallee           Float?
+  debutConstruction           DateTime?
+  finConstruction             DateTime?
+  coutTotal                   Float?
+  financement                 Float?
+  apportPropre                Float?
+  structureCapitalePrincipale String?
+  dureeCredit                 Int?
+  taux                        Float?
+  typeCredit                  String?
+  dureeProjet                 Int?
+  periodeAmorce               Int?
+  periodeRemboursement        Int?
+  tauxCouverture              Float?
+  ratio                       Float?
+
+  user                        User       @relation(fields: [creePar], references: [id], onDelete: Cascade)
+  client                      Client?    @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  scorings                    Scoring[]
+  auditLogs                   AuditLog[]
+  evaluations                 Evaluation[]  @relation("ProjectEvaluations")
+
+  // New relationships for scoring
+  scoringEvaluations          ScoringEvaluation[] @relation("ScoringProject")
+
+  @@index([creePar])
+  @@index([clientId])
+  @@map("BP_PF_projects")
+}
+
+model Scoring {
+  id          String   @id @default(uuid())
+  projectId   String
+  scoreGlobal Float
+  grade       String
+  composantes Json
+  version     Int
+  dateCalcul  DateTime @default(now())
+
+  project               Project                        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  evaluationDomainScores EvaluationDomainScore[]
+  evaluationAnswers     EvaluationAnswer[]
+
+  @@map("BP_PF_scorings")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  projectId     String?
+  utilisateurId String
+  action        String
+  details       String
+  dateAction    DateTime @default(now())
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user    User     @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([utilisateurId])
+  @@index([dateAction])
+  @@map("BP_PF_audit_logs")
+}
+
+// Legacy scoring tables (being migrated to new model)
+model ScoreDomain {
+  id              String          @id @default(uuid())
+  code            String          @unique
+  label           String
+  description     String?
+  isActive        Boolean         @default(true)
+  weight          Float           @default(0.125)
+  orderIndex      Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  criteria        ScoreCriterion[]
+  evaluationDomainScores EvaluationDomainScore[]
+
+  // Migration reference to new model
+  migratedToNodeId String?
+
+  @@map("BP_PF_domains")
+}
+
+model ScoreCriterion {
+  id              String          @id @default(uuid())
+  domainId        String
+  code            String
+  label           String
+  description     String?
+  type            String          @default("OPTION")
+  isActive        Boolean         @default(true)
+  hardStopIfBelow Float?
+  orderIndex      Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  domain          ScoreDomain     @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  options         ScoreOption[]
+  ranges          ScoreRange[]
+  evaluationAnswers EvaluationAnswer[]
+
+  // Migration reference to new model
+  migratedToNodeId String?
+
+  @@unique([domainId, code])
+  @@index([domainId])
+  @@map("BP_PF_criteria")
+}
+
+model ScoreOption {
+  id              String          @id @default(uuid())
+  criterionId     String
+  label           String
+  score           Float
+  orderIndex      Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@map("BP_PF_options")
+}
+
+model ScoreRange {
+  id              String          @id @default(uuid())
+  criterionId     String
+  minValue        Float
+  maxValue        Float
+  score           Float
+  label           String?
+  orderIndex      Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@map("BP_PF_ranges")
+}
+
+model Country {
+  id              String          @id @default(uuid())
+  code            String          @unique
+  label           String
+  riskScore       Float           @default(50.0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("BP_PF_countries")
+}
+
+model SystemConfig {
+  id              String          @id @default(uuid())
+  key             String          @unique
+  value           String
+  description     String?
+  updatedAt       DateTime        @updatedAt
+
+  @@map("BP_PF_system_config")
+}
+
+model EvaluationDomainScore {
+  id              String          @id @default(uuid())
+  domainId        String
+  scoringId       String
+  score           Float
+  weight          Float
+  createdAt       DateTime        @default(now())
+
+  domain          ScoreDomain     @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  scoring         Scoring         @relation(fields: [scoringId], references: [id], onDelete: Cascade)
+
+  @@unique([domainId, scoringId])
+  @@index([domainId])
+  @@index([scoringId])
+  @@map("BP_PF_evaluation_domain_scores")
+}
+
+model EvaluationAnswer {
+  id              String          @id @default(uuid())
+  criterionId     String
+  scoringId       String
+  answerType      String          @default("OPTION")
+  optionValue     String?
+  rangeValue      Float?
+  score           Float?
+  createdAt       DateTime        @default(now())
+
+  criterion       ScoreCriterion  @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+  scoring         Scoring         @relation(fields: [scoringId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@index([scoringId])
+  @@map("BP_PF_evaluation_answers")
+}
+
+model Evaluation {
+  id                          String              @id @default(uuid())
+  projectId                   String
+  analystId                   String?
+  scoringResult               Json                // ScoringResult object
+  stressTestResult            Json?               // StressTestResult object (optional)
+  rating                      String              // AAA, AA, A, BBB, BB, B, CCC, D
+  finalScore                  Float
+  recommendation              String              // APPROVE, APPROVE_WITH_CONDITIONS, REJECT
+  probabilityOfDefault        Float
+  triggeredNOGOs              Json                // Array of NO-GO rule IDs
+  appliedMALUS                Json                // Array of MALUS penalties
+  malusTotal                  Float
+  notes                       String?
+  status                      EvaluationStatus    @default(brouillon)
+  version                     String              @default("7.0")
+  // Extended fields
+  scoreFinancier              Float?
+  scoreTechnique              Float?
+  scoreMarche                 Float?
+  scoreEnvironnemental        Float?
+  scoreSocial                 Float?
+  scoreGouvenance             Float?
+  scoreJuridique              Float?
+  scorePays                   Float?
+  approvedBy                  String?
+  approvedAt                  DateTime?
+  rejectedBy                  String?
+  rejectedAt                  DateTime?
+  rejectionReason             String?
+  // Archiving & Versioning
+  isArchived                  Boolean             @default(false)
+  versionNumber               Int                 @default(1)
+  parentEvaluationId          String?             // For version history
+  archivedAt                  DateTime?
+  archivedBy                  String?
+  createdAt                   DateTime            @default(now())
+  updatedAt                   DateTime            @updatedAt
+
+  project                     Project             @relation("ProjectEvaluations", fields: [projectId], references: [id], onDelete: Cascade)
+  analyst                     User?               @relation("AnalystEvaluations", fields: [analystId], references: [id], onDelete: SetNull)
+  stressTestResults           StressTestScenarioResult[]
+  auditLogs                   ScoringAuditLog[]
+  parentEvaluation            Evaluation?         @relation("EvaluationVersions", fields: [parentEvaluationId], references: [id], onDelete: SetNull)
+  versionedEvaluations        Evaluation[]        @relation("EvaluationVersions")
+
+  @@index([projectId])
+  @@index([analystId])
+  @@index([rating])
+  @@index([createdAt])
+  @@index([isArchived])
+  @@index([parentEvaluationId])
+  @@map("BP_PF_v7pp_evaluations")
+}
+
+model StressTestScenarioResult {
+  id                String              @id @default(uuid())
+  evaluationId      String
+  scenarioId        String              // REVENUE_DECLINE_10, etc.
+  scenarioName      String
+  dscrBase          Float
+  dscrStress        Float
+  llcrStress        Float?
+  status            String              // PASS, MARGINAL, FAIL
+  margin            Float
+  notes             String?
+  createdAt         DateTime            @default(now())
+
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationId])
+  @@map("BP_PF_v7pp_stress_results")
+}
+
+model ScoringAuditLog {
+  id                String              @id @default(uuid())
+  evaluationId      String
+  userId            String
+  action            String              // CALCULATE, STRESS_TEST, RECALCULATE
+  changes           Json?               // What changed
+  previousScore     Float?
+  newScore          Float?
+  timestamp         DateTime            @default(now())
+
+  evaluation        Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  user              User                @relation("ScoringAuditLogs", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("BP_PF_v7pp_audit_logs")
+}
+
+// ============================================================================
+// NEW SCORING GOVERNANCE & PARAMETERIZATION MODEL (V7++.4+)
+// ============================================================================
+
+/// ScoringModel represents a family of scoring logic (e.g., PF Standard, PF Renewables)
+model ScoringModel {
+  id                String   @id @default(uuid())
+  code              String   @unique
+  label             String
+  description       String?
+  businessSegment   String?
+  projectType       String?
+  status            ScoringModelStatus @default(DRAFT)
+  isActive          Boolean  @default(true)
+  ownerBusinessId   String?
+  ownerRiskId       String?
+  effectiveDate     DateTime?
+  expiryDate        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  ownerBusiness     User?    @relation("OwnerBusiness", fields: [ownerBusinessId], references: [id], onDelete: SetNull)
+  versions          ScoringModelVersion[]
+  evaluations       ScoringEvaluation[] @relation("ModelUsed")
+  changeLogs        ScoringChangeLog[]
+
+  @@map("BP_PF_v7pp_scoring_models")
+}
+
+/// ScoringModelVersion represents a governed version of a scoring model
+model ScoringModelVersion {
+  id                String   @id @default(uuid())
+  modelId           String
+  versionNumber     Int
+  label             String
+  status            VersionStatus @default(DRAFT)
+  isPublished       Boolean  @default(false)
+  effectiveDate     DateTime?
+  expiryDate        DateTime?
+  changeReason      String?
+  releaseNotes      String?
+  createdBy         String
+  validatedBy       String?
+  publishedBy       String?
+  createdAt         DateTime @default(now())
+  validatedAt       DateTime?
+  publishedAt       DateTime?
+  updatedAt         DateTime @updatedAt
+
+  model             ScoringModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  creator           User     @relation("CreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  validator         User?    @relation("ValidatedBy", fields: [validatedBy], references: [id], onDelete: SetNull)
+  publisher         User?    @relation("PublishedBy", fields: [publishedBy], references: [id], onDelete: SetNull)
+
+  nodes             ScoringNode[]
+  rules             ScoringNodeRule[]
+  evaluations       ScoringEvaluation[] @relation("VersionUsed")
+  changeLogs        ScoringChangeLog[]
+
+  @@unique([modelId, versionNumber])
+  @@index([modelId])
+  @@index([status])
+  @@index([isPublished])
+  @@map("BP_PF_v7pp_scoring_versions")
+}
+
+/// ScoringNode is the universal hierarchical unit representing any level:
+/// DOMAIN, CRITERION, SUB_CRITERION, SUB_SUB_CRITERION, GROUP, LEAF, BLOCK
+model ScoringNode {
+  id                    String   @id @default(uuid())
+  versionId             String
+  parentNodeId          String?
+  nodeType              ScoringNodeType
+  code                  String
+  label                 String
+  shortLabel            String?
+  description           String?
+  helpText              String?
+  displayPath           String?
+  depth                 Int
+  orderIndex            Int
+  isActive              Boolean  @default(true)
+  isTerminal            Boolean  @default(false)
+  isScored              Boolean  @default(false)
+  isMandatory           Boolean  @default(false)
+  allowsChildren        Boolean  @default(true)
+  weight                Float?
+  weightMode            String?  @default("RELATIVE") // RELATIVE, ABSOLUTE, NONE
+  aggregationMethod     String?
+  answerType            ScoringAnswerType?
+  scoringMethod         String?
+  scoreMin              Float?
+  scoreMax              Float?
+  defaultValue          String?
+  unit                  String?
+  currency              String?
+  uiSchemaJson          String?  // JSON string for UI rendering hints
+  metadataJson          String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  version               ScoringModelVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  parentNode            ScoringNode? @relation("ChildNodes", fields: [parentNodeId], references: [id], onDelete: Cascade)
+  childNodes            ScoringNode[] @relation("ChildNodes")
+
+  options               ScoringNodeOption[]
+  ranges                ScoringNodeRange[]
+  formulas              ScoringNodeFormula[]
+  rules                 ScoringNodeRule[]
+  applicabilityRules    ScoringNodeApplicabilityRule[]
+  documentRequirements  ScoringNodeDocumentRequirement[]
+  evaluationAnswers     ScoringEvaluationAnswer[] @relation("NodeAnswers")
+  nodeResults           ScoringEvaluationNodeResult[] @relation("NodeScored")
+
+  @@unique([versionId, code])
+  @@index([versionId])
+  @@index([parentNodeId])
+  @@index([nodeType])
+  @@index([isActive])
+  @@index([depth])
+  @@map("BP_PF_v7pp_scoring_nodes")
+}
+
+/// ScoringNodeOption represents a single option/choice for a node
+model ScoringNodeOption {
+  id                String   @id @default(uuid())
+  nodeId            String
+  code              String?
+  label             String
+  value             String?
+  score             Float?
+  riskLevel         String?
+  color             String?
+  orderIndex        Int
+  isDefault         Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  metadataJson      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  node              ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId, code])
+  @@index([nodeId])
+  @@map("BP_PF_v7pp_scoring_options")
+}
+
+/// ScoringNodeRange represents a range/bracket for numeric answers
+model ScoringNodeRange {
+  id                String   @id @default(uuid())
+  nodeId            String
+  label             String?
+  minValue          Float
+  maxValue          Float
+  minIncluded       Boolean  @default(true)
+  maxIncluded       Boolean  @default(true)
+  score             Float?
+  color             String?
+  orderIndex        Int
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  node              ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+  @@map("BP_PF_v7pp_scoring_ranges")
+}
+
+/// ScoringNodeFormula represents a parameterized formula for score calculation
+model ScoringNodeFormula {
+  id                String   @id @default(uuid())
+  nodeId            String
+  expression        String   // Mathematical expression with variable references
+  variablesJson     String?  // JSON string of allowed variables
+  minOutput         Float?
+  maxOutput         Float?
+  roundingMode      String?  @default("HALF_UP") // HALF_UP, FLOOR, CEIL
+  fallbackValue     Float?
+  fallbackMessage   String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  node              ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId])
+  @@map("BP_PF_v7pp_scoring_formulas")
+}
+
+/// ScoringNodeRule represents business rules (NO-GO, hard stop, malus, warning)
+model ScoringNodeRule {
+  id                    String   @id @default(uuid())
+  nodeId                String?
+  versionId             String
+  ruleType              RuleType
+  code                  String
+  label                 String
+  description           String?
+  conditionExpression   String   // Expression to evaluate
+  severity              String   // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  actionType            String   // REJECT, BLOCK, APPLY_MALUS, SHOW_WARNING, REQUIRE_APPROVAL, HIDE_NODE, MAKE_REQUIRED
+  penaltyValue          Float?
+  blocking              Boolean  @default(false)
+  messageUser           String?
+  messageCommittee      String?
+  orderIndex            Int
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  node                  ScoringNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  version               ScoringModelVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+  @@index([versionId])
+  @@index([ruleType])
+  @@map("BP_PF_v7pp_scoring_rules")
+}
+
+/// ScoringNodeApplicabilityRule determines if a node should be shown/required/hidden
+model ScoringNodeApplicabilityRule {
+  id                    String   @id @default(uuid())
+  nodeId                String
+  conditionExpression   String   // Expression based on project/evaluation context
+  effectType            String   // SHOW, HIDE, REQUIRE, OPTIONAL, READ_ONLY, EXCLUDE_FROM_SCORE
+  priority              Int      @default(100)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+
+  node                  ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+  @@map("BP_PF_v7pp_applicability_rules")
+}
+
+/// ScoringNodeDocumentRequirement specifies documents expected for a node
+model ScoringNodeDocumentRequirement {
+  id                    String   @id @default(uuid())
+  nodeId                String
+  documentType          String
+  label                 String
+  description           String?
+  isRequired            Boolean  @default(false)
+  allowedMimeTypes      String?  // Comma-separated or JSON
+  maxFileSizeMb         Int?
+  validationLevel       String?  @default("INFORMATIVE") // INFORMATIVE, WARNING, BLOCKING
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+
+  node                  ScoringNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+  @@map("BP_PF_v7pp_document_requirements")
+}
+
+// ============================================================================
+// SCORING EVALUATION (NEW MODEL)
+// ============================================================================
+
+/// ScoringEvaluation represents the evaluation of a project using a specific model version
+model ScoringEvaluation {
+  id                    String   @id @default(uuid())
+  projectId             String
+  modelId               String
+  modelVersionId        String
+  analystId             String
+  status                EvaluationStatus @default(brouillon)
+  finalScore            Float?
+  rating                String?
+  recommendation        String?
+  probabilityOfDefault  Float?
+  malusTotal            Float?   @default(0)
+  triggeredRulesJson    String?  // JSON array of triggered rule IDs
+  summaryJson           String?  // JSON summary of key scores
+  notes                 String?
+  submittedAt           DateTime?
+  validatedAt           DateTime?
+  approvedAt            DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  project               Project  @relation("ScoringProject", fields: [projectId], references: [id], onDelete: Cascade)
+  model                 ScoringModel @relation("ModelUsed", fields: [modelId], references: [id], onDelete: SetNull)
+  version               ScoringModelVersion @relation("VersionUsed", fields: [modelVersionId], references: [id], onDelete: SetNull)
+  analyst               User     @relation("ScoringAnalyst", fields: [analystId], references: [id], onDelete: SetNull)
+
+  answers               ScoringEvaluationAnswer[]
+  nodeResults           ScoringEvaluationNodeResult[]
+  changeLogs            ScoringChangeLog[]
+
+  @@index([projectId])
+  @@index([modelId])
+  @@index([modelVersionId])
+  @@index([analystId])
+  @@index([status])
+  @@map("BP_PF_v7pp_scoring_evaluations")
+}
+
+/// ScoringEvaluationAnswer represents an answer provided by the user for a node
+model ScoringEvaluationAnswer {
+  id                    String   @id @default(uuid())
+  evaluationId          String
+  nodeId                String
+  answerType            ScoringAnswerType
+  valueString           String?
+  valueNumber           Float?
+  valueBoolean          Boolean?
+  valueDate             DateTime?
+  valueJson             String?  // For complex types
+  manualScore           Float?
+  comment               String?
+  sourceDocumentId      String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  evaluation            ScoringEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  node                  ScoringNode @relation("NodeAnswers", fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([evaluationId, nodeId])
+  @@index([evaluationId])
+  @@index([nodeId])
+  @@map("BP_PF_v7pp_evaluation_answers")
+}
+
+/// ScoringEvaluationNodeResult represents the calculated score for a node
+model ScoringEvaluationNodeResult {
+  id                    String   @id @default(uuid())
+  evaluationId          String
+  nodeId                String
+  rawScore              Float?
+  weightedScore         Float?
+  normalizedScore       Float?
+  aggregationMethod     String?
+  ruleImpactJson        String?  // JSON of rules that affected this node
+  explanation           String?
+  traceJson             String?  // Detailed calculation trace
+  createdAt             DateTime @default(now())
+
+  evaluation            ScoringEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  node                  ScoringNode @relation("NodeScored", fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([evaluationId, nodeId])
+  @@index([evaluationId])
+  @@index([nodeId])
+  @@map("BP_PF_v7pp_evaluation_node_results")
+}
+
+// ============================================================================
+// AUDIT & CHANGE LOG
+// ============================================================================
+
+/// ScoringChangeLog tracks all changes to scoring configuration
+model ScoringChangeLog {
+  id                    String   @id @default(uuid())
+  entityType            String   // ScoringModel, ScoringNode, ScoringNodeRule, etc.
+  entityId              String
+  modelId               String?
+  versionId             String?
+  evaluationId          String?
+  action                String   // CREATE, UPDATE, DELETE, PUBLISH, VALIDATE, etc.
+  fieldName             String?  // Which field changed (for UPDATE)
+  oldValueJson          String?  // Previous value as JSON
+  newValueJson          String?  // New value as JSON
+  changedBy             String
+  changedAt             DateTime @default(now())
+  comment               String?
+
+  model                 ScoringModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  version               ScoringModelVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
+  evaluation            ScoringEvaluation? @relation(fields: [evaluationId], references: [id], onDelete: SetNull)
+  user                  User     @relation("ChangedBy", fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@index([entityType])
+  @@index([entityId])
+  @@index([modelId])
+  @@index([versionId])
+  @@index([evaluationId])
+  @@index([changedBy])
+  @@index([changedAt])
+  @@map("BP_PF_v7pp_change_logs")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum ProjectStatus {
+  brouillon
+  en_cours
+  en_revue
+  approuve
+  rejete
+}
+
+enum UserRole {
+  admin
+  manager
+  analyst
+  viewer
+}
+
+enum EvaluationStatus {
+  brouillon  // Draft - Initial state
+  soumis     // Submitted - Awaiting validation
+  valide     // Validated - Approved
+  rejete     // Rejected - Needs revision
+}
+
+// ============================================================================
+// FIELD CONFIGURATION & PARAMETERIZATION MODELS
+// ============================================================================
+
+/// FormSection represents a section/tab/accordion in forms
+model FormSection {
+  id          String    @id @default(uuid())
+  entity      String    // "client", "project", "evaluation", "user"
+  title       String    // "Informations Générales", "Localisation", etc.
+  icon        String?   // Icon name or SVG
+  description String?
+  columns     Int       @default(2) // 1 or 2 column layout
+  orderIndex  Int
+  visible     Boolean   @default(true)
+  layout      String    @default("accordion") // "accordion", "tabs", "grid"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  fields      FieldConfiguration[] @relation("SectionFields")
+
+  @@unique([entity, title])
+  @@index([entity])
+  @@index([orderIndex])
+  @@map("BP_PF_form_sections")
+}
+
+/// FieldConfiguration represents a single form field
+model FieldConfiguration {
+  id              String    @id @default(uuid())
+  entity          String    // "client", "project", "evaluation", "user"
+  sectionId       String?
+  fieldName       String    // Internal field name (camelCase)
+  label           String    // Display label
+  fieldType       String    // "text", "email", "tel", "number", "date", "select", "textarea", "checkbox", "radio"
+  required        Boolean   @default(false)
+  placeholder     String?
+  helpText        String?
+  validation      String?   // Regex pattern or validation rule
+  minLength       Int?
+  maxLength       Int?
+  min             Float?
+  max             Float?
+  step            String?   // For number/date inputs
+  orderIndex      Int
+  visible         Boolean   @default(true)
+  editable        Boolean   @default(true)
+  customOptions   Json?     // For select/radio fields: [{label: "...", value: "..."}, ...]
+  defaultValue    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       String?   // userId who created this field
+  updatedBy       String?   // userId who last updated this field
+
+  section         FormSection? @relation("SectionFields", fields: [sectionId], references: [id], onDelete: SetNull)
+
+  @@unique([entity, fieldName])
+  @@index([entity])
+  @@index([sectionId])
+  @@index([visible])
+  @@index([orderIndex])
+  @@map("BP_PF_field_configurations")
+}
+
+/// FormPreset allows users to save and load field configurations
+model FormPreset {
+  id          String    @id @default(uuid())
+  entity      String    // "client", "project", "evaluation", "user"
+  name        String    // "Default Layout", "Minimal", "Full Details", etc.
+  description String?
+  fieldIds    String[]  // Array of visible field IDs
+  isDefault   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?   // userId
+
+  @@unique([entity, name])
+  @@index([entity])
+  @@index([isDefault])
+  @@map("BP_PF_form_presets")
+}
+
+// ============================================================================
+// SCORING GRID CONFIGURATION MODELS
+// ============================================================================
+
+/// ScoringCriterion represents a single scoring criterion (e.g., "Leverage", "Coverage")
+model ScoringCriterion {
+  id            String    @id @default(uuid())
+  code          String    @unique // "leverage", "coverage", "dscr", etc.
+  label         String    // "Leverage", "Couverture de la dette", etc.
+  description   String?
+  category      String    // "Financial", "Technical", "Market", "Environmental", "Social", "Governance", "Legal", "Country"
+  weight        Float     // 0.0 to 1.0 (e.g., 0.125 for 12.5%)
+  minScore      Float     @default(0)    // Minimum possible score
+  maxScore      Float     @default(100)  // Maximum possible score
+  scoreType     String    @default("NUMERIC") // "NUMERIC", "OPTION", "BOOLEAN", "FORMULA"
+  formula       String?   // For calculated fields: "A + B * 0.5"
+  isActive      Boolean   @default(true)
+  orderIndex    Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String?   // userId
+  updatedBy     String?   // userId
+
+  thresholds    ScoringThreshold[] @relation("CriterionThresholds")
+  options       ScoringOption[]    @relation("CriterionOptions")
+
+  @@index([category])
+  @@index([isActive])
+  @@index([orderIndex])
+  @@map("BP_PF_scoring_criteria")
+}
+
+/// ScoringThreshold defines score ranges for a criterion
+model ScoringThreshold {
+  id              String    @id @default(uuid())
+  criterionId     String
+  minValue        Float
+  maxValue        Float
+  score           Float     // Score assigned for this range
+  label           String?   // "Excellent", "Good", "Fair", "Poor"
+  description     String?
+  orderIndex      Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  criterion       ScoringCriterion @relation("CriterionThresholds", fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@index([orderIndex])
+  @@map("BP_PF_scoring_thresholds")
+}
+
+/// ScoringOption represents predefined options for option-based criteria
+model ScoringOption {
+  id            String    @id @default(uuid())
+  criterionId   String
+  label         String    // "Excellent", "Good", "Fair", "Poor"
+  score         Float     // Score value (e.g., 90, 70, 50, 30)
+  description   String?
+  orderIndex    Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  criterion     ScoringCriterion @relation("CriterionOptions", fields: [criterionId], references: [id], onDelete: Cascade)
+
+  @@index([criterionId])
+  @@index([orderIndex])
+  @@map("BP_PF_scoring_options")
+}
+
+/// ScoringGrille represents a complete scoring configuration/template
+model ScoringGrille {
+  id              String    @id @default(uuid())
+  code            String    @unique // "PF_STANDARD", "PF_GREEN", etc.
+  label           String    // "PF Standard", "Green Energy", etc.
+  description     String?
+  version         String    @default("1.0")
+  status          String    @default("DRAFT") // DRAFT, PUBLISHED, DEPRECATED
+  businessSegment String?   // "General", "Renewables", "SME", etc.
+  projectType     String?   // "Brownfield", "Greenfield", "Refinance"
+  isActive        Boolean   @default(true)
+  isDefault       Boolean   @default(false)
+  criteriaWeightTotal Float @default(1.0) // Should sum to 1.0
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  publishedAt     DateTime?
+  createdBy       String?   // userId
+  publishedBy     String?   // userId
+
+  @@index([status])
+  @@index([isActive])
+  @@index([isDefault])
+  @@map("BP_PF_scoring_grilles")
+}
+
+/// ScoringWeightingRule represents rules for calculating weights
+model ScoringWeightingRule {
+  id            String    @id @default(uuid())
+  grilleCode    String    // Reference to ScoringGrille
+  criterionCode String    // Reference to ScoringCriterion
+  weight        Float     // Weight for this combination
+  applicableToId String?   // Optional: client segment, project type
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([grilleCode, criterionCode])
+  @@index([grilleCode])
+  @@map("BP_PF_scoring_weighting_rules")
+}
+
+enum ScoringModelStatus {
+  DRAFT
+  IN_VALIDATION
+  PUBLISHED
+  RETIRED
+  ARCHIVED
+}
+
+enum VersionStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  RETIRED
+  ARCHIVED
+}
+
+enum ScoringNodeType {
+  DOMAIN
+  GROUP
+  CRITERION
+  SUB_CRITERION
+  SUB_SUB_CRITERION
+  LEAF
+  BLOCK
+}
+
+enum ScoringAnswerType {
+  OPTION_SINGLE
+  OPTION_MULTI
+  BOOLEAN
+  NUMERIC
+  NUMERIC_RANGE
+  PERCENTAGE
+  CURRENCY
+  DATE
+  TEXT
+  LONG_TEXT
+  SCORE_DIRECT
+  FORMULA_INPUT
+  LOOKUP_VALUE
+  DOCUMENT_CHECK
+  REFERENCE_LIST
+}
+
+enum RuleType {
+  HARD_STOP
+  NO_GO
+  MALUS
+  WARNING
+  REQUIRE_REVIEW
+  VISIBILITY
+  MANDATORY_IF
+  BLOCK_PUBLICATION
+}
+
+// ============================================================================
+// PARAMETRIZATION MODELS FOR DROPDOWNS AND REFERENCE DATA
+// ============================================================================
+
+model Sector {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  subsectors      Subsector[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_sectors")
+}
+
+model Subsector {
+  id              String        @id @default(uuid())
+  sectorId        String
+  code            String
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  sector          Sector        @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId])
+  @@index([code])
+  @@map("BP_PF_subsectors")
+}
+
+model ClientType {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_client_types")
+}
+
+model LegalForm {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_legal_forms")
+}
+
+model ClientSegment {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_client_segments")
+}
+
+model BankStatus {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_bank_statuses")
+}
+
+model InternalRating {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  score           Float?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_internal_ratings")
+}
+
+model KycStatus {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_kyc_statuses")
+}
+
+model ComplianceStatus {
+  id              String        @id @default(uuid())
+  code            String        @unique
+  label           String
+  description     String?
+  orderIndex      Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@map("BP_PF_compliance_statuses")
+}
