@@ -16,14 +16,80 @@ import prisma from "@/lib/prisma-client";
  * - Aucune logique hardcodée
  * - Traçabilité complète (audit trail)
  * - Flexible pour futurs changements
+ *
+ * ## Flux d'exécution
+ *
+ * 1. **Charger les nœuds**: Récupère toute la structure hiérarchique
+ * 2. **Charger les réponses**: Obtient les réponses utilisateur
+ * 3. **Construire l'arbre**: Crée la structure parent-enfant
+ * 4. **Scorer récursivement**: Calcule de bas en haut (feuilles → parents)
+ *    - Nœuds feuilles: basé sur la réponse et scoringMethod
+ *    - Nœuds parents: agrégation des enfants via aggregationMethod
+ * 5. **Appliquer les règles**: NO-GO, MALUS, WARNING avec pénalités
+ * 6. **Stocker les résultats**: Détail par nœud en base de données
+ * 7. **Calculer le score final**: Score global et rating (AAA-D)
+ *
+ * ## Scoring Methods (à la feuille)
+ *
+ * - **OPTION_SCORE**: Cherche le score dans les options (choix multiple)
+ * - **RANGE_SCORE**: Trouve la plage correspondant à la valeur numérique
+ * - **NUMERIC_DIRECT**: Utilise directement la valeur comme score (0-100)
+ * - **MANUAL_SCORE**: Utilise le score saisi manuellement par l'analyste
+ * - **FORMULA**: Évalue selon une formule (futur)
+ *
+ * ## Aggregation Methods (aux parents)
+ *
+ * - **WEIGHTED_AVERAGE**: Moyenne pondérée des enfants
+ * - **SIMPLE_AVERAGE**: Moyenne simple
+ * - **SUM**: Somme (peut dépasser 100)
+ * - **MIN**: Minimum
+ * - **MAX**: Maximum
+ *
+ * ## Évaluation des Règles
+ *
+ * - **NO-GO**: Règle disqualifiante (déclenchée si score < seuil)
+ * - **MALUS**: Pénalité (réduit le score du montant de penaltyValue)
+ * - **WARNING**: Informationnel (aucun impact sur le score)
+ *
+ * ## Exemple d'Arbre de Scoring
+ *
+ * ```
+ * Risque Financier (80 pts, weight=1)
+ *   ├─ Liquidité (85 pts, weight=0.5)
+ *   │  ├─ Current Ratio (90 pts)
+ *   │  └─ Quick Ratio (80 pts)
+ *   └─ Levier (75 pts, weight=0.5)
+ *      ├─ Debt/Equity (70 pts) [MALUS -10: dette > 3x]
+ *      └─ Debt/EBITDA (80 pts)
+ *
+ * Calcul:
+ *   Liquidité = (90 + 80) / 2 = 85
+ *   Levier = (70 + 80) / 2 = 75
+ *   Risque = (85×0.5 + 75×0.5) / 1 = 80
+ * ```
  */
 export class GenericScoringEngine {
   /**
    * Lance le calcul complet du scoring pour une évaluation
    *
-   * @param evaluationId - ID de l'évaluation
-   * @param modelVersionId - ID de la version du modèle scoring
-   * @returns Score final, rating, et tous les résultats par nœud
+   * Orchestre tout le flux:
+   * 1. Charge les nœuds et réponses
+   * 2. Construit l'arbre hiérarchique
+   * 3. Calcule récursivement les scores
+   * 4. Applique les règles
+   * 5. Stocke les résultats
+   * 6. Calcule le score final et la rating
+   *
+   * @param evaluationId - ID de l'évaluation à scorer
+   * @param modelVersionId - ID de la version du modèle de scoring
+   * @returns Objet contenant:
+   *   - evaluationId: ID de l'évaluation
+   *   - modelVersionId: Version utilisée
+   *   - globalScore: Score final (0-100)
+   *   - rating: Rating (AAA-D)
+   *   - results: Map des résultats par nœud
+   *   - summary: Résumé des domaines
+   *   - timestamp: Moment du calcul
    */
   static async calculateEvaluation(
     evaluationId: string,
@@ -88,6 +154,18 @@ export class GenericScoringEngine {
 
   /**
    * Charge tous les nœuds d'une version scoring avec leurs configurations
+   *
+   * Récupère l'arborescence complète incluant:
+   * - Structure parent-enfant via parentNodeId
+   * - Options (pour OPTION_SCORE)
+   * - Plages numériques (pour RANGE_SCORE)
+   * - Règles (NO-GO, MALUS, WARNING)
+   * - Formules (pour FORMULA)
+   *
+   * Les nœuds sont triés par depth puis orderIndex pour traitement prévisible.
+   *
+   * @param modelVersionId - ID de la version du modèle
+   * @returns Array de nœuds avec toutes leurs relations chargées
    */
   private static async loadScoringNodes(modelVersionId: string) {
     return prisma.scoringNode.findMany({
@@ -104,6 +182,18 @@ export class GenericScoringEngine {
 
   /**
    * Charge toutes les réponses pour une évaluation
+   *
+   * Récupère les réponses utilisateur associées à chaque nœud.
+   * Une réponse peut contenir:
+   * - valueString: pour choix multiples
+   * - valueNumber: pour valeurs numériques/plages
+   * - valueBoolean: pour questions booléennes
+   * - valueDate: pour dates
+   * - valueJson: pour données complexes
+   * - manualScore: pour scores saisis manuellement
+   *
+   * @param evaluationId - ID de l'évaluation
+   * @returns Array de réponses avec nœud et type de réponse
    */
   private static async loadAnswers(evaluationId: string) {
     return prisma.scoringEvaluationAnswer.findMany({
@@ -137,6 +227,23 @@ export class GenericScoringEngine {
 
   /**
    * Calcule un nœud et ses enfants récursivement
+   *
+   * Implémente l'algorithme depth-first: score les enfants d'abord,
+   * puis remonte pour scorer les parents.
+   *
+   * Flux:
+   * 1. **Récursion**: Scorer tous les enfants (profondeur d'abord)
+   * 2. **Évaluation**: Score le nœud courant basé sur ses enfants ou sa réponse
+   * 3. **Règles**: Applique les règles (NO-GO, MALUS, WARNING)
+   * 4. **Stockage**: Enregistre le résultat en base
+   * 5. **Retour**: Remonte le résultat au parent
+   *
+   * @param node - Nœud avec enfants pré-chargés
+   * @param allNodes - Tous les nœuds (pour contexte)
+   * @param answers - Map de réponses par nodeId
+   * @param results - Map en cours de résultats
+   * @param evaluationId - ID de l'évaluation
+   * @returns Résultat du scoring du nœud
    */
   private static async scoreNode(
     node: any,
@@ -186,6 +293,31 @@ export class GenericScoringEngine {
 
   /**
    * Agrège les scores des enfants en utilisant la méthode du nœud parent
+   *
+   * Combine les scores des enfants selon la méthode spécifiée dans le nœud:
+   *
+   * - **WEIGHTED_AVERAGE**: Moyenne pondérée (enfants avec poids différents)
+   *   Formule: Σ(score × weight) / Σweight
+   *   Usage: Domaines avec importance différente
+   *
+   * - **SIMPLE_AVERAGE**: Moyenne simple (tous les enfants égaux)
+   *   Formule: Σscore / count
+   *   Usage: Dimensions parallèles sans hiérarchie
+   *
+   * - **SUM**: Somme directe (pour métriques accumulatives)
+   *   Usage: Budgets, quantités (peut dépasser 100)
+   *
+   * - **MIN**: Prend le pire score (critère de sécurité)
+   *   Usage: Conformité (un échec = évaluation échoue)
+   *
+   * - **MAX**: Prend le meilleur score
+   *   Usage: Opportunités, capacités maximales
+   *
+   * Le résultat est toujours clamped à [0, 100] sauf pour SUM.
+   *
+   * @param parentNode - Nœud parent (contient aggregationMethod)
+   * @param childResults - Scores des enfants à agréger
+   * @returns Résultat du nœud parent avec score agrégé
    */
   private static aggregateChildren(
     parentNode: any,
@@ -258,6 +390,24 @@ export class GenericScoringEngine {
 
   /**
    * Calcule le score d'un nœud feuille basé sur la réponse
+   *
+   * Un nœud feuille n'a pas d'enfants et son score est déterminé par:
+   * 1. La réponse fournie par l'utilisateur
+   * 2. La méthode de scoring du nœud (scoringMethod)
+   * 3. La configuration du nœud (options, plages, etc.)
+   *
+   * Méthodes supportées:
+   * - **OPTION_SCORE**: Réponse choix → lookup dans node.options → score
+   * - **RANGE_SCORE**: Réponse numérique → lookup dans node.ranges → score
+   * - **NUMERIC_DIRECT**: Réponse numérique utilisée directement (0-100)
+   * - **MANUAL_SCORE**: Score saisi manuellement par l'analyste
+   * - **FORMULA**: Évaluation via formule (futur: nécessite expression parser)
+   *
+   * Si aucune réponse n'existe → rawScore = 0
+   *
+   * @param node - Nœud feuille avec scoringMethod et configuration
+   * @param answer - Réponse utilisateur (peut être undefined)
+   * @returns Résultat du nœud avec rawScore calculé
    */
   private static scoreLeafNode(
     node: any,
@@ -332,6 +482,30 @@ export class GenericScoringEngine {
 
   /**
    * Applique les règles (NO-GO, MALUS, warnings) à un nœud
+   *
+   * Évalue si chaque règle du nœud s'applique et les enregistre.
+   * Les règles peuvent:
+   *
+   * - **NO-GO**: Disqualifiante (ex: License manquante)
+   *   - Déclenchée si condition vraie
+   *   - Severity: CRITICAL
+   *   - Pénalité: grande (ex: -100 points)
+   *
+   * - **MALUS**: Pénalité (ex: Dépôt insuffisant)
+   *   - Réduit le score de penaltyValue
+   *   - Severity: MEDIUM
+   *   - Pénalité: modérée (ex: -15 points)
+   *
+   * - **WARNING**: Informationnel (ex: Premier emprunteur)
+   *   - Aucune pénalité
+   *   - Severity: LOW
+   *   - Pénalité: 0
+   *
+   * Les pénalités sont appliquées via applyRuleImpacts() après évaluation.
+   *
+   * @param node - Nœud avec règles configurées
+   * @param nodeScore - Score du nœud avant règles
+   * @returns Array de règles applicables (pré-pénalités)
    */
   private static async applyRules(
     node: any,
