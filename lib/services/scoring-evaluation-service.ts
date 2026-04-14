@@ -279,15 +279,45 @@ export class ScoringEvaluationService {
       nodeResults
     );
 
-    // Update evaluation with final score
+    // Calculate rating from score
+    const rating = this.getRatingFromScore(finalScores.globalScore);
+
+    // Update evaluation with final score and rating
     await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
       data: {
         finalScore: finalScores.globalScore,
+        rating,
       },
     });
 
-    return { nodeResults, finalScores };
+    return { nodeResults, finalScores, rating };
+  }
+
+  /**
+   * Determine rating (AAA-D scale) based on score (0-100)
+   */
+  private static getRatingFromScore(score: number): string {
+    const thresholds: Record<string, { min: number; max: number }> = {
+      AAA: { min: 95, max: 100 },
+      AA: { min: 85, max: 94 },
+      A: { min: 75, max: 84 },
+      BBB: { min: 65, max: 74 },
+      BB: { min: 55, max: 64 },
+      B: { min: 45, max: 54 },
+      CCC: { min: 35, max: 44 },
+      CC: { min: 25, max: 34 },
+      C: { min: 15, max: 24 },
+      D: { min: 0, max: 14 },
+    };
+
+    for (const [rating, { min, max }] of Object.entries(thresholds)) {
+      if (score >= min && score <= max) {
+        return rating;
+      }
+    }
+
+    return "D";
   }
 
   /**
