@@ -73,7 +73,7 @@ model User {
   @@index([role])
   @@index([createdAt])
   @@index([deletedAt])
-  @@map("BP_PF__users")
+  @@map("BP_PF_users")
 }
 
 /// User audit log for tracking permission changes and sensitive actions
@@ -108,7 +108,7 @@ model UserAuditLog {
   @@index([performedById])
   @@index([action])
   @@index([createdAt])
-  @@map("BP_PF__user_audit_logs")
+  @@map("BP_PF_user_audit_logs")
 }
 
 model Client {
