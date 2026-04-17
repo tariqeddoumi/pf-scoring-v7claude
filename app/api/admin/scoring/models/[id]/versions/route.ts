@@ -5,12 +5,13 @@ import { ScoringVersionService } from "@/lib/services/scoring-version-service";
 async function handler(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   if (request.method === "GET") {
     try {
       const versions = await ScoringVersionService.getVersionsByModel(
-        params.id
+        id
       );
 
       return NextResponse.json({
@@ -42,7 +43,7 @@ async function handler(
       }
 
       const version = await ScoringVersionService.createVersion({
-        modelId: params.id,
+        modelId: id,
         versionNumber: parseInt(versionNumber),
         label,
         changeReason,

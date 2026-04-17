@@ -5,12 +5,13 @@ import { ScoringEvaluationService } from "@/lib/services/scoring-evaluation-serv
 async function handler(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   if (request.method === "GET") {
     try {
       const evaluation =
-        await ScoringEvaluationService.getEvaluationWithResults(params.id);
+        await ScoringEvaluationService.getEvaluationWithResults(id);
 
       if (!evaluation) {
         return NextResponse.json(
@@ -39,7 +40,7 @@ async function handler(
 
       if (action === "submit") {
         const evaluation = await ScoringEvaluationService.submitEvaluation(
-          params.id,
+          id,
           user.userId
         );
 
@@ -51,7 +52,7 @@ async function handler(
 
       if (action === "approve") {
         const evaluation = await ScoringEvaluationService.approveEvaluation(
-          params.id,
+          id,
           user.userId
         );
 
@@ -63,7 +64,7 @@ async function handler(
 
       if (action === "reject" && reason) {
         const evaluation = await ScoringEvaluationService.rejectEvaluation(
-          params.id,
+          id,
           reason,
           user.userId
         );

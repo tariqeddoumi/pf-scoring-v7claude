@@ -9,10 +9,11 @@ import prisma from "@/lib/prisma-client";
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const evaluationId = params.id;
+    const { id } = await params;
+    const evaluationId = id;
     const { notes } = await req.json();
 
     // Fetch evaluation

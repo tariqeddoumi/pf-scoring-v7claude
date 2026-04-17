@@ -7,11 +7,12 @@ import { ZodError } from "zod";
 async function handleGET(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await prisma.client.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         projects: {
           select: { id: true, nom: true },
@@ -39,9 +40,10 @@ async function handleGET(
 async function handlePUT(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     // Validate input
@@ -68,7 +70,7 @@ async function handlePUT(
 
     // Check if client exists
     const existingClient = await prisma.client.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!existingClient) {
@@ -100,7 +102,7 @@ async function handlePUT(
 
     // Update client with all fields
     const updatedClient = await prisma.client.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         nom: validated.nom,
         email: validated.email ?? null,
@@ -155,11 +157,12 @@ async function handlePUT(
 async function handleDELETE(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await prisma.client.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!client) {
@@ -167,7 +170,7 @@ async function handleDELETE(
     }
 
     await prisma.client.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return NextResponse.json({

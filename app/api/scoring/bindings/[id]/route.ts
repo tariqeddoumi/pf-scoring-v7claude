@@ -7,11 +7,12 @@ import prisma from "@/lib/prisma-client";
  */
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const binding = await prisma.scoringNodeDataBinding.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!binding) {
@@ -44,13 +45,14 @@ export async function GET(
  */
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
 
     const binding = await prisma.scoringNodeDataBinding.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...body,
         transformConfigJson: body.transformConfigJson
@@ -88,11 +90,12 @@ export async function PUT(
  */
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const binding = await prisma.scoringNodeDataBinding.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { isActive: false },
     });
 

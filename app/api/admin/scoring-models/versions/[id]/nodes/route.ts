@@ -7,11 +7,12 @@ import prisma from "@/lib/prisma-client";
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const nodes = await prisma.scoringNode.findMany({
-      where: { versionId: params.id, isActive: true },
+      where: { versionId: id, isActive: true },
       select: {
         id: true,
         versionId: true,
@@ -82,9 +83,10 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const {
       parentNodeId,
@@ -120,7 +122,7 @@ export async function POST(
     // Create node
     const node = await prisma.scoringNode.create({
       data: {
-        versionId: params.id,
+        versionId: id,
         parentNodeId: parentNodeId || null,
         nodeType,
         code,

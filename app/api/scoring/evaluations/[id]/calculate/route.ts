@@ -13,10 +13,11 @@ import { ScoringEngineV8 } from "@/lib/services/scoring";
  */
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const evaluationId = params.id;
+    const { id } = await params;
+    const evaluationId = id;
 
     // Verify evaluation exists
     const evaluation = await prisma.scoringEvaluation.findUnique({

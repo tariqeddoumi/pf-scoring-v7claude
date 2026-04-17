@@ -5,11 +5,13 @@ import { ScoringModelService } from "@/lib/services/scoring-model-service";
 async function handler(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+
   if (request.method === "GET") {
     try {
-      const model = await ScoringModelService.getModelById(params.id);
+      const model = await ScoringModelService.getModelById(id);
 
       if (!model) {
         return NextResponse.json({ error: "Model not found" }, { status: 404 });
@@ -33,7 +35,7 @@ async function handler(
       const body = await request.json();
       const { label, description } = body;
 
-      const model = await ScoringModelService.updateModel(params.id, {
+      const model = await ScoringModelService.updateModel(id, {
         label,
         description,
         updatedBy: user.userId,
@@ -54,7 +56,7 @@ async function handler(
 
   if (request.method === "DELETE") {
     try {
-      await ScoringModelService.archiveModel(params.id, user.userId);
+      await ScoringModelService.archiveModel(id, user.userId);
 
       return NextResponse.json({
         success: true,

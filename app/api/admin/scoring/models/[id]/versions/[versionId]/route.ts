@@ -5,12 +5,13 @@ import { ScoringVersionService } from "@/lib/services/scoring-version-service";
 async function handler(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string; versionId: string } }
+  { params }: { params: Promise<{ id: string; versionId: string }> }
 ) {
+  const { id, versionId } = await params;
   if (request.method === "GET") {
     try {
       const version = await ScoringVersionService.getVersionById(
-        params.versionId
+        versionId
       );
 
       if (!version) {
@@ -40,7 +41,7 @@ async function handler(
 
       if (action === "transition" && targetStatus) {
         const version = await ScoringVersionService.transitionStatus(
-          params.versionId,
+          versionId,
           targetStatus,
           user.userId
         );
@@ -53,7 +54,7 @@ async function handler(
 
       if (action === "publish") {
         const version = await ScoringVersionService.publishVersion(
-          params.versionId,
+          versionId,
           user.userId
         );
 

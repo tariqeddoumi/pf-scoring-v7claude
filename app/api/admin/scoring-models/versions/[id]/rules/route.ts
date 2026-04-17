@@ -7,11 +7,12 @@ import prisma from "@/lib/prisma-client";
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const rules = await prisma.scoringNodeRule.findMany({
-      where: { versionId: params.id, isActive: true },
+      where: { versionId: id, isActive: true },
       include: {
         node: { select: { id: true, code: true, label: true } },
       },
@@ -41,9 +42,10 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const {
       nodeId,
@@ -78,7 +80,7 @@ export async function POST(
 
     const rule = await prisma.scoringNodeRule.create({
       data: {
-        versionId: params.id,
+        versionId: id,
         nodeId,
         ruleType,
         code,

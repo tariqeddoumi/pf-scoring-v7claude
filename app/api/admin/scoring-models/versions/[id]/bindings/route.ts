@@ -7,13 +7,15 @@ import prisma from "@/lib/prisma-client";
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+
     // Get all node IDs in this version
     const nodeIds = (
       await prisma.scoringNode.findMany({
-        where: { versionId: params.id, isActive: true },
+        where: { versionId: id, isActive: true },
         select: { id: true },
       })
     ).map((n) => n.id);
@@ -52,9 +54,10 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const {
       nodeId,
@@ -87,7 +90,7 @@ export async function POST(
       where: { id: nodeId },
     });
 
-    if (!node || node.versionId !== params.id) {
+    if (!node || node.versionId !== id) {
       return NextResponse.json(
         {
           success: false,
