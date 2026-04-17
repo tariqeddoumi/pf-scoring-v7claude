@@ -7,11 +7,12 @@ import prisma from "@/lib/prisma-client";
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const versions = await prisma.scoringModelVersion.findMany({
-      where: { modelId: params.id },
+      where: { modelId: id },
       select: {
         id: true,
         modelId: true,
@@ -58,9 +59,10 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const { label, fromVersionId } = body;
 
@@ -77,7 +79,7 @@ export async function POST(
 
     // Get latest version number
     const latestVersion = await prisma.scoringModelVersion.findFirst({
-      where: { modelId: params.id },
+      where: { modelId: id },
       orderBy: { versionNumber: "desc" },
     });
 
@@ -86,7 +88,7 @@ export async function POST(
     // Create new version
     const version = await prisma.scoringModelVersion.create({
       data: {
-        modelId: params.id,
+        modelId: id,
         versionNumber: nextVersionNumber,
         label,
         status: "DRAFT",

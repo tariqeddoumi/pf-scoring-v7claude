@@ -11,10 +11,11 @@ import { ModelLoader } from "@/lib/services/scoring";
  */
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const evaluationId = params.id;
+    const { id } = await params;
+    const evaluationId = id;
 
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },

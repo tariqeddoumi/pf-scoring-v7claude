@@ -8,10 +8,11 @@ import prisma from "@/lib/prisma-client";
  */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const evaluationId = params.id;
+    const { id } = await params;
+    const evaluationId = id;
     const { answers } = await req.json();
 
     if (!Array.isArray(answers)) {

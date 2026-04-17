@@ -56,7 +56,7 @@ export interface ResolvedValue {
   note?: string;
 }
 
-interface BindingRow {
+export interface BindingRow {
   id: string;
   nodeId: string;
   sourceEntity: string;

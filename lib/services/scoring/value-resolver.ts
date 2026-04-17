@@ -53,8 +53,15 @@ export class ValueResolver {
       }
     } else if (valueType === "DATE" && rawValue != null) {
       try {
-        resolvedValue = new Date(rawValue);
-        if (isNaN(resolvedValue.getTime())) {
+        if (typeof rawValue === "string" || typeof rawValue === "number" || rawValue instanceof Date) {
+          const dateValue = new Date(rawValue);
+          if (!isNaN(dateValue.getTime())) {
+            resolvedValue = dateValue;
+          } else {
+            resolvedValue = rawValue;
+            valueType = "STRING";
+          }
+        } else {
           resolvedValue = rawValue;
           valueType = "STRING";
         }

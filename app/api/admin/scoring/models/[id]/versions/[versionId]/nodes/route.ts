@@ -5,12 +5,13 @@ import { ScoringNodeService } from "@/lib/services/scoring-node-service";
 async function handler(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string; versionId: string } }
+  { params }: { params: Promise<{ id: string; versionId: string }> }
 ) {
+  const { id, versionId } = await params;
   if (request.method === "GET") {
     try {
       const nodes = await ScoringNodeService.getNodesByVersion(
-        params.versionId
+        versionId
       );
 
       return NextResponse.json({
@@ -56,7 +57,7 @@ async function handler(
       }
 
       const node = await ScoringNodeService.createNode({
-        versionId: params.versionId,
+        versionId: versionId,
         nodeType: nodeType as any,
         code,
         label,

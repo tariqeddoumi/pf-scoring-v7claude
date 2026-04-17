@@ -227,10 +227,12 @@ export class ScoringAuditService {
 
     const userActions = logs.reduce(
       (acc, log) => {
-        if (!acc[log.changedBy]) {
-          acc[log.changedBy] = [];
+        if (log.changedBy) {
+          if (!acc[log.changedBy]) {
+            acc[log.changedBy] = [];
+          }
+          acc[log.changedBy].push(log.action);
         }
-        acc[log.changedBy].push(log.action);
         return acc;
       },
       {} as Record<string, string[]>
