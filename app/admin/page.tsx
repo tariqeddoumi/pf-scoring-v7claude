@@ -19,9 +19,17 @@ interface AdminSection {
 const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "scoring",
-    title: "Configuration du Scoring",
-    description: "Gérez les domaines, critères et échelles de notation",
-    href: "/admin/scoring-config",
+    title: "Modèle de Scoring PF V7++",
+    description: "Visualisez les domaines, critères et barèmes du modèle actif",
+    href: "/admin/scoring",
+    icon: "📊",
+    requiredRole: "admin",
+  },
+  {
+    id: "scoring-grid",
+    title: "Grille de Scoring (legacy)",
+    description: "Gérez les critères de l'ancienne grille de notation",
+    href: "/admin/scoring-grid",
     icon: "⚙️",
     requiredRole: "admin",
   },
