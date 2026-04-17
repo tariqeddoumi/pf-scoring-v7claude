@@ -6,29 +6,30 @@
 -- Time: ~5 seconds
 -- ============================================================================
 
--- STEP 1: Create the ScoringModel
-INSERT INTO "BP_PF_v7pp_scoring_models" (
-  id, code, label, description, "businessSegment", "projectType",
-  status, "isActive", "createdAt", "updatedAt"
-) VALUES (
-  gen_random_uuid(),
-  'PF_V7PP',
-  'PF V7++ - Project Finance Standard Model',
-  'Comprehensive scoring model for project finance evaluations with 9 domains',
-  'Project Finance',
-  'Standard',
-  'PUBLISHED',
-  true,
-  NOW(),
-  NOW()
-)
-ON CONFLICT (code) DO UPDATE SET
-  label = 'PF V7++ - Project Finance Standard Model',
-  status = 'PUBLISHED',
-  "updatedAt" = NOW();
-
--- STEP 2: Get the model ID and create version
-WITH model_data AS (
+-- STEP 1 & 2: Create ScoringModel and Version
+WITH model_upsert AS (
+  INSERT INTO "BP_PF_v7pp_scoring_models" (
+    id, code, label, description, "businessSegment", "projectType",
+    status, "isActive", "createdAt", "updatedAt"
+  ) VALUES (
+    gen_random_uuid(),
+    'PF_V7PP',
+    'PF V7++ - Project Finance Standard Model',
+    'Comprehensive scoring model for project finance evaluations with 9 domains',
+    'Project Finance',
+    'Standard',
+    'PUBLISHED',
+    true,
+    NOW(),
+    NOW()
+  )
+  ON CONFLICT (code) DO UPDATE SET
+    label = 'PF V7++ - Project Finance Standard Model',
+    status = 'PUBLISHED',
+    "updatedAt" = NOW()
+  RETURNING id
+),
+model_data AS (
   SELECT id FROM "BP_PF_v7pp_scoring_models" WHERE code = 'PF_V7PP'
 ),
 user_data AS (
