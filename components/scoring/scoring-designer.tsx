@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Eye, ChevronDown, ChevronRight, Save } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ScoringModel {
   id: string;
@@ -48,6 +47,7 @@ export function ScoringDesigner() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingModel, setIsCreatingModel] = useState(false);
   const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState("models");
 
   useEffect(() => {
     loadModels();
@@ -96,11 +96,13 @@ export function ScoringDesigner() {
   const handleSelectModel = (model: ScoringModel) => {
     setSelectedModel(model);
     setSelectedVersion(null);
+    setActiveTab("versions");
     loadVersions(model.id);
   };
 
   const handleSelectVersion = (version: ScoringVersion) => {
     setSelectedVersion(version);
+    setActiveTab("nodes");
     loadNodeTree(version.id);
   };
 
@@ -117,26 +119,77 @@ export function ScoringDesigner() {
         </button>
       </div>
 
-      <Tabs defaultValue="models" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="models">Models</TabsTrigger>
-          <TabsTrigger value="versions" disabled={!selectedModel}>
-            Versions
-          </TabsTrigger>
-          <TabsTrigger value="nodes" disabled={!selectedVersion}>
-            Node Tree
-          </TabsTrigger>
-          <TabsTrigger value="rules" disabled={!selectedVersion}>
-            Rules
-          </TabsTrigger>
-          <TabsTrigger value="bindings" disabled={!selectedVersion}>
-            Bindings
-          </TabsTrigger>
-        </TabsList>
+      {/* Tab Navigation */}
+      <div className="flex gap-2 border-b border-gray-700">
+        <button
+          onClick={() => setActiveTab("models")}
+          className={`px-4 py-2 border-b-2 font-medium transition ${
+            activeTab === "models"
+              ? "border-blue-500 text-blue-400"
+              : "border-transparent text-gray-400 hover:text-gray-300"
+          }`}
+        >
+          Models
+        </button>
+        <button
+          onClick={() => selectedModel && setActiveTab("versions")}
+          disabled={!selectedModel}
+          className={`px-4 py-2 border-b-2 font-medium transition ${
+            !selectedModel ? "opacity-50 cursor-not-allowed" : ""
+          } ${
+            activeTab === "versions"
+              ? "border-blue-500 text-blue-400"
+              : "border-transparent text-gray-400 hover:text-gray-300"
+          }`}
+        >
+          Versions
+        </button>
+        <button
+          onClick={() => selectedVersion && setActiveTab("nodes")}
+          disabled={!selectedVersion}
+          className={`px-4 py-2 border-b-2 font-medium transition ${
+            !selectedVersion ? "opacity-50 cursor-not-allowed" : ""
+          } ${
+            activeTab === "nodes"
+              ? "border-blue-500 text-blue-400"
+              : "border-transparent text-gray-400 hover:text-gray-300"
+          }`}
+        >
+          Node Tree
+        </button>
+        <button
+          onClick={() => selectedVersion && setActiveTab("rules")}
+          disabled={!selectedVersion}
+          className={`px-4 py-2 border-b-2 font-medium transition ${
+            !selectedVersion ? "opacity-50 cursor-not-allowed" : ""
+          } ${
+            activeTab === "rules"
+              ? "border-blue-500 text-blue-400"
+              : "border-transparent text-gray-400 hover:text-gray-300"
+          }`}
+        >
+          Rules
+        </button>
+        <button
+          onClick={() => selectedVersion && setActiveTab("bindings")}
+          disabled={!selectedVersion}
+          className={`px-4 py-2 border-b-2 font-medium transition ${
+            !selectedVersion ? "opacity-50 cursor-not-allowed" : ""
+          } ${
+            activeTab === "bindings"
+              ? "border-blue-500 text-blue-400"
+              : "border-transparent text-gray-400 hover:text-gray-300"
+          }`}
+        >
+          Bindings
+        </button>
+      </div>
 
+      {/* Tab Content */}
+      <div className="space-y-4">
         {/* Models Tab */}
-        <TabsContent value="models" className="space-y-4">
-          {isLoading ? (
+        {activeTab === "models" && (
+          isLoading ? (
             <div className="text-center py-8">Loading models...</div>
           ) : (
             <div className="grid gap-4">
@@ -169,105 +222,109 @@ export function ScoringDesigner() {
                 </div>
               ))}
             </div>
-          )}
-        </TabsContent>
+          )
+        )}
 
         {/* Versions Tab */}
-        <TabsContent value="versions" className="space-y-4">
-          {selectedModel && selectedModel.versions && (
-            <div className="space-y-4">
-              {selectedModel.versions.map((version) => (
-                <div
-                  key={version.id}
-                  onClick={() => handleSelectVersion(version)}
-                  className={`p-4 border rounded cursor-pointer transition ${
-                    selectedVersion?.id === version.id
-                      ? "border-blue-500 bg-blue-900/20"
-                      : "border-gray-700 hover:border-gray-600"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">
-                        Version {version.versionNumber} - {version.label}
-                      </h3>
-                      <p className="text-sm text-gray-400">
-                        {version.nodeCount} nodes • Created {new Date(version.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {version.isPublished && (
-                        <span className="px-2 py-1 bg-green-900/30 text-green-400 text-xs rounded">
-                          Published
+        {activeTab === "versions" && (
+          <div className="space-y-4">
+            {selectedModel && selectedModel.versions && (
+              <div className="space-y-4">
+                {selectedModel.versions.map((version) => (
+                  <div
+                    key={version.id}
+                    onClick={() => handleSelectVersion(version)}
+                    className={`p-4 border rounded cursor-pointer transition ${
+                      selectedVersion?.id === version.id
+                        ? "border-blue-500 bg-blue-900/20"
+                        : "border-gray-700 hover:border-gray-600"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold">
+                          Version {version.versionNumber} - {version.label}
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          {version.nodeCount} nodes • Created {new Date(version.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {version.isPublished && (
+                          <span className="px-2 py-1 bg-green-900/30 text-green-400 text-xs rounded">
+                            Published
+                          </span>
+                        )}
+                        <span className={`px-2 py-1 text-xs rounded ${
+                          version.status === "DRAFT"
+                            ? "bg-gray-700 text-gray-300"
+                            : "bg-blue-700 text-blue-300"
+                        }`}>
+                          {version.status}
                         </span>
-                      )}
-                      <span className={`px-2 py-1 text-xs rounded ${
-                        version.status === "DRAFT"
-                          ? "bg-gray-700 text-gray-300"
-                          : "bg-blue-700 text-blue-300"
-                      }`}>
-                        {version.status}
-                      </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Node Tree Tab */}
-        <TabsContent value="nodes" className="space-y-4">
-          {selectedVersion && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">{selectedVersion.label} - Node Structure</h3>
-                <button className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded">
-                  <Plus className="w-4 h-4" />
-                  Add Node
-                </button>
-              </div>
-              <div className="border border-gray-700 rounded p-4 space-y-2">
-                {treeNodes.map((node) => (
-                  <NodeTreeItem key={node.id} node={node} expandedNodeIds={expandedNodeIds} setExpandedNodeIds={setExpandedNodeIds} />
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Node Tree Tab */}
+        {activeTab === "nodes" && selectedVersion && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">{selectedVersion.label} - Node Structure</h3>
+              <button className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded">
+                <Plus className="w-4 h-4" />
+                Add Node
+              </button>
             </div>
-          )}
-        </TabsContent>
+            <div className="border border-gray-700 rounded p-4 space-y-2">
+              {treeNodes.map((node) => (
+                <NodeTreeItem key={node.id} node={node} expandedNodeIds={expandedNodeIds} setExpandedNodeIds={setExpandedNodeIds} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Rules Tab */}
-        <TabsContent value="rules" className="space-y-4">
-          {selectedVersion && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Rules for {selectedVersion.label}</h3>
-                <button className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded">
-                  <Plus className="w-4 h-4" />
-                  Add Rule
-                </button>
+        {activeTab === "rules" && (
+          <div className="space-y-4">
+            {selectedVersion && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Rules for {selectedVersion.label}</h3>
+                  <button className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded">
+                    <Plus className="w-4 h-4" />
+                    Add Rule
+                  </button>
+                </div>
+                <RulesTable versionId={selectedVersion.id} />
               </div>
-              <RulesTable versionId={selectedVersion.id} />
-            </div>
-          )}
-        </TabsContent>
+            )}
+          </div>
+        )}
 
         {/* Bindings Tab */}
-        <TabsContent value="bindings" className="space-y-4">
-          {selectedVersion && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Data Bindings for {selectedVersion.label}</h3>
-                <button className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded">
-                  <Plus className="w-4 h-4" />
-                  Add Binding
-                </button>
+        {activeTab === "bindings" && (
+          <div className="space-y-4">
+            {selectedVersion && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">Data Bindings for {selectedVersion.label}</h3>
+                  <button className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded">
+                    <Plus className="w-4 h-4" />
+                    Add Binding
+                  </button>
+                </div>
+                <BindingsTable versionId={selectedVersion.id} />
               </div>
-              <BindingsTable versionId={selectedVersion.id} />
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -403,7 +460,7 @@ function RulesTable({ versionId }: { versionId: string }) {
                   <button className="p-1 hover:bg-red-900/30 rounded">
                     <Trash2 className="w-4 h-4 text-red-400" />
                   </button>
-                </div>
+                </td>
               </tr>
             ))
           )}
@@ -466,7 +523,7 @@ function BindingsTable({ versionId }: { versionId: string }) {
                   <button className="p-1 hover:bg-red-900/30 rounded">
                     <Trash2 className="w-4 h-4 text-red-400" />
                   </button>
-                </div>
+                </td>
               </tr>
             ))
           )}

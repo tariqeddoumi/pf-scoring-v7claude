@@ -132,14 +132,14 @@ export class ScoringEngineV8 {
 
       if (node.isScored && valueSnapshot) {
         // Load options & ranges
-        const options = [];
-        const ranges = [];
+        const options: any[] = [];
+        const ranges: any[] = [];
         const formula = undefined;
 
         // Score using appropriate method
         const scoreOut = ScoreCalculator.score(
           {
-            answer: valueSnapshot.resolvedValue,
+            answer: valueSnapshot.resolvedValue as string | number | boolean | null,
             options,
             ranges,
             formula,
@@ -152,7 +152,7 @@ export class ScoringEngineV8 {
         // Aggregate children
         const childIds = tree.childrenOf.get(node.id) || [];
         const children = childIds.map((id) => nodeScores.get(id)).filter(Boolean) as NodeResult[];
-        rawScore = AggregationEngine.aggregate(node.aggregationMethod, children as any);
+        rawScore = AggregationEngine.aggregate(node.aggregationMethod ?? undefined, children as any);
         explanation = `Aggregated ${children.length} children using ${node.aggregationMethod || "SUM"}`;
       }
 

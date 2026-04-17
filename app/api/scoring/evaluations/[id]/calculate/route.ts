@@ -30,7 +30,7 @@ export async function POST(
       );
     }
 
-    if (evaluation.status === "soumise" || evaluation.status === "approuvee") {
+    if (evaluation.status === "soumis" || evaluation.status === "valide") {
       return NextResponse.json(
         {
           success: false,

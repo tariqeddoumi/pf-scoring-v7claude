@@ -68,6 +68,14 @@ export async function POST(
       );
     }
 
+    const maxOrderIndex = await prisma.scoringNodeRule.findFirst({
+      where: { nodeId },
+      orderBy: { orderIndex: "desc" },
+      select: { orderIndex: true },
+    });
+
+    const orderIndex = (maxOrderIndex?.orderIndex ?? 0) + 1;
+
     const rule = await prisma.scoringNodeRule.create({
       data: {
         versionId: params.id,
@@ -83,6 +91,7 @@ export async function POST(
         messageCommittee: messageCommittee || null,
         blocking: ruleType === "NO_GO" || ruleType === "HARD_STOP",
         isActive: true,
+        orderIndex,
       },
     });
 

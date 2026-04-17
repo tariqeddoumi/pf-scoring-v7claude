@@ -43,15 +43,18 @@ export async function GET(
 
     // Build tree structure
     const tree: any[] = [];
-    const byId = new Map(nodesWithCounts.map((n) => [n.id, { ...n, children: [] }]));
+    const byId = new Map<string, any>(
+      nodesWithCounts.map((n) => [n.id, { ...n, children: [] }])
+    );
 
     for (const node of nodesWithCounts) {
+      const nodeEntry = byId.get(node.id);
       if (!node.parentNodeId) {
-        tree.push(byId.get(node.id));
+        if (nodeEntry) tree.push(nodeEntry);
       } else {
         const parent = byId.get(node.parentNodeId);
-        if (parent) {
-          parent.children.push(byId.get(node.id));
+        if (parent && nodeEntry) {
+          (parent.children as any[]).push(nodeEntry);
         }
       }
     }

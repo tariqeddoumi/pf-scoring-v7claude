@@ -54,7 +54,7 @@ export async function POST(
     const updated = await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
       data: {
-        status: "soumise",
+        status: "soumis",
         submittedAt: new Date(),
         notes: notes || evaluation.notes,
       },

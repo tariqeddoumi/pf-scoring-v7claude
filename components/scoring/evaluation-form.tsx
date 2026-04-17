@@ -191,7 +191,7 @@ function AnswerInput({
   answer: FormNode["answer"];
   onAnswerChange: () => void;
 }) {
-  const [value, setValue] = useState(
+  const [value, setValue] = useState<string | number | boolean>(
     answer?.valueString ?? answer?.valueNumber ?? answer?.valueBoolean ?? answer?.valueDate ?? ""
   );
 
@@ -200,7 +200,7 @@ function AnswerInput({
   if (node.answerType === "SELECT") {
     return (
       <select
-        value={value}
+        value={String(value)}
         onChange={(e) => {
           setValue(e.target.value);
           onAnswerChange();
@@ -217,7 +217,7 @@ function AnswerInput({
   if (node.answerType === "BOOLEAN") {
     return (
       <select
-        value={value ? "true" : "false"}
+        value={String(value) === "true" ? "true" : "false"}
         onChange={(e) => {
           setValue(e.target.value === "true");
           onAnswerChange();
@@ -234,7 +234,7 @@ function AnswerInput({
     return (
       <input
         type="number"
-        value={value}
+        value={String(value)}
         onChange={(e) => {
           setValue(e.target.value);
           onAnswerChange();
@@ -249,7 +249,7 @@ function AnswerInput({
     return (
       <input
         type="date"
-        value={value}
+        value={String(value)}
         onChange={(e) => {
           setValue(e.target.value);
           onAnswerChange();
@@ -261,7 +261,7 @@ function AnswerInput({
 
   return (
     <textarea
-      value={value}
+      value={String(value)}
       onChange={(e) => {
         setValue(e.target.value);
         onAnswerChange();

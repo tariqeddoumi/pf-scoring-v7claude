@@ -21,7 +21,7 @@ export default function ResultsPage() {
   const router = useRouter();
   const evaluationId = params.id as string;
 
-  const [trace, setTrace] = useState(null);
+  const [trace, setTrace] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

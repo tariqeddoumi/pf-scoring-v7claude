@@ -10,8 +10,8 @@ export default function EvaluationPage() {
   const router = useRouter();
   const evaluationId = params.id as string;
 
-  const [form, setForm] = useState(null);
-  const [evaluation, setEvaluation] = useState(null);
+  const [form, setForm] = useState<any>(null);
+  const [evaluation, setEvaluation] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCalculating, setIsCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,9 +96,9 @@ export default function EvaluationPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold">{evaluation?.modelLabel}</h1>
+            <h1 className="text-2xl font-bold">{evaluation && 'modelLabel' in evaluation ? (evaluation as any).modelLabel : 'Evaluation'}</h1>
             <p className="text-sm text-gray-400">
-              Project: {evaluation?.projectId}
+              Project: {evaluation && 'projectId' in evaluation ? (evaluation as any).projectId : 'Loading...'}
             </p>
           </div>
         </div>
