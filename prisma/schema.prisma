@@ -476,8 +476,8 @@ model ScoringModel {
   projectType       String?
   status            ScoringModelStatus @default(DRAFT)
   isActive          Boolean  @default(true)
-  ownerBusinessId   String?
-  ownerRiskId       String?
+  ownerBusinessId   String?  @db.Uuid
+  ownerRiskId       String?  @db.Uuid
   effectiveDate     DateTime?
   expiryDate        DateTime?
   createdAt         DateTime @default(now())
@@ -503,9 +503,9 @@ model ScoringModelVersion {
   expiryDate        DateTime?
   changeReason      String?
   releaseNotes      String?
-  createdBy         String
-  validatedBy       String?
-  publishedBy       String?
+  createdBy         String   @db.Uuid
+  validatedBy       String?  @db.Uuid
+  publishedBy       String?  @db.Uuid
   createdAt         DateTime @default(now())
   validatedAt       DateTime?
   publishedAt       DateTime?
@@ -573,6 +573,7 @@ model ScoringNode {
   rules                 ScoringNodeRule[]
   applicabilityRules    ScoringNodeApplicabilityRule[]
   documentRequirements  ScoringNodeDocumentRequirement[]
+  dataBindings          ScoringNodeDataBinding[] @relation("NodeBindings")
   evaluationAnswers     ScoringEvaluationAnswer[] @relation("NodeAnswers")
   nodeResults           ScoringEvaluationNodeResult[] @relation("NodeScored")
 
@@ -698,6 +699,42 @@ model ScoringNodeApplicabilityRule {
   @@map("BP_PF_v7pp_applicability_rules")
 }
 
+/// ScoringNodeDataBinding links a scoring node to a source of data (Client, Project, etc.)
+/// so that answers can be auto-filled or calculated, with override support.
+model ScoringNodeDataBinding {
+  id                      String   @id @default(uuid())
+  nodeId                  String
+  sourceEntity            String   // CLIENT, PROJECT, EVALUATION, DOCUMENT, CALCULATED, EXTERNAL_REFERENCE, MANUAL
+  sourceField             String?  // Flat field name on source entity
+  sourcePath              String?  // Dotted path for nested objects (e.g. client.financials.revenue)
+  bindingMode             String   @default("AUTO_EDITABLE") // AUTO_READONLY, AUTO_EDITABLE, AUTO_IF_EMPTY, MANUAL_ONLY, CALCULATED_ONLY
+  dataType                String?  // STRING, NUMBER, BOOLEAN, DATE, JSON
+  transformType           String   @default("NONE") // NONE, LOOKUP, FORMAT, MAP_VALUE, AGGREGATE, FORMULA, NORMALIZE
+  transformConfigJson     String?  // JSON configuration for the transform
+  defaultValue            String?  // Fallback default if resolved value is null
+  fallbackValue           String?  // Fallback value if source is unavailable
+  fallbackMessage         String?
+  isRequired              Boolean  @default(false)
+  isReadOnly              Boolean  @default(false)
+  allowOverride           Boolean  @default(true)
+  overrideRequiresReason  Boolean  @default(false)
+  priority                Int      @default(100)
+  isActive                Boolean  @default(true)
+  description             String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  node                    ScoringNode @relation("NodeBindings", fields: [nodeId], references: [id], onDelete: Cascade)
+  answers                 ScoringEvaluationAnswer[] @relation("BindingAnswers")
+
+  @@index([nodeId])
+  @@index([sourceEntity])
+  @@index([bindingMode])
+  @@index([isActive])
+  @@index([priority])
+  @@map("BP_PF_v7pp_node_data_bindings")
+}
+
 /// ScoringNodeDocumentRequirement specifies documents expected for a node
 model ScoringNodeDocumentRequirement {
   id                    String   @id @default(uuid())
@@ -725,10 +762,10 @@ model ScoringNodeDocumentRequirement {
 /// ScoringEvaluation represents the evaluation of a project using a specific model version
 model ScoringEvaluation {
   id                    String   @id @default(uuid())
-  projectId             String
+  projectId             String   @db.Uuid
   modelId               String
   modelVersionId        String
-  analystId             String
+  analystId             String?  @db.Uuid
   status                EvaluationStatus @default(brouillon)
   finalScore            Float?
   rating                String?
@@ -747,7 +784,7 @@ model ScoringEvaluation {
   project               Project  @relation("ScoringProject", fields: [projectId], references: [id], onDelete: Cascade)
   model                 ScoringModel @relation("ModelUsed", fields: [modelId], references: [id], onDelete: SetNull)
   version               ScoringModelVersion @relation("VersionUsed", fields: [modelVersionId], references: [id], onDelete: SetNull)
-  analyst               User     @relation("ScoringAnalyst", fields: [analystId], references: [id], onDelete: SetNull)
+  analyst               User?    @relation("ScoringAnalyst", fields: [analystId], references: [id], onDelete: SetNull)
 
   answers               ScoringEvaluationAnswer[]
   nodeResults           ScoringEvaluationNodeResult[]
@@ -763,27 +800,47 @@ model ScoringEvaluation {
 
 /// ScoringEvaluationAnswer represents an answer provided by the user for a node
 model ScoringEvaluationAnswer {
-  id                    String   @id @default(uuid())
-  evaluationId          String
-  nodeId                String
-  answerType            ScoringAnswerType
-  valueString           String?
-  valueNumber           Float?
-  valueBoolean          Boolean?
-  valueDate             DateTime?
-  valueJson             String?  // For complex types
-  manualScore           Float?
-  comment               String?
-  sourceDocumentId      String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                        String   @id @default(uuid())
+  evaluationId              String
+  nodeId                    String
+  answerType                ScoringAnswerType
+  valueString               String?
+  valueNumber               Float?
+  valueBoolean              Boolean?
+  valueDate                 DateTime?
+  valueJson                 String?  // For complex types
+  manualScore               Float?
+  comment                   String?
+  sourceDocumentId          String?
 
-  evaluation            ScoringEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  node                  ScoringNode @relation("NodeAnswers", fields: [nodeId], references: [id], onDelete: Cascade)
+  // Source tracking (binding-aware)
+  sourceType                String?  // MANUAL, AUTO_FROM_BINDING, OVERRIDDEN, CALCULATED
+  sourceEntity              String?  // CLIENT, PROJECT, EVALUATION, DOCUMENT, CALCULATED, EXTERNAL_REFERENCE, MANUAL
+  sourceField               String?  // Field path on source entity
+  sourcePath                String?  // Dotted path e.g. client.financials.revenue
+  sourceBindingId           String?  // FK to ScoringNodeDataBinding (nullable)
+  sourceValueSnapshotJson   String?  // Snapshot of raw value read from source
+  resolvedValueSnapshotJson String?  // Snapshot of resolved/transformed value
+  isAutoFilled              Boolean  @default(false)
+  isOverridden              Boolean  @default(false)
+  overrideReason            String?
+  overriddenBy              String?
+  overriddenAt              DateTime?
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  evaluation                ScoringEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  node                      ScoringNode @relation("NodeAnswers", fields: [nodeId], references: [id], onDelete: Cascade)
+  sourceBinding             ScoringNodeDataBinding? @relation("BindingAnswers", fields: [sourceBindingId], references: [id], onDelete: SetNull)
 
   @@unique([evaluationId, nodeId])
   @@index([evaluationId])
   @@index([nodeId])
+  @@index([sourceBindingId])
+  @@index([sourceType])
+  @@index([isAutoFilled])
+  @@index([isOverridden])
   @@map("BP_PF_v7pp_evaluation_answers")
 }
 
@@ -826,14 +883,14 @@ model ScoringChangeLog {
   fieldName             String?  // Which field changed (for UPDATE)
   oldValueJson          String?  // Previous value as JSON
   newValueJson          String?  // New value as JSON
-  changedBy             String
+  changedBy             String?  @db.Uuid
   changedAt             DateTime @default(now())
   comment               String?
 
   model                 ScoringModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
   version               ScoringModelVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
   evaluation            ScoringEvaluation? @relation(fields: [evaluationId], references: [id], onDelete: SetNull)
-  user                  User     @relation("ChangedBy", fields: [changedBy], references: [id], onDelete: SetNull)
+  user                  User?    @relation("ChangedBy", fields: [changedBy], references: [id], onDelete: SetNull)
 
   @@index([entityType])
   @@index([entityId])
