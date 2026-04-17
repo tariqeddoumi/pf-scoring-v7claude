@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, FileText, BarChart3 } from "lucide-react";
-import { Tabs } from "@/components/ui/Tabs";
-import { QuestionnaireForm } from "@/components/scoring/QuestionnaireForm";
+import { ArrowLeft, Loader2, BarChart3 } from "lucide-react";
+import Link from "next/link";
+import { EvaluationWorkspace } from "@/components/scoring/EvaluationWorkspace";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 
 interface Project {
@@ -15,14 +14,21 @@ interface Project {
 
 export default function NewEvaluationPage() {
   const router = useRouter();
+
+  /* data */
   const [projects, setProjects] = useState<Project[]>([]);
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireNode[]>([]);
-  const [modelVersionId, setModelVersionId] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [modelVersionId, setModelVersionId] = useState("");
+
+  /* state machine: "form" | "workspace" */
+  const [step, setStep] = useState<"form" | "workspace">("form");
+  const [evaluationId, setEvaluationId] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  /* ui */
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [evaluationId, setEvaluationId] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
 
   const [formData, setFormData] = useState({
     projectId: "",
@@ -31,147 +37,132 @@ export default function NewEvaluationPage() {
     status: "brouillon",
   });
 
-  // Fetch projects and questionnaire on mount
+  /* ── Load projects + questionnaire ── */
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       try {
-        setLoading(true);
-        const [projectsRes, questionnaireRes] = await Promise.all([
+        const [pRes, qRes] = await Promise.all([
           fetch("/api/projects"),
           fetch("/api/scoring/questionnaire"),
         ]);
 
-        if (!projectsRes.ok) throw new Error("Erreur lors du chargement des projets");
-        const projectsData = await projectsRes.json();
-        setProjects(projectsData.data || []);
-
-        if (questionnaireRes.ok) {
-          const qData = await questionnaireRes.json();
-          setQuestionnaire(qData.data || []);
-          setModelVersionId(qData.modelVersionId);
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          setProjects(pData.data || []);
         }
-      } catch (err: any) {
-        setError(err.message);
+
+        if (qRes.ok) {
+          const qData = await qRes.json();
+          setQuestionnaire(qData.data || []);
+          setModelVersionId(qData.modelVersionId || "");
+        }
+      } catch (e: any) {
+        setError(e.message);
       } finally {
         setLoading(false);
       }
-    };
-    fetchData();
+    })();
   }, []);
 
-  // Step 1: Create evaluation (without answers)
-  const handleCreateEvaluation = async (e: React.FormEvent) => {
+  /* ── Step 1: create evaluation ── */
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.projectId) return;
     setSubmitting(true);
     setError("");
-
     try {
       const res = await fetch("/api/evaluations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Erreur lors de la création");
+        const d = await res.json();
+        throw new Error(d.error || "Erreur lors de la création");
       }
-
-      const newEval = await res.json();
-      setEvaluationId(newEval.data.id);
-    } catch (err: any) {
-      setError(err.message);
+      const { data } = await res.json();
+      setEvaluationId(data.id);
+      setSelectedProject(projects.find((p) => p.id === formData.projectId) ?? null);
+      setStep("workspace");
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Step 2: Save answers and calculate score
-  const handleSubmitAnswers = async () => {
-    if (!evaluationId || !modelVersionId) return;
-
-    setSubmitting(true);
-    setError("");
-
-    try {
-      // Convert answers to API format
-      const answersArray = Object.entries(answers).map(([nodeId, value]) => ({
-        nodeId,
-        answerType: "VALUE",
-        valueString: typeof value === "string" ? value : undefined,
-        valueNumber: typeof value === "number" ? value : undefined,
-        comment: value.comment,
-      }));
-
-      const res = await fetch("/api/evaluations/calculate-score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          evaluationId,
-          modelVersionId,
-          answers: answersArray,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Erreur lors du calcul du score");
-      }
-
-      // Redirect to evaluation detail
-      router.push(`/evaluations/${evaluationId}`);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSubmitting(false);
-    }
+  /* ── Step 2: workspace complete ── */
+  const handleComplete = (id: string, score: number, rating: string) => {
+    router.push(`/evaluations/${id}?score=${score.toFixed(1)}&rating=${rating}`);
   };
 
+  /* ── Loading ── */
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-blue-400" size={40} />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <Loader2 className="animate-spin text-cyan-400 mx-auto" size={40} />
+          <p className="text-slate-400 text-sm">Chargement du questionnaire…</p>
+        </div>
       </div>
     );
   }
 
-  // If evaluation not yet created, show creation form
-  if (!evaluationId) {
+  /* ── Workspace (step 2) ── */
+  if (step === "workspace" && evaluationId) {
     return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link
-            href="/evaluations"
-            className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
-            title="Retour"
-          >
-            <ArrowLeft size={20} className="text-slate-400" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Nouvelle Évaluation</h1>
-            <p className="text-slate-400 mt-2">Créez une nouvelle évaluation de risque</p>
-          </div>
-        </div>
+      <EvaluationWorkspace
+        evaluationId={evaluationId}
+        projectName={selectedProject?.nom ?? "Projet"}
+        questionnaire={questionnaire}
+        modelVersionId={modelVersionId}
+        onComplete={handleComplete}
+      />
+    );
+  }
 
-        {/* Form Card */}
-        <div className="max-w-2xl rounded-lg border border-slate-700 bg-slate-800 p-6">
+  /* ── Creation form (step 1) ── */
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Link
+          href="/evaluations"
+          className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+        >
+          <ArrowLeft size={20} className="text-slate-400" />
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold text-white">Nouvelle Évaluation</h1>
+          <p className="text-slate-400 mt-1 text-sm">
+            Créez une évaluation de risque pour un projet
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Form card */}
+        <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-800 p-6">
           {error && (
             <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
               {error}
             </div>
           )}
 
-          {projects.length === 0 && !error && (
+          {questionnaire.length === 0 && (
             <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/30 p-4 text-yellow-400 text-sm mb-6">
-              Aucun projet trouvé. Créez un projet d'abord.
+              <strong>Attention:</strong> Aucun questionnaire de scoring n'est configuré. L'écran
+              de saisie sera vide.{" "}
+              <Link href="/admin/scoring" className="underline hover:text-yellow-300">
+                Configurer un modèle de scoring →
+              </Link>
             </div>
           )}
 
-          <form onSubmit={handleCreateEvaluation} className="space-y-6">
+          <form onSubmit={handleCreate} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-3">
-                Sélectionner un projet *
+              <label className="block text-sm font-semibold text-slate-300 mb-2">
+                Projet à évaluer <span className="text-red-400">*</span>
               </label>
               <select
                 value={formData.projectId}
@@ -180,18 +171,26 @@ export default function NewEvaluationPage() {
                 required
                 disabled={projects.length === 0}
               >
-                <option value="">-- Choisir un projet --</option>
+                <option value="">— Choisir un projet —</option>
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.nom}
                   </option>
                 ))}
               </select>
+              {projects.length === 0 && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Aucun projet disponible.{" "}
+                  <Link href="/projects/new" className="text-cyan-400 hover:underline">
+                    Créer un projet
+                  </Link>
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-3">
-                Recommandation
+              <label className="block text-sm font-semibold text-slate-300 mb-2">
+                Recommandation initiale
               </label>
               <select
                 value={formData.recommendation}
@@ -205,113 +204,89 @@ export default function NewEvaluationPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-3">
-                Notes
+              <label className="block text-sm font-semibold text-slate-300 mb-2">
+                Notes préliminaires
               </label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none transition-colors"
                 rows={3}
-                placeholder="Ajouter des notes ou commentaires..."
+                placeholder="Contexte, informations importantes…"
               />
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                disabled={submitting || !formData.projectId || projects.length === 0}
+                disabled={submitting || !formData.projectId}
                 className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Création en cours...
+                    <Loader2 size={16} className="animate-spin" />
+                    Création…
                   </>
                 ) : (
-                  "Créer et continuer"
+                  <>
+                    <BarChart3 size={16} />
+                    Lancer l'évaluation
+                  </>
                 )}
               </button>
               <Link
                 href="/evaluations"
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all text-center"
               >
                 Annuler
               </Link>
             </div>
           </form>
         </div>
-      </div>
-    );
-  }
 
-  // If evaluation created, show questionnaire
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/evaluations"
-          className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
-          title="Retour"
-        >
-          <ArrowLeft size={20} className="text-slate-400" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-white">Compléter l'Évaluation</h1>
-          <p className="text-slate-400 mt-2">Répondez aux questions de scoring</p>
+        {/* Info panel */}
+        <div className="space-y-4">
+          <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
+            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              <BarChart3 size={16} className="text-cyan-400" />
+              Questionnaire de scoring
+            </h3>
+            {questionnaire.length > 0 ? (
+              <div className="space-y-2">
+                {questionnaire.map((domain) => (
+                  <div
+                    key={domain.id}
+                    className="flex items-center justify-between text-xs"
+                  >
+                    <span className="text-slate-400">{domain.label}</span>
+                    <span className="text-slate-500">
+                      {domain.children?.length ?? 0} critères
+                    </span>
+                  </div>
+                ))}
+                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                  {questionnaire.length} domaines · {questionnaire.reduce(
+                    (s, d) => s + (d.children?.length ?? 0),
+                    0
+                  )}{" "}
+                  critères au total
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">Aucun modèle actif</p>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-5 text-xs text-slate-500 space-y-2">
+            <p className="font-semibold text-slate-400">Processus d'évaluation</p>
+            <ol className="space-y-1.5 list-decimal list-inside">
+              <li>Sélectionner le projet</li>
+              <li>Renseigner les critères par domaine</li>
+              <li>Calculer le score final</li>
+              <li>Soumettre pour validation</li>
+            </ol>
+          </div>
         </div>
-      </div>
-
-      {/* Questionnaire Card */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-        {error && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
-            {error}
-          </div>
-        )}
-
-        {questionnaire.length > 0 ? (
-          <>
-            <QuestionnaireForm
-              nodes={questionnaire}
-              onAnswersChange={setAnswers}
-            />
-
-            <div className="flex gap-3 pt-6 mt-6 border-t border-slate-700">
-              <button
-                onClick={handleSubmitAnswers}
-                disabled={submitting}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Calcul en cours...
-                  </>
-                ) : (
-                  "Calculer le score et finir"
-                )}
-              </button>
-              <Link
-                href="/evaluations"
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
-              >
-                Annuler
-              </Link>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-slate-400">Aucun questionnaire disponible</p>
-            <Link
-              href="/evaluations"
-              className="text-cyan-400 hover:text-cyan-300 mt-4 inline-block"
-            >
-              Retourner à la liste
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );
