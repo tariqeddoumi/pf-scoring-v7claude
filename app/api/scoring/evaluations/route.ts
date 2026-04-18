@@ -41,12 +41,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Create evaluation in draft status
+    // Use null for analystId (can be set later when user logs in)
     const evaluation = await prisma.scoringEvaluation.create({
       data: {
         projectId,
         modelId: version.modelId,
         modelVersionId,
-        analystId: "system", // In production, use authenticated user ID
+        analystId: null, // Optional - set when analyst reviews
         status: "brouillon",
       },
     });

@@ -71,10 +71,13 @@ export default function NewEvaluationPage() {
     setSubmitting(true);
     setError("");
     try {
-      const res = await fetch("/api/evaluations", {
+      const res = await fetch("/api/scoring/evaluations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          projectId: formData.projectId,
+          modelVersionId: modelVersionId,
+        }),
       });
       if (!res.ok) {
         const d = await res.json();
