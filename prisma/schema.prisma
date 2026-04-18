@@ -511,6 +511,11 @@ model ScoringModelVersion {
   publishedAt       DateTime?
   updatedAt         DateTime @updatedAt
 
+  // Configuration fields (parameterizable)
+  aggregationMethod String?   @default("WEIGHTED_AVERAGE")
+  weightMode        String?   @default("RELATIVE")
+  scoreScale        String?   @default("0_100")
+
   model             ScoringModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
   creator           User     @relation("CreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   validator         User?    @relation("ValidatedBy", fields: [validatedBy], references: [id], onDelete: SetNull)
@@ -560,6 +565,8 @@ model ScoringNode {
   currency              String?
   uiSchemaJson          String?  // JSON string for UI rendering hints
   metadataJson          String?
+  scoreLeafDepth        Int?     // Depth at which scoring is captured (0=domain, 1=criterion, 2+=subcriterion). Null = inherited from parent.
+  isScoringLeaf         Boolean  @default(false) // True = this node is a scoring input point
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

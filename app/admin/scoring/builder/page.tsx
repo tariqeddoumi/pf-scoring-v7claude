@@ -16,6 +16,7 @@ import {
 import NodeModal from "@/components/scoring/NodeModal";
 import OptionModal from "@/components/scoring/OptionModal";
 import RangeModal from "@/components/scoring/RangeModal";
+import { ModelConfigurationPanel } from "@/components/admin/ModelConfigurationPanel";
 
 interface ScoringOption {
   id: string;
@@ -417,6 +418,14 @@ export default function ScoringBuilderPage() {
             <span>Options: {questionnaire.reduce((s, d) => s + (d.children?.reduce((cs, c) => cs + (c.options?.length ?? 0), 0) ?? 0), 0)}</span>
           </div>
         </div>
+      )}
+
+      {/* Model Configuration Panel */}
+      {modelVersion && (
+        <ModelConfigurationPanel
+          versionId={modelVersion.id}
+          onConfigUpdate={loadModel}
+        />
       )}
 
       {/* Domains List */}
