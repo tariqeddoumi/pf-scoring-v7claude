@@ -8,28 +8,28 @@ import prisma from "@/lib/prisma-client";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { nodeId, minValue, maxValue, score, label, orderIndex } = body;
+    const { criterionId, minValue, maxValue, score, label } = body;
 
-    if (!nodeId || minValue === undefined || maxValue === undefined || score === undefined) {
+    if (!criterionId || minValue === undefined || maxValue === undefined || score === undefined) {
       return NextResponse.json(
-        { error: "Missing required fields: nodeId, minValue, maxValue, score", errorCode: "VALIDATION_ERROR" },
+        { error: "Missing required fields: criterionId, minValue, maxValue, score", errorCode: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
-    // Verify node exists and is a criterion
-    const node = await prisma.scoringNode.findUnique({
-      where: { id: nodeId },
+    // Verify criterion exists
+    const criterion = await prisma.scoringNode.findUnique({
+      where: { id: criterionId },
     });
 
-    if (!node) {
+    if (!criterion) {
       return NextResponse.json(
         { error: "Criterion not found", errorCode: "NOT_FOUND" },
         { status: 404 }
       );
     }
 
-    if (node.nodeType !== "CRITERION") {
+    if (criterion.nodeType !== "CRITERION") {
       return NextResponse.json(
         { error: "Can only add ranges to criteria", errorCode: "VALIDATION_ERROR" },
         { status: 400 }
@@ -44,14 +44,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const range = await prisma.scoringRange.create({
+    const range = await prisma.scoreRange.create({
       data: {
-        nodeId,
+        criterionId,
         minValue,
         maxValue,
         score,
         label: label || null,
-        orderIndex: orderIndex ?? 0,
+        orderIndex: 0,
       },
     });
 
@@ -92,14 +92,13 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    const range = await prisma.scoringRange.update({
+    const range = await prisma.scoreRange.update({
       where: { id: rangeId },
       data: {
         minValue: body.minValue !== undefined ? body.minValue : undefined,
         maxValue: body.maxValue !== undefined ? body.maxValue : undefined,
         score: body.score !== undefined ? body.score : undefined,
         label: body.label !== undefined ? body.label : undefined,
-        orderIndex: body.orderIndex ?? undefined,
       },
     });
 
@@ -129,7 +128,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    await prisma.scoringRange.delete({
+    await prisma.scoreRange.delete({
       where: { id: rangeId },
     });
 

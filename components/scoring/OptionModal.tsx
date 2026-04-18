@@ -8,9 +8,9 @@ export interface OptionModalProps {
   criterionCode: string;
   initialData?: {
     id?: string;
-    value: string;
     label: string;
     score: number;
+    description?: string;
   };
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
@@ -24,9 +24,9 @@ export default function OptionModal({
   onSubmit,
 }: OptionModalProps) {
   const [formData, setFormData] = useState(initialData || {
-    value: "",
     label: "",
     score: 0,
+    description: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -76,22 +76,6 @@ export default function OptionModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
-              Valeur
-            </label>
-            <input
-              type="text"
-              value={formData.value}
-              onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-              placeholder="ex: excellent"
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-              required
-              disabled={isEdit}
-            />
-            <p className="text-xs text-slate-500 mt-1">Non modifiable après création</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
               Libellé
             </label>
             <input
@@ -117,6 +101,19 @@ export default function OptionModal({
               step="1"
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Description (optionnel)
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Notes supplémentaires"
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
           </div>
 

@@ -8,53 +8,41 @@ import prisma from "@/lib/prisma-client";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { nodeId, value, label, score, orderIndex } = body;
+    const { criterionId, label, score, description } = body;
 
-    if (!nodeId || !value || !label || score === undefined) {
+    if (!criterionId || !label || score === undefined) {
       return NextResponse.json(
-        { error: "Missing required fields: nodeId, value, label, score", errorCode: "VALIDATION_ERROR" },
+        { error: "Missing required fields: criterionId, label, score", errorCode: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
-    // Verify node exists and is a criterion
-    const node = await prisma.scoringNode.findUnique({
-      where: { id: nodeId },
+    // Verify criterion exists
+    const criterion = await prisma.scoringNode.findUnique({
+      where: { id: criterionId },
     });
 
-    if (!node) {
+    if (!criterion) {
       return NextResponse.json(
         { error: "Criterion not found", errorCode: "NOT_FOUND" },
         { status: 404 }
       );
     }
 
-    if (node.nodeType !== "CRITERION") {
+    if (criterion.nodeType !== "CRITERION") {
       return NextResponse.json(
         { error: "Can only add options to criteria", errorCode: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
-    // Check value uniqueness per criterion
-    const existing = await prisma.scoringOption.findFirst({
-      where: { nodeId, value },
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        { error: `Option value "${value}" already exists for this criterion`, errorCode: "VALIDATION_ERROR" },
-        { status: 400 }
-      );
-    }
-
     const option = await prisma.scoringOption.create({
       data: {
-        nodeId,
-        value,
+        criterionId,
         label,
         score,
-        orderIndex: orderIndex ?? 0,
+        description: description || null,
+        orderIndex: 0,
       },
     });
 
@@ -90,7 +78,7 @@ export async function PUT(req: NextRequest) {
       data: {
         label: body.label || undefined,
         score: body.score !== undefined ? body.score : undefined,
-        orderIndex: body.orderIndex ?? undefined,
+        description: body.description !== undefined ? body.description : undefined,
       },
     });
 
