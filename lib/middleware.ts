@@ -1,47 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateRequest } from "./auth-middleware";
 
-export const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: ["read", "create", "update", "delete", "configure"],
-  manager: ["read", "create", "update", "validate"],
-  analyst: ["read", "create", "update"],
-  viewer: ["read"],
-};
+// DEPRECATED: Use auth-middleware.ts instead. This is kept for backward compatibility only.
+// DO NOT USE in new code.
 
+/**
+ * DEPRECATED: Use withAuth from auth-middleware.ts instead
+ * This middleware does NOT verify JWT signatures properly.
+ * @deprecated
+ */
 export function withAuth(handler: Function) {
   return async (req: NextRequest, context: any) => {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    try {
-      // Extract Bearer token from Authorization header
-      const token = authHeader.startsWith("Bearer ")
-        ? authHeader.substring(7)
-        : authHeader;
-
-      // Decode JWT payload (without verification for now - should use Supabase JWT secret)
-      const parts = token.split(".");
-      if (parts.length !== 3) {
-        return NextResponse.json(
-          { error: "Invalid token format" },
-          { status: 401 }
-        );
-      }
-
-      const payload = JSON.parse(
-        Buffer.from(parts[1], "base64").toString("utf-8")
+    const user = await authenticateRequest(req);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
       );
-
-      // Extract user role from JWT payload - use 'analyst' as default if not specified
-      const userRole = payload.role || payload.user_role || "analyst";
-
-      return handler(req, context, userRole);
-    } catch (error) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
+    return handler(req, context, user.role);
   };
 }
+
+/**
+ * Updated role permissions matrix aligned with new role hierarchy
+ */
+export const ROLE_PERMISSIONS: Record<string, string[]> = {
+  system_admin: [
+    "read",
+    "create",
+    "update",
+    "delete",
+    "configure",
+    "manage_users",
+    "manage_roles",
+    "system_settings",
+  ],
+  scoring_admin: [
+    "read",
+    "create",
+    "update",
+    "delete",
+    "configure",
+    "publish_model",
+    "manage_scoring",
+  ],
+  risk_manager: [
+    "read",
+    "create",
+    "update",
+    "evaluate",
+    "review",
+    "approve",
+    "override",
+  ],
+  committee_member: ["read", "evaluate", "approve", "decision"],
+  risk_analyst: ["read", "create", "update", "evaluate"],
+  auditor: ["read"],
+  read_only: ["read"],
+};
 
 export function checkPermission(
   userRole: string,

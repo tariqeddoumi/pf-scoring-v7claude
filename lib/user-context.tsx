@@ -2,7 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type UserRole = "admin" | "manager" | "analyst" | "viewer";
+export type UserRole =
+  | "system_admin"
+  | "scoring_admin"
+  | "risk_analyst"
+  | "risk_manager"
+  | "committee_member"
+  | "auditor"
+  | "read_only";
 
 export interface User {
   id: string;
@@ -20,152 +27,218 @@ export interface User {
 interface UserContextType {
   users: User[];
   currentUser: User | null;
-  createUser: (user: Omit<User, "id" | "createdAt">) => User;
-  updateUser: (id: string, updates: Partial<User>) => void;
-  deleteUser: (id: string) => void;
+  loading: boolean;
+  error: string | null;
+  createUser: (user: Omit<User, "id" | "createdAt">) => Promise<User>;
+  updateUser: (id: string, updates: Partial<User>) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
   getUser: (id: string) => User | null;
   setCurrentUser: (user: User | null) => void;
   getUsersByRole: (role: UserRole) => User[];
+  refreshUsers: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-const MOCK_USERS: User[] = [
-  {
-    id: "u1",
-    name: "Ahmed Ben Selhami",
-    email: "ahmed.selhami@bank.ma",
-    role: "admin",
-    department: "Scoring & Risk",
-    status: "active",
-    createdAt: new Date("2025-01-15"),
-    lastLogin: new Date("2026-04-03"),
-    phone: "+212 661 234 567",
-    avatar: "👨‍💼",
-  },
-  {
-    id: "u2",
-    name: "Fatima Zohra El Fassi",
-    email: "fatima.fassi@bank.ma",
-    role: "manager",
-    department: "Project Finance",
-    status: "active",
-    createdAt: new Date("2025-02-20"),
-    lastLogin: new Date("2026-04-02"),
-    phone: "+212 661 345 678",
-    avatar: "👩‍💼",
-  },
-  {
-    id: "u3",
-    name: "Mohamed Karim Bennani",
-    email: "mohamed.karim@bank.ma",
-    role: "analyst",
-    department: "Scoring & Risk",
-    status: "active",
-    createdAt: new Date("2025-03-10"),
-    lastLogin: new Date("2026-04-01"),
-    phone: "+212 661 456 789",
-    avatar: "👨‍💻",
-  },
-  {
-    id: "u4",
-    name: "Laïla Khouya",
-    email: "laila.khouya@bank.ma",
-    role: "analyst",
-    department: "Scoring & Risk",
-    status: "active",
-    createdAt: new Date("2025-03-15"),
-    lastLogin: new Date("2026-03-30"),
-    phone: "+212 661 567 890",
-    avatar: "👩‍💻",
-  },
-  {
-    id: "u5",
-    name: "Hassan Marhoum",
-    email: "hassan.marhoum@bank.ma",
-    role: "viewer",
-    department: "Executive Board",
-    status: "active",
-    createdAt: new Date("2025-04-01"),
-    lastLogin: new Date("2026-03-28"),
-    phone: "+212 661 678 901",
-    avatar: "👔",
-  },
-];
+// Helper: Get JWT token from cookie or localStorage
+function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
 
-const STORAGE_KEY = "pf_users";
+  // Try to get from cookie first
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("auth_token="))
+    ?.split("=")[1];
+  if (cookieValue) return cookieValue;
+
+  // Fallback to localStorage (for development)
+  return localStorage.getItem("auth_token");
+}
+
+// Helper: Parse JWT payload (does NOT verify signature, just extracts payload)
+function parseJwt(token: string): any {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUserState] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load users from localStorage on mount
+  // Load users from API on mount
   useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const data = JSON.parse(stored);
-        const parsed: User[] = data.map((u: any) => ({
+      const token = getStoredToken();
+      if (!token) {
+        setError("Not authenticated");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch("/api/admin/users", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load users: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        const parsed: User[] = data.data.map((u: any) => ({
           ...u,
           createdAt: new Date(u.createdAt),
           lastLogin: u.lastLogin ? new Date(u.lastLogin) : undefined,
         }));
         setUsers(parsed);
-      } else {
-        // Initialize with mock data
-        setUsers(MOCK_USERS);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_USERS));
-      }
 
-      // Set first user as current (admin by default)
-      const admin = MOCK_USERS.find((u) => u.role === "admin") || MOCK_USERS[0];
-      setCurrentUserState(admin);
-    } catch (error) {
-      setUsers(MOCK_USERS);
+        // Load current user from auth token
+        const tokenPayload = parseJwt(token);
+        if (tokenPayload && tokenPayload.userId) {
+          const user = parsed.find((u) => u.id === tokenPayload.userId);
+          if (user) {
+            setCurrentUserState(user);
+          }
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load users");
+      console.error("[UserContext] Error loading users:", err);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  // Save users to localStorage whenever they change
-  useEffect(() => {
-    try {
-      if (users.length > 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-      }
-    } catch (error) {}
-  }, [users]);
-
-  const createUser = (userData: Omit<User, "id" | "createdAt">): User => {
-    const newUser: User = {
-      ...userData,
-      id: `u_${Date.now()}`,
-      createdAt: new Date(),
-    };
-
-    setUsers((prev) => [...prev, newUser]);
-    return newUser;
   };
 
-  const updateUser = (id: string, updates: Partial<User>) => {
-    setUsers((prev) =>
-      prev.map((user) => (user.id === id ? { ...user, ...updates } : user))
-    );
+  const refreshUsers = async () => {
+    await loadUsers();
   };
 
-  const deleteUser = (id: string) => {
-    setUsers((prev) => prev.filter((user) => user.id !== id));
+  const createUser = async (
+    user: Omit<User, "id" | "createdAt">
+  ): Promise<User> => {
+    const token = getStoredToken();
+    if (!token) {
+      throw new Error("Not authenticated");
+    }
+
+    const response = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(user),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create user: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.success && data.data) {
+      const newUser: User = {
+        ...data.data,
+        createdAt: new Date(data.data.createdAt),
+        lastLogin: data.data.lastLogin
+          ? new Date(data.data.lastLogin)
+          : undefined,
+      };
+      setUsers([...users, newUser]);
+      return newUser;
+    }
+
+    throw new Error("Failed to create user");
+  };
+
+  const updateUser = async (
+    id: string,
+    updates: Partial<User>
+  ): Promise<void> => {
+    const token = getStoredToken();
+    if (!token) {
+      throw new Error("Not authenticated");
+    }
+
+    const response = await fetch(`/api/admin/users/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update user: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.success && data.data) {
+      setUsers(
+        users.map((u) =>
+          u.id === id
+            ? {
+                ...data.data,
+                createdAt: new Date(data.data.createdAt),
+                lastLogin: data.data.lastLogin
+                  ? new Date(data.data.lastLogin)
+                  : undefined,
+              }
+            : u
+        )
+      );
+    }
+  };
+
+  const deleteUser = async (id: string): Promise<void> => {
+    const token = getStoredToken();
+    if (!token) {
+      throw new Error("Not authenticated");
+    }
+
+    const response = await fetch(`/api/admin/users/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete user: ${response.status}`);
+    }
+
+    setUsers(users.filter((u) => u.id !== id));
   };
 
   const getUser = (id: string): User | null => {
-    return users.find((user) => user.id === id) || null;
+    return users.find((u) => u.id === id) || null;
   };
 
   const setCurrentUser = (user: User | null) => {
     setCurrentUserState(user);
-    if (user) {
-      updateUser(user.id, {
-        lastLogin: new Date(),
-      });
-    }
   };
 
   const getUsersByRole = (role: UserRole): User[] => {
@@ -177,12 +250,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       value={{
         users,
         currentUser,
+        loading,
+        error,
         createUser,
         updateUser,
         deleteUser,
         getUser,
         setCurrentUser,
         getUsersByRole,
+        refreshUsers,
       }}
     >
       {children}

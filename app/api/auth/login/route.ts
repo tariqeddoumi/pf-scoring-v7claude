@@ -103,11 +103,13 @@ export async function POST(request: Request) {
       { status: 200 }
     );
 
-    // Ajouter le cookie
+    // Ajouter le cookie - SECURE CONFIGURATION
+    // Note: Token is also returned in response for JavaScript to use as Bearer header
+    // Cookie is httpOnly to prevent XSS access
     response.cookies.set("auth_token", token, {
-      httpOnly: false, // Allow JavaScript to read for Bearer token
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      httpOnly: true,  // CRITICAL: Prevent XSS access to token
+      secure: true,    // CRITICAL: Only send over HTTPS (even in dev use secure flag)
+      sameSite: "strict",  // Prevent CSRF
       maxAge: 86400, // 24 heures
       path: "/",
     });
