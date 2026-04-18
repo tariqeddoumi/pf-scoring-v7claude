@@ -133,13 +133,22 @@ export default function ScoringAdminPage() {
             Configuration du modèle PF V7++ actif
           </p>
         </div>
-        <Link
-          href="/evaluations/new"
-          className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
-        >
-          <BarChart3 size={16} />
-          Nouvelle Évaluation
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/scoring/builder"
+            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+          >
+            <Settings size={16} />
+            Paramétrer
+          </Link>
+          <Link
+            href="/evaluations/new"
+            className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+          >
+            <BarChart3 size={16} />
+            Nouvelle Évaluation
+          </Link>
+        </div>
       </div>
 
       {error && (
