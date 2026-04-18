@@ -511,6 +511,11 @@ model ScoringModelVersion {
   publishedAt       DateTime?
   updatedAt         DateTime @updatedAt
 
+  // Configuration fields (parameterizable)
+  aggregationMethod String?   @default("WEIGHTED_AVERAGE")
+  weightMode        String?   @default("RELATIVE")
+  scoreScale        String?   @default("0_100")
+
   model             ScoringModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
   creator           User     @relation("CreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
   validator         User?    @relation("ValidatedBy", fields: [validatedBy], references: [id], onDelete: SetNull)

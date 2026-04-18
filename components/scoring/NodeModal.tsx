@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { ConfigurationDropdown } from "@/components/admin/ConfigurationDropdown";
 
 export interface NodeModalProps {
   isOpen: boolean;
@@ -155,19 +156,13 @@ export default function NodeModal({
           </div>
 
           {nodeType === "CRITERION" && (
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">
-                Type de réponse
-              </label>
-              <select
-                value={formData.answerType}
-                onChange={(e) => setFormData({ ...formData, answerType: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
-              >
-                <option value="OPTION_SINGLE">Options (liste déroulante)</option>
-                <option value="NUMERIC_RANGE">Numérique (plages)</option>
-              </select>
-            </div>
+            <ConfigurationDropdown
+              label="Type de réponse"
+              value={formData.answerType}
+              onChange={(value) => setFormData({ ...formData, answerType: value })}
+              configType="answerTypes"
+              placeholder="Sélectionner un type de réponse..."
+            />
           )}
 
           <div className="flex gap-3 justify-end pt-4">
