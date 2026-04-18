@@ -116,20 +116,20 @@ answerType?: string (STRING optionnel)
 
 ## 🚀 PRIORITÉS DE CORRECTION
 
-### Phase 1: URGENT (Permet l'usage)
-1. **Créer Admin CRUD pour Paramétrage**
-   - New page `/admin/scoring/builder`
-   - Create/Read/Update/Delete domains
-   - Create/Read/Update/Delete criteria
-   - Create/Read/Update/Delete options
-   - Create/Read/Update/Delete ranges
-   - Time: 4-6 heures
+### Phase 1: URGENT (Permet l'usage) ✅ COMPLÉTÉ
+1. **Créer Admin CRUD pour Paramétrage** ✅
+   - New page `/admin/scoring/builder` ✅
+   - Create/Read/Update/Delete domains ✅
+   - Create/Read/Update/Delete criteria ✅
+   - Create/Read/Update/Delete options ✅
+   - Create/Read/Update/Delete ranges ✅
+   - Status: COMPLETE - Full CRUD UI implemented with modals
 
-2. **Créer API pour Admin CRUD**
-   - `POST/PUT/DELETE /api/admin/scoring/nodes`
-   - `POST/PUT/DELETE /api/admin/scoring/options`
-   - `POST/PUT/DELETE /api/admin/scoring/ranges`
-   - Time: 2-3 heures
+2. **Créer API pour Admin CRUD** ✅
+   - `POST/PUT/DELETE /api/admin/scoring/nodes` ✅
+   - `POST/PUT/DELETE /api/admin/scoring/options` ✅
+   - `POST/PUT/DELETE /api/admin/scoring/ranges` ✅
+   - Status: COMPLETE - All endpoints implemented with validation
 
 ### Phase 2: Important (Robustesse)
 3. **Ajouter Validation Métier**
@@ -231,13 +231,15 @@ Avant d'activer en production :
 **Frontend:**
 - [x] Listes déroulantes pour options
 - [x] Champs numérique pour ranges
-- [ ] Interface admin paramétrage
-- [ ] Type safety strict
+- [x] Interface admin paramétrage (Phase 1 complete)
+- [ ] Type safety strict (Phase 2)
 
 **Backend:**
 - [x] GET questionnaire structure
 - [x] PATCH answers
-- [ ] POST/PUT/DELETE domains/criteria
+- [x] POST/PUT/DELETE domains/criteria
+- [x] POST/PUT/DELETE options
+- [x] POST/PUT/DELETE ranges
 - [x] Validation métier
 
 **Database:**
@@ -248,4 +250,37 @@ Avant d'activer en production :
 
 ---
 
-**Prochaines étapes:** Implémenter Phase 1 (Admin CRUD) pour flexibilité complète
+## ✅ PHASE 1 IMPLÉMENTÉE
+
+### Endpoints API Créés
+- ✅ `POST /api/admin/scoring/nodes` - Create domain/criterion
+- ✅ `PUT /api/admin/scoring/nodes` - Update node properties  
+- ✅ `DELETE /api/admin/scoring/nodes` - Delete node with cascade
+- ✅ `POST /api/admin/scoring/options` - Create option
+- ✅ `PUT /api/admin/scoring/options` - Update option
+- ✅ `DELETE /api/admin/scoring/options` - Delete option
+- ✅ `POST /api/admin/scoring/ranges` - Create range
+- ✅ `PUT /api/admin/scoring/ranges` - Update range
+- ✅ `DELETE /api/admin/scoring/ranges` - Delete range
+
+### Composants Frontend Créés
+- ✅ `/app/admin/scoring/builder/page.tsx` - Full CRUD interface
+- ✅ `/components/scoring/NodeModal.tsx` - Domain/criterion create/edit
+- ✅ `/components/scoring/OptionModal.tsx` - Option create/edit
+- ✅ `/components/scoring/RangeModal.tsx` - Range create/edit
+
+### Features
+- ✅ Hierarchical tree view with expand/collapse
+- ✅ Inline create/edit/delete buttons
+- ✅ Weight validation indicator (shows % total)
+- ✅ Model statistics dashboard
+- ✅ Delete confirmation dialogs
+- ✅ Loading states and error handling
+- ✅ All TypeScript strict mode compliant
+
+### Documentation
+- ✅ `ADMIN_SCORING_BUILDER_GUIDE.md` - Complete implementation guide
+
+---
+
+**Prochaines étapes:** Phase 2 (Validation Métier) et Phase 3 (Versioning/Bulk Operations)
