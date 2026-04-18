@@ -9,7 +9,7 @@
  * - Rating scales (AAA, AA, A, etc.)
  */
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 export interface AnswerType {
   id: string;
