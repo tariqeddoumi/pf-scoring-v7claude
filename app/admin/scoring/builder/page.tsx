@@ -488,8 +488,7 @@ export default function ScoringBuilderPage() {
                         </button>
                       </div>
                     )}
-                    {domain.children && domain.children.length > 0 && (
-                    {domain.children.map((criterion) => {
+                    {domain.children && domain.children.length > 0 && domain.children.map((criterion) => {
                       const isExpCrit = expandedCriteria.has(criterion.id);
                       const hasDetails = (criterion.options?.length ?? 0) > 0 || (criterion.ranges?.length ?? 0) > 0;
 
@@ -647,17 +646,15 @@ export default function ScoringBuilderPage() {
                         </div>
                       );
                     })}
-                    {domain.children && domain.children.length > 0 && (
-                      <div className="px-5 py-3 border-t border-slate-700 bg-slate-700/20">
-                        <button
-                          onClick={() => openCreateCriterionModal(domain.id)}
-                          className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700/30 rounded transition-colors text-sm"
-                        >
-                          <Plus size={14} />
-                          Ajouter Critère
-                        </button>
-                      </div>
-                    )}
+                    {domain.children && domain.children.length > 0 && <div className="px-5 py-3 border-t border-slate-700 bg-slate-700/20">
+                      <button
+                        onClick={() => openCreateCriterionModal(domain.id)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-700/30 rounded transition-colors text-sm"
+                      >
+                        <Plus size={14} />
+                        Ajouter Critère
+                      </button>
+                    </div>}
                   </div>
                 )}
               </div>
