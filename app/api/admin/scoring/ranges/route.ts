@@ -3,71 +3,70 @@ import prisma from "@/lib/prisma-client";
 
 /**
  * POST /api/admin/scoring/ranges
- * Add a new range to a criterion
+ * Ajoute une plage numérique à un critère (table BP_PF_v7pp_scoring_ranges)
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { criterionId, minValue, maxValue, score, label } = body;
+    // Accepte nodeId ou criterionId (compatibilité)
+    const nodeId = body.nodeId || body.criterionId;
+    const { minValue, maxValue, score, label } = body;
 
-    if (!criterionId || minValue === undefined || maxValue === undefined || score === undefined) {
+    if (!nodeId || minValue === undefined || maxValue === undefined || score === undefined) {
       return NextResponse.json(
-        { error: "Missing required fields: criterionId, minValue, maxValue, score", errorCode: "VALIDATION_ERROR" },
+        { error: "Champs requis manquants : nodeId, minValue, maxValue, score", errorCode: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
-    // Verify criterion exists
-    const criterion = await prisma.scoringNode.findUnique({
-      where: { id: criterionId },
-    });
+    if (minValue > maxValue) {
+      return NextResponse.json(
+        { error: "minValue doit être inférieur ou égal à maxValue", errorCode: "VALIDATION_ERROR" },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier que le nœud existe
+    const criterion = await prisma.scoringNode.findUnique({ where: { id: nodeId } });
 
     if (!criterion) {
       return NextResponse.json(
-        { error: "Criterion not found", errorCode: "NOT_FOUND" },
+        { error: "Critère introuvable", errorCode: "NOT_FOUND" },
         { status: 404 }
       );
     }
 
     if (criterion.nodeType !== "CRITERION") {
       return NextResponse.json(
-        { error: "Can only add ranges to criteria", errorCode: "VALIDATION_ERROR" },
+        { error: "Les plages ne peuvent être ajoutées qu'aux critères", errorCode: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
-    // Validate range logic
-    if (minValue > maxValue) {
-      return NextResponse.json(
-        { error: "minValue must be less than or equal to maxValue", errorCode: "VALIDATION_ERROR" },
-        { status: 400 }
-      );
-    }
+    // Calculer le prochain orderIndex
+    const lastRange = await prisma.scoringNodeRange.findFirst({
+      where: { nodeId },
+      orderBy: { orderIndex: "desc" },
+    });
+    const orderIndex = (lastRange?.orderIndex ?? -1) + 1;
 
-    const range = await prisma.scoreRange.create({
-      data: {
-        criterionId,
-        minValue,
-        maxValue,
-        score,
-        label: label || null,
-        orderIndex: 0,
-      },
+    const range = await prisma.scoringNodeRange.create({
+      data: { nodeId, minValue, maxValue, score, label: label || null, orderIndex },
     });
 
     return NextResponse.json({ data: range }, { status: 201 });
   } catch (error) {
     console.error("POST /api/admin/scoring/ranges:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error", errorCode: "INTERNAL_ERROR" },
+      { error: error instanceof Error ? error.message : "Erreur interne", errorCode: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
 }
 
 /**
- * PUT /api/admin/scoring/ranges/:rangeId
- * Update an existing range
+ * PUT /api/admin/scoring/ranges?rangeId=xxx
+ * Modifie une plage existante
  */
 export async function PUT(req: NextRequest) {
   try {
@@ -77,28 +76,25 @@ export async function PUT(req: NextRequest) {
 
     if (!rangeId) {
       return NextResponse.json(
-        { error: "rangeId required", errorCode: "VALIDATION_ERROR" },
+        { error: "rangeId requis", errorCode: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
-    // Validate range logic if provided
-    if (body.minValue !== undefined && body.maxValue !== undefined) {
-      if (body.minValue > body.maxValue) {
-        return NextResponse.json(
-          { error: "minValue must be less than or equal to maxValue", errorCode: "VALIDATION_ERROR" },
-          { status: 400 }
-        );
-      }
+    if (body.minValue !== undefined && body.maxValue !== undefined && body.minValue > body.maxValue) {
+      return NextResponse.json(
+        { error: "minValue doit être inférieur ou égal à maxValue", errorCode: "VALIDATION_ERROR" },
+        { status: 400 }
+      );
     }
 
-    const range = await prisma.scoreRange.update({
+    const range = await prisma.scoringNodeRange.update({
       where: { id: rangeId },
       data: {
-        minValue: body.minValue !== undefined ? body.minValue : undefined,
-        maxValue: body.maxValue !== undefined ? body.maxValue : undefined,
-        score: body.score !== undefined ? body.score : undefined,
-        label: body.label !== undefined ? body.label : undefined,
+        ...(body.minValue !== undefined && { minValue: body.minValue }),
+        ...(body.maxValue !== undefined && { maxValue: body.maxValue }),
+        ...(body.score !== undefined && { score: body.score }),
+        ...(body.label !== undefined && { label: body.label }),
       },
     });
 
@@ -106,15 +102,15 @@ export async function PUT(req: NextRequest) {
   } catch (error) {
     console.error("PUT /api/admin/scoring/ranges:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error", errorCode: "INTERNAL_ERROR" },
+      { error: error instanceof Error ? error.message : "Erreur interne", errorCode: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
 }
 
 /**
- * DELETE /api/admin/scoring/ranges/:rangeId
- * Delete a range
+ * DELETE /api/admin/scoring/ranges?rangeId=xxx
+ * Supprime une plage
  */
 export async function DELETE(req: NextRequest) {
   try {
@@ -123,20 +119,18 @@ export async function DELETE(req: NextRequest) {
 
     if (!rangeId) {
       return NextResponse.json(
-        { error: "rangeId required", errorCode: "VALIDATION_ERROR" },
+        { error: "rangeId requis", errorCode: "VALIDATION_ERROR" },
         { status: 400 }
       );
     }
 
-    await prisma.scoreRange.delete({
-      where: { id: rangeId },
-    });
+    await prisma.scoringNodeRange.delete({ where: { id: rangeId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE /api/admin/scoring/ranges:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error", errorCode: "INTERNAL_ERROR" },
+      { error: error instanceof Error ? error.message : "Erreur interne", errorCode: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
