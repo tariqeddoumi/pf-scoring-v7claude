@@ -38,13 +38,10 @@ export async function withAuth(
 ): Promise<NextResponse> {
   const user = await authenticateRequest(request);
   if (!user) {
-    // Allow requests without auth in development or with default mock user
-    const mockUser: AuthPayload = {
-      userId: "550e8400-e29b-41d4-a716-446655440000", // Valid UUID v4
-      email: "mock@example.com",
-      role: "admin",
-    };
-    return handler(request, mockUser);
+    return NextResponse.json(
+      { error: "Unauthorized", errorCode: "ERR_AUTH_401" },
+      { status: 401 }
+    );
   }
   return handler(request, user);
 }

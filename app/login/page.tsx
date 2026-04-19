@@ -10,7 +10,6 @@ function LoginPageContent() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [useBypass, setUseBypass] = useState(false);
 
   useEffect(() => {
     const errorParam = searchParams.get("error");
@@ -87,33 +86,7 @@ function LoginPageContent() {
     }
   };
 
-  const handleBypassLogin = async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/projects-bypass");
-      const data = await response.json();
-
-      if (response.ok) {
-        router.push("/dashboard");
-      } else {
-        // Afficher le code d'erreur s'il existe
-        const errorMessage = data.error?.code
-          ? `${data.error.message} (${data.error.code})`
-          : data.error?.message || "Erreur lors de l'accès au tableau de bord";
-        setError(errorMessage);
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Impossible de rejoindre le serveur";
-      setError(`Erreur de connexion: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Bypass login removed for security - all access requires authentication
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-4">
@@ -234,30 +207,6 @@ function LoginPageContent() {
             </p>
           </div>
 
-          {/* Bypass Mode */}
-          <div className="mt-6 pt-6 border-t border-slate-700">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useBypass}
-                onChange={(e) => setUseBypass(e.target.checked)}
-                className="w-4 h-4 bg-slate-700 border border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span className="text-sm text-slate-400">
-                Mode test (contourner l&apos;authentification)
-              </span>
-            </label>
-
-            {useBypass && (
-              <button
-                onClick={handleBypassLogin}
-                disabled={loading}
-                className="w-full mt-3 px-4 py-2 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Accès..." : "Accéder au tableau de bord"}
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Footer */}
