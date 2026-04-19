@@ -1,19 +1,19 @@
-import { NextResponse } from "next/server";
-
+import { NextResponse, NextRequest } from "next/server";
+import { withAdminAuth } from "@/lib/auth-middleware";
+import { successResponse, serverError } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 
-export async function GET() {
-  try {
-    const domains = await prisma.scoreDomain.findMany({
-      orderBy: { orderIndex: "asc" },
-    });
+export async function GET(request: NextRequest) {
+  return withAdminAuth(request, async () => {
+    try {
+      const domains = await prisma.scoreDomain.findMany({
+        orderBy: { orderIndex: "asc" },
+      });
 
-    return NextResponse.json(domains);
-  } catch (error) {
-    console.error("Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des domaines" },
-      { status: 500 }
-    );
-  }
+      return successResponse(domains, { count: domains.length });
+    } catch (error: any) {
+      console.error("[ADMIN/DOMAINS] GET error:", error);
+      return serverError("Erreur lors de la récupération des domaines");
+    }
+  });
 }

@@ -1,29 +1,29 @@
-import { NextResponse } from "next/server";
-
+import { NextRequest } from "next/server";
+import { withAdminAuth } from "@/lib/auth-middleware";
+import { successResponse, serverError } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
+  return withAdminAuth(request, async () => {
+    try {
+      const { id } = await params;
 
-    const criteria = await prisma.scoreCriterion.findMany({
-      where: { domainId: id },
-      orderBy: { orderIndex: "asc" },
-      include: {
-        options: { orderBy: { orderIndex: "asc" } },
-        ranges: { orderBy: { orderIndex: "asc" } },
-      },
-    });
+      const criteria = await prisma.scoreCriterion.findMany({
+        where: { domainId: id },
+        orderBy: { orderIndex: "asc" },
+        include: {
+          options: { orderBy: { orderIndex: "asc" } },
+          ranges: { orderBy: { orderIndex: "asc" } },
+        },
+      });
 
-    return NextResponse.json(criteria);
-  } catch (error) {
-    console.error("Erreur:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des critères" },
-      { status: 500 }
-    );
-  }
+      return successResponse(criteria, { count: criteria.length });
+    } catch (error: any) {
+      console.error("[ADMIN/DOMAINS/[ID]/CRITERIA] GET error:", error);
+      return serverError("Erreur lors de la récupération des critères");
+    }
+  });
 }
