@@ -87,7 +87,14 @@ export default function ProjectDetailPage({
       try {
         const { id } = await params;
         setProjectId(id);
-        const response = await fetch(`/api/projects/${id}`);
+        const token = localStorage.getItem("auth_token");
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        const response = await fetch(`/api/projects/${id}`, { headers });
         if (!response.ok) throw new Error("Failed to fetch project");
         const data = await response.json();
         setProject(data.data || data);

@@ -46,7 +46,14 @@ export default function ClientsPage() {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/clients");
+      const token = localStorage.getItem("auth_token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await fetch("/api/clients", { headers });
       if (!response.ok) throw new Error("Failed to fetch clients");
       const data = await response.json();
       setClients(data.data || []);
@@ -62,8 +69,16 @@ export default function ClientsPage() {
   const handleDelete = async (clientId: string) => {
     try {
       setDeleting(true);
+      const token = localStorage.getItem("auth_token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       const response = await fetch(`/api/clients/${clientId}`, {
         method: "DELETE",
+        headers,
       });
       if (!response.ok) throw new Error("Failed to delete client");
       setClients(clients.filter((c) => c.id !== clientId));

@@ -88,10 +88,11 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    // Créer la réponse avec le cookie
+    // Créer la réponse avec le token et le cookie
     const response = NextResponse.json(
       {
         success: true,
+        token,
         user: {
           id: user.id,
           email: user.email,

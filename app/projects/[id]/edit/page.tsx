@@ -74,7 +74,14 @@ export default function EditProjectPage({
       try {
         const { id } = await params;
         setProjectId(id);
-        const response = await fetch(`/api/projects/${id}`);
+        const token = localStorage.getItem("auth_token");
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        const response = await fetch(`/api/projects/${id}`, { headers });
         if (!response.ok) throw new Error("Failed to fetch project");
         const data = await response.json();
         const project = data.data || data;
@@ -119,11 +126,16 @@ export default function EditProjectPage({
     try {
       if (!projectId) throw new Error("Project ID not found");
 
+      const token = localStorage.getItem("auth_token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(formData),
       });
 

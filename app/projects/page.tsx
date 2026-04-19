@@ -44,7 +44,14 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/projects");
+      const token = localStorage.getItem("auth_token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await fetch("/api/projects", { headers });
       if (!response.ok) throw new Error("Failed to fetch projects");
       const data = await response.json();
       setProjects(data.data || []);
@@ -60,8 +67,16 @@ export default function ProjectsPage() {
   const handleDelete = async (projectId: string) => {
     try {
       setDeleting(true);
+      const token = localStorage.getItem("auth_token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "DELETE",
+        headers,
       });
       if (!response.ok) throw new Error("Failed to delete project");
       setProjects(projects.filter((p) => p.id !== projectId));

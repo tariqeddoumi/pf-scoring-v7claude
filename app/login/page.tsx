@@ -36,6 +36,10 @@ function LoginPageContent() {
       const data = await response.json();
 
       if (response.ok) {
+        // Store token in localStorage for API requests
+        if (data.token) {
+          localStorage.setItem("auth_token", data.token);
+        }
         router.push("/dashboard");
       } else {
         // Afficher le code d'erreur s'il existe pour plus de détails
