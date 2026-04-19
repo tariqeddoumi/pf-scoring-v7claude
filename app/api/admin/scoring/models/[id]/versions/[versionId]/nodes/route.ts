@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth-middleware";
+import { withAdminAuth } from "@/lib/auth-middleware";
 import { ScoringNodeService } from "@/lib/services/scoring-node-service";
 
 async function handler(
@@ -90,9 +90,9 @@ async function handler(
 }
 
 export async function GET(request: NextRequest, { params }: any) {
-  return withAuth(request, (req, user) => handler(req, user, { params }));
+  return withAdminAuth(request, (req, user) => handler(req, user, { params }));
 }
 
 export async function POST(request: NextRequest, { params }: any) {
-  return withAuth(request, (req, user) => handler(req, user, { params }));
+  return withAdminAuth(request, (req, user) => handler(req, user, { params }));
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth-middleware';
+import { withAdminAuth } from '@/lib/auth-middleware';
 import {
   getEntityFields,
   getFormSections,
@@ -102,9 +102,9 @@ async function handler(request: NextRequest, user: any) {
 }
 
 export async function GET(request: NextRequest) {
-  return withAuth(request, (req, user) => handler(req, user));
+  return withAdminAuth(request, (req, user) => handler(req, user));
 }
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, (req, user) => handler(req, user));
+  return withAdminAuth(request, (req, user) => handler(req, user));
 }

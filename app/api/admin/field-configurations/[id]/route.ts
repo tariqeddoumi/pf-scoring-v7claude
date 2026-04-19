@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth-middleware';
+import { withAdminAuth } from '@/lib/auth-middleware';
 import {
   getFieldConfig,
   updateFieldConfig,
@@ -147,7 +147,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return withAuth(request, (req, user) =>
+  return withAdminAuth(request, (req, user) =>
     handler(req, user, { params: { id } })
   );
 }
@@ -157,7 +157,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return withAuth(request, (req, user) =>
+  return withAdminAuth(request, (req, user) =>
     handler(req, user, { params: { id } })
   );
 }
@@ -167,7 +167,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return withAuth(request, (req, user) =>
+  return withAdminAuth(request, (req, user) =>
     handler(req, user, { params: { id } })
   );
 }
