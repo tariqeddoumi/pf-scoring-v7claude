@@ -84,7 +84,14 @@ export default function EditClientPage({
         setClientId(id);
 
         // Fetch client data
-        const clientResponse = await fetch(`/api/clients/${id}`);
+        const token = localStorage.getItem("auth_token");
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        const clientResponse = await fetch(`/api/clients/${id}`, { headers });
         if (!clientResponse.ok) throw new Error("Failed to fetch client");
         const clientData = await clientResponse.json();
         const client = clientData.data || clientData;
@@ -134,9 +141,16 @@ export default function EditClientPage({
     try {
       if (!clientId) throw new Error("Client ID not found");
 
+      const token = localStorage.getItem("auth_token");
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       const response = await fetch(`/api/clients/${clientId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(formData),
       });
 

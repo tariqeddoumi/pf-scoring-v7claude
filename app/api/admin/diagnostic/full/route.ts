@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getTokenFromCookie, verifyToken } from "@/lib/auth";
+import { NextRequest } from "next/server";
+import { withAdminAuth } from "@/lib/auth-middleware";
+import { successResponse, serverError } from "@/lib/api-response";
 import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 
@@ -259,60 +260,30 @@ function getEnvironmentVariables(): EnvironmentVar[] {
 }
 
 export async function GET(request: NextRequest) {
-  try {
-    // Verify authentication
-    const cookieHeader = request.headers.get("cookie");
-    const token = getTokenFromCookie(cookieHeader);
+  return withAdminAuth(request, async () => {
+    try {
+      // Run all diagnostic tests in parallel
+      const tests = await Promise.all([
+        testDatabaseConnection(),
+        testUserCount(),
+        testProjectCount(),
+        Promise.resolve(testJWTSecret()),
+        Promise.resolve(testOAuthConfiguration()),
+        Promise.resolve(testApplicationURL()),
+        Promise.resolve(testNodeEnvironment()),
+      ]);
 
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentification requise" },
-        { status: 401 }
+      const environment = getEnvironmentVariables();
+
+      return successResponse({
+        tests,
+        environment,
+      });
+    } catch (error: any) {
+      console.error("[ADMIN/DIAGNOSTIC/FULL] GET error:", error);
+      return serverError(
+        "Erreur lors de l'exécution des diagnostiques"
       );
     }
-
-    // Verify token and check admin role
-    const payload = await verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-    }
-
-    if (payload.role !== "admin") {
-      return NextResponse.json(
-        {
-          error: "Seuls les administrateurs peuvent accéder aux diagnostiques",
-        },
-        { status: 403 }
-      );
-    }
-
-    // Run all diagnostic tests in parallel
-    const tests = await Promise.all([
-      testDatabaseConnection(),
-      testUserCount(),
-      testProjectCount(),
-      Promise.resolve(testJWTSecret()),
-      Promise.resolve(testOAuthConfiguration()),
-      Promise.resolve(testApplicationURL()),
-      Promise.resolve(testNodeEnvironment()),
-    ]);
-
-    const environment = getEnvironmentVariables();
-
-    return NextResponse.json({
-      success: true,
-      tests,
-      environment,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error: unknown) {
-    console.error("Erreur diagnostique:", error);
-    return NextResponse.json(
-      {
-        error: "Erreur lors de l'exécution des diagnostiques",
-        details: getErrorMessage(error),
-      },
-      { status: 500 }
-    );
-  }
+  });
 }

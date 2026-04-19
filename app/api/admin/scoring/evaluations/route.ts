@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth-middleware";
+import { withAdminAuth } from "@/lib/auth-middleware";
 import { ScoringEvaluationService } from "@/lib/services/scoring-evaluation-service";
 
 async function handler(request: NextRequest, user: any) {
@@ -54,5 +54,5 @@ async function handler(request: NextRequest, user: any) {
 }
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, handler);
+  return withAdminAuth(request, handler);
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth-middleware';
+import { withAdminAuth, withAuth } from '@/lib/auth-middleware';
 import { ScoringEvaluationService } from '@/lib/services/scoring-evaluation-service';
 
 interface RouteContext {

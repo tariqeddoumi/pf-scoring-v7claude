@@ -9,7 +9,9 @@
  * GET /api/admin/scoring/configuration?type=ratingScales
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { withAdminAuth } from "@/lib/auth-middleware";
+import { successResponse, serverError, errorResponse } from "@/lib/api-response";
 import {
   getAnswerTypes,
   getAggregationMethods,
@@ -19,54 +21,41 @@ import {
 } from "@/lib/services/scoring-configuration-service";
 
 export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const type = searchParams.get("type");
+  return withAdminAuth(req, async () => {
+    try {
+      const { searchParams } = new URL(req.url);
+      const type = searchParams.get("type");
 
-    if (!type) {
-      return NextResponse.json({
-        success: false,
-        error: "Missing 'type' parameter",
-        errorCode: "MISSING_PARAMETER",
-      }, { status: 400 });
+      if (!type) {
+        return errorResponse("Paramètre 'type' manquant", { status: 400, errorCode: "MISSING_PARAMETER" });
+      }
+
+      let data;
+
+      switch (type) {
+        case "answerTypes":
+          data = await getAnswerTypes();
+          break;
+        case "aggregationMethods":
+          data = await getAggregationMethods();
+          break;
+        case "weightModes":
+          data = await getWeightModes();
+          break;
+        case "scoreScales":
+          data = await getScoreScales();
+          break;
+        case "ratingScales":
+          data = await getRatingScales();
+          break;
+        default:
+          return errorResponse(`Type de configuration inconnu: ${type}`, { status: 400, errorCode: "INVALID_TYPE" });
+      }
+
+      return successResponse(data);
+    } catch (error: any) {
+      console.error("[ADMIN/SCORING/CONFIGURATION] GET error:", error);
+      return serverError("Erreur lors de la récupération de la configuration");
     }
-
-    let data;
-
-    switch (type) {
-      case "answerTypes":
-        data = await getAnswerTypes();
-        break;
-      case "aggregationMethods":
-        data = await getAggregationMethods();
-        break;
-      case "weightModes":
-        data = await getWeightModes();
-        break;
-      case "scoreScales":
-        data = await getScoreScales();
-        break;
-      case "ratingScales":
-        data = await getRatingScales();
-        break;
-      default:
-        return NextResponse.json({
-          success: false,
-          error: `Unknown configuration type: ${type}`,
-          errorCode: "INVALID_TYPE",
-        }, { status: 400 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      data,
-    });
-  } catch (error) {
-    console.error("Configuration API error:", error);
-    return NextResponse.json({
-      success: false,
-      error: "Failed to fetch configuration",
-      errorCode: "INTERNAL_ERROR",
-    }, { status: 500 });
-  }
+  });
 }

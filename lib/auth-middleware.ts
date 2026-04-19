@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { hasPermission, hasMinimumRole as checkMinimumRole, type UserRole } from "./permissions";
 
 export interface AuthPayload {
   userId: string;
   email: string;
-  role: "admin" | "manager" | "analyst" | "viewer";
+  role: string; // Dynamic role type
   iat?: number;
   exp?: number;
 }
@@ -38,13 +39,10 @@ export async function withAuth(
 ): Promise<NextResponse> {
   const user = await authenticateRequest(request);
   if (!user) {
-    // Allow requests without auth in development or with default mock user
-    const mockUser: AuthPayload = {
-      userId: "550e8400-e29b-41d4-a716-446655440000", // Valid UUID v4
-      email: "mock@example.com",
-      role: "admin",
-    };
-    return handler(request, mockUser);
+    return NextResponse.json(
+      { success: false, error: "Unauthorized", errorCode: "ERR_AUTH_401" },
+      { status: 401 }
+    );
   }
   return handler(request, user);
 }
@@ -54,18 +52,64 @@ export async function withAdminAuth(
   handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
 ): Promise<NextResponse> {
   return withAuth(request, async (req, user) => {
-    if (user.role !== "admin" && user.role !== "manager") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Check if user has admin-level role
+    if (!checkMinimumRole(user.role, "scoring_admin")) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden", errorCode: "ERR_AUTH_403" },
+        { status: 403 }
+      );
     }
     return handler(req, user);
   });
 }
 
+/**
+ * Middleware to check specific permission
+ */
+export async function withPermission(
+  permission: string,
+  request: NextRequest,
+  handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
+): Promise<NextResponse> {
+  return withAuth(request, async (req, user) => {
+    if (!hasPermission(user.role, permission)) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden", errorCode: "ERR_AUTH_403" },
+        { status: 403 }
+      );
+    }
+    return handler(req, user);
+  });
+}
+
+/**
+ * Middleware to check minimum role
+ */
+export async function withMinimumRole(
+  minimumRole: UserRole,
+  request: NextRequest,
+  handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
+): Promise<NextResponse> {
+  return withAuth(request, async (req, user) => {
+    if (!checkMinimumRole(user.role, minimumRole)) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden", errorCode: "ERR_AUTH_403" },
+        { status: 403 }
+      );
+    }
+    return handler(req, user);
+  });
+}
+
+// Legacy role hierarchy (kept for backward compatibility)
 export const ROLE_HIERARCHY: Record<string, number> = {
-  admin: 4,
-  manager: 3,
-  analyst: 2,
-  viewer: 1,
+  system_admin: 7,
+  scoring_admin: 6,
+  risk_manager: 5,
+  committee_member: 4,
+  risk_analyst: 3,
+  auditor: 2,
+  read_only: 1,
 };
 
 export function hasMinimumRole(userRole: string, minimumRole: string): boolean {
