@@ -2,27 +2,28 @@
 -- Migration: Add Workflow, Decision, Override, Document, Comment, Approval tables
 -- Date: 2026-04-19
 -- Context: Lot 3 Phase 1 - Banking-grade workflow & decision management
+-- Fixed: UUID types for FK columns referencing existing tables
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
 -- 1. ScoringWorkflow — one-to-one with ScoringEvaluation
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_workflows" (
-    "id"                          TEXT NOT NULL PRIMARY KEY,
-    "evaluationId"                TEXT NOT NULL,
+    "id"                          UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "evaluationId"                UUID NOT NULL,
 
     "status"                      TEXT NOT NULL DEFAULT 'DRAFT',
     "currentStep"                 INTEGER NOT NULL DEFAULT 0,
 
     "requestedAt"                 TIMESTAMP(3),
     "submittedAt"                 TIMESTAMP(3),
-    "submittedBy"                 TEXT,
+    "submittedBy"                 UUID,
     "reviewStartedAt"             TIMESTAMP(3),
     "reviewCompletedAt"           TIMESTAMP(3),
     "approvedAt"                  TIMESTAMP(3),
-    "approvedBy"                  TEXT,
+    "approvedBy"                  UUID,
     "rejectedAt"                  TIMESTAMP(3),
-    "rejectedBy"                  TEXT,
+    "rejectedBy"                  UUID,
 
     "requiresCommitteeApproval"   BOOLEAN NOT NULL DEFAULT false,
     "requiresRiskManagerReview"   BOOLEAN NOT NULL DEFAULT true,
@@ -45,8 +46,8 @@ CREATE INDEX IF NOT EXISTS "BP_PF_v7pp_scoring_workflows_currentStep_idx" ON "BP
 -- 2. ScoringWorkflowStep — steps inside a workflow
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_workflow_steps" (
-    "id"          TEXT NOT NULL PRIMARY KEY,
-    "workflowId"  TEXT NOT NULL,
+    "id"          UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "workflowId"  UUID NOT NULL,
 
     "stepNumber"  INTEGER NOT NULL,
     "stepName"    TEXT NOT NULL,
@@ -58,8 +59,8 @@ CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_workflow_steps" (
     "completedAt" TIMESTAMP(3),
     "dueDate"     TIMESTAMP(3),
 
-    "assignedTo"  TEXT,
-    "assignedBy"  TEXT,
+    "assignedTo"  UUID,
+    "assignedBy"  UUID,
     "notes"       TEXT,
     "feedback"    TEXT,
 
@@ -80,8 +81,8 @@ CREATE INDEX IF NOT EXISTS "BP_PF_v7pp_scoring_workflow_steps_status_idx"      O
 -- 3. ScoringDecision — final decision on a workflow
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_decisions" (
-    "id"                     TEXT NOT NULL PRIMARY KEY,
-    "workflowId"             TEXT NOT NULL,
+    "id"                     UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "workflowId"             UUID NOT NULL,
 
     "decisionType"           TEXT NOT NULL,
     "riskRating"             TEXT NOT NULL,
@@ -91,11 +92,11 @@ CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_decisions" (
     "hasConditions"          BOOLEAN NOT NULL DEFAULT false,
     "conditionsJson"         TEXT,
 
-    "decidedBy"              TEXT NOT NULL,
+    "decidedBy"              UUID NOT NULL,
     "decidedAt"              TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     "requiresHigherApproval" BOOLEAN NOT NULL DEFAULT false,
-    "escalatedTo"            TEXT,
+    "escalatedTo"            UUID,
 
     "createdAt"              TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt"              TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -118,9 +119,9 @@ CREATE INDEX IF NOT EXISTS "BP_PF_v7pp_scoring_decisions_decidedAt_idx"     ON "
 -- 4. ScoringOverride — score overrides with audit trail
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_overrides" (
-    "id"              TEXT NOT NULL PRIMARY KEY,
-    "evaluationId"    TEXT NOT NULL,
-    "nodeId"          TEXT NOT NULL,
+    "id"              UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "evaluationId"    UUID NOT NULL,
+    "nodeId"          UUID NOT NULL,
 
     "originalValue"   TEXT,
     "originalScore"   DOUBLE PRECISION,
@@ -131,9 +132,9 @@ CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_overrides" (
     "justification"   TEXT,
     "riskLevel"       TEXT NOT NULL,
 
-    "overriddenBy"    TEXT NOT NULL,
+    "overriddenBy"    UUID NOT NULL,
     "overriddenAt"    TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "approvedBy"      TEXT,
+    "approvedBy"      UUID,
     "approvedAt"      TIMESTAMP(3),
 
     "auditNotes"      TEXT,
@@ -168,8 +169,8 @@ CREATE INDEX IF NOT EXISTS "BP_PF_v7pp_scoring_overrides_status_idx"       ON "B
 -- 5. ScoringDocument — documents uploaded for an evaluation
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_documents" (
-    "id"           TEXT NOT NULL PRIMARY KEY,
-    "evaluationId" TEXT NOT NULL,
+    "id"           UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "evaluationId" UUID NOT NULL,
 
     "fileName"     TEXT NOT NULL,
     "fileSize"     INTEGER NOT NULL,
@@ -177,12 +178,12 @@ CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_documents" (
     "storagePath"  TEXT NOT NULL,
 
     "documentType" TEXT NOT NULL,
-    "nodeId"       TEXT,
+    "nodeId"       UUID,
     "isRequired"   BOOLEAN NOT NULL DEFAULT false,
 
-    "uploadedBy"   TEXT NOT NULL,
+    "uploadedBy"   UUID NOT NULL,
     "uploadedAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "verifiedBy"   TEXT,
+    "verifiedBy"   UUID,
     "verifiedAt"   TIMESTAMP(3),
 
     "description"  TEXT,
@@ -215,21 +216,21 @@ CREATE INDEX IF NOT EXISTS "BP_PF_v7pp_scoring_documents_uploadedAt_idx"   ON "B
 -- 6. ScoringComment — comments and discussions on workflows
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_comments" (
-    "id"              TEXT NOT NULL PRIMARY KEY,
-    "workflowId"      TEXT NOT NULL,
+    "id"              UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "workflowId"      UUID NOT NULL,
 
     "content"         TEXT NOT NULL,
     "commentType"     TEXT NOT NULL DEFAULT 'GENERAL',
 
-    "createdBy"       TEXT NOT NULL,
+    "createdBy"       UUID NOT NULL,
     "createdAt"       TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    "parentCommentId" TEXT,
+    "parentCommentId" UUID,
 
     "isInternal"      BOOLEAN NOT NULL DEFAULT false,
     "isResolved"      BOOLEAN NOT NULL DEFAULT false,
     "resolvedAt"      TIMESTAMP(3),
-    "resolvedBy"      TEXT,
+    "resolvedBy"      UUID,
 
     "updatedAt"       TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -254,14 +255,14 @@ CREATE INDEX IF NOT EXISTS "BP_PF_v7pp_scoring_comments_isResolved_idx"  ON "BP_
 -- 7. ScoringApproval — approval chain entries
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "BP_PF_v7pp_scoring_approvals" (
-    "id"             TEXT NOT NULL PRIMARY KEY,
-    "workflowId"     TEXT NOT NULL,
+    "id"             UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "workflowId"     UUID NOT NULL,
 
     "approvalType"   TEXT NOT NULL,
     "status"         TEXT NOT NULL DEFAULT 'PENDING',
 
     "requestedFrom"  TEXT NOT NULL,
-    "approvedBy"     TEXT,
+    "approvedBy"     UUID,
     "approvedAt"     TIMESTAMP(3),
 
     "comments"       TEXT,
