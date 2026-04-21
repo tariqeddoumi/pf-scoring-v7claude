@@ -11,7 +11,7 @@ interface RouteParams {
  */
 async function handleGET(request: NextRequest, user: any, params: any) {
   try {
-    if (!hasMinimumRole(user.role, "manager")) {
+    if (!hasMinimumRole(user.role, "risk_manager")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

@@ -1,38 +1,76 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { hasPermission, hasMinimumRole as checkMinimumRole, type UserRole } from "./permissions";
+import {
+  hasPermission,
+  hasMinimumRole,
+  type UserRole,
+} from "./permissions";
+
+/**
+ * Middleware d'authentification et d'autorisation pour les routes API.
+ *
+ * FONCTIONNEMENT (pour débutants) :
+ * -------------------------------------------
+ * Chaque requête API doit fournir un token JWT dans le header :
+ *   Authorization: Bearer <token>
+ *
+ * Le middleware vérifie :
+ *   1. Que le token est présent et valide (non expiré, bonne signature)
+ *   2. Que l'utilisateur a le rôle ou la permission nécessaire
+ *
+ * UTILISATION dans les routes API :
+ *   export async function GET(req) {
+ *     return withAuth(req, async (req, user) => {
+ *       // Ici, user est authentifié et disponible
+ *     });
+ *   }
+ */
 
 export interface AuthPayload {
   userId: string;
   email: string;
-  role: string; // Dynamic role type
-  iat?: number;
-  exp?: number;
+  role: string;
+  iat?: number; // Issued At (timestamp de création du token)
+  exp?: number; // Expiration (timestamp d'expiration)
 }
 
+// Le secret JWT est lu depuis les variables d'environnement.
+// En production, SUPABASE_JWT_SECRET doit TOUJOURS être défini.
 const JWT_SECRET =
   process.env.SUPABASE_JWT_SECRET ||
   process.env.JWT_SECRET ||
   "your-secret-key";
 
+// Pré-encoder le secret une seule fois (optimisation — évite de recréer TextEncoder à chaque requête)
+const JWT_SECRET_BYTES = new TextEncoder().encode(JWT_SECRET);
+
+/**
+ * Vérifie le token JWT dans le header Authorization.
+ * Retourne le payload décodé si valide, null sinon.
+ */
 export async function authenticateRequest(
   request: NextRequest
 ): Promise<AuthPayload | null> {
   try {
     const authHeader = request.headers.get("authorization");
+    // Le header doit être au format "Bearer <token>"
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return null;
     }
 
-    const token = authHeader.substring(7);
-    const secret = new TextEncoder().encode(JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
+    const token = authHeader.substring(7); // Extraire le token après "Bearer "
+    const { payload } = await jwtVerify(token, JWT_SECRET_BYTES);
     return payload as unknown as AuthPayload;
   } catch {
+    // Token invalide, expiré, ou signature incorrecte
     return null;
   }
 }
 
+/**
+ * Wrapper de base : vérifie l'authentification avant d'appeler le handler.
+ * Retourne 401 si l'utilisateur n'est pas connecté.
+ */
 export async function withAuth(
   request: NextRequest,
   handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
@@ -40,22 +78,25 @@ export async function withAuth(
   const user = await authenticateRequest(request);
   if (!user) {
     return NextResponse.json(
-      { success: false, error: "Unauthorized", errorCode: "ERR_AUTH_401" },
+      { success: false, error: "Non authentifié", errorCode: "ERR_AUTH_401" },
       { status: 401 }
     );
   }
   return handler(request, user);
 }
 
+/**
+ * Wrapper admin : requiert au minimum le rôle "scoring_admin".
+ * Retourne 403 si l'utilisateur n'a pas les droits suffisants.
+ */
 export async function withAdminAuth(
   request: NextRequest,
   handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
 ): Promise<NextResponse> {
   return withAuth(request, async (req, user) => {
-    // Check if user has admin-level role
-    if (!checkMinimumRole(user.role, "scoring_admin")) {
+    if (!hasMinimumRole(user.role, "scoring_admin")) {
       return NextResponse.json(
-        { success: false, error: "Forbidden", errorCode: "ERR_AUTH_403" },
+        { success: false, error: "Accès interdit", errorCode: "ERR_AUTH_403" },
         { status: 403 }
       );
     }
@@ -64,7 +105,8 @@ export async function withAdminAuth(
 }
 
 /**
- * Middleware to check specific permission
+ * Wrapper permission : vérifie qu'un utilisateur possède une permission précise.
+ * Ex : withPermission("scoring:delete", req, handler)
  */
 export async function withPermission(
   permission: string,
@@ -74,7 +116,7 @@ export async function withPermission(
   return withAuth(request, async (req, user) => {
     if (!hasPermission(user.role, permission)) {
       return NextResponse.json(
-        { success: false, error: "Forbidden", errorCode: "ERR_AUTH_403" },
+        { success: false, error: "Accès interdit", errorCode: "ERR_AUTH_403" },
         { status: 403 }
       );
     }
@@ -83,7 +125,8 @@ export async function withPermission(
 }
 
 /**
- * Middleware to check minimum role
+ * Wrapper rôle minimum : vérifie que l'utilisateur a au moins un certain niveau de rôle.
+ * Ex : withMinimumRole("risk_manager", req, handler)
  */
 export async function withMinimumRole(
   minimumRole: UserRole,
@@ -91,9 +134,9 @@ export async function withMinimumRole(
   handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
 ): Promise<NextResponse> {
   return withAuth(request, async (req, user) => {
-    if (!checkMinimumRole(user.role, minimumRole)) {
+    if (!hasMinimumRole(user.role, minimumRole)) {
       return NextResponse.json(
-        { success: false, error: "Forbidden", errorCode: "ERR_AUTH_403" },
+        { success: false, error: "Accès interdit", errorCode: "ERR_AUTH_403" },
         { status: 403 }
       );
     }
@@ -101,17 +144,6 @@ export async function withMinimumRole(
   });
 }
 
-// Legacy role hierarchy (kept for backward compatibility)
-export const ROLE_HIERARCHY: Record<string, number> = {
-  system_admin: 7,
-  scoring_admin: 6,
-  risk_manager: 5,
-  committee_member: 4,
-  risk_analyst: 3,
-  auditor: 2,
-  read_only: 1,
-};
-
-export function hasMinimumRole(userRole: string, minimumRole: string): boolean {
-  return (ROLE_HIERARCHY[userRole] || 0) >= (ROLE_HIERARCHY[minimumRole] || 0);
-}
+// Re-export des fonctions de permissions pour la commodité des routes API
+// (évite d'avoir à importer depuis deux fichiers différents)
+export { hasMinimumRole, hasPermission } from "./permissions";

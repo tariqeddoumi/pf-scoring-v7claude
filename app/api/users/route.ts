@@ -8,7 +8,7 @@ import { paginationSchema } from "@/lib/validation-schemas";
  */
 async function handleGET(request: NextRequest, user: any) {
   try {
-    if (!hasMinimumRole(user.role, "manager")) {
+    if (!hasMinimumRole(user.role, "risk_manager")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

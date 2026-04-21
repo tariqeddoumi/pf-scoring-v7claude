@@ -1,8 +1,16 @@
-import prisma from "@/lib/prisma-client";
-
 /**
- * Score calculator - evaluates individual nodes based on answers and rules.
- * Computes raw, weighted, and normalized scores.
+ * Score calculator — évalue chaque nœud selon sa réponse.
+ *
+ * COMMENT ÇA MARCHE (pour débutants) :
+ * ----------------------------------------
+ * Chaque question du scoring peut être évaluée de 3 façons :
+ *
+ * 1. OPTIONS  → choix multiples (ex: "Contrat ferme" = 80 pts, "Pas de contrat" = 0 pts)
+ * 2. PLAGES   → valeur numérique dans un intervalle (ex: DSCR entre 1.2 et 1.5 = 60 pts)
+ * 3. FORMULE  → expression arithmétique (ex: "revenus / dettes * 100")
+ *
+ * L'AggregationEngine combine les scores enfants en score parent
+ * selon différentes méthodes (somme, moyenne pondérée, etc.)
  */
 
 export interface ScoreInputs {
@@ -63,8 +71,13 @@ export class ScoreCalculator {
   }
 
   /**
-   * Evaluate a formula with variables.
-   * Basic expression parsing: supports +, -, *, /, parentheses.
+   * Évalue une formule arithmétique avec substitution de variables.
+   *
+   * SÉCURITÉ : on utilise un parser récursif au lieu de eval() pour éviter
+   * toute injection de code. Seules les opérations +, -, *, / et parenthèses
+   * sont autorisées.
+   *
+   * Exemple : expression="dscr * 50", variables={dscr: 1.4} → 70
    */
   static scoreFromFormula(
     expression: string,
@@ -72,26 +85,28 @@ export class ScoreCalculator {
     fallback: number = 0
   ): ScoreOutput {
     try {
+      // Remplacer chaque variable par sa valeur numérique
       let expr = expression;
       for (const [key, value] of Object.entries(variables)) {
         const val = Number(value);
         if (!isNaN(val)) {
+          // \b = word boundary : évite de remplacer "dscr" dans "dscr2"
           expr = expr.replace(new RegExp(`\\b${key}\\b`, "g"), String(val));
         }
       }
-      // Simple evaluation (in production use a safe math evaluator)
-      // eslint-disable-next-line no-eval
-      const result = eval(expr);
-      const score = Number(result);
-      if (isNaN(score)) throw new Error("Result is NaN");
+
+      // Parser arithmétique sécurisé (pas d'eval)
+      const score = safeEvalArithmetic(expr);
+      if (isNaN(score)) throw new Error("Résultat NaN");
+
       return {
         rawScore: score,
-        explanation: `Formula "${expression}" evaluated to ${score}`,
+        explanation: `Formule "${expression}" évaluée à ${score}`,
       };
     } catch (err) {
       return {
         rawScore: fallback,
-        explanation: `Formula evaluation failed: ${err instanceof Error ? err.message : String(err)}`,
+        explanation: `Échec de la formule : ${err instanceof Error ? err.message : String(err)}`,
       };
     }
   }
@@ -120,9 +135,102 @@ export class ScoreCalculator {
   }
 }
 
+// ============================================================================
+// PARSER ARITHMÉTIQUE SÉCURISÉ (remplace eval)
+// ============================================================================
+// Implémentation d'un parseur "descente récursive" pour les expressions
+// arithmétiques simples : +, -, *, /, parenthèses, nombres décimaux.
+//
+// Grammaire supportée :
+//   expression = term (('+' | '-') term)*
+//   term       = factor (('*' | '/') factor)*
+//   factor     = '(' expression ')' | '-' factor | NUMBER
+//
+// Cette approche est 100% sûre car elle n'exécute JAMAIS de code arbitraire.
+// ============================================================================
+
 /**
- * Aggregation engine - combines child scores into parent scores.
- * Supports: SUM, WEIGHTED_SUM, AVERAGE, WEIGHTED_AVERAGE, MIN, MAX, COUNT.
+ * Découpe une expression en tokens (nombres et opérateurs).
+ * Exemple : "1.5 * (2 + 3)" → ["1.5", "*", "(", "2", "+", "3", ")"]
+ */
+function tokenize(expr: string): string[] {
+  const tokens: string[] = [];
+  let i = 0;
+  while (i < expr.length) {
+    const ch = expr[i];
+    // Ignorer les espaces
+    if (/\s/.test(ch)) { i++; continue; }
+    // Opérateurs et parenthèses
+    if ("+-*/()".includes(ch)) { tokens.push(ch); i++; continue; }
+    // Nombres décimaux
+    if (/[\d.]/.test(ch)) {
+      let num = "";
+      while (i < expr.length && /[\d.]/.test(expr[i])) num += expr[i++];
+      tokens.push(num);
+      continue;
+    }
+    throw new Error(`Caractère invalide dans la formule : "${ch}"`);
+  }
+  return tokens;
+}
+
+/**
+ * Évalue une expression arithmétique de façon sécurisée.
+ * Lève une erreur si la formule est invalide ou si elle contient des caractères non autorisés.
+ */
+function safeEvalArithmetic(expr: string): number {
+  const tokens = tokenize(expr);
+  let pos = 0;
+
+  // Niveau 1 : addition et soustraction (priorité basse)
+  function parseExpression(): number {
+    let left = parseTerm();
+    while (pos < tokens.length && (tokens[pos] === "+" || tokens[pos] === "-")) {
+      const op = tokens[pos++];
+      const right = parseTerm();
+      left = op === "+" ? left + right : left - right;
+    }
+    return left;
+  }
+
+  // Niveau 2 : multiplication et division (priorité haute)
+  function parseTerm(): number {
+    let left = parseFactor();
+    while (pos < tokens.length && (tokens[pos] === "*" || tokens[pos] === "/")) {
+      const op = tokens[pos++];
+      const right = parseFactor();
+      if (op === "/" && right === 0) throw new Error("Division par zéro");
+      left = op === "*" ? left * right : left / right;
+    }
+    return left;
+  }
+
+  // Niveau 3 : nombre, parenthèse, ou signe négatif
+  function parseFactor(): number {
+    if (tokens[pos] === "(") {
+      pos++; // consommer "("
+      const val = parseExpression();
+      if (tokens[pos] === ")") pos++; // consommer ")"
+      return val;
+    }
+    if (tokens[pos] === "-") {
+      pos++; // signe négatif unaire
+      return -parseFactor();
+    }
+    const num = parseFloat(tokens[pos]);
+    if (isNaN(num)) throw new Error(`Token invalide : "${tokens[pos]}"`);
+    pos++;
+    return num;
+  }
+
+  return parseExpression();
+}
+
+// ============================================================================
+
+/**
+ * Aggregation engine — combine les scores enfants en score parent.
+ * Méthodes supportées : SUM, WEIGHTED_SUM, AVERAGE, WEIGHTED_AVERAGE, MIN, MAX, COUNT.
  */
 
 export interface NodeScoreData {

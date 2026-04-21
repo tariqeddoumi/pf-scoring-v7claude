@@ -38,7 +38,10 @@ async function handleGET(request: NextRequest, user: any) {
  */
 async function handlePOST(request: NextRequest, user: any) {
   try {
-    if (!hasMinimumRole(user.role, "analyst")) {
+    // "analyst" n'existe PAS dans la hiérarchie — le rôle correct est "risk_analyst"
+    // Hiérarchie complète : read_only < auditor < risk_analyst < committee_member
+    //                       < risk_manager < scoring_admin < system_admin
+    if (!hasMinimumRole(user.role, "risk_analyst")) {
       return NextResponse.json(
         {
           success: false,

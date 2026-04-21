@@ -34,7 +34,7 @@ async function handleGET(request: NextRequest, user: any, params: any) {
  */
 async function handlePUT(request: NextRequest, user: any, params: any) {
   try {
-    if (!hasMinimumRole(user.role, "analyst")) {
+    if (!hasMinimumRole(user.role, "risk_analyst")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -72,7 +72,7 @@ async function handlePUT(request: NextRequest, user: any, params: any) {
  */
 async function handleDELETE(request: NextRequest, user: any, params: any) {
   try {
-    if (!hasMinimumRole(user.role, "analyst")) {
+    if (!hasMinimumRole(user.role, "risk_analyst")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

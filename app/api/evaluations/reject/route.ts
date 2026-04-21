@@ -7,7 +7,7 @@ import { EvaluationService } from "@/lib/services/evaluation-service";
  */
 async function handlePOST(request: NextRequest, user: any) {
   try {
-    if (!hasMinimumRole(user.role, "manager")) {
+    if (!hasMinimumRole(user.role, "risk_manager")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

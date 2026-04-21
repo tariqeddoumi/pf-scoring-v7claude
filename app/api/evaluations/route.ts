@@ -8,7 +8,7 @@ import { paginationSchema } from "@/lib/validation-schemas";
  */
 async function handleGET(request: NextRequest, user: any) {
   try {
-    if (!hasMinimumRole(user.role, "analyst")) {
+    if (!hasMinimumRole(user.role, "risk_analyst")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -42,7 +42,7 @@ async function handleGET(request: NextRequest, user: any) {
  */
 async function handlePOST(request: NextRequest, user: any) {
   try {
-    if (!hasMinimumRole(user.role, "analyst")) {
+    if (!hasMinimumRole(user.role, "risk_analyst")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
