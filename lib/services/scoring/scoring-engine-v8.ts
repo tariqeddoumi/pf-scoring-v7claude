@@ -5,16 +5,19 @@ import { ValueResolver, ResolvedValueSnapshot } from "./value-resolver";
 import { BindingResolver, BindingContext } from "./binding-resolver";
 
 /**
- * Scoring Engine V8 - unified engine integrating:
- * - Hierarchical model loading
- * - Source-aware data binding
- * - Type-safe value resolution
- * - Score calculation (options/ranges/formulas)
- * - Hierarchical aggregation
- * - Rule impact tracking & explanation
+ * Scoring Engine V8 — moteur de calcul unifié.
  *
- * Each evaluation builds a complete calculation trace (nodeId → explanation)
- * for audit and transparency.
+ * FONCTIONNEMENT (pour débutants) :
+ * --------------------------------------------------
+ * 1. On charge la structure du modèle (arbre de nœuds)
+ * 2. On résout les liaisons de données (binding : ex. "lire le montant du projet")
+ * 3. On calcule le score de chaque FEUILLE (question individuelle)
+ *    → options (choix multiples) ou plages numériques (ex: DSCR > 1.5 = 80 pts)
+ * 4. On remonte dans l'arbre (bottom-up) en agrégeant les scores enfants
+ * 5. On applique les règles malus (pénalités pour conditions risquées)
+ * 6. On génère une trace complète pour l'audit
+ *
+ * Le score final est converti en note Basel (AAA → D) et une recommandation.
  */
 
 export interface RuleImpact {
@@ -103,12 +106,15 @@ export class ScoringEngineV8 {
       rulesByNode.set(rule.nodeId, list);
     }
 
-    // Calculate scores bottom-up
+    // Calcul des scores en remontant de la feuille vers la racine (bottom-up).
+    // IMPORTANT : on utilise traverseBottomUp (post-ordre) et non traverseDepthFirst
+    // (pré-ordre), sinon les enfants ne sont pas encore calculés quand le parent
+    // essaie de les agréger.
     const nodeScores = new Map<string, NodeResult>();
     let triggeredRuleIds: string[] = [];
     let malusTotal = 0;
 
-    ModelLoader.traverseDepthFirst(tree, (node, _depth) => {
+    ModelLoader.traverseBottomUp(tree, (node) => {
       const answer = answersByNode.get(node.id);
       const binding = resolvedBindings.get(node.id);
 
@@ -273,10 +279,14 @@ export class ScoringEngineV8 {
   }
 
   /**
-   * Persist calculation results to database.
+   * Persiste les résultats de calcul en base de données.
+   *
+   * OPTIMISATION : au lieu de faire N appels upsert (un par nœud),
+   * on supprime les anciens résultats puis on insère tout en une seule requête.
+   * Cela passe de N+1 requêtes à 3 requêtes quelle que soit la taille du modèle.
    */
   static async persistTrace(trace: EvaluationTrace): Promise<void> {
-    // Update evaluation with final score, rating, recommendation
+    // Étape 1 : mettre à jour le résumé de l'évaluation (score final, note, recommandation)
     await prisma.scoringEvaluation.update({
       where: { id: trace.evaluationId },
       data: {
@@ -289,8 +299,9 @@ export class ScoringEngineV8 {
       },
     });
 
-    // Persist individual node results
+    // Étape 2 : collecter tous les résultats nœud par nœud (arbre → liste plate)
     const results: Array<{ evaluationId: string; nodeId: string; data: NodeResult }> = [];
+
     const collectResults = (nodes: NodeResult[]) => {
       for (const node of nodes) {
         results.push({ evaluationId: trace.evaluationId, nodeId: node.nodeId, data: node });
@@ -299,10 +310,14 @@ export class ScoringEngineV8 {
     };
     collectResults(trace.rootResults);
 
-    for (const { evaluationId, nodeId, data } of results) {
-      await prisma.scoringEvaluationNodeResult.upsert({
-        where: { evaluationId_nodeId: { evaluationId, nodeId } },
-        create: {
+    // Étape 3 : supprimer les anciens résultats, puis insérer tous les nouveaux d'un coup
+    // (deleteMany + createMany = 2 requêtes au lieu de N*2 avec upsert individuel)
+    await prisma.$transaction([
+      prisma.scoringEvaluationNodeResult.deleteMany({
+        where: { evaluationId: trace.evaluationId },
+      }),
+      prisma.scoringEvaluationNodeResult.createMany({
+        data: results.map(({ evaluationId, nodeId, data }) => ({
           evaluationId,
           nodeId,
           rawScore: data.rawScore,
@@ -312,17 +327,8 @@ export class ScoringEngineV8 {
           explanation: data.explanation,
           ruleImpactJson: JSON.stringify(data.ruleImpacts),
           traceJson: JSON.stringify(data),
-        },
-        update: {
-          rawScore: data.rawScore,
-          weightedScore: data.weightedScore,
-          normalizedScore: data.normalizedScore,
-          aggregationMethod: data.aggregationMethod,
-          explanation: data.explanation,
-          ruleImpactJson: JSON.stringify(data.ruleImpacts),
-          traceJson: JSON.stringify(data),
-        },
-      });
-    }
+        })),
+      }),
+    ]);
   }
 }

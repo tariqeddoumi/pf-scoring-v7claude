@@ -3,8 +3,18 @@ import prisma from "@/lib/prisma-client";
 
 /**
  * PATCH /api/scoring/evaluations/[id]/answers
- * Batch update answers for an evaluation.
- * Accepts array of { nodeId, value, overrideReason? }.
+ * Mise à jour en lot des réponses d'une évaluation.
+ *
+ * CORPS DE LA REQUÊTE :
+ *   { answers: [{ nodeId: string, value: any, overrideReason?: string }] }
+ *
+ * Les valeurs sont stockées dans des colonnes typées séparées :
+ *   - valueString  : texte / code d'option (ex: "FORT", "MOYEN")
+ *   - valueNumber  : nombre décimal (ex: 1.45 pour le DSCR)
+ *   - valueBoolean : oui/non
+ *   - valueDate    : date ISO (ex: "2025-01-15")
+ *
+ * La base utilise un upsert : crée la réponse si elle n'existe pas, sinon la met à jour.
  */
 export async function PATCH(
   req: NextRequest,
@@ -19,44 +29,51 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          error: "answers must be an array",
+          error: "Le champ 'answers' doit être un tableau",
           errorCode: "VALIDATION_ERROR",
         },
         { status: 400 }
       );
     }
 
-    // Verify evaluation exists
+    // Vérifier que l'évaluation existe avant de modifier ses réponses
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },
     });
 
     if (!evaluation) {
       return NextResponse.json(
-        { success: false, error: "Evaluation not found", errorCode: "NOT_FOUND" },
+        { success: false, error: "Évaluation introuvable", errorCode: "NOT_FOUND" },
         { status: 404 }
       );
     }
 
-    // Update each answer
+    // Mettre à jour chaque réponse individuellement
     const updated = [];
     for (const { nodeId, value, overrideReason } of answers) {
       if (!nodeId || value === undefined) continue;
 
-      // Determine value type & storage column
+      // Détecter le type JavaScript de la valeur et mapper vers la bonne colonne DB.
+      // Note : les valeurs venant du JSON ne peuvent jamais être instanceof Date —
+      //        on traite les chaînes de date comme des strings pour préserver leur format.
       let valueString: string | null = null;
       let valueNumber: number | null = null;
       let valueBoolean: boolean | null = null;
       let valueDate: Date | null = null;
 
-      if (typeof value === "string") {
-        valueString = value;
+      if (typeof value === "boolean") {
+        valueBoolean = value;
       } else if (typeof value === "number") {
         valueNumber = value;
-      } else if (typeof value === "boolean") {
-        valueBoolean = value;
-      } else if (value instanceof Date || typeof value === "string") {
-        valueDate = new Date(value);
+      } else if (typeof value === "string") {
+        // Détecter si la chaîne ressemble à une date ISO (ex: "2025-01-15T00:00:00Z")
+        const dateCandidate = new Date(value);
+        const isIsoDate = /^\d{4}-\d{2}-\d{2}/.test(value) && !isNaN(dateCandidate.getTime());
+        if (isIsoDate) {
+          valueDate = dateCandidate;
+        } else {
+          valueString = value;
+        }
       }
 
       const result = await prisma.scoringEvaluationAnswer.upsert({

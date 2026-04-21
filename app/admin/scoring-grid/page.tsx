@@ -381,16 +381,29 @@ export default function ScoringGridPage() {
       {!loading && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">
-            Criteria ({criteria.length})
+            Critères de scoring ({criteria.length})
           </h2>
 
           {criteria.length === 0 ? (
             <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 text-center text-slate-400">
-              No criteria defined yet. Add one to get started.
+              Aucun critère défini. Ajoutez-en un pour commencer.
             </div>
           ) : (
-            <div className="space-y-3">
-              {criteria.map((item) => (
+            /* Group criteria by category */
+            <div className="space-y-6">
+              {Array.from(new Set(criteria.map(c => c.category))).sort().map(category => (
+                <div key={category} className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+                      {category}
+                    </h3>
+                    <div className="flex-1 h-px bg-slate-700" />
+                    <span className="text-xs text-slate-500">
+                      {criteria.filter(c => c.category === category).length} critères
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+              {criteria.filter(c => c.category === category).map((item) => (
                 <div
                   key={item.id}
                   className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden"
@@ -421,18 +434,18 @@ export default function ScoringGridPage() {
                   </button>
 
                   {expandedCriteria.has(item.id) && (
-                    <div className="border-t border-slate-700 p-4 space-y-3 bg-slate-700/30">
+                    <div className="border-t border-slate-700 p-4 space-y-4 bg-slate-700/30">
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
-                          <p className="text-slate-400">Score Type</p>
+                          <p className="text-slate-400">Type de score</p>
                           <p className="text-white font-medium">{item.scoreType}</p>
                         </div>
                         <div>
-                          <p className="text-slate-400">Min Score</p>
+                          <p className="text-slate-400">Score min</p>
                           <p className="text-white font-medium">{item.minScore}</p>
                         </div>
                         <div>
-                          <p className="text-slate-400">Max Score</p>
+                          <p className="text-slate-400">Score max</p>
                           <p className="text-white font-medium">{item.maxScore}</p>
                         </div>
                       </div>
@@ -441,17 +454,82 @@ export default function ScoringGridPage() {
                         <p className="text-sm text-slate-300">{item.description}</p>
                       )}
 
-                      <div className="flex gap-2 pt-2">
+                      {/* Thresholds (sous-critères numériques) */}
+                      {item.thresholds && item.thresholds.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                            Plages de notation ({item.thresholds.length} sous-critères)
+                          </p>
+                          <table className="w-full text-xs rounded-lg overflow-hidden">
+                            <thead>
+                              <tr className="bg-slate-800 text-slate-400">
+                                <th className="text-left px-3 py-2 font-medium">Libellé</th>
+                                <th className="text-center px-3 py-2 font-medium">Min</th>
+                                <th className="text-center px-3 py-2 font-medium">Max</th>
+                                <th className="text-right px-3 py-2 font-medium">Score</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                              {item.thresholds.map((t) => (
+                                <tr key={t.id} className="text-slate-300">
+                                  <td className="px-3 py-2">{t.label ?? '—'}</td>
+                                  <td className="px-3 py-2 text-center font-mono">{t.minValue}</td>
+                                  <td className="px-3 py-2 text-center font-mono">
+                                    {t.maxValue >= 999 ? '∞' : t.maxValue}
+                                  </td>
+                                  <td className={`px-3 py-2 text-right font-bold ${
+                                    t.score >= 75 ? 'text-green-400' :
+                                    t.score >= 50 ? 'text-yellow-400' : 'text-red-400'
+                                  }`}>{t.score} pts</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Options (sous-critères qualitatifs) */}
+                      {item.options && item.options.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                            Options de notation ({item.options.length} sous-critères)
+                          </p>
+                          <table className="w-full text-xs rounded-lg overflow-hidden">
+                            <thead>
+                              <tr className="bg-slate-800 text-slate-400">
+                                <th className="text-left px-3 py-2 font-medium">Option</th>
+                                <th className="text-right px-3 py-2 font-medium">Score</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                              {item.options.sort((a, b) => a.orderIndex - b.orderIndex).map((o) => (
+                                <tr key={o.id} className="text-slate-300">
+                                  <td className="px-3 py-2">{o.label}</td>
+                                  <td className={`px-3 py-2 text-right font-bold ${
+                                    o.score >= 75 ? 'text-green-400' :
+                                    o.score >= 50 ? 'text-yellow-400' : 'text-red-400'
+                                  }`}>{o.score} pts</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-1">
                         <button
                           onClick={() => setDeleteConfirm(item.id)}
                           className="px-3 py-1 text-red-400 hover:bg-red-500/20 rounded transition-colors flex items-center gap-1 text-sm"
                         >
                           <Trash2 size={16} />
-                          Delete
+                          Supprimer
                         </button>
                       </div>
                     </div>
                   )}
+                </div>
+              ))}
+                  </div>
                 </div>
               ))}
             </div>

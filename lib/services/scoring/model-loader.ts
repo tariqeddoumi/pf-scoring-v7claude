@@ -3,6 +3,19 @@ import prisma from "@/lib/prisma-client";
 /**
  * Model loader - loads and caches scoring model versions with full tree structure.
  * Organizes nodes into parent-child hierarchy for traversal and calculation.
+ *
+ * ARCHITECTURE NOTE (pour débutants) :
+ * -----------------------------------------
+ * Un modèle de scoring est un arbre :
+ *   - Racines (depth 0) : Domaines (ex: "Risque Financier")
+ *   - Niveau 1 : Critères (ex: "Endettement")
+ *   - Feuilles (depth max) : Questions réelles à scorer
+ *
+ * Quand on calcule le score, on part DES FEUILLES vers la RACINE.
+ * C'est ce qu'on appelle l'agrégation "bottom-up".
+ *
+ * Ce fichier stocke l'arbre en mémoire (cache) pour éviter des requêtes
+ * répétées à la base de données.
  */
 
 export interface NodeMeta {
@@ -136,26 +149,68 @@ export class ModelLoader {
   }
 
   /**
-   * Traverse nodes in depth-first order, invoking callback for each.
+   * Traverse nodes in depth-first PRE-ORDER (parent → children).
+   * Utile pour afficher l'arbre, générer des breadcrumbs, etc.
+   *
+   * ⚠️ NE PAS utiliser pour le calcul de scores (utiliser traverseBottomUp).
    */
   static traverseDepthFirst(
     tree: ModelTree,
     callback: (node: NodeMeta, depth: number) => void
   ): void {
     const visited = new Set<string>();
+
     const visit = (nodeId: string, depth: number) => {
       if (visited.has(nodeId)) return;
       visited.add(nodeId);
+
       const node = tree.nodesById.get(nodeId);
       if (!node) return;
+
+      // On traite le parent EN PREMIER, puis ses enfants (pré-ordre)
       callback(node, depth);
+
       const children = tree.childrenOf.get(nodeId) || [];
       for (const childId of children) {
         visit(childId, depth + 1);
       }
     };
+
     for (const rootId of tree.rootNodeIds) {
       visit(rootId, 0);
+    }
+  }
+
+  /**
+   * Traverse nodes in POST-ORDER (children → parent).
+   * OBLIGATOIRE pour le calcul de scores : les feuilles doivent être calculées
+   * avant que le parent puisse agréger leurs résultats.
+   *
+   * Exemple : pour calculer le score de "Risque Financier",
+   * on doit d'abord avoir scoré "Endettement", "Liquidité", etc.
+   */
+  static traverseBottomUp(
+    tree: ModelTree,
+    callback: (node: NodeMeta) => void
+  ): void {
+    const visited = new Set<string>();
+
+    const visit = (nodeId: string) => {
+      if (visited.has(nodeId)) return;
+      visited.add(nodeId);
+
+      // On traite LES ENFANTS D'ABORD (post-ordre), puis le parent
+      const children = tree.childrenOf.get(nodeId) || [];
+      for (const childId of children) {
+        visit(childId);
+      }
+
+      const node = tree.nodesById.get(nodeId);
+      if (node) callback(node);
+    };
+
+    for (const rootId of tree.rootNodeIds) {
+      visit(rootId);
     }
   }
 
