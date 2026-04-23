@@ -48,7 +48,7 @@ AND NOT EXISTS (
 -- Utilise des plages génériques réutilisables
 -- ============================================================================
 INSERT INTO "BP_PF_v7pp_scoring_ranges" (
-  id, "nodeId", "minValue", "maxValue", score, label, "isActive", "createdAt", "updatedAt"
+  id, "nodeId", "minValue", "maxValue", score, label, "orderIndex", "isActive", "createdAt", "updatedAt"
 )
 SELECT
   gen_random_uuid(),
@@ -57,17 +57,18 @@ SELECT
   r.max_val,
   r.score_val,
   r.label_text,
+  r.order_idx,
   true,
   NOW(),
   NOW()
 FROM "BP_PF_v7pp_scoring_nodes" n
 CROSS JOIN (VALUES
-  (0.0::float,  0.5::float,  20::int, 'Très Faible (0 – 0.5)'),
-  (0.5::float,  1.0::float,  45::int, 'Faible (0.5 – 1.0)'),
-  (1.0::float,  1.5::float,  65::int, 'Moyen (1.0 – 1.5)'),
-  (1.5::float,  2.5::float,  85::int, 'Fort (1.5 – 2.5)'),
-  (2.5::float, 99.0::float,  95::int, 'Excellent (≥ 2.5)')
-) AS r(min_val, max_val, score_val, label_text)
+  (0.0::float,  0.5::float,  20::int, 'Très Faible (0 – 0.5)',   0::int),
+  (0.5::float,  1.0::float,  45::int, 'Faible (0.5 – 1.0)',      1::int),
+  (1.0::float,  1.5::float,  65::int, 'Moyen (1.0 – 1.5)',       2::int),
+  (1.5::float,  2.5::float,  85::int, 'Fort (1.5 – 2.5)',        3::int),
+  (2.5::float, 99.0::float,  95::int, 'Excellent (≥ 2.5)',       4::int)
+) AS r(min_val, max_val, score_val, label_text, order_idx)
 WHERE n."versionId" = (
   SELECT id FROM "BP_PF_v7pp_scoring_versions" WHERE "versionNumber" = 3 LIMIT 1
 )
