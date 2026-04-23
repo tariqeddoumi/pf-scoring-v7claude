@@ -14,6 +14,20 @@ import {
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
 
+function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (typeof window !== "undefined") {
+    for (const cookie of document.cookie.split(";")) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "auth_token") {
+        try { headers["Authorization"] = `Bearer ${decodeURIComponent(value)}`; } catch {}
+        break;
+      }
+    }
+  }
+  return headers;
+}
+
 interface Evaluation {
   id: string;
   projectId: string;
@@ -85,7 +99,7 @@ export default function EvaluationDetailPage({
       try {
         const { id } = await params;
         setEvalId(id);
-        const response = await fetch(`/api/evaluations/${id}`);
+        const response = await fetch(`/api/evaluations/${id}`, { headers: authHeaders() });
         if (!response.ok) throw new Error("Failed to fetch evaluation");
         const data = await response.json();
         setEvaluation(data.data || data);
