@@ -7,6 +7,20 @@ import Link from "next/link";
 import { EvaluationWorkspace } from "@/components/scoring/EvaluationWorkspace";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 
+function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (typeof window !== "undefined") {
+    for (const cookie of document.cookie.split(";")) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "auth_token") {
+        try { headers["Authorization"] = `Bearer ${decodeURIComponent(value)}`; } catch {}
+        break;
+      }
+    }
+  }
+  return headers;
+}
+
 interface Project {
   id: string;
   nom: string;
@@ -41,9 +55,10 @@ export default function NewEvaluationPage() {
   useEffect(() => {
     (async () => {
       try {
+        const headers = authHeaders();
         const [pRes, qRes] = await Promise.all([
-          fetch("/api/projects"),
-          fetch("/api/scoring/questionnaire"),
+          fetch("/api/projects", { headers }),
+          fetch("/api/scoring/questionnaire", { headers }),
         ]);
 
         if (pRes.ok) {
@@ -73,7 +88,7 @@ export default function NewEvaluationPage() {
     try {
       const res = await fetch("/api/scoring/evaluations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({
           projectId: formData.projectId,
           modelVersionId: modelVersionId,

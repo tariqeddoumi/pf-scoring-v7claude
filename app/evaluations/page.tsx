@@ -14,6 +14,20 @@ import {
   RATING_COLORS,
 } from "@/lib/ui-constants";
 
+function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json", ...extra };
+  if (typeof window !== "undefined") {
+    for (const cookie of document.cookie.split(";")) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "auth_token") {
+        try { headers["Authorization"] = `Bearer ${decodeURIComponent(value)}`; } catch {}
+        break;
+      }
+    }
+  }
+  return headers;
+}
+
 interface EvaluationRow {
   id: string;
   projectId: string;
@@ -61,7 +75,7 @@ export default function EvaluationsPage() {
   const fetchEvaluations = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/evaluations?limit=100");
+      const res = await fetch("/api/evaluations?limit=100", { headers: authHeaders() });
       if (!res.ok) throw new Error("Erreur lors du chargement des évaluations");
       const data = await res.json();
       const rows: EvaluationRow[] = (data.data || []).map((ev: any) => ({
@@ -91,6 +105,7 @@ export default function EvaluationsPage() {
       setDeleting(true);
       const res = await fetch(`/api/evaluations/${evaluationId}`, {
         method: "DELETE",
+        headers: authHeaders(),
       });
       if (!res.ok) throw new Error("Erreur lors de la suppression");
       setEvaluations(evaluations.filter((e) => e.id !== evaluationId));
@@ -110,7 +125,7 @@ export default function EvaluationsPage() {
 
       const res = await fetch(`/api/evaluations/${evaluationId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({ ...ev, isArchived: archive }),
       });
       if (!res.ok) throw new Error("Erreur lors de l'archivage");
