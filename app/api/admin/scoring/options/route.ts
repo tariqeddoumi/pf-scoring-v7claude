@@ -30,8 +30,9 @@ export async function POST(req: NextRequest) {
         return errorResponse("Critère introuvable", { status: 404, errorCode: "NOT_FOUND" });
       }
 
-      if (criterion.nodeType !== "CRITERION") {
-        return errorResponse("Les options ne peuvent être ajoutées qu'aux critères", { status: 400 });
+      const LEAF_NODE_TYPES = ["CRITERION", "SUB_CRITERION", "SUB_SUB_CRITERION", "LEAF"];
+      if (!LEAF_NODE_TYPES.includes(criterion.nodeType)) {
+        return errorResponse("Les options ne peuvent être ajoutées qu'aux nœuds terminaux (critère, sous-critère, etc.)", { status: 400 });
       }
 
       // Calculer le prochain orderIndex

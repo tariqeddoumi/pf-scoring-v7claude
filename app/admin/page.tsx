@@ -26,9 +26,17 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "admin",
   },
   {
+    id: "scoring-grid-v7pp",
+    title: "Paramétrage Grille V7++ ★",
+    description: "Éditeur hiérarchique complet — domaines, critères, sous-critères, options et plages numériques",
+    href: "/admin/scoring-grid-v7pp",
+    icon: "🎛️",
+    requiredRole: "admin",
+  },
+  {
     id: "scoring-grid",
     title: "Grille de Scoring (legacy)",
-    description: "Gérez les critères de l'ancienne grille de notation",
+    description: "Ancienne grille — critères plats sans hiérarchie",
     href: "/admin/scoring-grid",
     icon: "⚙️",
     requiredRole: "admin",
