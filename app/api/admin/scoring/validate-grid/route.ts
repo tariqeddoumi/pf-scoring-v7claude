@@ -42,17 +42,22 @@ export async function POST(req: NextRequest) {
       }
 
       // Validate weights per sibling group
+      // Weights are stored as fractions (0.0-1.0), tolerance ±1.5% = ±0.015
       for (const [parentId, siblings] of byParent.entries()) {
         const withWeight = siblings.filter((n) => n.weight !== null && n.weight !== undefined);
         if (withWeight.length === 0) continue;
         const total = withWeight.reduce((s, n) => s + (n.weight ?? 0), 0);
-        if (Math.abs(total - 100) > 1.5) {
+        const isPercentageFormat = total > 1.5; // heuristic: if sum > 1.5 assume % format
+        const expected = isPercentageFormat ? 100 : 1;
+        const tolerance = isPercentageFormat ? 1.5 : 0.015;
+        if (Math.abs(total - expected) > tolerance) {
           for (const n of withWeight) {
+            const displayTotal = isPercentageFormat ? total.toFixed(1) + "%" : (total * 100).toFixed(1) + "%";
             errors.push({
               nodeId: n.id,
               nodePath: getPath(n.id),
               field: "weight",
-              message: `Poids: total ${total.toFixed(1)}% (attendu 100%) dans ce groupe`,
+              message: `Poids: total ${displayTotal} (attendu 100%) dans ce groupe`,
               severity: "error",
             });
           }
