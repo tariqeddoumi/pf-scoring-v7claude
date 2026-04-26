@@ -4,22 +4,6 @@ import { ScoreCalculator, AggregationEngine } from "./score-calculator";
 import { ValueResolver, ResolvedValueSnapshot } from "./value-resolver";
 import { BindingResolver, BindingContext } from "./binding-resolver";
 
-/**
- * Scoring Engine V8 — moteur de calcul unifié.
- *
- * FONCTIONNEMENT (pour débutants) :
- * --------------------------------------------------
- * 1. On charge la structure du modèle (arbre de nœuds)
- * 2. On résout les liaisons de données (binding : ex. "lire le montant du projet")
- * 3. On calcule le score de chaque FEUILLE (question individuelle)
- *    → options (choix multiples) ou plages numériques (ex: DSCR > 1.5 = 80 pts)
- * 4. On remonte dans l'arbre (bottom-up) en agrégeant les scores enfants
- * 5. On applique les règles malus (pénalités pour conditions risquées)
- * 6. On génère une trace complète pour l'audit
- *
- * Le score final est converti en note Basel (AAA → D) et une recommandation.
- */
-
 export interface RuleImpact {
   ruleId: string;
   ruleCode: string;
@@ -57,24 +41,13 @@ export interface EvaluationTrace {
 }
 
 export class ScoringEngineV8 {
-  /**
-   * Score an entire evaluation end-to-end:
-   * 1. Load model structure
-   * 2. Resolve all answers with bindings
-   * 3. Calculate node scores bottom-up
-   * 4. Apply rules & penalties
-   * 5. Aggregate hierarchy
-   * 6. Generate trace & rating
-   */
   static async scoreEvaluation(evaluationId: string): Promise<EvaluationTrace> {
-    // Load evaluation context
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },
       include: { project: true },
     });
     if (!evaluation) throw new Error(`Evaluation not found: ${evaluationId}`);
 
-    // Load model & answers
     const tree = await ModelLoader.loadVersion(evaluation.modelVersionId);
     const bindingCtx: BindingContext = {
       evaluationId,
@@ -82,19 +55,41 @@ export class ScoringEngineV8 {
       clientId: evaluation.project?.clientId,
     };
 
-    // Resolve all bindings once
     const resolvedBindings = await BindingResolver.resolveForNodes(
       Array.from(tree.nodesById.keys()),
       bindingCtx
     );
 
-    // Load all answers
     const answers = await prisma.scoringEvaluationAnswer.findMany({
       where: { evaluationId },
     });
     const answersByNode = new Map(answers.map((a) => [a.nodeId, a]));
 
-    // Load all rules
+    // FIX 1: Load options and ranges for ALL nodes upfront
+    const nodeIds = Array.from(tree.nodesById.keys());
+    const [allOptions, allRanges] = await Promise.all([
+      prisma.scoringNodeOption.findMany({
+        where: { nodeId: { in: nodeIds }, isActive: true },
+        orderBy: { orderIndex: "asc" },
+      }),
+      prisma.scoringNodeRange.findMany({
+        where: { nodeId: { in: nodeIds }, isActive: true },
+        orderBy: { minValue: "asc" },
+      }),
+    ]);
+    const optionsByNode = new Map<string, typeof allOptions>();
+    for (const opt of allOptions) {
+      const list = optionsByNode.get(opt.nodeId) || [];
+      list.push(opt);
+      optionsByNode.set(opt.nodeId, list);
+    }
+    const rangesByNode = new Map<string, typeof allRanges>();
+    for (const rng of allRanges) {
+      const list = rangesByNode.get(rng.nodeId) || [];
+      list.push(rng);
+      rangesByNode.set(rng.nodeId, list);
+    }
+
     const allRules = await prisma.scoringNodeRule.findMany({
       where: { versionId: evaluation.modelVersionId, isActive: true },
     });
@@ -106,10 +101,6 @@ export class ScoringEngineV8 {
       rulesByNode.set(rule.nodeId, list);
     }
 
-    // Calcul des scores en remontant de la feuille vers la racine (bottom-up).
-    // IMPORTANT : on utilise traverseBottomUp (post-ordre) et non traverseDepthFirst
-    // (pré-ordre), sinon les enfants ne sont pas encore calculés quand le parent
-    // essaie de les agréger.
     const nodeScores = new Map<string, NodeResult>();
     let triggeredRuleIds: string[] = [];
     let malusTotal = 0;
@@ -118,7 +109,6 @@ export class ScoringEngineV8 {
       const answer = answersByNode.get(node.id);
       const binding = resolvedBindings.get(node.id);
 
-      // Resolve value
       let valueSnapshot: ResolvedValueSnapshot | undefined;
       if (answer) {
         const raw =
@@ -132,45 +122,45 @@ export class ScoringEngineV8 {
         valueSnapshot = ValueResolver.resolveValue(binding.resolvedValue, binding);
       }
 
-      // Score the node
       let rawScore = 0;
       let explanation = "";
 
       if (node.isScored && valueSnapshot) {
-        // Load options & ranges
-        const options: any[] = [];
-        const ranges: any[] = [];
-        const formula = undefined;
+        // FIX 1: Use the preloaded options/ranges
+        const options = (optionsByNode.get(node.id) || []).map((o) => ({
+          value: o.value ?? o.code ?? o.label,
+          score: o.score ?? 0,
+        }));
+        const ranges = (rangesByNode.get(node.id) || []).map((r) => ({
+          min: r.minValue,
+          max: r.maxValue,
+          score: r.score ?? 0,
+        }));
 
-        // Score using appropriate method
         const scoreOut = ScoreCalculator.score(
           {
             answer: valueSnapshot.resolvedValue as string | number | boolean | null,
-            options,
-            ranges,
-            formula,
+            options: options.length > 0 ? options : undefined,
+            ranges: ranges.length > 0 ? ranges : undefined,
           },
           0
         );
         rawScore = scoreOut.rawScore;
         explanation = scoreOut.explanation;
       } else if (!node.isScored && node.childrenCount > 0) {
-        // Aggregate children
         const childIds = tree.childrenOf.get(node.id) || [];
         const children = childIds.map((id) => nodeScores.get(id)).filter(Boolean) as NodeResult[];
         rawScore = AggregationEngine.aggregate(node.aggregationMethod ?? undefined, children as any);
-        explanation = `Aggregated ${children.length} children using ${node.aggregationMethod || "SUM"}`;
+        explanation = `Aggregated ${children.length} children using ${node.aggregationMethod || "AVERAGE"}`;
       }
 
-      // Apply weighted score
-      const weight = node.weight ?? 1;
-      const weightedScore = AggregationEngine.computeWeighted({ rawScore, weight } as any);
+      // FIX 2: weights are fractions (0.0-1.0), no /100 division needed
+      const weight = node.weight ?? null;
+      const weightedScore = weight !== null ? rawScore * weight : rawScore;
 
-      // Apply rules
       const rules = rulesByNode.get(node.id) || [];
       const ruleImpacts: RuleImpact[] = [];
       for (const rule of rules) {
-        // Simplified rule evaluation (in production, use a proper expression engine)
         if (rule.actionType === "APPLY_MALUS" && rule.penaltyValue) {
           ruleImpacts.push({
             ruleId: rule.id,
@@ -202,7 +192,6 @@ export class ScoringEngineV8 {
       });
     });
 
-    // Build result hierarchy
     const rootResults: NodeResult[] = [];
     for (const rootId of tree.rootNodeIds) {
       const root = nodeScores.get(rootId);
@@ -212,9 +201,13 @@ export class ScoringEngineV8 {
       }
     }
 
-    // Compute final score (first root's weighted score if available)
-    const finalScore = rootResults.length > 0 ? rootResults[0].weightedScore : 0;
-    const finalScoreAdjusted = Math.max(0, finalScore - malusTotal);
+    // FIX 3: finalScore = sum of ALL domain weightedScores (not just first)
+    const totalWeight = rootResults.reduce((s, r) => s + (r.weight ?? 0), 0);
+    const rawFinalScore =
+      totalWeight > 0
+        ? rootResults.reduce((s, r) => s + r.rawScore * (r.weight ?? 0), 0) / totalWeight
+        : rootResults.reduce((s, r) => s + r.weightedScore, 0);
+    const finalScoreAdjusted = Math.max(0, Math.min(100, rawFinalScore - malusTotal));
     const rating = this.scoreToRating(finalScoreAdjusted);
 
     const traceJson = JSON.stringify(rootResults, null, 2);
@@ -232,9 +225,6 @@ export class ScoringEngineV8 {
     };
   }
 
-  /**
-   * Recursively build child result hierarchy.
-   */
   private static buildResultTree(
     nodeId: string,
     nodeScores: Map<string, NodeResult>,
@@ -252,9 +242,6 @@ export class ScoringEngineV8 {
     return children;
   }
 
-  /**
-   * Convert final score to Basel-compliant grade (AAA-D).
-   */
   private static scoreToRating(score: number): string {
     if (score >= 90) return "AAA";
     if (score >= 80) return "AA";
@@ -268,9 +255,6 @@ export class ScoringEngineV8 {
     return "D";
   }
 
-  /**
-   * Convert rating to risk recommendation.
-   */
   private static scoreToRecommendation(score: number): string {
     if (score >= 80) return "Approuver - Profil très solide";
     if (score >= 60) return "Approuver avec conditions";
@@ -278,15 +262,7 @@ export class ScoringEngineV8 {
     return "Rejeter - Profil insuffisant";
   }
 
-  /**
-   * Persiste les résultats de calcul en base de données.
-   *
-   * OPTIMISATION : au lieu de faire N appels upsert (un par nœud),
-   * on supprime les anciens résultats puis on insère tout en une seule requête.
-   * Cela passe de N+1 requêtes à 3 requêtes quelle que soit la taille du modèle.
-   */
   static async persistTrace(trace: EvaluationTrace): Promise<void> {
-    // Étape 1 : mettre à jour le résumé de l'évaluation (score final, note, recommandation)
     await prisma.scoringEvaluation.update({
       where: { id: trace.evaluationId },
       data: {
@@ -299,9 +275,7 @@ export class ScoringEngineV8 {
       },
     });
 
-    // Étape 2 : collecter tous les résultats nœud par nœud (arbre → liste plate)
     const results: Array<{ evaluationId: string; nodeId: string; data: NodeResult }> = [];
-
     const collectResults = (nodes: NodeResult[]) => {
       for (const node of nodes) {
         results.push({ evaluationId: trace.evaluationId, nodeId: node.nodeId, data: node });
@@ -310,8 +284,6 @@ export class ScoringEngineV8 {
     };
     collectResults(trace.rootResults);
 
-    // Étape 3 : supprimer les anciens résultats, puis insérer tous les nouveaux d'un coup
-    // (deleteMany + createMany = 2 requêtes au lieu de N*2 avec upsert individuel)
     await prisma.$transaction([
       prisma.scoringEvaluationNodeResult.deleteMany({
         where: { evaluationId: trace.evaluationId },

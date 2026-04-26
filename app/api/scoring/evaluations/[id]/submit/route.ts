@@ -40,7 +40,8 @@ export async function POST(
       );
     }
 
-    if (!evaluation.finalScore) {
+    // FIX 5: allow finalScore=0, only block on null/undefined
+    if (evaluation.finalScore === null || evaluation.finalScore === undefined) {
       return NextResponse.json(
         {
           success: false,
@@ -61,7 +62,7 @@ export async function POST(
       },
     });
 
-    // Log the submission event
+    // FIX 4: changedBy must be a UUID (nullable), not the string "system"
     await prisma.scoringChangeLog.create({
       data: {
         entityType: "ScoringEvaluation",
@@ -69,7 +70,7 @@ export async function POST(
         evaluationId,
         action: "SUBMIT",
         newValueJson: JSON.stringify({ status: "soumise" }),
-        changedBy: "system",
+        changedBy: null,
         comment: "Evaluation submitted for validation",
       },
     });
