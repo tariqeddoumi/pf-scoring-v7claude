@@ -41,7 +41,7 @@ async function handlePOST(request: NextRequest, user: any) {
     // "analyst" n'existe PAS dans la hiérarchie — le rôle correct est "risk_analyst"
     // Hiérarchie complète : read_only < auditor < risk_analyst < committee_member
     //                       < risk_manager < scoring_admin < system_admin
-    if (!hasMinimumRole(user.role, "risk_analyst")) {
+    if (!["admin","manager","analyst","risk_analyst"].includes(user.role)) {
       return NextResponse.json(
         {
           success: false,
