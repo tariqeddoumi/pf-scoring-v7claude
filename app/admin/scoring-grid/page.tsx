@@ -90,10 +90,17 @@ export default function ScoringGridPage() {
     fetchCriteria();
   }, []);
 
+  const getAuthHeaders = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchCriteria = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/scoring-criteria');
+      const response = await fetch('/api/admin/scoring-criteria', {
+        headers: { ...getAuthHeaders() },
+      });
       if (!response.ok) throw new Error('Failed to fetch criteria');
       const data = await response.json();
       setCriteria(data.data || []);
@@ -114,7 +121,7 @@ export default function ScoringGridPage() {
     try {
       const response = await fetch('/api/admin/scoring-criteria', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           ...formData,
           weight: parseFloat(formData.weight as any),
@@ -151,6 +158,7 @@ export default function ScoringGridPage() {
     try {
       const response = await fetch(`/api/admin/scoring-criteria/${id}`, {
         method: 'DELETE',
+        headers: { ...getAuthHeaders() },
       });
 
       if (!response.ok) throw new Error('Failed to delete criterion');
