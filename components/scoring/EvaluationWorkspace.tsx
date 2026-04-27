@@ -11,9 +11,12 @@ import {
   CheckCircle2,
   Info,
   RotateCcw,
+  LayoutList,
+  Columns,
 } from "lucide-react";
 import { DomainSidebar } from "./DomainSidebar";
 import { LiveScorePanel, type AnswerValue } from "./LiveScorePanel";
+import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 
 interface EvaluationWorkspaceProps {
@@ -333,6 +336,7 @@ export function EvaluationWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [expandAll, setExpandAll] = useState(false);
+  const [viewMode, setViewMode] = useState<"tabbed" | "accordion">("tabbed");
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentDomain = questionnaire.find((d) => d.id === currentDomainId) ?? questionnaire[0];
@@ -482,6 +486,32 @@ export function EvaluationWorkspace({
           )}
         </div>
 
+        {/* View mode toggle */}
+        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 flex-shrink-0 mr-3">
+          <button
+            onClick={() => setViewMode("tabbed")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all ${
+              viewMode === "tabbed"
+                ? "bg-slate-700 text-white"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Columns size={13} />
+            Domaine
+          </button>
+          <button
+            onClick={() => setViewMode("accordion")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all ${
+              viewMode === "accordion"
+                ? "bg-slate-700 text-white"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <LayoutList size={13} />
+            Tous
+          </button>
+        </div>
+
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
@@ -511,120 +541,130 @@ export function EvaluationWorkspace({
         </div>
       </div>
 
-      {/* ── Main layout (3 columns) ─────────────────────────── */}
+      {/* ── Main layout ─────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Domain sidebar */}
-        <DomainSidebar
-          domains={questionnaire}
-          currentDomainId={currentDomainId}
-          onSelect={setCurrentDomainId}
-          stats={stats}
-        />
+        {/* Left: Domain sidebar (hidden in accordion mode) */}
+        {viewMode === "tabbed" && (
+          <DomainSidebar
+            domains={questionnaire}
+            currentDomainId={currentDomainId}
+            onSelect={setCurrentDomainId}
+            stats={stats}
+          />
+        )}
 
-        {/* Centre: Criteria panel */}
-        <div className="flex-1 overflow-y-auto">
-          {currentDomain && (
-            <div className="max-w-3xl mx-auto px-6 py-6">
-              {/* Domain header */}
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
-                      {currentDomain.code}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {currentIndex + 1} / {questionnaire.length}
-                    </span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-white">{currentDomain.label}</h2>
-                  {currentDomain.description && (
-                    <p className="text-sm text-slate-400 mt-1">{currentDomain.description}</p>
-                  )}
-                </div>
-                <button
-                  onClick={() => setExpandAll((v) => !v)}
-                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
-                >
-                  <RotateCcw size={12} />
-                  {expandAll ? "Réduire tout" : "Tout ouvrir"}
-                </button>
-              </div>
-
-              {/* Progress for this domain */}
-              {stats[currentDomain.id] && (
-                <div className="mb-6 p-3 bg-slate-800/50 rounded-lg border border-slate-700 flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex justify-between text-xs text-slate-400 mb-1">
-                      <span>Progression du domaine</span>
-                      <span>
-                        {stats[currentDomain.id].answered} / {stats[currentDomain.id].total} critères
+        {/* Centre: Content area */}
+        {viewMode === "tabbed" ? (
+          <div className="flex-1 overflow-y-auto">
+            {currentDomain && (
+              <div className="max-w-3xl mx-auto px-6 py-6">
+                {/* Domain header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
+                        {currentDomain.code}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {currentIndex + 1} / {questionnaire.length}
                       </span>
                     </div>
-                    <div className="bg-slate-700 rounded-full h-2">
-                      <div
-                        className="h-2 rounded-full bg-cyan-500 transition-all duration-500"
-                        style={{
-                          width: `${
-                            stats[currentDomain.id].total > 0
-                              ? (stats[currentDomain.id].answered / stats[currentDomain.id].total) * 100
-                              : 0
-                          }%`,
-                        }}
-                      />
+                    <h2 className="text-2xl font-bold text-white">{currentDomain.label}</h2>
+                    {currentDomain.description && (
+                      <p className="text-sm text-slate-400 mt-1">{currentDomain.description}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setExpandAll((v) => !v)}
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    <RotateCcw size={12} />
+                    {expandAll ? "Réduire tout" : "Tout ouvrir"}
+                  </button>
+                </div>
+
+                {/* Progress for this domain */}
+                {stats[currentDomain.id] && (
+                  <div className="mb-6 p-3 bg-slate-800/50 rounded-lg border border-slate-700 flex items-center gap-4">
+                    <div className="flex-1">
+                      <div className="flex justify-between text-xs text-slate-400 mb-1">
+                        <span>Progression du domaine</span>
+                        <span>
+                          {stats[currentDomain.id].answered} / {stats[currentDomain.id].total} critères
+                        </span>
+                      </div>
+                      <div className="bg-slate-700 rounded-full h-2">
+                        <div
+                          className="h-2 rounded-full bg-cyan-500 transition-all duration-500"
+                          style={{
+                            width: `${
+                              stats[currentDomain.id].total > 0
+                                ? (stats[currentDomain.id].answered / stats[currentDomain.id].total) * 100
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Criteria tree */}
-              <div>
-                {currentDomain.children && currentDomain.children.length > 0 ? (
-                  currentDomain.children.map((child) => (
-                    <CriteriaTree
-                      key={child.id}
-                      node={child}
-                      depth={0}
-                      answers={answers}
-                      onAnswer={handleAnswer}
-                      expandedAll={expandAll}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-slate-500">
-                    <p>Ce domaine n'a pas encore de critères configurés.</p>
-                  </div>
                 )}
+
+                {/* Criteria tree */}
+                <div>
+                  {currentDomain.children && currentDomain.children.length > 0 ? (
+                    currentDomain.children.map((child) => (
+                      <CriteriaTree
+                        key={child.id}
+                        node={child}
+                        depth={0}
+                        answers={answers}
+                        onAnswer={handleAnswer}
+                        expandedAll={expandAll}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-slate-500">
+                      <p>Ce domaine n'a pas encore de critères configurés.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation prev/next */}
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-800">
+                  <button
+                    onClick={goPrev}
+                    disabled={currentIndex === 0}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-all"
+                  >
+                    <ChevronRight size={16} className="rotate-180" />
+                    {currentIndex > 0 ? questionnaire[currentIndex - 1].label : "—"}
+                  </button>
+
+                  <span className="text-xs text-slate-600">
+                    Domaine {currentIndex + 1} sur {questionnaire.length}
+                  </span>
+
+                  <button
+                    onClick={goNext}
+                    disabled={currentIndex >= questionnaire.length - 1}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-all"
+                  >
+                    {currentIndex < questionnaire.length - 1
+                      ? questionnaire[currentIndex + 1].label
+                      : "—"}
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
               </div>
-
-              {/* Navigation prev/next */}
-              <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-800">
-                <button
-                  onClick={goPrev}
-                  disabled={currentIndex === 0}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-all"
-                >
-                  <ChevronRight size={16} className="rotate-180" />
-                  {currentIndex > 0 ? questionnaire[currentIndex - 1].label : "—"}
-                </button>
-
-                <span className="text-xs text-slate-600">
-                  Domaine {currentIndex + 1} sur {questionnaire.length}
-                </span>
-
-                <button
-                  onClick={goNext}
-                  disabled={currentIndex >= questionnaire.length - 1}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-all"
-                >
-                  {currentIndex < questionnaire.length - 1
-                    ? questionnaire[currentIndex + 1].label
-                    : "—"}
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        ) : (
+          <EvaluationAccordionView
+            questionnaire={questionnaire}
+            answers={answers}
+            onAnswer={handleAnswer}
+          />
+        )}
 
         {/* Right: Live score panel */}
         <LiveScorePanel
