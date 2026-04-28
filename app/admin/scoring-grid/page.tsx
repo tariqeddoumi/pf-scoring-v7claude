@@ -90,9 +90,10 @@ export default function ScoringGridPage() {
     fetchCriteria();
   }, []);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): Record<string, string> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    if (token) return { Authorization: `Bearer ${token}` };
+    return {};
   };
 
   const fetchCriteria = async () => {
