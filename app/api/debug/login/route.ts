@@ -3,7 +3,14 @@ import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 import { verifyPassword } from "@/lib/auth";
 
+const PROD_BLOCKED = NextResponse.json(
+  { error: "Route désactivée en production" },
+  { status: 403 }
+);
+
 export async function GET(request: Request) {
+  if (process.env.NODE_ENV === "production") return PROD_BLOCKED;
+
   try {
     const { searchParams } = new URL(request.url);
     const email = searchParams.get("email");
@@ -17,85 +24,48 @@ export async function GET(request: Request) {
       });
     }
 
-    // Trouver l'utilisateur
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      return NextResponse.json({
-        status: "error",
-        message: "User not found",
-        email,
-      });
+      return NextResponse.json({ status: "error", message: "User not found", email });
     }
 
-    // Vérifier le mot de passe
     const passwordValid = await verifyPassword(password, user.password || "");
 
     return NextResponse.json({
       status: passwordValid ? "success" : "error",
       message: passwordValid ? "Password is correct" : "Password is incorrect",
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user.id, email: user.email, role: user.role },
     });
   } catch (error: unknown) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: getErrorMessage(error),
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: "error", message: getErrorMessage(error) }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === "production") return PROD_BLOCKED;
+
   try {
     const { email, password } = await request.json();
 
     if (!email || !password) {
-      return NextResponse.json({
-        status: "error",
-        message: "Email et mot de passe requis",
-      });
+      return NextResponse.json({ status: "error", message: "Email et mot de passe requis" });
     }
 
-    // Trouver l'utilisateur
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      return NextResponse.json({
-        status: "error",
-        message: "User not found",
-        email,
-      });
+      return NextResponse.json({ status: "error", message: "User not found", email });
     }
 
-    // Vérifier le mot de passe
     const passwordValid = await verifyPassword(password, user.password || "");
 
     return NextResponse.json({
       status: passwordValid ? "success" : "error",
       message: passwordValid ? "Password is correct" : "Password is incorrect",
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user.id, email: user.email, role: user.role },
     });
   } catch (error: unknown) {
-    return NextResponse.json(
-      {
-        status: "error",
-        message: getErrorMessage(error),
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: "error", message: getErrorMessage(error) }, { status: 500 });
   }
 }

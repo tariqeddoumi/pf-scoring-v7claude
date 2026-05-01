@@ -86,6 +86,12 @@ export default function FieldManagementPage() {
     helpText: '',
   });
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (token) return { Authorization: `Bearer ${token}` };
+    return {};
+  };
+
   // Fetch sections and fields
   useEffect(() => {
     fetchSections();
@@ -95,7 +101,8 @@ export default function FieldManagementPage() {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/admin/field-configurations?entity=${selectedEntity}&type=sections`
+        `/api/admin/field-configurations?entity=${selectedEntity}&type=sections`,
+        { headers: { ...getAuthHeaders() } }
       );
       if (!response.ok) throw new Error('Failed to fetch sections');
       const data = await response.json();
@@ -127,7 +134,7 @@ export default function FieldManagementPage() {
     try {
       const response = await fetch('/api/admin/field-configurations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           type: 'field',
           entity: selectedEntity,
@@ -159,6 +166,7 @@ export default function FieldManagementPage() {
     try {
       const response = await fetch(`/api/admin/field-configurations/${fieldId}`, {
         method: 'DELETE',
+        headers: { ...getAuthHeaders() },
       });
 
       if (!response.ok) throw new Error('Failed to delete field');
@@ -175,7 +183,7 @@ export default function FieldManagementPage() {
     try {
       const response = await fetch(`/api/admin/field-configurations/${fieldId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ visible: !visible }),
       });
 
