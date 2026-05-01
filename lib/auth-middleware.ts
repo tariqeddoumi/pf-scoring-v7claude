@@ -34,14 +34,15 @@ export interface AuthPayload {
   exp?: number; // Expiration (timestamp d'expiration)
 }
 
-// Le secret JWT est lu depuis les variables d'environnement.
-// En production, SUPABASE_JWT_SECRET doit TOUJOURS être défini.
-const JWT_SECRET =
+const _rawSecret =
   process.env.SUPABASE_JWT_SECRET ||
-  process.env.JWT_SECRET ||
-  "your-secret-key";
+  process.env.JWT_SECRET;
 
-// Pré-encoder le secret une seule fois (optimisation — évite de recréer TextEncoder à chaque requête)
+if (!_rawSecret && process.env.NODE_ENV === "production") {
+  throw new Error("FATAL: JWT_SECRET ou SUPABASE_JWT_SECRET doit être défini en production");
+}
+
+const JWT_SECRET = _rawSecret || "dev-secret-key-change-in-production";
 const JWT_SECRET_BYTES = new TextEncoder().encode(JWT_SECRET);
 
 /**
