@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiGet } from "@/lib/api-client";
 import {
   TrendingUp,
   AlertCircle,
@@ -54,9 +55,9 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         const [projRes, evalRes, auditRes] = await Promise.all([
-          fetch("/api/projects?limit=100"),
-          fetch("/api/evaluations?limit=100"),
-          fetch("/api/audit?limit=10"),
+          apiGet("/api/projects?limit=100"),
+          apiGet("/api/evaluations?limit=100"),
+          apiGet("/api/audit?limit=10"),
         ]);
 
         if (projRes.ok) {
