@@ -32,10 +32,15 @@ async function handler(request: NextRequest) {
             email: true,
             telephone: true,
             type: true,
-            segment: true,
-            kycStatus: true,
-            complianceStatus: true,
-            internalRating: true,
+            typeClient: true,
+            segmentClientele: true,
+            statusKYC: true,
+            statusConformite: true,
+            ratingInterne: true,
+            statutBancaire: true,
+            secteur: true,
+            pays: true,
+            status: true,
             createdAt: true,
           },
         }),
@@ -62,11 +67,12 @@ async function handler(request: NextRequest) {
   if (request.method === "POST") {
     try {
       const body = await request.json();
-      const { nom, email, telephone, type, segment, kycStatus, complianceStatus } = body;
+      const { nom, email, telephone, type, typeClient, segmentClientele,
+              statusKYC, statusConformite, secteur, pays, description } = body;
 
-      if (!nom || !email) {
+      if (!nom) {
         return NextResponse.json(
-          { success: false, error: "Nom et email requis" },
+          { success: false, error: "Le nom est requis" },
           { status: 400 }
         );
       }
@@ -74,12 +80,16 @@ async function handler(request: NextRequest) {
       const client = await prisma.client.create({
         data: {
           nom,
-          email,
+          email: email || null,
           telephone: telephone || null,
-          type: type || "ENTERPRISE",
-          segment: segment || "GENERAL",
-          kycStatus: kycStatus || "PENDING",
-          complianceStatus: complianceStatus || "PENDING",
+          type: type || "Entreprise",
+          typeClient: typeClient || "Entreprise",
+          segmentClientele: segmentClientele || null,
+          statusKYC: statusKYC || "En attente",
+          statusConformite: statusConformite || "En attente",
+          secteur: secteur || null,
+          pays: pays || null,
+          description: description || null,
         },
       });
 
