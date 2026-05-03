@@ -13,6 +13,7 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
+import { apiGet, apiPut } from "@/lib/api-client";
 import { Project } from "@/lib/types/models";
 import { Tabs } from "@/components/ui/Tabs";
 
@@ -74,14 +75,7 @@ export default function EditProjectPage({
       try {
         const { id } = await params;
         setProjectId(id);
-        const token = localStorage.getItem("auth_token");
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-        const response = await fetch(`/api/projects/${id}`, { headers });
+        const response = await apiGet(`/api/projects/${id}`);
         if (!response.ok) throw new Error("Failed to fetch project");
         const data = await response.json();
         const project = data.data || data;
@@ -126,18 +120,7 @@ export default function EditProjectPage({
     try {
       if (!projectId) throw new Error("Project ID not found");
 
-      const token = localStorage.getItem("auth_token");
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-      const response = await fetch(`/api/projects/${projectId}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify(formData),
-      });
+      const response = await apiPut(`/api/projects/${projectId}`, formData);
 
       const data = await response.json();
 

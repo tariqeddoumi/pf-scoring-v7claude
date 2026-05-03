@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Plus, Search, Eye, Edit2, Trash2, Filter, X, Lock } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { apiGet, apiDelete } from "@/lib/api-client";
 import { Project } from "@/lib/types/models";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 import LoadingSkeleton from "@/components/common/LoadingSkeleton";
@@ -44,14 +45,7 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("auth_token");
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-      const response = await fetch("/api/projects", { headers });
+      const response = await apiGet("/api/projects");
       if (!response.ok) throw new Error("Failed to fetch projects");
       const data = await response.json();
       setProjects(data.data || []);
@@ -67,17 +61,7 @@ export default function ProjectsPage() {
   const handleDelete = async (projectId: string) => {
     try {
       setDeleting(true);
-      const token = localStorage.getItem("auth_token");
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-      const response = await fetch(`/api/projects/${projectId}`, {
-        method: "DELETE",
-        headers,
-      });
+      const response = await apiDelete(`/api/projects/${projectId}`);
       if (!response.ok) throw new Error("Failed to delete project");
       setProjects(projects.filter((p) => p.id !== projectId));
       setDeleteConfirm(null);
