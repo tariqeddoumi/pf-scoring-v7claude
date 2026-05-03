@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { api } from "../api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
 import { Evaluation } from "@/types/database";
 
 export function useEvaluationAPI() {
@@ -32,14 +32,13 @@ export function useEvaluationAPI() {
   async function fetchEvaluations(): Promise<void> {
     try {
       setLoading(true);
-      const data = await api.evaluations.list();
-      // L'API retourne { success: true, data: [...] } ou directement un tableau
-      const list = (data as { data?: Evaluation[] })?.data ?? (data as Evaluation[]);
+      const res = await apiGet("/api/evaluations");
+      const json = await res.json();
+      const list = json.data || json;
       setEvaluations(Array.isArray(list) ? list : []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur de chargement");
-      // Fallback : lire depuis localStorage si l'API est indisponible
       const stored = localStorage.getItem("pf_evaluations");
       if (stored) {
         try {
@@ -53,25 +52,18 @@ export function useEvaluationAPI() {
     }
   }
 
-  /**
-   * Crée une nouvelle évaluation et l'ajoute à la liste locale.
-   * @param data - Données de l'évaluation (projectId, notes, etc.)
-   */
   async function createEvaluation(data: Partial<Evaluation>): Promise<Evaluation> {
-    const result = await api.evaluations.create(data);
-    const newEval = ((result as { data?: Evaluation })?.data ?? result) as Evaluation;
+    const res = await apiPost("/api/evaluations", data);
+    const json = await res.json();
+    const newEval = (json.data ?? json) as Evaluation;
     setEvaluations((prev) => [...prev, newEval]);
     return newEval;
   }
 
-  /**
-   * Met à jour une évaluation existante dans la liste locale.
-   * @param id   - Identifiant de l'évaluation
-   * @param data - Champs à modifier
-   */
   async function updateEvaluation(id: string, data: Partial<Evaluation>): Promise<Evaluation> {
-    const result = await api.evaluations.update(id, data);
-    const updated = ((result as { data?: Evaluation })?.data ?? result) as Evaluation;
+    const res = await apiPost(`/api/evaluations/${id}`, data);
+    const json = await res.json();
+    const updated = (json.data ?? json) as Evaluation;
     setEvaluations((prev) => prev.map((e) => (e.id === id ? updated : e)));
     return updated;
   }
