@@ -15,6 +15,7 @@ import {
   BarChart3,
   Calendar,
 } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
 import { Tabs } from "@/components/ui/Tabs";
 
 interface Project {
@@ -87,14 +88,7 @@ export default function ProjectDetailPage({
       try {
         const { id } = await params;
         setProjectId(id);
-        const token = localStorage.getItem("auth_token");
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-        const response = await fetch(`/api/projects/${id}`, { headers });
+        const response = await apiGet(`/api/projects/${id}`);
         if (!response.ok) throw new Error("Failed to fetch project");
         const data = await response.json();
         setProject(data.data || data);

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { apiGet } from "@/lib/api-client";
 import { useMutation } from "@/lib/hooks/useApi";
 import { DataTable } from "@/components/crud/DataTable";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ export default function ClientsPage() {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/clients");
+      const response = await apiGet("/api/clients");
       if (!response.ok) throw new Error("Failed to fetch clients");
       const data = await response.json();
       setClients(data.data || []);

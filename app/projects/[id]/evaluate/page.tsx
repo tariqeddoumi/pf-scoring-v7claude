@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { apiGet, apiPost } from "@/lib/api-client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,7 +75,7 @@ export default function EvaluationFormPage({
 
   const fetchProject = async (id: string) => {
     try {
-      const res = await fetch(`/api/projects/${id}`);
+      const res = await apiGet(`/api/projects/${id}`);
       if (res.ok) {
         const data = await res.json();
         setProject(data);
@@ -84,7 +85,7 @@ export default function EvaluationFormPage({
 
   const fetchDomains = async () => {
     try {
-      const res = await fetch("/api/admin/domains");
+      const res = await apiGet("/api/admin/domains");
       if (res.ok) {
         const domainsData = await res.json();
         // Charger les critères pour chaque domaine
@@ -92,7 +93,7 @@ export default function EvaluationFormPage({
           domainsData
             .filter((d: Domain) => d.weight > 0)
             .map(async (domain: Domain) => {
-              const criteriaRes = await fetch(
+              const criteriaRes = await apiGet(
                 `/api/admin/domains/${domain.id}/criteria`
               );
               const criteria = criteriaRes.ok ? await criteriaRes.json() : [];
@@ -152,13 +153,9 @@ export default function EvaluationFormPage({
       });
 
       // Soumettre le score
-      const res = await fetch(`/api/projects/${projectId}/scoring`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          composantes,
-          countryCode: project?.countryCode,
-        }),
+      const res = await apiPost(`/api/projects/${projectId}/scoring`, {
+        composantes,
+        countryCode: project?.countryCode,
       });
 
       if (!res.ok) {

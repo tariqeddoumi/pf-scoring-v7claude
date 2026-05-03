@@ -13,6 +13,7 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
+import { apiPost } from "@/lib/api-client";
 import { Tabs } from "@/components/ui/Tabs";
 
 export default function NewProjectPage() {
@@ -89,13 +90,7 @@ export default function NewProjectPage() {
     setFieldErrors({});
 
     try {
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await apiPost("/api/projects", formData);
 
       const data = await response.json();
 
