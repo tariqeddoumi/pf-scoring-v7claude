@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
 
-async function handler(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
-
-  // GET - Get client by ID
-  if (request.method === "GET") {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return withAuth(request, async (req) => {
+    const { id } = await params;
     try {
       const client = await prisma.client.findUnique({
         where: { id },
@@ -30,12 +31,17 @@ async function handler(request: NextRequest, { params }: { params: { id: string 
         { status: 500 }
       );
     }
-  }
+  });
+}
 
-  // PUT - Update client
-  if (request.method === "PUT") {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return withAuth(request, async (req) => {
+    const { id } = await params;
     try {
-      const body = await request.json();
+      const body = await req.json();
       const client = await prisma.client.update({
         where: { id },
         data: {
@@ -58,10 +64,15 @@ async function handler(request: NextRequest, { params }: { params: { id: string 
         { status: 500 }
       );
     }
-  }
+  });
+}
 
-  // DELETE - Delete client
-  if (request.method === "DELETE") {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return withAuth(request, async (req) => {
+    const { id } = await params;
     try {
       await prisma.client.delete({ where: { id } });
       return NextResponse.json({ success: true, message: "Client supprimé" });
@@ -72,22 +83,5 @@ async function handler(request: NextRequest, { params }: { params: { id: string 
         { status: 500 }
       );
     }
-  }
-
-  return NextResponse.json(
-    { success: false, error: "Méthode non autorisée" },
-    { status: 405 }
-  );
-}
-
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  return withAuth(request, (req) => handler(req, { params }));
-}
-
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  return withAuth(request, (req) => handler(req, { params }));
-}
-
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return withAuth(request, (req) => handler(req, { params }));
+  });
 }
