@@ -6,6 +6,7 @@ import {
   ArrowLeft, Plus, Trash2, Edit2, Shield, Search, X, RefreshCw,
   UserCheck, Save, AlertCircle,
 } from "lucide-react";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -314,8 +315,7 @@ export default function AdminUsersPage() {
       setLoading(true);
       const params = new URLSearchParams();
       if (activeFilter !== "all") params.set("active", activeFilter === "active" ? "true" : "false");
-      const response = await fetch(`/api/admin/users?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch");
+      const response = await apiGet(`/api/admin/users?${params}`);
       const data = await response.json();
       setUsers(data.data || []);
       setError(null);
@@ -334,11 +334,7 @@ export default function AdminUsersPage() {
   };
 
   const handleCreate = async (form: UserForm) => {
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    const res = await apiPost("/api/admin/users", form);
     if (!res.ok) {
       const d = await res.json();
       throw new Error(d.error || "Erreur lors de la création");
@@ -349,11 +345,7 @@ export default function AdminUsersPage() {
 
   const handleEdit = async (form: UserForm) => {
     if (!modalUser) return;
-    const res = await fetch(`/api/admin/users/${modalUser.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    const res = await apiPut(`/api/admin/users/${modalUser.id}`, form);
     if (!res.ok) {
       const d = await res.json();
       throw new Error(d.error || "Erreur lors de la mise à jour");
@@ -366,7 +358,7 @@ export default function AdminUsersPage() {
     if (!deleteConfirm) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/users/${deleteConfirm.id}`, { method: "DELETE" });
+      const res = await apiDelete(`/api/admin/users/${deleteConfirm.id}`);
       if (!res.ok) throw new Error("Erreur lors de la suppression");
       setUsers((prev) => prev.filter((u) => u.id !== deleteConfirm.id));
       setDeleteConfirm(null);

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { apiGet, apiPut } from "@/lib/api-client";
 
 interface Country {
   id: string;
@@ -34,11 +35,9 @@ export default function CountryRiskPage() {
 
   const fetchCountries = async () => {
     try {
-      const res = await fetch("/api/admin/countries");
-      if (res.ok) {
-        const data = await res.json();
-        setCountries(data);
-      }
+      const res = await apiGet("/api/admin/countries");
+      const data = await res.json();
+      setCountries(data);
     } catch (error) {
       console.error("Erreur:", error);
     } finally {
@@ -48,11 +47,9 @@ export default function CountryRiskPage() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch("/api/admin/config/country-risk-mode");
-      if (res.ok) {
-        const data = await res.json();
-        setConfig(data);
-      }
+      const res = await apiGet("/api/admin/config/country-risk-mode");
+      const data = await res.json();
+      setConfig(data);
     } catch (error) {
       console.error("Erreur:", error);
     }
@@ -61,11 +58,7 @@ export default function CountryRiskPage() {
   const updateCountryRisk = async (countryId: string, newScore: number) => {
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/countries/${countryId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ riskScore: newScore }),
-      });
+      const res = await apiPut(`/api/admin/countries/${countryId}`, { riskScore: newScore });
 
       if (res.ok) {
         const updatedCountries = countries.map((c) =>
@@ -84,11 +77,7 @@ export default function CountryRiskPage() {
   const updateMode = async (newMode: "AUTO_ASSIGN" | "MANUAL") => {
     try {
       setSaving(true);
-      const res = await fetch("/api/admin/config/country-risk-mode", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: newMode }),
-      });
+      const res = await apiPut("/api/admin/config/country-risk-mode", { mode: newMode });
 
       if (res.ok) {
         setConfig({ mode: newMode });
