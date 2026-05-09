@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ modelI
 
       // Find system/admin user for createdBy
       const adminUser = await prisma.user.findFirst({
-        where: { role: "admin", isActive: true, deletedAt: null },
+        where: { role: "system_admin", isActive: true, deletedAt: null },
         orderBy: { createdAt: "asc" },
       });
       const createdBy = adminUser?.id ?? user.userId;

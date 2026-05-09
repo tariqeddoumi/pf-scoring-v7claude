@@ -9,7 +9,7 @@ import { paginationSchema } from "@/lib/validation-schemas";
 async function handleGET(request: NextRequest, user: any) {
   try {
     // Allow: admin, manager, analyst (not viewer)
-    const allowedRoles = ["admin", "manager", "analyst", "risk_analyst", "risk_manager"];
+    const allowedRoles = ["system_admin", "scoring_admin", "risk_manager", "risk_analyst"];
     if (!allowedRoles.includes(user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -45,7 +45,7 @@ async function handleGET(request: NextRequest, user: any) {
 async function handlePOST(request: NextRequest, user: any) {
   try {
     // Allow: admin, manager, analyst (not viewer)
-    const allowedRoles = ["admin", "manager", "analyst", "risk_analyst", "risk_manager"];
+    const allowedRoles = ["system_admin", "scoring_admin", "risk_manager", "risk_analyst"];
     if (!allowedRoles.includes(user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

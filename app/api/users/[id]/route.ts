@@ -44,7 +44,7 @@ async function handleGET(request: NextRequest, user: any, params: any) {
 async function handlePUT(request: NextRequest, user: any, params: any) {
   try {
     // Can update own profile or be admin
-    if (user.userId !== params.id && user.role !== "admin") {
+    if (user.userId !== params.id && user.role !== "system_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -76,7 +76,7 @@ async function handlePUT(request: NextRequest, user: any, params: any) {
  */
 async function handleDELETE(request: NextRequest, user: any, params: any) {
   try {
-    if (user.role !== "admin") {
+    if (user.role !== "system_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

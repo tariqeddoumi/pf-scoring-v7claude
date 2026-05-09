@@ -106,11 +106,11 @@ export async function POST(request: Request) {
 
     // Ajouter le cookie
     response.cookies.set("auth_token", token, {
-      httpOnly: false, // Allow JavaScript to read for Bearer token
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 86400, // 24 heures
       path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 jours
     });
 
     console.log(`[LOGIN] Successful login for ${email}`);

@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== "admin") {
+    if (!payload || payload.role !== "system_admin") {
       return NextResponse.json(
         { error: "Seuls les administrateurs peuvent créer des comptes" },
         { status: 403 }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         nom,
         prenom,
         password: hashedPassword,
-        role: role || "analyst",
+        role: role || "read_only",
       },
     });
 

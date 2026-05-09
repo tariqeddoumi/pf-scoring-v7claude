@@ -33,8 +33,8 @@ export function withAuth(handler: Function) {
         Buffer.from(parts[1], "base64").toString("utf-8")
       );
 
-      // Extract user role from JWT payload - use 'analyst' as default if not specified
-      const userRole = payload.role || payload.user_role || "analyst";
+      // Extract user role from JWT payload - use 'read_only' as default if not specified
+      const userRole = payload.role || payload.user_role || "read_only";
 
       return handler(req, context, userRole);
     } catch (error) {

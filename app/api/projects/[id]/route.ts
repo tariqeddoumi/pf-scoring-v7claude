@@ -34,7 +34,7 @@ async function handlePUT(request: NextRequest, user: any, params: any) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    if (project.creePar !== user.userId && user.role !== "admin") {
+    if (project.creePar !== user.userId && user.role !== "system_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -62,7 +62,7 @@ async function handleDELETE(request: NextRequest, user: any, params: any) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    if (project.creePar !== user.userId && user.role !== "admin") {
+    if (project.creePar !== user.userId && user.role !== "system_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

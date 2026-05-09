@@ -3,7 +3,7 @@ import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 
-const VALID_ROLES = ["admin", "manager", "analyst", "viewer"] as const;
+const VALID_ROLES = ["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const;
 const USER_SELECT = {
   id: true,
   email: true,
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           email,
           nom,
           prenom: prenom || "",
-          role: role || "analyst",
+          role: role || "read_only",
           isActive: true,
         },
         select: USER_SELECT,

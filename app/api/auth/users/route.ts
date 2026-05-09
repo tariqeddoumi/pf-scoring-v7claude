@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Seuls les admins peuvent voir tous les utilisateurs
-    const isAdmin = payload.role === "admin";
+    const isAdmin = payload.role === "system_admin";
 
     let users;
     if (isAdmin) {
@@ -91,7 +91,7 @@ export async function PUT(request: NextRequest) {
     const { id, nom, prenom, password, role } = await request.json();
 
     // Un utilisateur ne peut modifier que son propre compte, sauf les admins
-    if (payload.userId !== id && payload.role !== "admin") {
+    if (payload.userId !== id && payload.role !== "system_admin") {
       return NextResponse.json(
         { error: "Vous ne pouvez modifier que votre propre compte" },
         { status: 403 }
@@ -114,7 +114,7 @@ export async function PUT(request: NextRequest) {
     if (nom) updateData.nom = nom;
     if (prenom) updateData.prenom = prenom;
     if (password) updateData.password = await hashPassword(password);
-    if (role && payload.role === "admin") updateData.role = role;
+    if (role && payload.role === "system_admin") updateData.role = role;
 
     const updatedUser = await prisma.user.update({
       where: { id },

@@ -5,11 +5,12 @@ import { ScoringNodeService } from "@/lib/services/scoring-node-service";
 async function handler(
   request: NextRequest,
   user: any,
-  { params }: { params: { id: string; versionId: string; nodeId: string } }
+  { params }: { params: Promise<{ id: string; versionId: string; nodeId: string }> }
 ) {
+  const { id, versionId, nodeId } = await params;
   if (request.method === "GET") {
     try {
-      const node = await ScoringNodeService.getNodeById(params.nodeId);
+      const node = await ScoringNodeService.getNodeById(nodeId);
 
       if (!node) {
         return NextResponse.json({ error: "Node not found" }, { status: 404 });
@@ -49,7 +50,7 @@ async function handler(
       // Handle different actions
       if (action === "addOption" && option) {
         const result = await ScoringNodeService.addNodeOption({
-          nodeId: params.nodeId,
+          nodeId,
           label: option.label,
           value: option.value,
           score: option.score,
@@ -60,7 +61,7 @@ async function handler(
 
       if (action === "addRange" && range) {
         const result = await ScoringNodeService.addNodeRange({
-          nodeId: params.nodeId,
+          nodeId,
           label: range.label,
           minValue: range.minValue,
           maxValue: range.maxValue,
@@ -72,8 +73,8 @@ async function handler(
 
       if (action === "addRule" && rule) {
         const result = await ScoringNodeService.addNodeRule({
-          nodeId: params.nodeId,
-          versionId: params.versionId,
+          nodeId,
+          versionId,
           ruleType: rule.ruleType,
           code: rule.code,
           label: rule.label,
@@ -88,7 +89,7 @@ async function handler(
 
       if (action === "addApplicabilityRule" && applicabilityRule) {
         const result = await ScoringNodeService.addApplicabilityRule({
-          nodeId: params.nodeId,
+          nodeId,
           effectType: applicabilityRule.effectType,
           conditionExpression: applicabilityRule.conditionExpression,
           createdBy: user.userId,
@@ -98,7 +99,7 @@ async function handler(
 
       if (action === "reorder" && newOrderIndex !== undefined) {
         const result = await ScoringNodeService.reorderNode(
-          params.nodeId,
+          nodeId,
           newOrderIndex,
           user.userId
         );
@@ -106,7 +107,7 @@ async function handler(
       }
 
       // Standard update
-      const node = await ScoringNodeService.updateNode(params.nodeId, {
+      const node = await ScoringNodeService.updateNode(nodeId, {
         label,
         description,
         weight,
@@ -134,7 +135,7 @@ async function handler(
 
   if (request.method === "DELETE") {
     try {
-      await ScoringNodeService.deleteNode(params.nodeId, user.userId);
+      await ScoringNodeService.deleteNode(nodeId, user.userId);
 
       return NextResponse.json({
         success: true,
@@ -155,14 +156,23 @@ async function handler(
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
-export async function GET(request: NextRequest, { params }: any) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; versionId: string; nodeId: string }> }
+) {
   return withAdminAuth(request, (req, user) => handler(req, user, { params }));
 }
 
-export async function PUT(request: NextRequest, { params }: any) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; versionId: string; nodeId: string }> }
+) {
   return withAdminAuth(request, (req, user) => handler(req, user, { params }));
 }
 
-export async function DELETE(request: NextRequest, { params }: any) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; versionId: string; nodeId: string }> }
+) {
   return withAdminAuth(request, (req, user) => handler(req, user, { params }));
 }

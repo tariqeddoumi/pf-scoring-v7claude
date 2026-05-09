@@ -12,7 +12,7 @@ export async function PUT(
       const { modelId, versionId } = await context.params;
 
       const adminUser = await prisma.user.findFirst({
-        where: { role: "admin", isActive: true, deletedAt: null },
+        where: { role: "system_admin", isActive: true, deletedAt: null },
         orderBy: { createdAt: "asc" },
       });
       const publishedBy = adminUser?.id ?? user.userId;

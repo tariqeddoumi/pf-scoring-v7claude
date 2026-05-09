@@ -90,7 +90,7 @@ export interface User {
   email: string;
   nom: string;
   prenom: string;
-  role: "admin" | "manager" | "analyst" | "viewer";
+  role: "system_admin" | "scoring_admin" | "risk_manager" | "committee_member" | "risk_analyst" | "auditor" | "read_only";
   avatar?: string;
   createdAt: string;
 }

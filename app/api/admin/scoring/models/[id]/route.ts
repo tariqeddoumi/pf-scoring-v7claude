@@ -74,14 +74,23 @@ async function handler(
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
-export async function GET(request: NextRequest, { params }: any) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   return withAdminAuth(request, (req, user) => handler(req, user, { params }));
 }
 
-export async function PUT(request: NextRequest, { params }: any) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   return withAdminAuth(request, (req, user) => handler(req, user, { params }));
 }
 
-export async function DELETE(request: NextRequest, { params }: any) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   return withAdminAuth(request, (req, user) => handler(req, user, { params }));
 }

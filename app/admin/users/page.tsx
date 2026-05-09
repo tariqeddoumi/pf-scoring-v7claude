@@ -9,12 +9,14 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type UserRole = "system_admin" | "scoring_admin" | "risk_manager" | "committee_member" | "risk_analyst" | "auditor" | "read_only";
+
 interface User {
   id: string;
   email: string;
   nom: string;
   prenom: string;
-  role: "admin" | "manager" | "analyst" | "viewer";
+  role: UserRole;
   isActive: boolean;
   lastLoginAt: string | null;
   createdAt: string;
@@ -27,38 +29,47 @@ interface UserForm {
   email: string;
   nom: string;
   prenom: string;
-  role: "admin" | "manager" | "analyst" | "viewer";
+  role: UserRole;
   isActive: boolean;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrateur",
-  manager: "Gestionnaire",
-  analyst: "Analyste",
-  viewer: "Lecteur",
+  system_admin: "Super Admin",
+  scoring_admin: "Admin Scoring",
+  risk_manager: "Gestionnaire Risque",
+  committee_member: "Membre Comité",
+  risk_analyst: "Analyste Risque",
+  auditor: "Auditeur",
+  read_only: "Lecture seule",
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  admin: "bg-red-500/20 text-red-300 border-red-500/30",
-  manager: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  analyst: "bg-green-500/20 text-green-300 border-green-500/30",
-  viewer: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+  system_admin: "bg-red-500/20 text-red-300 border-red-500/30",
+  scoring_admin: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+  risk_manager: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  committee_member: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+  risk_analyst: "bg-green-500/20 text-green-300 border-green-500/30",
+  auditor: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+  read_only: "bg-slate-500/20 text-slate-400 border-slate-500/30",
 };
 
 const ROLE_ICONS: Record<string, string> = {
-  admin: "🔴",
-  manager: "🔵",
-  analyst: "🟢",
-  viewer: "⚪",
+  system_admin: "🔴",
+  scoring_admin: "🟠",
+  risk_manager: "🔵",
+  committee_member: "🟣",
+  risk_analyst: "🟢",
+  auditor: "🟡",
+  read_only: "⚪",
 };
 
 const EMPTY_FORM: UserForm = {
   email: "",
   nom: "",
   prenom: "",
-  role: "analyst",
+  role: "risk_analyst",
   isActive: true,
 };
 
@@ -75,10 +86,13 @@ function Badge({ children, className = "" }: { children: React.ReactNode; classN
 function Avatar({ nom, prenom, role }: { nom: string; prenom: string; role: string }) {
   const initials = `${prenom[0] || ""}${nom[0] || ""}`.toUpperCase() || "?";
   const bgMap: Record<string, string> = {
-    admin: "bg-red-600",
-    manager: "bg-blue-600",
-    analyst: "bg-green-600",
-    viewer: "bg-slate-600",
+    system_admin: "bg-red-600",
+    scoring_admin: "bg-orange-600",
+    risk_manager: "bg-blue-600",
+    committee_member: "bg-purple-600",
+    risk_analyst: "bg-green-600",
+    auditor: "bg-yellow-600",
+    read_only: "bg-slate-600",
   };
   return (
     <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 ${bgMap[role] || "bg-slate-600"}`}>
@@ -218,7 +232,7 @@ function UserModal({
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">Rôle</label>
             <div className="grid grid-cols-2 gap-2">
-              {(["admin", "manager", "analyst", "viewer"] as const).map((r) => (
+              {(["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const).map((r) => (
                 <button
                   key={r}
                   type="button"
@@ -379,8 +393,8 @@ export default function AdminUsersPage() {
   const stats = {
     total: users.length,
     active: users.filter((u) => u.isActive).length,
-    admins: users.filter((u) => u.role === "admin").length,
-    analysts: users.filter((u) => u.role === "analyst").length,
+    admins: users.filter((u) => u.role === "system_admin" || u.role === "scoring_admin").length,
+    analysts: users.filter((u) => u.role === "risk_analyst").length,
   };
 
   return (
@@ -462,7 +476,7 @@ export default function AdminUsersPage() {
           </div>
 
           <div className="flex items-center gap-1 bg-slate-800 rounded-lg border border-slate-600 p-1">
-            {["ALL", "admin", "manager", "analyst", "viewer"].map((r) => (
+            {["ALL", "system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"].map((r) => (
               <button key={r} onClick={() => setRoleFilter(r)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"}`}>
                 {r === "ALL" ? "Tous" : ROLE_LABELS[r]}
