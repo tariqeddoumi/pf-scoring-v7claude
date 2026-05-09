@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "postbuild": "prisma migrate deploy || true",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -18,6 +19,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
     "db:seed": "prisma db seed",
     "schema:template": "node scripts/create-template.js",
     "schema:generate": "node scripts/generate-schema.js"
