@@ -3,7 +3,7 @@
  * Role-based access control for all entities and actions
  */
 
-export type UserRole = 'admin' | 'manager' | 'analyst' | 'viewer';
+export type UserRole = 'system_admin' | 'scoring_admin' | 'risk_manager' | 'committee_member' | 'risk_analyst' | 'auditor' | 'read_only';
 
 export type EntityType = 'client' | 'project' | 'evaluation' | 'user' | 'scoring_grid' | 'field_config';
 
@@ -13,7 +13,7 @@ export type ActionType = 'create' | 'read' | 'update' | 'delete' | 'export' | 'a
  * Permission matrix defining allowed actions per role per entity
  */
 const PERMISSION_MATRIX: Record<UserRole, Record<EntityType, ActionType[]>> = {
-  admin: {
+  system_admin: {
     client:       ['create', 'read', 'update', 'delete', 'export'],
     project:      ['create', 'read', 'update', 'delete', 'export', 'approve'],
     evaluation:   ['create', 'read', 'update', 'delete', 'export', 'approve'],
@@ -21,7 +21,15 @@ const PERMISSION_MATRIX: Record<UserRole, Record<EntityType, ActionType[]>> = {
     scoring_grid: ['create', 'read', 'update', 'delete', 'configure'],
     field_config: ['create', 'read', 'update', 'delete', 'configure'],
   },
-  manager: {
+  scoring_admin: {
+    client:       ['read'],
+    project:      ['read'],
+    evaluation:   ['read'],
+    user:         [],
+    scoring_grid: ['create', 'read', 'update', 'delete', 'configure'],
+    field_config: ['create', 'read', 'update', 'delete', 'configure'],
+  },
+  risk_manager: {
     client:       ['create', 'read', 'update', 'delete', 'export'],
     project:      ['create', 'read', 'update', 'delete', 'export', 'approve'],
     evaluation:   ['create', 'read', 'update', 'delete', 'export', 'approve'],
@@ -29,7 +37,15 @@ const PERMISSION_MATRIX: Record<UserRole, Record<EntityType, ActionType[]>> = {
     scoring_grid: ['read'],
     field_config: ['read'],
   },
-  analyst: {
+  committee_member: {
+    client:       ['read'],
+    project:      ['read'],
+    evaluation:   ['read', 'approve'],
+    user:         [],
+    scoring_grid: ['read'],
+    field_config: ['read'],
+  },
+  risk_analyst: {
     client:       ['create', 'read', 'update', 'export'],
     project:      ['create', 'read', 'update', 'export'],
     evaluation:   ['create', 'read', 'update', 'export'],
@@ -37,7 +53,15 @@ const PERMISSION_MATRIX: Record<UserRole, Record<EntityType, ActionType[]>> = {
     scoring_grid: ['read'],
     field_config: ['read'],
   },
-  viewer: {
+  auditor: {
+    client:       ['read'],
+    project:      ['read'],
+    evaluation:   ['read'],
+    user:         ['read'],
+    scoring_grid: ['read'],
+    field_config: ['read'],
+  },
+  read_only: {
     client:       ['read'],
     project:      ['read'],
     evaluation:   ['read'],
@@ -76,35 +100,35 @@ export const getAllowedActions = (
  * Check if role can access admin features
  */
 export const canAccessAdmin = (role: UserRole): boolean => {
-  return role === 'admin';
+  return role === 'system_admin';
 };
 
 /**
  * Check if role can manage users
  */
 export const canManageUsers = (role: UserRole): boolean => {
-  return role === 'admin';
+  return role === 'system_admin';
 };
 
 /**
  * Check if role can approve evaluations
  */
 export const canApproveEvaluations = (role: UserRole): boolean => {
-  return role === 'admin' || role === 'manager';
+  return ['system_admin', 'risk_manager', 'committee_member'].includes(role);
 };
 
 /**
  * Check if role can configure scoring grids
  */
 export const canConfigureScoring = (role: UserRole): boolean => {
-  return role === 'admin';
+  return ['system_admin', 'scoring_admin'].includes(role);
 };
 
 /**
  * Check if role can export data
  */
 export const canExport = (role: UserRole): boolean => {
-  return role !== 'viewer';
+  return role !== 'read_only' && role !== 'auditor';
 };
 
 /**
@@ -119,10 +143,13 @@ export const getPermissionMatrix = (): Record<UserRole, Record<EntityType, Actio
  */
 export const getRoleLabel = (role: UserRole): string => {
   const labels: Record<UserRole, string> = {
-    admin: 'Administrateur',
-    manager: 'Manager',
-    analyst: 'Analyste',
-    viewer: 'Lecteur',
+    system_admin: 'Administrateur Système',
+    scoring_admin: 'Admin Scoring',
+    risk_manager: 'Manager Risque',
+    committee_member: 'Membre Comité',
+    risk_analyst: 'Analyste Risque',
+    auditor: 'Auditeur',
+    read_only: 'Lecteur',
   };
   return labels[role] || role;
 };

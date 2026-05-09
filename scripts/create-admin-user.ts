@@ -29,7 +29,7 @@ async function main() {
         password: hashedPassword,
         nom: "Admin",
         prenom: "PF Scoring",
-        role: "admin",
+        role: "system_admin",
       },
     });
 
