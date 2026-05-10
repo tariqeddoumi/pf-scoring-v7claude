@@ -26,8 +26,8 @@ model User {
   nom           String
   /// First name
   prenom        String
-  /// User role: admin, manager, analyst, viewer
-  role          UserRole @default(analyst)
+  /// User role: system_admin, scoring_admin, risk_manager, committee_member, risk_analyst, auditor, read_only
+  role          UserRole @default(read_only)
   /// OAuth provider (google, etc.)
   oauthProvider String?
   /// OAuth provider user ID
@@ -940,10 +940,13 @@ enum ProjectStatus {
 }
 
 enum UserRole {
-  admin
-  manager
-  analyst
-  viewer
+  system_admin
+  scoring_admin
+  risk_manager
+  committee_member
+  risk_analyst
+  auditor
+  read_only
 }
 
 enum EvaluationStatus {
@@ -1621,4 +1624,25 @@ model ScoringApproval {
   @@index([status])
   @@index([dueDate])
   @@map("BP_PF_v7pp_scoring_approvals")
+}
+
+// ============================================================================
+// SCORING RATING BUCKETS
+// ============================================================================
+
+/// ScoringRatingBucket maps score ranges to ratings, risk levels, and recommendations
+model ScoringRatingBucket {
+  id             String   @id @default(cuid())
+  minScore       Float
+  maxScore       Float
+  rating         String // "AAA", "AA", "A", etc.
+  riskLevel      String // "Très faible", "Faible", "Moyen", "Élevé", "Très élevé"
+  recommendation String // "Financer", "Financer sous conditions", "Refuser"
+  decisionPolicy String? // Politique de décision
+  color          String? // "#22c55e" (hex color)
+  orderIndex     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("scoring_rating_buckets")
 }

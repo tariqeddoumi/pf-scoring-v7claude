@@ -19,7 +19,7 @@ export class UserService {
     const user = await prisma.user.create({
       data: {
         ...validated,
-        role: validated.role || "analyst",
+        role: validated.role || "read_only",
       },
     });
 

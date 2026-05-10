@@ -6,7 +6,7 @@ export function usePermission() {
 
   const can = (entity: EntityType, action: ActionType): boolean => {
     if (!user) return false; // Default to deny if user not loaded
-    return hasPermission(user.role, entity, action);
+    return hasPermission(user.role as any, entity, action);
   };
 
   return { can, user };

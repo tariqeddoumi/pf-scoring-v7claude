@@ -38,10 +38,9 @@ async function handleGET(request: NextRequest, user: any) {
  */
 async function handlePOST(request: NextRequest, user: any) {
   try {
-    // "analyst" n'existe PAS dans la hiérarchie — le rôle correct est "risk_analyst"
     // Hiérarchie complète : read_only < auditor < risk_analyst < committee_member
     //                       < risk_manager < scoring_admin < system_admin
-    if (!["admin","manager","analyst","risk_analyst"].includes(user.role)) {
+    if (!["system_admin","scoring_admin","risk_manager","risk_analyst"].includes(user.role)) {
       return NextResponse.json(
         {
           success: false,
@@ -53,7 +52,6 @@ async function handlePOST(request: NextRequest, user: any) {
     }
 
     const body = await request.json();
-    console.log("[PROJECTS] POST request body:", JSON.stringify(body));
 
     const project = await ProjectService.createProject(body, user.userId);
 

@@ -527,7 +527,7 @@ async function main() {
           email: "system@pf-scoring.local",
           nom: "System",
           prenom: "Seed",
-          role: "admin",
+          role: "system_admin",
           password: "",
         },
       });

@@ -18,7 +18,7 @@ export default function NewUserPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "analyst",
+    role: "risk_analyst",
   });
 
   const handleChange = (
@@ -170,10 +170,13 @@ export default function NewUserPage() {
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   >
-                    <option value="viewer">Lecteur</option>
-                    <option value="analyst">Analyste</option>
-                    <option value="manager">Gestionnaire</option>
-                    <option value="admin">Administrateur</option>
+                    <option value="read_only">Lecture seule</option>
+                    <option value="auditor">Auditeur</option>
+                    <option value="risk_analyst">Analyste Risque</option>
+                    <option value="committee_member">Membre Comité</option>
+                    <option value="risk_manager">Gestionnaire Risque</option>
+                    <option value="scoring_admin">Admin Scoring</option>
+                    <option value="system_admin">Super Admin</option>
                   </select>
                 </div>
 

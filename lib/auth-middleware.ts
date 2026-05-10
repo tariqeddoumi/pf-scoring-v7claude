@@ -34,16 +34,27 @@ export interface AuthPayload {
   exp?: number; // Expiration (timestamp d'expiration)
 }
 
-const _rawSecret =
-  process.env.SUPABASE_JWT_SECRET ||
-  process.env.JWT_SECRET;
+function getJwtSecret(): string {
+  const _rawSecret =
+    process.env.SUPABASE_JWT_SECRET ||
+    process.env.JWT_SECRET;
 
-if (!_rawSecret && process.env.NODE_ENV === "production") {
-  throw new Error("FATAL: JWT_SECRET ou SUPABASE_JWT_SECRET doit être défini en production");
+  if (!_rawSecret && process.env.NODE_ENV === "production") {
+    throw new Error("FATAL: JWT_SECRET ou SUPABASE_JWT_SECRET doit être défini en production");
+  }
+
+  return _rawSecret || "dev-secret-key-change-in-production";
 }
 
-const JWT_SECRET = _rawSecret || "dev-secret-key-change-in-production";
-const JWT_SECRET_BYTES = new TextEncoder().encode(JWT_SECRET);
+let JWT_SECRET_BYTES: Uint8Array | null = null;
+
+function getJwtSecretBytes(): Uint8Array {
+  if (!JWT_SECRET_BYTES) {
+    const secret = getJwtSecret();
+    JWT_SECRET_BYTES = new TextEncoder().encode(secret);
+  }
+  return JWT_SECRET_BYTES;
+}
 
 /**
  * Vérifie le token JWT dans le header Authorization.
@@ -60,7 +71,7 @@ export async function authenticateRequest(
     }
 
     const token = authHeader.substring(7); // Extraire le token après "Bearer "
-    const { payload } = await jwtVerify(token, JWT_SECRET_BYTES);
+    const { payload } = await jwtVerify(token, getJwtSecretBytes());
     return payload as unknown as AuthPayload;
   } catch {
     // Token invalide, expiré, ou signature incorrecte

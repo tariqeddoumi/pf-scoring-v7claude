@@ -33,7 +33,7 @@ export const createUserSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one number"),
   nom: z.string().min(1, "Last name is required").max(100),
   prenom: z.string().min(1, "First name is required").max(100),
-  role: z.enum(["admin", "manager", "analyst", "viewer"]).default("analyst"),
+  role: z.enum(["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"]).default("read_only"),
 });
 
 export const updateUserSchema = createUserSchema
@@ -49,11 +49,11 @@ export const updateUserSchema = createUserSchema
   });
 
 export const changeUserRoleSchema = z.object({
-  role: z.enum(["admin", "manager", "analyst", "viewer"]),
+  role: z.enum(["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"]),
 });
 
 export const userListQuerySchema = paginationSchema.extend({
-  role: z.enum(["admin", "manager", "analyst", "viewer"]).optional(),
+  role: z.enum(["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"]).optional(),
   search: z.string().optional(),
 });
 

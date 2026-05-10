@@ -11,7 +11,7 @@ interface User {
   email: string;
   nom: string;
   prenom: string;
-  role: "admin" | "manager" | "analyst" | "viewer";
+  role: "system_admin" | "scoring_admin" | "risk_manager" | "committee_member" | "risk_analyst" | "auditor" | "read_only";
   createdAt: string;
 }
 
@@ -31,7 +31,7 @@ export default function EditUserPage({
     nom: "",
     prenom: "",
     email: "",
-    role: "analyst",
+    role: "risk_analyst",
     password: "",
     confirmPassword: "",
   });
@@ -49,7 +49,7 @@ export default function EditUserPage({
           nom: user.nom || "",
           prenom: user.prenom || "",
           email: user.email || "",
-          role: user.role || "analyst",
+          role: user.role || "risk_analyst",
           password: "",
           confirmPassword: "",
         });
@@ -220,14 +220,17 @@ export default function EditUserPage({
                   <label className="block text-sm font-semibold text-white mb-2">Rôle *</label>
                   <select
                     name="role"
-                    value={formData.role || "analyst"}
+                    value={formData.role || "risk_analyst"}
                     onChange={handleChange}
                     className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   >
-                    <option value="viewer">Lecteur</option>
-                    <option value="analyst">Analyste</option>
-                    <option value="manager">Gestionnaire</option>
-                    <option value="admin">Administrateur</option>
+                    <option value="read_only">Lecture seule</option>
+                    <option value="auditor">Auditeur</option>
+                    <option value="risk_analyst">Analyste Risque</option>
+                    <option value="committee_member">Membre Comité</option>
+                    <option value="risk_manager">Gestionnaire Risque</option>
+                    <option value="scoring_admin">Admin Scoring</option>
+                    <option value="system_admin">Super Admin</option>
                   </select>
                 </div>
 

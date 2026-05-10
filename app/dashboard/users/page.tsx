@@ -135,12 +135,15 @@ export default function UsersPage() {
                   label: "Role",
                   type: "select",
                   options: [
-                    { label: "Admin", value: "admin" },
-                    { label: "Manager", value: "manager" },
-                    { label: "Analyst", value: "analyst" },
-                    { label: "Viewer", value: "viewer" },
+                    { label: "Super Admin", value: "system_admin" },
+                    { label: "Admin Scoring", value: "scoring_admin" },
+                    { label: "Gestionnaire Risque", value: "risk_manager" },
+                    { label: "Membre Comité", value: "committee_member" },
+                    { label: "Analyste Risque", value: "risk_analyst" },
+                    { label: "Auditeur", value: "auditor" },
+                    { label: "Lecture seule", value: "read_only" },
                   ],
-                  defaultValue: "analyst",
+                  defaultValue: "risk_analyst",
                 },
               ]}
               onSubmit={handleCreateUser}

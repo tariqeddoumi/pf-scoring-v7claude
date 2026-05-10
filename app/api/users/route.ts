@@ -33,7 +33,7 @@ async function handleGET(request: NextRequest, user: any) {
  */
 async function handlePOST(request: NextRequest, user: any) {
   try {
-    if (user.role !== "admin") {
+    if (user.role !== "system_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

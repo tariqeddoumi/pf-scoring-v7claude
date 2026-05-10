@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type UserRole = "admin" | "manager" | "analyst" | "viewer";
+export type UserRole = "system_admin" | "scoring_admin" | "risk_manager" | "committee_member" | "risk_analyst" | "auditor" | "read_only";
 
 export interface User {
   id: string;
@@ -35,7 +35,7 @@ const MOCK_USERS: User[] = [
     id: "u1",
     name: "Ahmed Ben Selhami",
     email: "ahmed.selhami@bank.ma",
-    role: "admin",
+    role: "system_admin",
     department: "Scoring & Risk",
     status: "active",
     createdAt: new Date("2025-01-15"),
@@ -47,7 +47,7 @@ const MOCK_USERS: User[] = [
     id: "u2",
     name: "Fatima Zohra El Fassi",
     email: "fatima.fassi@bank.ma",
-    role: "manager",
+    role: "risk_manager",
     department: "Project Finance",
     status: "active",
     createdAt: new Date("2025-02-20"),
@@ -59,7 +59,7 @@ const MOCK_USERS: User[] = [
     id: "u3",
     name: "Mohamed Karim Bennani",
     email: "mohamed.karim@bank.ma",
-    role: "analyst",
+    role: "risk_analyst",
     department: "Scoring & Risk",
     status: "active",
     createdAt: new Date("2025-03-10"),
@@ -71,7 +71,7 @@ const MOCK_USERS: User[] = [
     id: "u4",
     name: "Laïla Khouya",
     email: "laila.khouya@bank.ma",
-    role: "analyst",
+    role: "risk_analyst",
     department: "Scoring & Risk",
     status: "active",
     createdAt: new Date("2025-03-15"),
@@ -83,7 +83,7 @@ const MOCK_USERS: User[] = [
     id: "u5",
     name: "Hassan Marhoum",
     email: "hassan.marhoum@bank.ma",
-    role: "viewer",
+    role: "read_only",
     department: "Executive Board",
     status: "active",
     createdAt: new Date("2025-04-01"),
@@ -118,7 +118,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Set first user as current (admin by default)
-      const admin = MOCK_USERS.find((u) => u.role === "admin") || MOCK_USERS[0];
+      const admin = MOCK_USERS.find((u) => u.role === "system_admin") || MOCK_USERS[0];
       setCurrentUserState(admin);
     } catch (error) {
       setUsers(MOCK_USERS);

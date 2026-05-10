@@ -5,18 +5,24 @@
 
 // Role Colors
 export const ROLE_COLORS: Record<string, string> = {
-  admin: "bg-red-500/20 text-red-400",
-  manager: "bg-blue-500/20 text-blue-400",
-  analyst: "bg-green-500/20 text-green-400",
-  viewer: "bg-slate-500/20 text-slate-400",
+  system_admin: "bg-red-500/20 text-red-400",
+  scoring_admin: "bg-purple-500/20 text-purple-400",
+  risk_manager: "bg-blue-500/20 text-blue-400",
+  committee_member: "bg-cyan-500/20 text-cyan-400",
+  risk_analyst: "bg-green-500/20 text-green-400",
+  auditor: "bg-yellow-500/20 text-yellow-400",
+  read_only: "bg-slate-500/20 text-slate-400",
 };
 
 // Role Labels (French)
 export const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrateur",
-  manager: "Gestionnaire",
-  analyst: "Analyste",
-  viewer: "Lecteur",
+  system_admin: "Super Administrateur",
+  scoring_admin: "Administrateur Scoring",
+  risk_manager: "Gestionnaire de Risque",
+  committee_member: "Membre du Comité",
+  risk_analyst: "Analyste de Risque",
+  auditor: "Auditeur",
+  read_only: "Lecture Seule",
 };
 
 // Status Colors for Evaluations

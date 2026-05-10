@@ -24,7 +24,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Visualisez les domaines, critères et barèmes du modèle actif",
     href: "/admin/scoring",
     icon: "📊",
-    requiredRole: "admin",
+    requiredRole: "system_admin",
   },
   {
     id: "scoring-grid-v7pp",
@@ -32,7 +32,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Éditeur hiérarchique complet — domaines, critères, sous-critères, options et plages numériques",
     href: "/admin/scoring-grid-v7pp",
     icon: "🎛️",
-    requiredRole: "admin",
+    requiredRole: "system_admin",
   },
   {
     id: "scoring-grid",
@@ -40,7 +40,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Ancienne grille — critères plats sans hiérarchie",
     href: "/admin/scoring-grid",
     icon: "⚙️",
-    requiredRole: "admin",
+    requiredRole: "system_admin",
   },
   {
     id: "country-risk",
@@ -48,7 +48,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Configurez les scores de risque par pays",
     href: "/admin/country-risk",
     icon: "🌍",
-    requiredRole: "admin",
+    requiredRole: "system_admin",
   },
   {
     id: "auth",
@@ -56,7 +56,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Paramétrez les méthodes d'authentification et les politiques",
     href: "/admin/auth-settings",
     icon: "🔐",
-    requiredRole: "admin",
+    requiredRole: "system_admin",
   },
   {
     id: "system",
@@ -64,7 +64,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Configurez les paramètres généraux de l'application",
     href: "/admin/system-settings",
     icon: "🛠️",
-    requiredRole: "admin",
+    requiredRole: "system_admin",
   },
   {
     id: "diagnostic",
@@ -72,7 +72,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Tests de santé et vérification de la configuration",
     href: "/admin/diagnostic",
     icon: "🔍",
-    requiredRole: "admin",
+    requiredRole: "system_admin",
   },
   {
     id: "users",
@@ -80,7 +80,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Gérez les utilisateurs et leurs rôles",
     href: "/admin/users",
     icon: "👥",
-    requiredRole: "admin",
+    requiredRole: "system_admin",
   },
   {
     id: "audit",
@@ -88,7 +88,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Consultez l'historique complet des modifications",
     href: "/admin/audit-logs",
     icon: "📋",
-    requiredRole: "manager",
+    requiredRole: "risk_manager",
   },
 ];
 
@@ -108,7 +108,7 @@ export default function AdminPage() {
         const userData = await res.json();
 
         // Vérifier que c'est admin ou manager
-        if (userData.role !== "admin" && userData.role !== "manager") {
+        if (userData.role !== "system_admin" && userData.role !== "risk_manager") {
           router.push("/dashboard");
           return;
         }
@@ -148,7 +148,7 @@ export default function AdminPage() {
 
   const visibleSections = ADMIN_SECTIONS.filter(
     (s) =>
-      !s.requiredRole || s.requiredRole === user.role || user.role === "admin"
+      !s.requiredRole || s.requiredRole === user.role || user.role === "system_admin"
   );
 
   return (

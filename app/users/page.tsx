@@ -12,7 +12,7 @@ interface User {
   email: string;
   nom: string;
   prenom: string;
-  role: "admin" | "manager" | "analyst" | "viewer";
+  role: "system_admin" | "scoring_admin" | "risk_manager" | "committee_member" | "risk_analyst" | "auditor" | "read_only";
   createdAt: string;
 }
 
@@ -148,10 +148,13 @@ export default function UsersPage() {
           className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none appearance-none cursor-pointer text-sm md:text-base"
         >
           <option value="">Tous les rôles</option>
-          <option value="admin">Admin</option>
-          <option value="manager">Manager</option>
-          <option value="analyst">Analyste</option>
-          <option value="viewer">Lecteur</option>
+          <option value="system_admin">Super Admin</option>
+          <option value="scoring_admin">Admin Scoring</option>
+          <option value="risk_manager">Gestionnaire Risque</option>
+          <option value="committee_member">Membre Comité</option>
+          <option value="risk_analyst">Analyste Risque</option>
+          <option value="auditor">Auditeur</option>
+          <option value="read_only">Lecture seule</option>
         </select>
       </div>
 

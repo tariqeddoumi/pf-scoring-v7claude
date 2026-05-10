@@ -19,7 +19,7 @@ export async function DELETE(
     }
 
     const payload = await verifyToken(token);
-    if (!payload || payload.role !== "admin") {
+    if (!payload || payload.role !== "system_admin") {
       return NextResponse.json(
         { error: "Seuls les administrateurs peuvent supprimer des comptes" },
         { status: 403 }
@@ -41,9 +41,9 @@ export async function DELETE(
     }
 
     // Ne pas permettre de supprimer le dernier admin
-    if (user.role === "admin") {
+    if (user.role === "system_admin") {
       const adminCount = await prisma.user.count({
-        where: { role: "admin" },
+        where: { role: "system_admin" },
       });
 
       if (adminCount <= 1) {
