@@ -1646,3 +1646,95 @@ model ScoringRatingBucket {
 
   @@map("scoring_rating_buckets")
 }
+
+// ============================================================================
+// V8 SECTORAL ADJUSTMENT LAYER
+// ============================================================================
+
+/// V8 sector master list (12 sectors)
+model V8Sector {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  label      String
+  orderIndex Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  domainWeights  V8SectorDomainWeight[]
+  stressTests    V8SectorStressTest[]
+  redFlags       V8SectorRedFlag[]
+  domainImpacts  V8SectorDomainImpact[]
+
+  @@map("BP_PF_v8_sectors")
+}
+
+/// Adjusted domain weights per sector (D1-D9, sum = 100 per sector)
+model V8SectorDomainWeight {
+  id             String   @id @default(cuid())
+  sectorId       String
+  domainCode     String   // D1..D9
+  weightAdjusted Float
+  createdAt      DateTime @default(now())
+
+  sector V8Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, domainCode])
+  @@index([sectorId])
+  @@map("BP_PF_v8_sector_domain_weights")
+}
+
+/// Sector-specific mandatory stress test scenarios
+model V8SectorStressTest {
+  id          String   @id @default(cuid())
+  sectorId    String
+  description String
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V8Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@index([sectorId])
+  @@map("BP_PF_v8_sector_stress_tests")
+}
+
+/// Sector-specific red flags (isNoGo = true means automatic No-Go trigger)
+model V8SectorRedFlag {
+  id          String   @id @default(cuid())
+  sectorId    String
+  description String
+  isNoGo      Boolean  @default(false)
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V8Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@index([sectorId])
+  @@map("BP_PF_v8_sector_red_flags")
+}
+
+/// Relative domain emphasis adjustments per sector (positive = focus more, negative = focus less)
+model V8SectorDomainImpact {
+  id         String   @id @default(cuid())
+  sectorId   String
+  domainCode String   // D1..D9
+  impact     Int      // e.g. +2, -1, 0
+  createdAt  DateTime @default(now())
+
+  sector V8Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, domainCode])
+  @@index([sectorId])
+  @@map("BP_PF_v8_sector_domain_impacts")
+}
+
+/// V8 integration rules / bonus-malus configuration
+model V8IntegrationRule {
+  id         String   @id @default(cuid())
+  rubrique   String
+  regle      String
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@map("BP_PF_v8_integration_rules")
+}
