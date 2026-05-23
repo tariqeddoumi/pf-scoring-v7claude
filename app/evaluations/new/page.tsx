@@ -6,20 +6,7 @@ import { ArrowLeft, Loader2, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { EvaluationWorkspace } from "@/components/scoring/EvaluationWorkspace";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
-
-function authHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (typeof window !== "undefined") {
-    for (const cookie of document.cookie.split(";")) {
-      const [name, value] = cookie.trim().split("=");
-      if (name === "auth_token") {
-        try { headers["Authorization"] = `Bearer ${decodeURIComponent(value)}`; } catch {}
-        break;
-      }
-    }
-  }
-  return headers;
-}
+import { apiGet, apiPost } from "@/lib/api-client";
 
 interface Project {
   id: string;
@@ -55,10 +42,9 @@ export default function NewEvaluationPage() {
   useEffect(() => {
     (async () => {
       try {
-        const headers = authHeaders();
         const [pRes, qRes] = await Promise.all([
-          fetch("/api/projects", { headers }),
-          fetch("/api/scoring/questionnaire", { headers }),
+          apiGet("/api/projects"),
+          apiGet("/api/scoring/questionnaire"),
         ]);
 
         if (pRes.ok) {
@@ -86,13 +72,9 @@ export default function NewEvaluationPage() {
     setSubmitting(true);
     setError("");
     try {
-      const res = await fetch("/api/scoring/evaluations", {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          projectId: formData.projectId,
-          modelVersionId: modelVersionId,
-        }),
+      const res = await apiPost("/api/scoring/evaluations", {
+        projectId: formData.projectId,
+        modelVersionId: modelVersionId,
       });
       if (!res.ok) {
         const d = await res.json();

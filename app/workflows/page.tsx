@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Search, Filter, ChevronRight, AlertCircle } from 'lucide-react';
+import { apiGet } from '@/lib/api-client';
 
 interface Workflow {
   id: string;
@@ -47,13 +48,7 @@ export default function WorkflowsPage() {
   const fetchWorkflows = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('auth_token');
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      if (token) headers.Authorization = `Bearer ${token}`;
-
-      const response = await fetch('/api/admin/scoring/workflows?limit=100', {
-        headers
-      });
+      const response = await apiGet('/api/admin/scoring/workflows?limit=100');
 
       if (!response.ok) {
         throw new Error('Failed to fetch workflows');

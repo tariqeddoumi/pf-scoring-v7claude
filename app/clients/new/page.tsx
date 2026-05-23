@@ -14,6 +14,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
+import { apiPost } from "@/lib/api-client";
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -85,11 +86,7 @@ export default function NewClientPage() {
     setFieldErrors({});
 
     try {
-      const response = await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const response = await apiPost("/api/clients", formData);
 
       const data = await response.json();
 

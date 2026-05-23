@@ -15,6 +15,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
+import { apiGet } from "@/lib/api-client";
 
 interface Client {
   id: string;
@@ -66,14 +67,7 @@ export default function ClientDetailPage({
       try {
         const { id } = await params;
         setClientId(id);
-        const token = localStorage.getItem("auth_token");
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-        const response = await fetch(`/api/clients/${id}`, { headers });
+        const response = await apiGet(`/api/clients/${id}`);
         if (!response.ok) throw new Error("Failed to fetch client");
         const data = await response.json();
         setClient(data.data || data);
