@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
 
 interface NodeResult {
   nodeId: string;
@@ -32,7 +33,7 @@ export default function ResultsPage() {
   const loadTrace = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(
+      const res = await apiGet(
         `/api/scoring/evaluations/${evaluationId}/trace`
       );
       if (!res.ok) throw new Error("Failed to load trace");

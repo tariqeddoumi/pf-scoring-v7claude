@@ -15,6 +15,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
+import { apiGet, apiPut } from "@/lib/api-client";
 
 export default function EditClientPage({
   params,
@@ -84,14 +85,7 @@ export default function EditClientPage({
         setClientId(id);
 
         // Fetch client data
-        const token = localStorage.getItem("auth_token");
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-        const clientResponse = await fetch(`/api/clients/${id}`, { headers });
+        const clientResponse = await apiGet(`/api/clients/${id}`);
         if (!clientResponse.ok) throw new Error("Failed to fetch client");
         const clientData = await clientResponse.json();
         const client = clientData.data || clientData;
@@ -141,18 +135,7 @@ export default function EditClientPage({
     try {
       if (!clientId) throw new Error("Client ID not found");
 
-      const token = localStorage.getItem("auth_token");
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-      const response = await fetch(`/api/clients/${clientId}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify(formData),
-      });
+      const response = await apiPut(`/api/clients/${clientId}`, formData);
 
       const data = await response.json();
 

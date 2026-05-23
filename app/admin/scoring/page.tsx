@@ -13,6 +13,7 @@ import {
   ListOrdered,
   Hash,
 } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
 
 interface ScoringNode {
   id: string;
@@ -63,7 +64,7 @@ export default function ScoringAdminPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/scoring/questionnaire");
+        const res = await apiGet("/api/scoring/questionnaire");
         if (!res.ok) {
           const d = await res.json();
           throw new Error(d.error || "Erreur chargement");

@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { apiGet, apiPost, apiDelete } from '@/lib/api-client';
 
 interface ScoringCriterion {
   id: string;
@@ -90,18 +91,10 @@ export default function ScoringGridPage() {
     fetchCriteria();
   }, []);
 
-  const getAuthHeaders = (): Record<string, string> => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    if (token) return { Authorization: `Bearer ${token}` };
-    return {};
-  };
-
   const fetchCriteria = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/scoring-criteria', {
-        headers: { ...getAuthHeaders() },
-      });
+      const response = await apiGet('/api/admin/scoring-criteria');
       if (!response.ok) throw new Error('Failed to fetch criteria');
       const data = await response.json();
       setCriteria(data.data || []);
@@ -120,16 +113,12 @@ export default function ScoringGridPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/scoring-criteria', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({
-          ...formData,
-          weight: parseFloat(formData.weight as any),
-          minScore: parseFloat(formData.minScore as any),
-          maxScore: parseFloat(formData.maxScore as any),
-          orderIndex: criteria.length,
-        }),
+      const response = await apiPost('/api/admin/scoring-criteria', {
+        ...formData,
+        weight: parseFloat(formData.weight as any),
+        minScore: parseFloat(formData.minScore as any),
+        maxScore: parseFloat(formData.maxScore as any),
+        orderIndex: criteria.length,
       });
 
       if (!response.ok) {
@@ -157,10 +146,7 @@ export default function ScoringGridPage() {
 
   const handleDeleteCriteria = async (id: string) => {
     try {
-      const response = await fetch(`/api/admin/scoring-criteria/${id}`, {
-        method: 'DELETE',
-        headers: { ...getAuthHeaders() },
-      });
+      const response = await apiDelete(`/api/admin/scoring-criteria/${id}`);
 
       if (!response.ok) throw new Error('Failed to delete criterion');
 

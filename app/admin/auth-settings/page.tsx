@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { apiCall } from "@/lib/api-client";
 
 export default function AuthSettingsPage() {
   const [settings, setSettings] = useState({
@@ -17,9 +18,8 @@ export default function AuthSettingsPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch("/api/admin/config/auth", {
+      const res = await apiCall("/api/admin/config/auth", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
 

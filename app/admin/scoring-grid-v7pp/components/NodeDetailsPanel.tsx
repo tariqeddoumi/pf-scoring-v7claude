@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2, Check, X } from "lucide-react";
 import type { ScoringNode, ScoringNodeOption, ScoringNodeRange } from "@/lib/types/scoring-grid";
+import { apiPut, apiPost, apiDelete } from "@/lib/api-client";
 
 interface NodeDetailsPanelProps {
   node: ScoringNode;
@@ -79,11 +80,7 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`/api/admin/scoring/nodes/${node.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const res = await apiPut(`/api/admin/scoring/nodes/${node.id}`, formData);
       if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
       onNodeUpdate(formData);
       onDirtyChange(false);
@@ -185,11 +182,7 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
     if (!newOption.label || newOption.value === undefined) return;
 
     try {
-      const res = await fetch(`/api/admin/scoring/nodes/${node.id}/options`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newOption),
-      });
+      const res = await apiPost(`/api/admin/scoring/nodes/${node.id}/options`, newOption);
       if (!res.ok) throw new Error("Erreur lors de l'ajout");
       const data = await res.json();
       setOptions([...options, data.data]);
@@ -202,10 +195,7 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
 
   const handleDeleteOption = async (optionId: string) => {
     try {
-      const res = await fetch(`/api/admin/scoring/nodes/${node.id}/options/${optionId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await apiDelete(`/api/admin/scoring/nodes/${node.id}/options/${optionId}`);
       if (!res.ok) throw new Error("Erreur lors de la suppression");
       setOptions(options.filter((o) => o.id !== optionId));
       onDirtyChange(true);
@@ -299,11 +289,7 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
     if (newRange.minValue === undefined || newRange.maxValue === undefined) return;
 
     try {
-      const res = await fetch(`/api/admin/scoring/nodes/${node.id}/ranges`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newRange),
-      });
+      const res = await apiPost(`/api/admin/scoring/nodes/${node.id}/ranges`, newRange);
       if (!res.ok) throw new Error("Erreur lors de l'ajout");
       const data = await res.json();
       setRanges([...ranges, data.data]);
@@ -316,10 +302,7 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
 
   const handleDeleteRange = async (rangeId: string) => {
     try {
-      const res = await fetch(`/api/admin/scoring/nodes/${node.id}/ranges/${rangeId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await apiDelete(`/api/admin/scoring/nodes/${node.id}/ranges/${rangeId}`);
       if (!res.ok) throw new Error("Erreur lors de la suppression");
       setRanges(ranges.filter((r) => r.id !== rangeId));
       onDirtyChange(true);
@@ -413,11 +396,7 @@ function ValidationTab({ node }: ValidationTabProps) {
   const validateNode = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/scoring/validate-grid", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ versionId: "dummy" }),
-      });
+      const res = await apiPost("/api/admin/scoring/validate-grid", { versionId: "dummy" });
       const data = await res.json();
       setValidationErrors(data.data?.errors || []);
     } catch (e) {

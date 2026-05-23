@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, PlayCircle, Send, BarChart3 } from "lucide-react";
 import { EvaluationForm } from "@/components/scoring/evaluation-form";
+import { apiGet, apiPost, apiCall } from "@/lib/api-client";
 
 export default function EvaluationPage() {
   const params = useParams();
@@ -23,7 +24,7 @@ export default function EvaluationPage() {
   const loadForm = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/scoring/evaluations/${evaluationId}/form`);
+      const res = await apiGet(`/api/scoring/evaluations/${evaluationId}/form`);
       if (!res.ok) throw new Error("Failed to load form");
       const { data } = await res.json();
       setForm(data.form);
@@ -36,9 +37,8 @@ export default function EvaluationPage() {
   };
 
   const handleSaveAnswers = async (answers: any[]) => {
-    const res = await fetch(`/api/scoring/evaluations/${evaluationId}/answers`, {
+    const res = await apiCall(`/api/scoring/evaluations/${evaluationId}/answers`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ answers }),
     });
     if (!res.ok) throw new Error("Failed to save answers");
@@ -49,9 +49,7 @@ export default function EvaluationPage() {
   const handleCalculate = async () => {
     setIsCalculating(true);
     try {
-      const res = await fetch(`/api/scoring/evaluations/${evaluationId}/calculate`, {
-        method: "POST",
-      });
+      const res = await apiPost(`/api/scoring/evaluations/${evaluationId}/calculate`);
       if (!res.ok) throw new Error("Calculation failed");
       const { data } = await res.json();
       alert(`Calculation complete: ${data.rating} (${data.finalScore.toFixed(2)})`);
@@ -67,11 +65,7 @@ export default function EvaluationPage() {
   const handleSubmit = async () => {
     if (!confirm("Submit evaluation for validation?")) return;
     try {
-      const res = await fetch(`/api/scoring/evaluations/${evaluationId}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: "" }),
-      });
+      const res = await apiPost(`/api/scoring/evaluations/${evaluationId}/submit`, { notes: "" });
       if (!res.ok) throw new Error("Submit failed");
       alert("Evaluation submitted");
       router.push(`/scoring/evaluations/${evaluationId}/results`);

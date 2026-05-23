@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import LoadingSkeleton from "@/components/common/LoadingSkeleton";
 import { usePermission } from "@/lib/hooks/usePermission";
 import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
+import { apiGet, apiDelete } from "@/lib/api-client";
 
 interface User {
   id: string;
@@ -47,7 +48,7 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/users");
+      const response = await apiGet("/api/users");
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       setUsers(data.data || []);
@@ -63,9 +64,7 @@ export default function UsersPage() {
   const handleDelete = async (userId: string) => {
     try {
       setDeleting(true);
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "DELETE",
-      });
+      const response = await apiDelete(`/api/users/${userId}`);
       if (!response.ok) throw new Error("Failed to delete user");
       setUsers(users.filter((u) => u.id !== userId));
       setDeleteConfirm(null);

@@ -17,6 +17,7 @@ import NodeModal from "@/components/scoring/NodeModal";
 import OptionModal from "@/components/scoring/OptionModal";
 import RangeModal from "@/components/scoring/RangeModal";
 import { ModelConfigurationPanel } from "@/components/admin/ModelConfigurationPanel";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 
 interface ScoringOption {
   id: string;
@@ -124,11 +125,7 @@ export default function ScoringBuilderPage() {
   const handleNodeSubmit = async (data: any) => {
     if (nodeModalData?.id) {
       // Edit
-      const res = await fetch(`/api/admin/scoring/nodes?nodeId=${nodeModalData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await apiPut(`/api/admin/scoring/nodes?nodeId=${nodeModalData.id}`, data);
 
       if (!res.ok) {
         const err = await res.json();
@@ -145,11 +142,7 @@ export default function ScoringBuilderPage() {
         orderIndex: 0,
       };
 
-      const res = await fetch("/api/admin/scoring/nodes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiPost("/api/admin/scoring/nodes", payload);
 
       if (!res.ok) {
         const err = await res.json();
@@ -177,11 +170,7 @@ export default function ScoringBuilderPage() {
   const handleOptionSubmit = async (data: any) => {
     if (optionModalData?.id) {
       // Edit
-      const res = await fetch(`/api/admin/scoring/options?optionId=${optionModalData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await apiPut(`/api/admin/scoring/options?optionId=${optionModalData.id}`, data);
 
       if (!res.ok) {
         const err = await res.json();
@@ -194,11 +183,7 @@ export default function ScoringBuilderPage() {
         nodeId: selectedCriterionId,
       };
 
-      const res = await fetch("/api/admin/scoring/options", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiPost("/api/admin/scoring/options", payload);
 
       if (!res.ok) {
         const err = await res.json();
@@ -226,11 +211,7 @@ export default function ScoringBuilderPage() {
   const handleRangeSubmit = async (data: any) => {
     if (rangeModalData?.id) {
       // Edit
-      const res = await fetch(`/api/admin/scoring/ranges?rangeId=${rangeModalData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await apiPut(`/api/admin/scoring/ranges?rangeId=${rangeModalData.id}`, data);
 
       if (!res.ok) {
         const err = await res.json();
@@ -243,11 +224,7 @@ export default function ScoringBuilderPage() {
         nodeId: selectedCriterionId,
       };
 
-      const res = await fetch("/api/admin/scoring/ranges", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiPost("/api/admin/scoring/ranges", payload);
 
       if (!res.ok) {
         const err = await res.json();
@@ -261,7 +238,7 @@ export default function ScoringBuilderPage() {
   const loadModel = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/scoring/questionnaire");
+      const res = await apiGet("/api/scoring/questionnaire");
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error || "Erreur chargement");
@@ -287,9 +264,7 @@ export default function ScoringBuilderPage() {
 
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/scoring/nodes?nodeId=${nodeId}`, {
-        method: "DELETE",
-      });
+      const res = await apiDelete(`/api/admin/scoring/nodes?nodeId=${nodeId}`);
 
       if (!res.ok) {
         const d = await res.json();
@@ -309,9 +284,7 @@ export default function ScoringBuilderPage() {
 
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/scoring/options?optionId=${optionId}`, {
-        method: "DELETE",
-      });
+      const res = await apiDelete(`/api/admin/scoring/options?optionId=${optionId}`);
 
       if (!res.ok) {
         const d = await res.json();
@@ -331,9 +304,7 @@ export default function ScoringBuilderPage() {
 
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/scoring/ranges?rangeId=${rangeId}`, {
-        method: "DELETE",
-      });
+      const res = await apiDelete(`/api/admin/scoring/ranges?rangeId=${rangeId}`);
 
       if (!res.ok) {
         const d = await res.json();

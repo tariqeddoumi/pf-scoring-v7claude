@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { apiGet, apiPost, apiPut } from "@/lib/api-client";
 import { VersionHeaderBar } from "./components/VersionHeaderBar";
 import { ScoringGridSplit } from "./components/ScoringGridSplit";
 import { StatsDashboard } from "./components/StatsDashboard";
@@ -23,9 +24,7 @@ export default function ScoringGridRefactoredPage() {
   useEffect(() => {
     const loadModels = async () => {
       try {
-        const res = await fetch("/api/admin/scoring/models", {
-          headers: { "Content-Type": "application/json" },
-        });
+        const res = await apiGet("/api/admin/scoring/models");
         if (!res.ok) throw new Error("Impossible de charger les modèles");
         const data = await res.json();
         setModels(data.data || []);
@@ -48,9 +47,7 @@ export default function ScoringGridRefactoredPage() {
 
   const loadVersions = async (modelId: string) => {
     try {
-      const res = await fetch(`/api/admin/scoring/models/${modelId}/versions`, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await apiGet(`/api/admin/scoring/models/${modelId}/versions`);
       if (!res.ok) throw new Error("Impossible de charger les versions");
       const data = await res.json();
       const versionsList = data.data || [];
@@ -71,9 +68,7 @@ export default function ScoringGridRefactoredPage() {
 
   const loadNodes = async (versionId: string) => {
     try {
-      const res = await fetch(`/api/admin/scoring/nodes?versionId=${versionId}`, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await apiGet(`/api/admin/scoring/nodes?versionId=${versionId}`);
       if (!res.ok) throw new Error("Impossible de charger les nœuds");
       const data = await res.json();
       setNodes(buildHierarchy(data.data || []));
@@ -84,9 +79,7 @@ export default function ScoringGridRefactoredPage() {
 
   const loadStats = async (versionId: string) => {
     try {
-      const res = await fetch(`/api/admin/scoring/grid-stats?versionId=${versionId}`, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await apiGet(`/api/admin/scoring/grid-stats?versionId=${versionId}`);
       if (!res.ok) throw new Error("Impossible de charger les stats");
       const data = await res.json();
       setStats(data.data);
@@ -131,10 +124,8 @@ export default function ScoringGridRefactoredPage() {
     if (!activeModel) return;
     try {
       setLoading(true);
-      const res = await fetch(`/api/admin/scoring/models/${activeModel.id}/versions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ changeReason: "Nouvelle version de brouillon" }),
+      const res = await apiPost(`/api/admin/scoring/models/${activeModel.id}/versions`, {
+        changeReason: "Nouvelle version de brouillon",
       });
       if (!res.ok) throw new Error("Erreur lors de la création");
       await loadVersions(activeModel.id);
@@ -149,13 +140,9 @@ export default function ScoringGridRefactoredPage() {
     if (!activeModel || !activeVersion) return;
     try {
       setLoading(true);
-      const res = await fetch(
+      const res = await apiPut(
         `/api/admin/scoring/models/${activeModel.id}/versions/${activeVersion.id}/publish`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
-        }
+        {}
       );
       if (!res.ok) throw new Error("Erreur lors de la publication");
       await loadVersions(activeModel.id);

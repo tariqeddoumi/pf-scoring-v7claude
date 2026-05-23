@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Loader2, FileText, BarChart3, CheckCircle } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
+import { apiGet, apiPut } from "@/lib/api-client";
 
 interface Evaluation {
   id: string;
@@ -71,7 +72,7 @@ export default function EditEvaluationPage({
       try {
         const { id } = await params;
         setEvalId(id);
-        const response = await fetch(`/api/evaluations/${id}`);
+        const response = await apiGet(`/api/evaluations/${id}`);
         if (!response.ok) throw new Error("Failed to fetch evaluation");
         const data = await response.json();
         const evaluation = data.data || data;
@@ -121,11 +122,7 @@ export default function EditEvaluationPage({
     try {
       if (!evalId) throw new Error("Evaluation ID not found");
 
-      const response = await fetch(`/api/evaluations/${evalId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      const response = await apiPut(`/api/evaluations/${evalId}`, formData);
 
       const data = await response.json();
 
