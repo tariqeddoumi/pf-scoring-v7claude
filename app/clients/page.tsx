@@ -9,6 +9,7 @@ import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 import LoadingSkeleton from "@/components/common/LoadingSkeleton";
 import { usePermission } from "@/lib/hooks/usePermission";
 import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
+import { apiGet, apiDelete } from "@/lib/api-client";
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -53,7 +54,7 @@ export default function ClientsPage() {
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
-      const response = await fetch("/api/clients", { headers });
+      const response = await apiGet("/api/clients");
       if (!response.ok) throw new Error("Failed to fetch clients");
       const data = await response.json();
       setClients(data.data || []);

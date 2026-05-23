@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
+import { apiGet } from "@/lib/api-client";
 
 interface AuditLog {
   id: string;
@@ -28,7 +29,7 @@ export default function AuditPage() {
   useEffect(() => {
     async function fetchLogs() {
       try {
-        const res = await fetch("/api/audit");
+        const res = await apiGet("/api/audit");
         const data = await res.json();
         setLogs(
           data.map((log: Record<string, unknown>) => ({
