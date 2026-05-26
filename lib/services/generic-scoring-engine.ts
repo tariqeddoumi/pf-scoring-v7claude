@@ -263,15 +263,16 @@ export class GenericScoringEngine {
     // 1. Calculer les enfants d'abord
     const childResults: ScoringNodeResult[] = [];
     for (const child of node.children || []) {
+      const childNode = child as ScoringNode & { children?: unknown[] };
       const childResult = await this.scoreNode(
-        child,
+        childNode,
         allNodes,
         answers,
         results,
         evaluationId
       );
       childResults.push(childResult);
-      results.set(child.id, childResult);
+      results.set((child as any).id, childResult);
     }
 
     // 2. Scorer ce nœud
