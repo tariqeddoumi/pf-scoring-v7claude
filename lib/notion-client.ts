@@ -149,19 +149,19 @@ export async function getTrackingItems() {
       database_id: databaseId,
     });
 
-    return (response.results as unknown[]).map((page: unknown) => {
-      const pageObj = page as Record<string, unknown>;
-      const properties = pageObj.properties as Record<string, unknown>;
+    return ((response as unknown) as { results: unknown[] }).results.map((page: unknown) => {
+      const pageObj = page as Record<string, any>;
+      const properties = pageObj.properties as Record<string, any>;
       return {
         id: pageObj.id,
-        name: (properties.Name as Record<string, unknown>).title?.[0]?.plain_text || "",
-        bloc: (properties.Bloc as Record<string, unknown>).select?.name || "",
-        statut: (properties.Statut as Record<string, unknown>).select?.name || "",
-        completion: (properties["Complétion %"] as Record<string, unknown>).number || 0,
-        description: (properties.Description as Record<string, unknown>).rich_text?.[0]?.plain_text || "",
-        specification: (properties.Spécification as Record<string, unknown>).rich_text?.[0]?.plain_text || "",
-        notes: (properties.Notes as Record<string, unknown>).rich_text?.[0]?.plain_text || "",
-        dateUpdated: (properties["Date Maj"] as Record<string, unknown>).date?.start || "",
+        name: (properties.Name as Record<string, any>).title?.[0]?.plain_text || "",
+        bloc: (properties.Bloc as Record<string, any>).select?.name || "",
+        statut: (properties.Statut as Record<string, any>).select?.name || "",
+        completion: (properties["Complétion %"] as Record<string, any>).number || 0,
+        description: (properties.Description as Record<string, any>).rich_text?.[0]?.plain_text || "",
+        specification: (properties.Spécification as Record<string, any>).rich_text?.[0]?.plain_text || "",
+        notes: (properties.Notes as Record<string, any>).rich_text?.[0]?.plain_text || "",
+        dateUpdated: (properties["Date Maj"] as Record<string, any>).date?.start || "",
       };
     });
   } catch (error) {

@@ -4,7 +4,7 @@
  * Includes stress tests, red flags, and domain impact modifiers
  */
 
-import { ScoringResult } from "@/types/scoring-v7plus";
+import { ScoringResult, RatingScale } from "@/types/scoring-v7plus";
 
 export interface V8SectorData {
   id: string;
@@ -156,7 +156,7 @@ export class V8ScoringEngine {
     let weightAdjustmentImpact = 0;
 
     for (const domainWeight of sectorData.domainWeights) {
-      const domainCode = domainWeight.domainCode;
+      const domainCode = domainWeight.domainCode as keyof typeof baseResult.domains;
       const baseDomainScore = baseResult.domains[domainCode]?.aggregatedScore ?? 0;
 
       // Calculate the adjustment factor (0.8 to 1.2 range for ±20% variance)
@@ -325,7 +325,8 @@ export class V8ScoringEngine {
     let domainImpactTotal = 0;
 
     for (const impact of sectorData.domainImpacts) {
-      const domainScore = baseResult.domains[impact.domainCode]?.aggregatedScore ?? 5;
+      const domainCode = impact.domainCode as keyof typeof baseResult.domains;
+      const domainScore = baseResult.domains[domainCode]?.aggregatedScore ?? 5;
 
       // Impact modifier: -3 to +5 scale
       // Negative impacts reduce weak scores, positive impacts boost strong scores
@@ -343,15 +344,15 @@ export class V8ScoringEngine {
   /**
    * Convert score to rating scale (shared with V7++)
    */
-  private static scoreToRating(score: number): string {
-    if (score >= 8.5) return "AAA";
-    if (score >= 7.5) return "AA";
-    if (score >= 6.5) return "A";
-    if (score >= 5.5) return "BBB";
-    if (score >= 4.5) return "BB";
-    if (score >= 3.5) return "B";
-    if (score >= 2.0) return "CCC";
-    return "D";
+  private static scoreToRating(score: number): RatingScale {
+    if (score >= 8.5) return RatingScale.AAA;
+    if (score >= 7.5) return RatingScale.AA;
+    if (score >= 6.5) return RatingScale.A;
+    if (score >= 5.5) return RatingScale.BBB;
+    if (score >= 4.5) return RatingScale.BB;
+    if (score >= 3.5) return RatingScale.B;
+    if (score >= 2.0) return RatingScale.CCC;
+    return RatingScale.D;
   }
 
   /**

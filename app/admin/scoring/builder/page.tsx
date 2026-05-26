@@ -666,7 +666,7 @@ export default function ScoringBuilderPage() {
       <NodeModal
         isOpen={nodeModalOpen}
         nodeType={nodeModalType}
-        initialData={nodeModalData && 'code' in nodeModalData && 'label' in nodeModalData ? {
+        initialData={nodeModalData && 'code' in nodeModalData && 'label' in nodeModalData && typeof nodeModalData.code === 'string' && typeof nodeModalData.label === 'string' ? {
           id: nodeModalData.id,
           code: nodeModalData.code,
           label: nodeModalData.label,
@@ -684,7 +684,7 @@ export default function ScoringBuilderPage() {
       <OptionModal
         isOpen={optionModalOpen}
         criterionCode={selectedCriterionCode}
-        initialData={optionModalData && 'label' in optionModalData && 'score' in optionModalData ? {
+        initialData={optionModalData && 'label' in optionModalData && 'score' in optionModalData && typeof optionModalData.label === 'string' && typeof optionModalData.score === 'number' ? {
           id: optionModalData.id,
           label: optionModalData.label,
           score: optionModalData.score,
@@ -697,7 +697,7 @@ export default function ScoringBuilderPage() {
       <RangeModal
         isOpen={rangeModalOpen}
         criterionCode={selectedCriterionCode}
-        initialData={rangeModalData && 'minValue' in rangeModalData && 'maxValue' in rangeModalData && 'score' in rangeModalData ? {
+        initialData={rangeModalData && 'minValue' in rangeModalData && 'maxValue' in rangeModalData && 'score' in rangeModalData && typeof rangeModalData.minValue === 'number' && typeof rangeModalData.maxValue === 'number' && typeof rangeModalData.score === 'number' ? {
           id: rangeModalData.id,
           minValue: rangeModalData.minValue,
           maxValue: rangeModalData.maxValue,
