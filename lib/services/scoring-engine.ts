@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma-client";
-import { ScoringAnswerType } from "@prisma/client";
+import type { ScoringNode, ScoringEvaluationAnswer } from "@prisma/client";
 
 /**
  * Result of scoring a single node
@@ -58,7 +58,7 @@ export class ScoringEngine {
     ]);
 
     // Build node tree structure
-    const nodeMap = new Map<string, any>();
+    const nodeMap = new Map<string, ScoringNode & { children: unknown[] }>();
     nodes.forEach((node) => {
       nodeMap.set(node.id, { ...node, children: [] });
     });
@@ -66,7 +66,11 @@ export class ScoringEngine {
     // Link parent-child relationships
     nodes.forEach((node) => {
       if (node.parentNodeId && nodeMap.has(node.parentNodeId)) {
-        nodeMap.get(node.parentNodeId).children.push(nodeMap.get(node.id));
+        const parent = nodeMap.get(node.parentNodeId);
+        const child = nodeMap.get(node.id);
+        if (parent && child) {
+          parent.children.push(child);
+        }
       }
     });
 
@@ -76,12 +80,15 @@ export class ScoringEngine {
     // Score from leaves up
     const results = new Map<string, NodeScore>();
     for (const rootNode of rootNodes) {
-      await this.scoreNodeRecursive(
-        nodeMap.get(rootNode.id),
-        evaluationId,
-        answers,
-        results
-      );
+      const nodeWithChildren = nodeMap.get(rootNode.id);
+      if (nodeWithChildren) {
+        await this.scoreNodeRecursive(
+          nodeWithChildren,
+          evaluationId,
+          answers,
+          results
+        );
+      }
     }
 
     return results;
@@ -91,9 +98,9 @@ export class ScoringEngine {
    * Recursively score a node and its children
    */
   private static async scoreNodeRecursive(
-    nodeWithChildren: any,
-    evaluationId: string,
-    answers: any[],
+    nodeWithChildren: ScoringNode & { children: unknown[] },
+    _evaluationId: string,
+    answers: ScoringEvaluationAnswer[],
     results: Map<string, NodeScore>
   ): Promise<NodeScore> {
     const node = nodeWithChildren;
@@ -101,14 +108,15 @@ export class ScoringEngine {
     // Score children first
     const childScores: NodeScore[] = [];
     for (const child of node.children || []) {
+      const childNode = child as ScoringNode & { children: unknown[] };
       const childScore = await this.scoreNodeRecursive(
-        child,
-        evaluationId,
+        childNode,
+        _evaluationId,
         answers,
         results
       );
       childScores.push(childScore);
-      results.set(child.id, childScore);
+      results.set(childNode.id, childScore);
     }
 
     // Score this node based on its scoring method
@@ -119,12 +127,11 @@ export class ScoringEngine {
       nodeScore = await this.aggregateChildScores(
         node,
         childScores,
-        evaluationId,
         answers
       );
     } else {
       // This is a leaf node - score based on answer
-      nodeScore = await this.scoreLeafNode(node, evaluationId, answers);
+      nodeScore = await this.scoreLeafNode(node, answers);
     }
 
     // Apply rules
@@ -143,9 +150,8 @@ export class ScoringEngine {
    * Score a leaf node based on its answer
    */
   private static async scoreLeafNode(
-    node: any,
-    evaluationId: string,
-    answers: any[]
+    node: ScoringNode & { options?: unknown[]; ranges?: unknown[]; weight?: number; aggregationMethod?: string },
+    answers: ScoringEvaluationAnswer[]
   ): Promise<NodeScore> {
     const answer = answers.find((a) => a.nodeId === node.id);
     let rawScore = 0;
@@ -210,36 +216,38 @@ export class ScoringEngine {
    * Score from option selection
    */
   private static async scoreFromOption(
-    node: any,
-    answer: any
+    node: ScoringNode & { options?: unknown[] },
+    answer: ScoringEvaluationAnswer
   ): Promise<number> {
     const option = node.options?.find(
-      (o: any) => o.value === answer.valueString
+      (o: unknown) => (o as Record<string, unknown>).value === answer.valueString
     );
-    return option?.score || 0;
+    return (option as Record<string, unknown> | undefined)?.score as number || 0;
   }
 
   /**
    * Score from numeric range
    */
-  private static async scoreFromRange(node: any, answer: any): Promise<number> {
+  private static async scoreFromRange(node: ScoringNode & { ranges?: unknown[] }, answer: ScoringEvaluationAnswer): Promise<number> {
     const value = answer.valueNumber || 0;
     const range = node.ranges?.find(
-      (r: any) =>
-        value >= r.minValue &&
-        value <= r.maxValue &&
-        (r.minIncluded || value > r.minValue) &&
-        (r.maxIncluded || value < r.maxValue)
+      (r: unknown) => {
+        const rangeRec = r as Record<string, unknown>;
+        return value >= (rangeRec.minValue as number) &&
+          value <= (rangeRec.maxValue as number) &&
+          ((rangeRec.minIncluded as boolean) || value > (rangeRec.minValue as number)) &&
+          ((rangeRec.maxIncluded as boolean) || value < (rangeRec.maxValue as number));
+      }
     );
-    return range?.score || 0;
+    return (range as Record<string, unknown> | undefined)?.score as number || 0;
   }
 
   /**
    * Score from formula
    */
   private static async scoreFromFormula(
-    node: any,
-    answer: any
+    node: ScoringNode & { formulas?: unknown[] },
+    answer: ScoringEvaluationAnswer
   ): Promise<number> {
     const formula = node.formulas?.[0];
     if (!formula) return 0;
@@ -257,10 +265,9 @@ export class ScoringEngine {
    * Aggregate child scores based on aggregation method
    */
   private static async aggregateChildScores(
-    node: any,
+    node: ScoringNode & { weight?: number; aggregationMethod?: string },
     childScores: NodeScore[],
-    evaluationId: string,
-    answers: any[]
+    _answers: ScoringEvaluationAnswer[]
   ): Promise<NodeScore> {
     let rawScore = 0;
     let explanation = "";
@@ -342,8 +349,8 @@ export class ScoringEngine {
    * Evaluate rules for a node
    */
   private static async evaluateRules(
-    node: any,
-    nodeScore: NodeScore
+    node: ScoringNode & { rules?: unknown[] },
+    _nodeScore: NodeScore
   ): Promise<RuleImpact[]> {
     const impacts: RuleImpact[] = [];
 
@@ -356,13 +363,14 @@ export class ScoringEngine {
       const triggered = await this.evaluateRuleCondition(rule);
 
       if (triggered) {
+        const ruleRec = rule as Record<string, unknown>;
         const impact: RuleImpact = {
-          ruleId: rule.id,
-          ruleCode: rule.code,
-          ruleType: rule.ruleType,
-          severity: rule.severity || "MEDIUM",
-          impact: rule.penaltyValue || 0,
-          message: rule.messageUser || `Rule ${rule.code} triggered`,
+          ruleId: String(ruleRec.id),
+          ruleCode: String(ruleRec.code),
+          ruleType: String(ruleRec.ruleType),
+          severity: String(ruleRec.severity || "MEDIUM"),
+          impact: (ruleRec.penaltyValue as number) || 0,
+          message: String(ruleRec.messageUser || `Rule ${ruleRec.code} triggered`),
         };
 
         impacts.push(impact);
@@ -375,13 +383,14 @@ export class ScoringEngine {
   /**
    * Evaluate rule condition (simplified)
    */
-  private static async evaluateRuleCondition(rule: any): Promise<boolean> {
+  private static async evaluateRuleCondition(rule: unknown): Promise<boolean> {
     // Simplified evaluation - in production use expression evaluator
-    if (!rule.conditionExpression) return false;
+    const ruleRec = rule as Record<string, unknown>;
+    if (!ruleRec.conditionExpression) return false;
 
     // For now, rules are triggered based on metadata
     // In full implementation, use safe expression evaluator
-    return rule.isActive === true;
+    return ruleRec.isActive === true;
   }
 
   /**
@@ -408,12 +417,12 @@ export class ScoringEngine {
    * Get final scores for evaluation
    */
   static async getFinalScores(
-    evaluationId: string,
+    _evaluationId: string,
     results: Map<string, NodeScore>
   ): Promise<{
     globalScore: number;
     scores: Map<string, NodeScore>;
-    summary: any;
+    summary: Record<string, unknown>;
   }> {
     // Find root scores (nodes with no parent)
     const rootScores = Array.from(results.values()).filter(
