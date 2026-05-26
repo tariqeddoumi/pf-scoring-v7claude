@@ -83,17 +83,17 @@ export default function ScoringBuilderPage() {
 
   // Modal states
   const [nodeModalOpen, setNodeModalOpen] = useState(false);
-  const [nodeModalData, setNodeModalData] = useState<any>(null);
+  const [nodeModalData, setNodeModalData] = useState<Partial<ScoringNode> | null>(null);
   const [nodeModalType, setNodeModalType] = useState<"DOMAIN" | "CRITERION">("DOMAIN");
   const [selectedDomainId, setSelectedDomainId] = useState("");
 
   const [optionModalOpen, setOptionModalOpen] = useState(false);
-  const [optionModalData, setOptionModalData] = useState<any>(null);
+  const [optionModalData, setOptionModalData] = useState<Partial<ScoringOption> | null>(null);
   const [selectedCriterionId, setSelectedCriterionId] = useState("");
   const [selectedCriterionCode, setSelectedCriterionCode] = useState("");
 
   const [rangeModalOpen, setRangeModalOpen] = useState(false);
-  const [rangeModalData, setRangeModalData] = useState<any>(null);
+  const [rangeModalData, setRangeModalData] = useState<Partial<ScoringRange> | null>(null);
 
   useEffect(() => {
     loadModel();
@@ -122,7 +122,7 @@ export default function ScoringBuilderPage() {
     setNodeModalOpen(true);
   };
 
-  const handleNodeSubmit = async (data: any) => {
+  const handleNodeSubmit = async (data: Record<string, unknown>) => {
     if (nodeModalData?.id) {
       // Edit
       const res = await apiPut(`/api/admin/scoring/nodes?nodeId=${nodeModalData.id}`, data);
@@ -167,7 +167,7 @@ export default function ScoringBuilderPage() {
     setOptionModalOpen(true);
   };
 
-  const handleOptionSubmit = async (data: any) => {
+  const handleOptionSubmit = async (data: Record<string, unknown>) => {
     if (optionModalData?.id) {
       // Edit
       const res = await apiPut(`/api/admin/scoring/options?optionId=${optionModalData.id}`, data);
@@ -208,7 +208,7 @@ export default function ScoringBuilderPage() {
     setRangeModalOpen(true);
   };
 
-  const handleRangeSubmit = async (data: any) => {
+  const handleRangeSubmit = async (data: Record<string, unknown>) => {
     if (rangeModalData?.id) {
       // Edit
       const res = await apiPut(`/api/admin/scoring/ranges?rangeId=${rangeModalData.id}`, data);
@@ -252,8 +252,8 @@ export default function ScoringBuilderPage() {
       });
       const ids = new Set<string>((data.data || []).map((d: ScoringNode) => d.id));
       setExpandedDomains(ids);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -272,8 +272,8 @@ export default function ScoringBuilderPage() {
       }
 
       await loadModel();
-    } catch (e: any) {
-      alert(`Erreur: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Erreur: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setSaving(false);
     }
@@ -292,8 +292,8 @@ export default function ScoringBuilderPage() {
       }
 
       await loadModel();
-    } catch (e: any) {
-      alert(`Erreur: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Erreur: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setSaving(false);
     }
@@ -312,8 +312,8 @@ export default function ScoringBuilderPage() {
       }
 
       await loadModel();
-    } catch (e: any) {
-      alert(`Erreur: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Erreur: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setSaving(false);
     }
