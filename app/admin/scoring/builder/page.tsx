@@ -83,17 +83,17 @@ export default function ScoringBuilderPage() {
 
   // Modal states
   const [nodeModalOpen, setNodeModalOpen] = useState(false);
-  const [nodeModalData, setNodeModalData] = useState<Partial<ScoringNode> | null>(null);
+  const [nodeModalData, setNodeModalData] = useState<Partial<ScoringNode> | undefined>(undefined);
   const [nodeModalType, setNodeModalType] = useState<"DOMAIN" | "CRITERION">("DOMAIN");
   const [selectedDomainId, setSelectedDomainId] = useState("");
 
   const [optionModalOpen, setOptionModalOpen] = useState(false);
-  const [optionModalData, setOptionModalData] = useState<Partial<ScoringOption> | null>(null);
+  const [optionModalData, setOptionModalData] = useState<Partial<ScoringOption> | undefined>(undefined);
   const [selectedCriterionId, setSelectedCriterionId] = useState("");
   const [selectedCriterionCode, setSelectedCriterionCode] = useState("");
 
   const [rangeModalOpen, setRangeModalOpen] = useState(false);
-  const [rangeModalData, setRangeModalData] = useState<Partial<ScoringRange> | null>(null);
+  const [rangeModalData, setRangeModalData] = useState<Partial<ScoringRange> | undefined>(undefined);
 
   useEffect(() => {
     loadModel();
@@ -101,14 +101,14 @@ export default function ScoringBuilderPage() {
 
   const openCreateDomainModal = () => {
     setNodeModalType("DOMAIN");
-    setNodeModalData(null);
+    setNodeModalData(undefined);
     setSelectedDomainId("");
     setNodeModalOpen(true);
   };
 
   const openCreateCriterionModal = (domainId: string) => {
     setNodeModalType("CRITERION");
-    setNodeModalData(null);
+    setNodeModalData(undefined);
     setSelectedDomainId(domainId);
     setNodeModalOpen(true);
   };
@@ -156,7 +156,7 @@ export default function ScoringBuilderPage() {
   const openCreateOptionModal = (criterionId: string, criterionCode: string) => {
     setSelectedCriterionId(criterionId);
     setSelectedCriterionCode(criterionCode);
-    setOptionModalData(null);
+    setOptionModalData(undefined);
     setOptionModalOpen(true);
   };
 
@@ -197,7 +197,7 @@ export default function ScoringBuilderPage() {
   const openCreateRangeModal = (criterionId: string, criterionCode: string) => {
     setSelectedCriterionId(criterionId);
     setSelectedCriterionCode(criterionCode);
-    setRangeModalData(null);
+    setRangeModalData(undefined);
     setRangeModalOpen(true);
   };
 
@@ -666,7 +666,15 @@ export default function ScoringBuilderPage() {
       <NodeModal
         isOpen={nodeModalOpen}
         nodeType={nodeModalType}
-        initialData={nodeModalData}
+        initialData={nodeModalData && 'code' in nodeModalData && 'label' in nodeModalData ? {
+          id: nodeModalData.id,
+          code: nodeModalData.code,
+          label: nodeModalData.label,
+          shortLabel: nodeModalData.shortLabel,
+          description: nodeModalData.description,
+          weight: nodeModalData.weight,
+          answerType: nodeModalData.answerType,
+        } : undefined}
         parentDomainCode={selectedDomainId ? questionnaire.find(d => d.id === selectedDomainId)?.code : undefined}
         onClose={() => setNodeModalOpen(false)}
         onSubmit={handleNodeSubmit}
@@ -676,7 +684,12 @@ export default function ScoringBuilderPage() {
       <OptionModal
         isOpen={optionModalOpen}
         criterionCode={selectedCriterionCode}
-        initialData={optionModalData}
+        initialData={optionModalData && 'label' in optionModalData && 'score' in optionModalData ? {
+          id: optionModalData.id,
+          label: optionModalData.label,
+          score: optionModalData.score,
+          description: optionModalData.description,
+        } : undefined}
         onClose={() => setOptionModalOpen(false)}
         onSubmit={handleOptionSubmit}
       />
@@ -684,7 +697,13 @@ export default function ScoringBuilderPage() {
       <RangeModal
         isOpen={rangeModalOpen}
         criterionCode={selectedCriterionCode}
-        initialData={rangeModalData}
+        initialData={rangeModalData && 'minValue' in rangeModalData && 'maxValue' in rangeModalData && 'score' in rangeModalData ? {
+          id: rangeModalData.id,
+          minValue: rangeModalData.minValue,
+          maxValue: rangeModalData.maxValue,
+          score: rangeModalData.score,
+          label: rangeModalData.label,
+        } : undefined}
         onClose={() => setRangeModalOpen(false)}
         onSubmit={handleRangeSubmit}
       />

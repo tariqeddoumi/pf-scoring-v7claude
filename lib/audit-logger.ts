@@ -80,7 +80,7 @@ export class AuditLogger {
             status: entry.status,
             errorMessage: entry.errorMessage,
             changeDetails,
-          },
+          } as any,
           timestamp: entry.timestamp || new Date(),
         },
       });

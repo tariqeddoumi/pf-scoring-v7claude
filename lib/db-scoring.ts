@@ -32,16 +32,16 @@ export async function saveEvaluation(
       data: {
         projectId,
         analystId,
-        scoringResult: scoringResult as unknown, // Store as JSON
-        stressTestResult: stressTestResult as unknown, // Store as JSON if provided
+        scoringResult: scoringResult as any, // Store as JSON
+        stressTestResult: stressTestResult as any, // Store as JSON if provided
         rating: scoringResult.rating,
         finalScore: scoringResult.finalScore,
         recommendation: scoringResult.recommendation,
         probabilityOfDefault: scoringResult.probabilityOfDefault,
-        triggeredNOGOs: scoringResult.triggeredNOGOs as unknown,
-        appliedMALUS: scoringResult.appliedMALUS as unknown,
+        triggeredNOGOs: scoringResult.triggeredNOGOs as any,
+        appliedMALUS: scoringResult.appliedMALUS as any,
         malusTotal: scoringResult.malusTotal,
-        status: "valide",
+        status: "valide" as any,
         version: "7.0",
       },
     });
@@ -103,7 +103,7 @@ export async function updateEvaluationStatus(
     return (await prisma.evaluation.update({
       where: { id: evaluationId },
       data: {
-        status: status as unknown,
+        status: status as any,
         notes,
         updatedAt: new Date(),
       },
@@ -141,7 +141,7 @@ export async function saveStressTestResults(
     const evaluation = await prisma.evaluation.update({
       where: { id: evaluationId },
       data: {
-        stressTestResult: stressTestResult as unknown,
+        stressTestResult: stressTestResult as any,
       },
     });
 
@@ -189,7 +189,7 @@ export async function logScoringAction(
         evaluationId: evaluationId || "",
         userId,
         action,
-        changes: changes as unknown,
+        changes: changes as any,
       },
     });
   } catch {
@@ -229,7 +229,7 @@ export async function getProjectEvaluationStats(projectId: string): Promise<{
   try {
     const evaluations = (await prisma.evaluation.findMany({
       where: { projectId },
-    })) as unknown as unknown[];
+    })) as unknown as any[];
 
     if (evaluations.length === 0) {
       return {
@@ -242,12 +242,12 @@ export async function getProjectEvaluationStats(projectId: string): Promise<{
 
     // Calculate average score
     const avgScore =
-      evaluations.reduce((sum, e) => sum + e.finalScore, 0) /
+      evaluations.reduce((sum, e: any) => sum + e.finalScore, 0) /
       evaluations.length;
 
     // Rating distribution
     const ratingDist: Record<string, number> = {};
-    evaluations.forEach((e) => {
+    evaluations.forEach((e: any) => {
       ratingDist[e.rating] = (ratingDist[e.rating] || 0) + 1;
     });
 
@@ -255,7 +255,7 @@ export async function getProjectEvaluationStats(projectId: string): Promise<{
       totalEvaluations: evaluations.length,
       averageScore: Math.round(avgScore * 100) / 100,
       ratingDistribution: ratingDist,
-      lastEvaluation: evaluations[0],
+      lastEvaluation: evaluations[0] as Evaluation,
     };
   } catch (error) {
     throw error;
@@ -272,7 +272,7 @@ export async function exportEvaluationsToCSV(
     const evaluations = (await prisma.evaluation.findMany({
       where: { projectId },
       orderBy: { createdAt: "desc" },
-    })) as unknown as unknown[];
+    })) as unknown as any[];
 
     if (evaluations.length === 0) {
       return "No evaluations found";
@@ -291,7 +291,7 @@ export async function exportEvaluationsToCSV(
     ];
 
     // CSV rows
-    const rows = evaluations.map((e) => [
+    const rows = evaluations.map((e: any) => [
       e.id,
       e.createdAt.toISOString().split("T")[0],
       e.rating,

@@ -14,7 +14,6 @@ type NotionClient = {
 let notion: NotionClient | null = null;
 
 try {
-  // @ts-expect-error - @notionhq/client is an optional dependency
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Client } = require("@notionhq/client") as {
     Client: new (config: { auth: string }) => NotionClient;
@@ -140,7 +139,7 @@ export const DATABASE_SCHEMA = {
 export async function getTrackingItems() {
   const databaseId = process.env.NOTION_DATABASE_ID;
 
-  if (!databaseId) {
+  if (!databaseId || !notion) {
     console.error("NOTION_DATABASE_ID not configured. Create database first.");
     return [];
   }
@@ -183,6 +182,10 @@ export async function updateTrackingItem(
     dateUpdated?: string;
   }
 ) {
+  if (!notion) {
+    throw new Error("Notion client not initialized");
+  }
+
   try {
     const properties: Record<string, unknown> = {};
 
@@ -234,7 +237,7 @@ export async function createTrackingItem(item: {
 }) {
   const databaseId = process.env.NOTION_DATABASE_ID;
 
-  if (!databaseId) {
+  if (!databaseId || !notion) {
     throw new Error("NOTION_DATABASE_ID not configured");
   }
 

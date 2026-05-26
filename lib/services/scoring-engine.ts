@@ -150,7 +150,7 @@ export class ScoringEngine {
    * Score a leaf node based on its answer
    */
   private static async scoreLeafNode(
-    node: ScoringNode & { options?: unknown[]; ranges?: unknown[]; weight?: number; aggregationMethod?: string },
+    node: ScoringNode & { options?: unknown[]; ranges?: unknown[]; weight?: number | null; aggregationMethod?: string | null },
     answers: ScoringEvaluationAnswer[]
   ): Promise<NodeScore> {
     const answer = answers.find((a) => a.nodeId === node.id);
@@ -206,7 +206,7 @@ export class ScoringEngine {
       weightedScore: weighted,
       normalizedScore: rawScore,
       weight: node.weight || 1,
-      aggregationMethod: node.aggregationMethod,
+      aggregationMethod: node.aggregationMethod || undefined,
       explanation,
       ruleImpacts: [],
     };
@@ -265,7 +265,7 @@ export class ScoringEngine {
    * Aggregate child scores based on aggregation method
    */
   private static async aggregateChildScores(
-    node: ScoringNode & { weight?: number; aggregationMethod?: string },
+    node: ScoringNode & { weight?: number | null; aggregationMethod?: string | null },
     childScores: NodeScore[],
     _answers: ScoringEvaluationAnswer[]
   ): Promise<NodeScore> {
@@ -325,7 +325,7 @@ export class ScoringEngine {
       weightedScore: weighted,
       normalizedScore: rawScore,
       weight: node.weight || 1,
-      aggregationMethod: node.aggregationMethod,
+      aggregationMethod: node.aggregationMethod || undefined,
       explanation,
       ruleImpacts: [],
     };
