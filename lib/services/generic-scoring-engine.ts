@@ -338,7 +338,7 @@ export class GenericScoringEngine {
         rawScore: 0,
         normalizedScore: 0,
         weight: parentNode.weight || 1,
-        aggregationMethod: parentNode.aggregationMethod,
+        aggregationMethod: parentNode.aggregationMethod || undefined,
         explanation: "Aucun enfant",
         appliedRules: [],
       };
@@ -391,7 +391,7 @@ export class GenericScoringEngine {
       rawScore: Math.min(100, Math.max(0, rawScore)), // Clamp 0-100
       normalizedScore: rawScore,
       weight: parentNode.weight || 1,
-      aggregationMethod: parentNode.aggregationMethod,
+      aggregationMethod: parentNode.aggregationMethod || undefined,
       explanation,
       appliedRules: [],
     };
@@ -485,7 +485,7 @@ export class GenericScoringEngine {
       rawScore,
       normalizedScore: rawScore,
       weight: node.weight || 1,
-      aggregationMethod: node.aggregationMethod,
+      aggregationMethod: node.aggregationMethod || undefined,
       explanation,
       appliedRules: [],
     };
@@ -557,7 +557,7 @@ export class GenericScoringEngine {
     if (!rule.isActive) return false;
 
     // Exemple: règle déclenchée si score < 25
-    if (rule.ruleType === "NO-GO" && nodeScore.rawScore < 25) {
+    if (rule.ruleType === "NO_GO" && nodeScore.rawScore < 25) {
       return true;
     }
 

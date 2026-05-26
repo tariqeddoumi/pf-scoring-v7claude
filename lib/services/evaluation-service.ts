@@ -292,8 +292,8 @@ export class EvaluationService {
         dscrStress: scenarioData.dscrStress as number,
         llcrStress: scenarioData.llcrStress as number,
         status: scenarioData.status as string,
-        margin: scenarioData.margin as number | null | undefined,
-        notes: scenarioData.notes as string | null | undefined,
+        margin: (scenarioData.margin as number | null | undefined) ?? 0,
+        notes: (scenarioData.notes as string | null | undefined) || null,
       },
     });
 

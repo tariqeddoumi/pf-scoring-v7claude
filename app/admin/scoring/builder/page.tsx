@@ -688,7 +688,7 @@ export default function ScoringBuilderPage() {
           id: optionModalData.id,
           label: optionModalData.label,
           score: optionModalData.score,
-          description: optionModalData.description,
+          description: undefined,
         } : undefined}
         onClose={() => setOptionModalOpen(false)}
         onSubmit={handleOptionSubmit}
