@@ -67,28 +67,30 @@ export default function ExportsPage() {
     try {
       if (selectedExport === "evaluation" && selectedEvaluation) {
         const evaluation = evaluationsList.find(
-          (e: any) => e.id === selectedEvaluation
+          (e: Record<string, unknown>) => (e as Record<string, unknown>).id === selectedEvaluation
         );
         if (!evaluation) throw new Error("Évaluation non trouvée");
 
         if (format === "pdf") {
-          const blob = ExportService.generateEvaluationPDF(evaluation as any);
-          const filename = `evaluation-${(evaluation as any).id || (evaluation as any).evaluationId}-${new Date().getTime()}.html`;
+          const blob = ExportService.generateEvaluationPDF(evaluation as Record<string, unknown>);
+          const evaluationRecord = evaluation as Record<string, unknown>;
+          const filename = `evaluation-${evaluationRecord.id || evaluationRecord.evaluationId}-${new Date().getTime()}.html`;
           downloadFile(blob, filename);
         } else if (format === "word") {
-          const blob = ExportService.generateEvaluationWord(evaluation as any);
-          const filename = `evaluation-${(evaluation as any).id || (evaluation as any).evaluationId}-${new Date().getTime()}.html`;
+          const blob = ExportService.generateEvaluationWord(evaluation as Record<string, unknown>);
+          const evaluationRecord = evaluation as Record<string, unknown>;
+          const filename = `evaluation-${evaluationRecord.id || evaluationRecord.evaluationId}-${new Date().getTime()}.html`;
           downloadFile(blob, filename);
         }
       } else if (selectedExport === "portfolio") {
         if (format === "excel") {
           const blob = ExportService.generatePortfolioExcel(
-            evaluationsList as any
+            evaluationsList as unknown[]
           );
           downloadFile(blob, `portfolio-${new Date().getTime()}.csv`);
         } else if (format === "csv") {
           const blob = ExportService.generatePortfolioExcel(
-            evaluationsList as any
+            evaluationsList as unknown[]
           );
           downloadFile(blob, `portfolio-${new Date().getTime()}.csv`);
         }
@@ -176,7 +178,7 @@ export default function ExportsPage() {
       {selectedExport && (
         <Card className="border-cyan-600 bg-cyan-600/5">
           <CardHeader>
-            <CardTitle>Configuration de l'Export</CardTitle>
+            <CardTitle>Configuration de l&apos;Export</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Evaluation Selection */}
@@ -191,9 +193,9 @@ export default function ExportsPage() {
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-slate-100 focus:border-cyan-600 focus:outline-none"
                 >
                   <option value="">-- Choisir une évaluation --</option>
-                  {evaluationsList?.map((e: any) => (
-                    <option key={e.id} value={e.id}>
-                      {e.id} ({e.projectId}) - {e.status}
+                  {evaluationsList?.map((e: Record<string, unknown>) => (
+                    <option key={String(e.id)} value={String(e.id)}>
+                      {String(e.id)} ({String(e.projectId)}) - {String(e.status)}
                     </option>
                   ))}
                 </select>
@@ -261,16 +263,13 @@ export default function ExportsPage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-slate-400">
           <p>
-            • <strong>PDF</strong> : Format de lecture seule, idéal pour
-            l'archivage et la distribution
+            • <strong>PDF</strong> : Format de lecture seule, idéal pour l&apos;archivage et la distribution
           </p>
           <p>
-            • <strong>Excel</strong> : Format éditable avec formules, parfait
-            pour l'analyse supplémentaire
+            • <strong>Excel</strong> : Format éditable avec formules, parfait pour l&apos;analyse supplémentaire
           </p>
           <p>
-            • <strong>Word</strong> : Format documents structurés, idéal pour
-            les rapports
+            • <strong>Word</strong> : Format documents structurés, idéal pour les rapports
           </p>
           <p>
             • <strong>CSV</strong> : Format texte universel, compatible avec

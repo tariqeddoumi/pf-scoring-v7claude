@@ -32,21 +32,21 @@ export async function saveEvaluation(
       data: {
         projectId,
         analystId,
-        scoringResult: scoringResult as any, // Store as JSON
-        stressTestResult: stressTestResult as any, // Store as JSON if provided
+        scoringResult: scoringResult as unknown, // Store as JSON
+        stressTestResult: stressTestResult as unknown, // Store as JSON if provided
         rating: scoringResult.rating,
         finalScore: scoringResult.finalScore,
         recommendation: scoringResult.recommendation,
         probabilityOfDefault: scoringResult.probabilityOfDefault,
-        triggeredNOGOs: scoringResult.triggeredNOGOs as any,
-        appliedMALUS: scoringResult.appliedMALUS as any,
+        triggeredNOGOs: scoringResult.triggeredNOGOs as unknown,
+        appliedMALUS: scoringResult.appliedMALUS as unknown,
         malusTotal: scoringResult.malusTotal,
         status: "valide",
         version: "7.0",
       },
     });
 
-    return evaluation as any;
+    return evaluation as unknown as Evaluation;
   } catch (error) {
     throw error;
   }
@@ -65,7 +65,7 @@ export async function getEvaluation(
         project: true,
         analyst: true,
       },
-    })) as any;
+    })) as unknown as Evaluation | null;
   } catch (error) {
     throw error;
   }
@@ -85,7 +85,7 @@ export async function getProjectEvaluations(
       orderBy: { createdAt: "desc" },
       take: limit,
       skip: offset,
-    })) as any;
+    })) as unknown as Evaluation[];
   } catch (error) {
     throw error;
   }
@@ -103,11 +103,11 @@ export async function updateEvaluationStatus(
     return (await prisma.evaluation.update({
       where: { id: evaluationId },
       data: {
-        status: status as any,
+        status: status as unknown,
         notes,
         updatedAt: new Date(),
       },
-    })) as any;
+    })) as unknown as Evaluation;
   } catch (error) {
     throw error;
   }
@@ -123,7 +123,7 @@ export async function getLatestEvaluation(
     return (await prisma.evaluation.findFirst({
       where: { projectId },
       orderBy: { createdAt: "desc" },
-    })) as any;
+    })) as unknown as Evaluation | null;
   } catch (error) {
     throw error;
   }
@@ -135,13 +135,13 @@ export async function getLatestEvaluation(
 export async function saveStressTestResults(
   evaluationId: string,
   stressTestResult: StressTestResult
-): Promise<any> {
+): Promise<unknown> {
   try {
     // Update evaluation with stress test results
     const evaluation = await prisma.evaluation.update({
       where: { id: evaluationId },
       data: {
-        stressTestResult: stressTestResult as any,
+        stressTestResult: stressTestResult as unknown,
       },
     });
 
@@ -180,7 +180,7 @@ export async function logScoringAction(
   userId: string,
   action: "CALCULATE" | "RECALCULATE" | "STRESS_TEST",
   details?: string,
-  changes?: any,
+  changes?: unknown,
   evaluationId?: string
 ): Promise<void> {
   try {
@@ -189,10 +189,10 @@ export async function logScoringAction(
         evaluationId: evaluationId || "",
         userId,
         action,
-        changes: changes as any,
+        changes: changes as unknown,
       },
     });
-  } catch (error) {
+  } catch {
     // Don't throw - logging failure shouldn't break the flow
   }
 }
@@ -200,14 +200,14 @@ export async function logScoringAction(
 /**
  * Get audit logs for an evaluation
  */
-export async function getAuditLogs(evaluationId: string): Promise<any[]> {
+export async function getAuditLogs(): Promise<unknown[]> {
   try {
     // Note: This requires evaluationId to be linked in ScoringAuditLog
     // For now, retrieve all logs and filter by user
     return (await prisma.scoringAuditLog.findMany({
       orderBy: { timestamp: "desc" },
       take: 50,
-    })) as any;
+    })) as unknown as unknown[];
   } catch (error) {
     throw error;
   }
@@ -229,7 +229,7 @@ export async function getProjectEvaluationStats(projectId: string): Promise<{
   try {
     const evaluations = (await prisma.evaluation.findMany({
       where: { projectId },
-    })) as any[];
+    })) as unknown as unknown[];
 
     if (evaluations.length === 0) {
       return {
@@ -272,7 +272,7 @@ export async function exportEvaluationsToCSV(
     const evaluations = (await prisma.evaluation.findMany({
       where: { projectId },
       orderBy: { createdAt: "desc" },
-    })) as any[];
+    })) as unknown as unknown[];
 
     if (evaluations.length === 0) {
       return "No evaluations found";
@@ -349,7 +349,7 @@ export async function disconnect(): Promise<void> {
   await prisma.$disconnect();
 }
 
-export default {
+const dbScoring = {
   saveEvaluation,
   getEvaluation,
   getProjectEvaluations,
@@ -363,3 +363,5 @@ export default {
   deleteOldEvaluations,
   disconnect,
 };
+
+export default dbScoring;

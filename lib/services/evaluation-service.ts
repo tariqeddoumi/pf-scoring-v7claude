@@ -30,7 +30,7 @@ export class EvaluationService {
       data: {
         projectId: validated.projectId,
         analystId: createdBy,
-        scoringResult: (validated.scoringResult || {}) as any,
+        scoringResult: (validated.scoringResult || {}) as Record<string, unknown>,
         finalScore: validated.finalScore || 0,
         rating: "D",
         recommendation: "APPROVE",
@@ -49,7 +49,7 @@ export class EvaluationService {
   /**
    * Get evaluation by ID
    */
-  static async getEvaluationById(id: string, userId?: string) {
+  static async getEvaluationById(id: string, _userId?: string) {
     const evaluation = await prisma.evaluation.findUnique({
       where: { id },
       include: {
@@ -71,11 +71,11 @@ export class EvaluationService {
   static async getAllEvaluations(
     page: number = 1,
     limit: number = 50,
-    filters?: any
+    filters?: Record<string, unknown>
   ) {
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (filters?.status) where.status = filters.status;
     if (filters?.projectId) where.projectId = filters.projectId;
     if (filters?.analystId) where.analystId = filters.analystId;
@@ -113,7 +113,7 @@ export class EvaluationService {
   static async submitEvaluation(
     id: string,
     data: z.infer<typeof submitEvaluationSchema>,
-    submittedBy: string
+    _submittedBy: string
   ) {
     const validated = submitEvaluationSchema.parse(data);
 
@@ -134,8 +134,8 @@ export class EvaluationService {
         finalScore: validated.finalScore,
         rating: validated.rating,
         probabilityOfDefault: validated.probabilityOfDefault,
-        triggeredNOGOs: validated.triggeredNOGOs as any,
-        appliedMALUS: validated.appliedMALUS as any,
+        triggeredNOGOs: validated.triggeredNOGOs as unknown[],
+        appliedMALUS: validated.appliedMALUS as unknown[],
         malusTotal: validated.malusTotal,
         notes: validated.notes,
         updatedAt: new Date(),
@@ -151,7 +151,7 @@ export class EvaluationService {
   static async validateEvaluation(
     id: string,
     data: z.infer<typeof validateEvaluationSchema>,
-    validatedBy: string
+    _validatedBy: string
   ) {
     const validated = validateEvaluationSchema.parse(data);
 
@@ -194,7 +194,7 @@ export class EvaluationService {
   static async rejectEvaluation(
     id: string,
     data: z.infer<typeof rejectEvaluationSchema>,
-    rejectedBy: string
+    _rejectedBy: string
   ) {
     const validated = rejectEvaluationSchema.parse(data);
 
@@ -272,8 +272,8 @@ export class EvaluationService {
    */
   static async createStressTest(
     evaluationId: string,
-    scenarioData: any,
-    createdBy: string
+    scenarioData: Record<string, unknown>,
+    _createdBy: string
   ) {
     const evaluation = await prisma.evaluation.findUnique({
       where: { id: evaluationId },

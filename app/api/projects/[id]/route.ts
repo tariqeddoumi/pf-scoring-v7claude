@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth-middleware";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { ProjectService } from "@/lib/services/project-service";
 
 interface RouteParams {
@@ -9,7 +9,7 @@ interface RouteParams {
 /**
  * GET /api/projects/[id] - Get project by ID
  */
-async function handleGET(request: NextRequest, user: any, params: any) {
+async function handleGET(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     const project = await ProjectService.getProjectById(params.id, user.userId);
 
@@ -18,15 +18,16 @@ async function handleGET(request: NextRequest, user: any, params: any) {
     }
 
     return NextResponse.json(project, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 /**
  * PUT /api/projects/[id] - Update project (owner or admin)
  */
-async function handlePUT(request: NextRequest, user: any, params: any) {
+async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     const project = await ProjectService.getProjectById(params.id);
 
@@ -46,15 +47,16 @@ async function handlePUT(request: NextRequest, user: any, params: any) {
     );
 
     return NextResponse.json(updated, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 /**
  * DELETE /api/projects/[id] - Delete project (owner or admin)
  */
-async function handleDELETE(request: NextRequest, user: any, params: any) {
+async function handleDELETE(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     const project = await ProjectService.getProjectById(params.id);
 
@@ -69,8 +71,9 @@ async function handleDELETE(request: NextRequest, user: any, params: any) {
     await ProjectService.deleteProject(params.id, user.userId);
 
     return NextResponse.json({ message: "Project deleted" }, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 

@@ -25,7 +25,7 @@ export async function POST(
     let body: StressTestRequestBody;
     try {
       body = (await request.json()) as StressTestRequestBody;
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         {
           success: false,
@@ -63,15 +63,13 @@ export async function POST(
     const vulnerableScenarios: string[] = [];
 
     // Scenario 1: Revenue Decline -10%
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (scenarios.includes("REVENUE_DECLINE_10" as any)) {
+    if (scenarios.includes(StressScenario.REVENUE_DECLINE_10)) {
       const revenueStress = baseCase.revenue * 0.9;
       const dscrStress = revenueStress / baseCase.debtService;
       const passed = dscrStress > 1.25;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       stressResults.push({
-        scenarioId: "REVENUE_DECLINE_10" as any,
+        scenarioId: StressScenario.REVENUE_DECLINE_10,
         name: "Revenue Decline -10%",
         description: "Market downturn / demand reduction / offtaker issues",
         assumption: "Revenue decreases by 10%",
@@ -90,7 +88,7 @@ export async function POST(
     }
 
     // Scenario 2: Cost Inflation +5%
-    if (scenarios.includes("COST_INFLATION_5" as any)) {
+    if (scenarios.includes(StressScenario.COST_INFLATION_5)) {
       const costMultiplier = 1.05;
       const additionalCost = baseCase.debtService * 0.05;
       const revenueStress = baseCase.revenue - additionalCost;
@@ -98,7 +96,7 @@ export async function POST(
       const passed = dscrStress > 1.2;
 
       stressResults.push({
-        scenarioId: "COST_INFLATION_5" as any,
+        scenarioId: StressScenario.COST_INFLATION_5,
         name: "Cost Inflation +5%",
         description: "Operating cost increase",
         assumption: "OPEX increases by 5%",
@@ -117,7 +115,7 @@ export async function POST(
     }
 
     // Scenario 3: Interest Rate +200bps
-    if (scenarios.includes("INTEREST_RATE_200BPS" as any)) {
+    if (scenarios.includes(StressScenario.INTEREST_RATE_200BPS)) {
       const rateIncrease = 0.02;
       const additionalInterest = baseCase.debtService * rateIncrease * 0.5; // Rough estimate
       const newDebtService = baseCase.debtService + additionalInterest;
@@ -125,7 +123,7 @@ export async function POST(
       const passed = dscrStress > 1.25;
 
       stressResults.push({
-        scenarioId: "INTEREST_RATE_200BPS" as any,
+        scenarioId: StressScenario.INTEREST_RATE_200BPS,
         name: "Interest Rate +200bps",
         description: "Rate increase (floating debt)",
         assumption: "Interest rates increase by 2%",
@@ -144,14 +142,14 @@ export async function POST(
     }
 
     // Scenario 4: FX Depreciation -10%
-    if (scenarios.includes("FX_DEPRECIATION_10" as any)) {
+    if (scenarios.includes(StressScenario.FX_DEPRECIATION_10)) {
       const fxDepreciation = 0.1;
       const revenueStress = baseCase.revenue * (1 - fxDepreciation);
       const dscrStress = revenueStress / baseCase.debtService;
       const passed = dscrStress > 1.25;
 
       stressResults.push({
-        scenarioId: "FX_DEPRECIATION_10" as any,
+        scenarioId: StressScenario.FX_DEPRECIATION_10,
         name: "FX Depreciation -10%",
         description: "Local currency weakness",
         assumption: "Currency depreciates by 10%",
@@ -171,14 +169,14 @@ export async function POST(
 
     // Combined Perfect Storm: Revenue -8% + Cost +3% + Rate +150bps
     let perfectStormResult: StressTestScenario | undefined;
-    if (scenarios.includes("COMBINED_PERFECT_STORM" as any)) {
+    if (scenarios.includes(StressScenario.COMBINED_PERFECT_STORM)) {
       const revenueStress = baseCase.revenue * 0.92;
       const costStress = baseCase.debtService * 1.03;
       const dscrStress = revenueStress / costStress;
       const passed = dscrStress > 1.1;
 
       perfectStormResult = {
-        scenarioId: "COMBINED_PERFECT_STORM" as any,
+        scenarioId: StressScenario.COMBINED_PERFECT_STORM,
         name: "Perfect Storm: -8% Revenue, +3% Cost, +150bps Rate",
         description: "Combined extreme stress",
         assumption: "Multiple simultaneous shocks",
@@ -216,7 +214,7 @@ export async function POST(
         criticalRisks: vulnerableScenarios.filter((s) =>
           s.includes("CRITICAL")
         ),
-        overallRating: overallRating as any,
+        overallRating,
       },
     };
 
@@ -231,7 +229,7 @@ export async function POST(
         analystId,
         "STRESS_TEST",
         `Stress test completed: ${overallRating} resilience (${result.summary.vulnerableScenarios.length} vulnerable scenarios)`,
-        undefined,
+        undefined as unknown as string,
         evaluationId
       );
     } catch (dbError) {

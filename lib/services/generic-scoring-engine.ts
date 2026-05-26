@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma-client";
+import type { ScoringNode, ScoringEvaluationAnswer, ScoringNodeRule } from "@prisma/client";
 
 /**
  * Service de calcul de scoring générique et paramétrable
@@ -204,9 +205,9 @@ export class GenericScoringEngine {
   /**
    * Construit l'arbre hiérarchique des nœuds
    */
-  private static buildNodeTree(nodes: any[]) {
-    const nodeMap = new Map<string, any>();
-    const roots: any[] = [];
+  private static buildNodeTree(nodes: Array<ScoringNode & { children?: unknown[] }>) {
+    const nodeMap = new Map<string, ScoringNode & { children: unknown[] }>();
+    const roots: Array<ScoringNode & { children: unknown[] }> = [];
 
     // Créer une map avec enfants vides
     nodes.forEach((node) => {
@@ -216,9 +217,16 @@ export class GenericScoringEngine {
     // Lier les enfants aux parents
     nodes.forEach((node) => {
       if (node.parentNodeId && nodeMap.has(node.parentNodeId)) {
-        nodeMap.get(node.parentNodeId)?.children.push(nodeMap.get(node.id));
+        const parent = nodeMap.get(node.parentNodeId);
+        const child = nodeMap.get(node.id);
+        if (parent && child) {
+          parent.children.push(child);
+        }
       } else if (!node.parentNodeId) {
-        roots.push(nodeMap.get(node.id));
+        const nodeWithChildren = nodeMap.get(node.id);
+        if (nodeWithChildren) {
+          roots.push(nodeWithChildren);
+        }
       }
     });
 
@@ -246,9 +254,9 @@ export class GenericScoringEngine {
    * @returns Résultat du scoring du nœud
    */
   private static async scoreNode(
-    node: any,
-    allNodes: any[],
-    answers: any[],
+    node: ScoringNode & { children?: unknown[] },
+    allNodes: ScoringNode[],
+    answers: ScoringEvaluationAnswer[],
     results: Map<string, ScoringNodeResult>,
     evaluationId: string
   ): Promise<ScoringNodeResult> {
@@ -320,7 +328,7 @@ export class GenericScoringEngine {
    * @returns Résultat du nœud parent avec score agrégé
    */
   private static aggregateChildren(
-    parentNode: any,
+    parentNode: ScoringNode,
     childResults: ScoringNodeResult[]
   ): ScoringNodeResult {
     if (childResults.length === 0) {
@@ -410,8 +418,8 @@ export class GenericScoringEngine {
    * @returns Résultat du nœud avec rawScore calculé
    */
   private static scoreLeafNode(
-    node: any,
-    answer: any
+    node: ScoringNode & { options?: unknown[]; ranges?: unknown[] },
+    answer: ScoringEvaluationAnswer | undefined
   ): ScoringNodeResult {
     let rawScore = 0;
     let explanation = "Pas de réponse";
@@ -425,21 +433,23 @@ export class GenericScoringEngine {
         case "OPTION_SCORE":
           // Réponse choix: chercher le score de l'option
           const option = node.options?.find(
-            (o: any) => o.value === answer.valueString
+            (o: unknown) => (o as Record<string, unknown>).value === answer.valueString
           );
-          rawScore = option?.score || 0;
+          rawScore = (option as Record<string, unknown> | undefined)?.score as number || 0;
           explanation = `Option sélectionnée: ${answer.valueString} (${rawScore}pts)`;
           break;
 
         case "RANGE_SCORE":
           // Réponse numérique: chercher la plage
           const range = node.ranges?.find(
-            (r: any) =>
-              answer.valueNumber >= r.minValue &&
-              answer.valueNumber <= r.maxValue
+            (r: unknown) => {
+              const rangeRec = r as Record<string, unknown>;
+              return answer.valueNumber! >= (rangeRec.minValue as number) &&
+              answer.valueNumber! <= (rangeRec.maxValue as number);
+            }
           );
-          rawScore = range?.score || 0;
-          explanation = `Valeur ${answer.valueNumber} → plage ${range?.label || "?"} (${rawScore}pts)`;
+          rawScore = (range as Record<string, unknown> | undefined)?.score as number || 0;
+          explanation = `Valeur ${answer.valueNumber} → plage ${(range as Record<string, unknown> | undefined)?.label || "?"} (${rawScore}pts)`;
           break;
 
         case "NUMERIC_DIRECT":
@@ -466,8 +476,8 @@ export class GenericScoringEngine {
       }
     }
 
-    // Appliquer le poids du nœud
-    const weightedScore = rawScore * (node.weight || 1);
+    // Appliquer le poids du nœud (résultat utilisé ailleurs)
+    void (rawScore * (node.weight || 1));
 
     return {
       nodeId: node.id,
@@ -508,7 +518,7 @@ export class GenericScoringEngine {
    * @returns Array de règles applicables (pré-pénalités)
    */
   private static async applyRules(
-    node: any,
+    node: ScoringNode & { rules?: ScoringNodeRule[] },
     nodeScore: ScoringNodeResult
   ) {
     const appliedRules: AppliedRule[] = [];
@@ -539,7 +549,7 @@ export class GenericScoringEngine {
   /**
    * Évalue si une règle s'applique basée sur des conditions
    */
-  private static evaluateRuleCondition(rule: any, nodeScore: ScoringNodeResult): boolean {
+  private static evaluateRuleCondition(rule: ScoringNodeRule, nodeScore: ScoringNodeResult): boolean {
     // Pour l'instant, logique simple
     // Futur: parser d'expressions pour conditions complexes
 
@@ -614,7 +624,7 @@ export class GenericScoringEngine {
    */
   private static async getFinalScore(
     results: Map<string, ScoringNodeResult>,
-    evaluationId: string
+    _evaluationId: string
   ) {
     // Récupérer les nœuds racines (domaines)
     const rootResults = Array.from(results.values()).filter((r) =>
@@ -654,7 +664,7 @@ export class GenericScoringEngine {
   /**
    * Détermine si un résultat est une racine (domaine)
    */
-  private static isRootNode(result: ScoringNodeResult): boolean {
+  private static isRootNode(_result: ScoringNodeResult): boolean {
     // Les racines sont les domaines (depth = 0)
     // À améliorer: passer le depth
     return true; // Pour l'instant

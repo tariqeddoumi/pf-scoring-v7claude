@@ -4,7 +4,7 @@ import { EvaluationService } from "@/lib/services/evaluation-service";
 import { ScoringQuestionnaireService } from "@/lib/services/scoring-questionnaire-service";
 import { ScoringEngine } from "@/lib/services/scoring-engine";
 import { V8ScoringEngine } from "@/lib/scoring-engine-v8";
-import { prisma } from "@/lib/db";
+import prisma from "@/lib/prisma";
 
 /**
  * POST /api/evaluations/calculate-score - Calculate score from answers
@@ -31,7 +31,7 @@ async function handlePOST(request: NextRequest, user: any) {
     );
 
     // Get final scores
-    const { globalScore, scores } = await ScoringEngine.getFinalScores(
+    let { globalScore, scores } = await ScoringEngine.getFinalScores(
       evaluationId,
       scoreResults
     );
@@ -43,7 +43,7 @@ async function handlePOST(request: NextRequest, user: any) {
     // Apply V8 sectoral adjustments if sector is specified
     if (sectorCode) {
       try {
-        const sectorData = await prisma.bP_PF_v8_sectors.findFirst({
+        const sectorData = await prisma.v8Sector.findFirst({
           where: { code: sectorCode },
           include: {
             domainWeights: true,
@@ -55,7 +55,7 @@ async function handlePOST(request: NextRequest, user: any) {
 
         if (sectorData) {
           // Fetch evaluation data for stress test assessment
-          const evaluation = await prisma.bP_PF_evaluations.findUnique({
+          const evaluation = await prisma.evaluation.findUnique({
             where: { id: evaluationId },
             include: { project: true },
           });
@@ -65,17 +65,17 @@ async function handlePOST(request: NextRequest, user: any) {
             {
               evaluationId,
               projectId: evaluation?.projectId || "",
-              projectName: evaluation?.project?.name || "",
+              projectName: (evaluation?.project?.nom || evaluation?.project?.description) as string,
               domains: Object.fromEntries(scores),
               globalScore,
               normalizedScore: globalScore,
-              rating,
+              rating: rating as unknown as import("@/types/scoring-v7plus").RatingScale,
               probabilityOfDefault: 0.05,
               triggeredNOGOs: [],
               appliedMALUS: [],
               malusTotal: 0,
               finalScore: globalScore,
-              recommendation: "PROCEED",
+              recommendation: "APPROVE",
               calculatedAt: new Date(),
               version: "7.0",
             },

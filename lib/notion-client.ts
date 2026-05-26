@@ -3,11 +3,22 @@
  * Connects Claude to Notion for automatic tracking updates
  */
 
-let notion: any = null;
+type NotionClient = {
+  databases: { query: (config: unknown) => Promise<unknown> };
+  pages: {
+    update: (config: unknown) => Promise<unknown>;
+    create: (config: unknown) => Promise<unknown>;
+  };
+};
+
+let notion: NotionClient | null = null;
 
 try {
-  // @ts-ignore - @notionhq/client is an optional dependency
-  const { Client } = require("@notionhq/client") as any;
+  // @ts-expect-error - @notionhq/client is an optional dependency
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Client } = require("@notionhq/client") as {
+    Client: new (config: { auth: string }) => NotionClient;
+  };
   const notionApiKey = process.env.NOTION_API_KEY;
 
   if (notionApiKey) {
@@ -15,7 +26,7 @@ try {
       auth: notionApiKey,
     });
   }
-} catch (error) {
+} catch {
   console.warn(
     "Notion client not available - @notionhq/client module not installed"
   );
@@ -139,18 +150,19 @@ export async function getTrackingItems() {
       database_id: databaseId,
     });
 
-    return response.results.map((page: any) => {
-      const properties = page.properties;
+    return (response.results as unknown[]).map((page: unknown) => {
+      const pageObj = page as Record<string, unknown>;
+      const properties = pageObj.properties as Record<string, unknown>;
       return {
-        id: page.id,
-        name: properties.Name.title[0]?.plain_text || "",
-        bloc: properties.Bloc.select?.name || "",
-        statut: properties.Statut.select?.name || "",
-        completion: properties["Complétion %"].number || 0,
-        description: properties.Description.rich_text[0]?.plain_text || "",
-        specification: properties.Spécification.rich_text[0]?.plain_text || "",
-        notes: properties.Notes.rich_text[0]?.plain_text || "",
-        dateUpdated: properties["Date Maj"].date?.start || "",
+        id: pageObj.id,
+        name: (properties.Name as Record<string, unknown>).title?.[0]?.plain_text || "",
+        bloc: (properties.Bloc as Record<string, unknown>).select?.name || "",
+        statut: (properties.Statut as Record<string, unknown>).select?.name || "",
+        completion: (properties["Complétion %"] as Record<string, unknown>).number || 0,
+        description: (properties.Description as Record<string, unknown>).rich_text?.[0]?.plain_text || "",
+        specification: (properties.Spécification as Record<string, unknown>).rich_text?.[0]?.plain_text || "",
+        notes: (properties.Notes as Record<string, unknown>).rich_text?.[0]?.plain_text || "",
+        dateUpdated: (properties["Date Maj"] as Record<string, unknown>).date?.start || "",
       };
     });
   } catch (error) {
@@ -172,7 +184,7 @@ export async function updateTrackingItem(
   }
 ) {
   try {
-    const properties: any = {};
+    const properties: Record<string, unknown> = {};
 
     if (updates.statut) {
       properties.Statut = {
@@ -268,20 +280,26 @@ export async function createTrackingItem(item: {
 export async function getTrackingStats() {
   const items = await getTrackingItems();
 
+  type Item = {
+    statut: string;
+    completion: number;
+    bloc: string;
+  };
+
   const stats = {
     total: items.length,
-    integrated: items.filter((i: any) => i.statut === "INTÉGRÉ").length,
-    inProgress: items.filter((i: any) => i.statut === "EN COURS").length,
-    planned: items.filter((i: any) => i.statut === "PLANIFIÉ").length,
-    blocked: items.filter((i: any) => i.statut === "BLOQUÉ").length,
+    integrated: items.filter((i: Item) => i.statut === "INTÉGRÉ").length,
+    inProgress: items.filter((i: Item) => i.statut === "EN COURS").length,
+    planned: items.filter((i: Item) => i.statut === "PLANIFIÉ").length,
+    blocked: items.filter((i: Item) => i.statut === "BLOQUÉ").length,
     averageCompletion:
-      items.reduce((sum: number, i: any) => sum + i.completion, 0) /
+      items.reduce((sum: number, i: Item) => sum + i.completion, 0) /
         items.length || 0,
-    byBloc: {} as Record<string, any>,
+    byBloc: {} as Record<string, Record<string, number>>,
   };
 
   // Group by bloc
-  items.forEach((item: any) => {
+  items.forEach((item: Item) => {
     if (!stats.byBloc[item.bloc]) {
       stats.byBloc[item.bloc] = {
         total: 0,
