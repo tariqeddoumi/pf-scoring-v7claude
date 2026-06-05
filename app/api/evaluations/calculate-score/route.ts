@@ -5,6 +5,7 @@ import { ScoringQuestionnaireService } from "@/lib/services/scoring-questionnair
 import { ScoringEngine } from "@/lib/services/scoring-engine";
 import { V8ScoringEngine } from "@/lib/scoring-engine-v8";
 import prisma from "@/lib/prisma";
+import { scoreToRating } from "@/lib/utils/rating-converter";
 
 /**
  * POST /api/evaluations/calculate-score - Calculate score from answers
@@ -37,7 +38,7 @@ async function handlePOST(request: NextRequest, user: any) {
     );
 
     // Determine rating based on score
-    let rating = getRatingFromScore(globalScore);
+    let rating = scoreToRating(globalScore);
     let v8Adjustment = null;
 
     // Apply V8 sectoral adjustments if sector is specified
@@ -114,36 +115,11 @@ async function handlePOST(request: NextRequest, user: any) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error calculating score:", error);
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-}
-
-/**
- * Determine rating from score
- */
-function getRatingFromScore(score: number): string {
-  const thresholds: Record<string, { min: number; max: number }> = {
-    AAA: { min: 95, max: 100 },
-    AA: { min: 85, max: 94 },
-    A: { min: 75, max: 84 },
-    BBB: { min: 65, max: 74 },
-    BB: { min: 55, max: 64 },
-    B: { min: 45, max: 54 },
-    CCC: { min: 35, max: 44 },
-    CC: { min: 25, max: 34 },
-    C: { min: 15, max: 24 },
-    D: { min: 0, max: 14 },
-  };
-
-  for (const [rating, { min, max }] of Object.entries(thresholds)) {
-    if (score >= min && score <= max) {
-      return rating;
-    }
-  }
-
-  return "D"; // Default to lowest rating
 }
 
 export async function POST(request: NextRequest) {
