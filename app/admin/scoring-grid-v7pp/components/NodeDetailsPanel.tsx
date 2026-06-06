@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Plus, Trash2, Check, X } from "lucide-react";
 import type { ScoringNode, ScoringNodeOption, ScoringNodeRange } from "@/lib/types/scoring-grid";
 import { apiPut, apiPost, apiDelete } from "@/lib/api-client";
+import { RulesTab } from "./RulesTab";
+import { BindingsTab } from "./BindingsTab";
 
 interface NodeDetailsPanelProps {
   node: ScoringNode;
@@ -12,7 +14,7 @@ interface NodeDetailsPanelProps {
   onDirtyChange: (dirty: boolean) => void;
 }
 
-type TabType = "properties" | "options" | "ranges" | "validation";
+type TabType = "properties" | "options" | "ranges" | "rules" | "bindings" | "validation";
 
 export function NodeDetailsPanel({
   node,
@@ -27,12 +29,12 @@ export function NodeDetailsPanel({
     <div className="flex flex-col h-full">
       {/* Tab bar */}
       <div className="border-b border-slate-700 bg-slate-900">
-        <div className="flex gap-0">
-          {(["properties", "options", "ranges", "validation"] as const).map((tab) => (
+        <div className="flex gap-0 overflow-x-auto">
+          {(["properties", "options", "ranges", "rules", "bindings", "validation"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab
                   ? "border-cyan-400 text-cyan-400"
                   : "border-transparent text-slate-400 hover:text-slate-300"
@@ -41,6 +43,8 @@ export function NodeDetailsPanel({
               {tab === "properties" && "Propriétés"}
               {tab === "options" && "Options"}
               {tab === "ranges" && "Plages"}
+              {tab === "rules" && "Règles"}
+              {tab === "bindings" && "Liaisons"}
               {tab === "validation" && "Validation"}
             </button>
           ))}
@@ -58,6 +62,8 @@ export function NodeDetailsPanel({
         {activeTab === "ranges" && (
           <RangesTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} />
         )}
+        {activeTab === "rules" && <RulesTab nodeId={node.id} versionId={versionId} />}
+        {activeTab === "bindings" && <BindingsTab nodeId={node.id} versionId={versionId} />}
         {activeTab === "validation" && <ValidationTab node={node} />}
       </div>
     </div>
