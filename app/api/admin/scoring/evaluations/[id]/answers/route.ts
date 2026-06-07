@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth, withAuth } from '@/lib/auth-middleware';
 import { ScoringEvaluationService } from '@/lib/services/scoring-evaluation-service';
 
-interface RouteContext {
-  params: Promise<{ id: string }>;
-}
-
 /**
  * Handler for GET/POST /api/admin/scoring/evaluations/[id]/answers
  * Gets or creates answers for a specific evaluation
@@ -100,7 +96,7 @@ async function handleRequest(
 
 export async function GET(
   request: NextRequest,
-  { params }: RouteContext
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   return withAuth(request, (req, user) =>
@@ -110,7 +106,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: RouteContext
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   return withAuth(request, (req, user) =>
