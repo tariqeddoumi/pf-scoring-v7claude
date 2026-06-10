@@ -92,10 +92,31 @@ const ADMIN_SECTIONS: AdminSection[] = [
   },
 ];
 
+interface UserData {
+  id: string;
+  email: string;
+  nom: string;
+  prenom: string;
+  role: string;
+  avatar?: string;
+  createdAt?: string;
+}
+
+interface AdminPageState {
+  loading: boolean;
+  user: UserData | null;
+  v8Enabled: boolean;
+  modelVersion: string;
+}
+
 export default function AdminPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ role: string } | null>(null);
+  const [state, setState] = useState<AdminPageState>({
+    loading: true,
+    user: null,
+    v8Enabled: false,
+    modelVersion: "V7++",
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -105,7 +126,7 @@ export default function AdminPage() {
           router.push("/login");
           return;
         }
-        const userData = await res.json();
+        const userData: UserData = await res.json();
 
         // Vérifier que c'est admin ou manager
         if (userData.role !== "system_admin" && userData.role !== "risk_manager") {
@@ -113,12 +134,31 @@ export default function AdminPage() {
           return;
         }
 
-        setUser(userData);
+        // Check V8 status
+        let v8Enabled = false;
+        let modelVersion = "V7++";
+        try {
+          const v8Res = await apiGet("/api/admin/diagnostic/v8-status");
+          if (v8Res.ok) {
+            const v8Data = await v8Res.json();
+            v8Enabled = v8Data.enabled || false;
+            modelVersion = v8Enabled ? "V8" : "V7++";
+          }
+        } catch (e) {
+          console.warn("Could not check V8 status:", e);
+        }
+
+        setState({
+          loading: false,
+          user: userData,
+          v8Enabled,
+          modelVersion,
+        });
       } catch (error) {
         console.error("Erreur:", error);
         router.push("/login");
       } finally {
-        setLoading(false);
+        setState((prev) => ({ ...prev, loading: false }));
       }
     };
 
@@ -134,7 +174,7 @@ export default function AdminPage() {
     }
   };
 
-  if (loading) {
+  if (state.loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -142,13 +182,15 @@ export default function AdminPage() {
     );
   }
 
-  if (!user) {
+  if (!state.user) {
     return null;
   }
 
   const visibleSections = ADMIN_SECTIONS.filter(
     (s) =>
-      !s.requiredRole || s.requiredRole === user.role || user.role === "system_admin"
+      !s.requiredRole ||
+      s.requiredRole === state.user!.role ||
+      state.user!.role === "system_admin"
   );
 
   return (
@@ -224,15 +266,21 @@ export default function AdminPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Rôle Actuel</p>
-              <p className="text-2xl font-bold capitalize">{user.role}</p>
+              <p className="text-2xl font-bold capitalize">{state.user.role}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Domaines Actifs</p>
               <p className="text-2xl font-bold">8</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Pays Configurés</p>
-              <p className="text-2xl font-bold">13</p>
+              <p className="text-sm text-muted-foreground">Modèle Actif</p>
+              <p
+                className={`text-2xl font-bold ${
+                  state.v8Enabled ? "text-blue-400" : "text-amber-400"
+                }`}
+              >
+                {state.modelVersion}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Statut</p>
