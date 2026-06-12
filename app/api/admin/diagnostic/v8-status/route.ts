@@ -34,17 +34,16 @@ export async function GET(request: NextRequest) {
     const enabled = v8SectorCount > 0;
 
     // Récupérer les détails
-    let sectors = [];
-    if (enabled) {
-      sectors = await prisma.v8Sector.findMany({
-        select: {
-          code: true,
-          label: true,
-          isActive: true,
-        },
-        take: 5,
-      });
-    }
+    const sectors = enabled
+      ? await prisma.v8Sector.findMany({
+          select: {
+            code: true,
+            label: true,
+            isActive: true,
+          },
+          take: 5,
+        })
+      : [];
 
     return NextResponse.json({
       enabled,
