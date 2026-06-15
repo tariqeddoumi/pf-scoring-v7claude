@@ -3,8 +3,7 @@
 -- Non-breaking: Preserves all existing V7++ and V8 tables
 -- RLS: Critical tables protected via policy
 
--- Enable UUID and JSON extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable UUID extension (used for uuid_generate_v4 defaults)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================================
@@ -177,32 +176,37 @@ ALTER TABLE "BP_PF_v9_stress_tests" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "BP_PF_app_configuration" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "BP_PF_app_config_history" ENABLE ROW LEVEL SECURITY;
 
+-- NOTE: PostgreSQL has no "CREATE POLICY IF NOT EXISTS"; use DROP + CREATE for idempotency.
+-- This app reads/writes exclusively through Prisma on a privileged pooler role (which
+-- bypasses RLS) and enforces authorization at the application layer (withAdminAuth).
+-- RLS here is defense-in-depth for any direct (anon) Supabase client access: reference
+-- data is world-readable, configuration/history are not exposed to anon clients.
+
 -- Public read access for V9 reference data (sectors, thresholds, etc.)
-CREATE POLICY IF NOT EXISTS "v9_sectors_read_all" ON "BP_PF_v9_sectors"
+DROP POLICY IF EXISTS "v9_sectors_read_all" ON "BP_PF_v9_sectors";
+CREATE POLICY "v9_sectors_read_all" ON "BP_PF_v9_sectors"
   FOR SELECT USING (true);
 
-CREATE POLICY IF NOT EXISTS "v9_thresholds_read_all" ON "BP_PF_v9_sector_thresholds"
+DROP POLICY IF EXISTS "v9_thresholds_read_all" ON "BP_PF_v9_sector_thresholds";
+CREATE POLICY "v9_thresholds_read_all" ON "BP_PF_v9_sector_thresholds"
   FOR SELECT USING (true);
 
-CREATE POLICY IF NOT EXISTS "v9_red_flags_read_all" ON "BP_PF_v9_red_flags"
+DROP POLICY IF EXISTS "v9_red_flags_read_all" ON "BP_PF_v9_red_flags";
+CREATE POLICY "v9_red_flags_read_all" ON "BP_PF_v9_red_flags"
   FOR SELECT USING (true);
 
-CREATE POLICY IF NOT EXISTS "v9_indicators_read_all" ON "BP_PF_v9_indicators"
+DROP POLICY IF EXISTS "v9_indicators_read_all" ON "BP_PF_v9_indicators";
+CREATE POLICY "v9_indicators_read_all" ON "BP_PF_v9_indicators"
   FOR SELECT USING (true);
 
-CREATE POLICY IF NOT EXISTS "v9_stress_tests_read_all" ON "BP_PF_v9_stress_tests"
+DROP POLICY IF EXISTS "v9_stress_tests_read_all" ON "BP_PF_v9_stress_tests";
+CREATE POLICY "v9_stress_tests_read_all" ON "BP_PF_v9_stress_tests"
   FOR SELECT USING (true);
 
--- Public read for app configuration (for UI)
-CREATE POLICY IF NOT EXISTS "app_config_read_public" ON "BP_PF_app_configuration"
+-- Public read for app configuration limited to keys explicitly marked public (for UI)
+DROP POLICY IF EXISTS "app_config_read_public" ON "BP_PF_app_configuration";
+CREATE POLICY "app_config_read_public" ON "BP_PF_app_configuration"
   FOR SELECT USING ("isPublic" = true);
-
--- Admin-only for config management
-CREATE POLICY IF NOT EXISTS "app_config_write_admin" ON "BP_PF_app_configuration"
-  FOR ALL USING (auth.uid() IN (SELECT id FROM "users" WHERE role = 'system_admin'));
-
-CREATE POLICY IF NOT EXISTS "app_config_history_read_admin" ON "BP_PF_app_config_history"
-  FOR SELECT USING (auth.uid() IN (SELECT id FROM "users" WHERE role = 'system_admin'));
 
 -- ============================================================================
 -- COMPUTED VIEWS / MATERIALIZED SNAPSHOTS (optional, for performance)

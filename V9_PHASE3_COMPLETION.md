@@ -241,7 +241,7 @@ $ npx tsc --noEmit -p tsconfig.json
    ```bash
    # If DATABASE_URL is available:
    npx prisma migrate deploy
-   npm run prisma:seed
+   npm run db:seed:v9
    curl http://localhost:3000/api/v9/control
    ```
 
@@ -342,7 +342,7 @@ $ npx tsc --noEmit -p tsconfig.json
 
 **Ready for:**
 1. Database migration (`npx prisma migrate deploy`)
-2. Data seed (`npm run prisma:seed`)
+2. Data seed (`npm run db:seed:v9`)
 3. Dev testing (`npm run dev` → `/admin/configuration`)
 4. Vercel deployment (push to main, env vars configured)
 

@@ -164,7 +164,7 @@
 
 - [ ] Set DATABASE_URL in Vercel environment
 - [ ] Apply migration: `npx prisma migrate deploy`
-- [ ] Run seed: `npm run prisma:seed`
+- [ ] Run seed: `npm run db:seed:v9`
 - [ ] Verify: `/api/v9/control` returns all counts correct
 - [ ] Test in staging
 - [ ] Deploy to production
@@ -383,7 +383,7 @@
 
 1. **Setup DATABASE_URL** in environment if not already done
 2. **Apply migration**: `npx prisma migrate deploy`
-3. **Run seed**: `npm run prisma:seed`
+3. **Run seed**: `npm run db:seed:v9`
 4. **Verify data**: Call `/api/v9/control` endpoint
 5. **Update layout.tsx**: Integrate AppConfigProvider + ThemeWrapper
 6. **Create admin screen**: Configuration management page

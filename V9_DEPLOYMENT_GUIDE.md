@@ -41,10 +41,10 @@ npx prisma migrate deploy
 
 ```bash
 # Run seed script (TypeScript)
-npm run prisma:seed
+npm run db:seed:v9
 
 # Or via npx:
-npx prisma db seed
+npm run db:seed:v9
 
 # Expected output:
 # 🌱 Starting V9 seed...
@@ -388,7 +388,7 @@ export default function ConfigurationPage() {
 ```bash
 # Ensure DATABASE_URL is set
 export DATABASE_URL="postgresql://..."
-npm run prisma:seed
+npm run db:seed:v9
 ```
 
 ### Data integrity check fails
