@@ -19,6 +19,15 @@ interface AdminSection {
 
 const ADMIN_SECTIONS: AdminSection[] = [
   {
+    id: "configuration",
+    title: "Paramétrage de l'outil ★",
+    description:
+      "Nom affiché, logo, couleurs, police et thème — appliqués en direct dans toute l'application",
+    href: "/admin/configuration",
+    icon: "🎨",
+    requiredRole: "system_admin",
+  },
+  {
     id: "scoring",
     title: "Modèle de Scoring PF V7++",
     description: "Visualisez les domaines, critères et barèmes du modèle actif",

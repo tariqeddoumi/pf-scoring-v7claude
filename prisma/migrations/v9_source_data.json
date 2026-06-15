@@ -383,7 +383,7 @@
   ],
   "appConfiguration": [
     {"key": "APP_NAME", "value": "PF Scoring", "type": "string", "category": "branding", "isPublic": true, "description": "Nom de l'outil affiché"},
-    {"key": "APP_LOGO_URL", "value": "/logo.svg", "type": "url", "category": "branding", "isPublic": true, "description": "URL du logo"},
+    {"key": "APP_LOGO_URL", "value": "", "type": "url", "category": "branding", "isPublic": true, "description": "URL du logo (vide = initiales)"},
     {"key": "PRIMARY_COLOR", "value": "oklch(0.55 0.13 250)", "type": "color", "category": "theme", "isPublic": true, "description": "Couleur primaire (oklch)"},
     {"key": "SECONDARY_COLOR", "value": "oklch(0.48 0.09 120)", "type": "color", "category": "theme", "isPublic": true, "description": "Couleur secondaire"},
     {"key": "FONT_FAMILY", "value": "Inter", "type": "string", "category": "theme", "isPublic": true, "description": "Police principale"},

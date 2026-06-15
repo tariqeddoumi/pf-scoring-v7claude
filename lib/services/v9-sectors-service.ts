@@ -1,14 +1,66 @@
-import { Prisma } from '@prisma/client';
+// Serialized shapes returned by GET /api/v9/sectors (dates are ISO strings over the wire).
 
-export type SectorWithDetails = Prisma.V9SectorGetPayload<{
-  include: {
-    thresholds: true;
-    domainWeights: true;
-    redFlags: true;
-    indicators: true;
-    stressTests: true;
-  };
-}>;
+export interface SectorThreshold {
+  id: string;
+  sectorId: string;
+  ratioType: string;
+  level: string;
+  minValue: number | null;
+  maxValue: number | null;
+  score: number | null;
+}
+
+export interface SectorDomainWeight {
+  id: string;
+  sectorId: string;
+  domainCode: string;
+  weightAdjusted: number;
+}
+
+export interface SectorRedFlag {
+  id: string;
+  sectorId: string;
+  code: string;
+  description: string;
+  isNoGo: boolean;
+  penalty: number | null;
+  orderIndex: number;
+}
+
+export interface SectorIndicator {
+  id: string;
+  sectorId: string;
+  code: string;
+  label: string;
+  unit: string | null;
+  targetValue: string | null;
+  direction: string;
+  orderIndex: number;
+}
+
+export interface SectorStressTest {
+  id: string;
+  sectorId: string;
+  code: string;
+  description: string;
+  variable: string | null;
+  shockPct: number | null;
+  passDscrMin: number | null;
+  orderIndex: number;
+}
+
+export interface SectorWithDetails {
+  id: string;
+  code: string;
+  label: string;
+  orderIndex: number;
+  isActive: boolean;
+  thresholds: SectorThreshold[];
+  domainWeights: SectorDomainWeight[];
+  redFlags: SectorRedFlag[];
+  indicators: SectorIndicator[];
+  stressTests: SectorStressTest[];
+}
 
 let sectorsCache: SectorWithDetails[] | null = null;
 let cacheExpiry = 0;
@@ -31,10 +83,11 @@ export async function fetchSectors(): Promise<SectorWithDetails[]> {
     }
 
     const { data } = await res.json();
-    sectorsCache = data.sectors || [];
+    const sectors: SectorWithDetails[] = data.sectors || [];
+    sectorsCache = sectors;
     cacheExpiry = now + CACHE_TTL;
 
-    return sectorsCache;
+    return sectors;
   } catch (error) {
     console.error('[V9SectorsService] Failed to fetch sectors:', error);
     return [];
