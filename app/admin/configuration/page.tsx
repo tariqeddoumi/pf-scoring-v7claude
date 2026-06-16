@@ -25,9 +25,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   branding: "Identité de l'outil",
   theme: "Apparence & thème",
   behavior: "Comportement",
+  scoring: "Moteur de scoring",
+  screens: "Écrans & formulaires",
 };
 
-const CATEGORY_ORDER = ["branding", "theme", "behavior"];
+const CATEGORY_ORDER = ["branding", "theme", "behavior", "scoring", "screens"];
 
 export default function ConfigurationPage() {
   const router = useRouter();
@@ -163,6 +165,29 @@ export default function ConfigurationPage() {
                             </option>
                           ))}
                         </select>
+                      ) : item.type === "bool" ? (
+                        <select
+                          id={item.key}
+                          value={current === "true" ? "true" : "false"}
+                          onChange={(e) =>
+                            setDrafts((p) => ({ ...p, [item.key]: e.target.value }))
+                          }
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <option value="true" className="bg-background">Activé</option>
+                          <option value="false" className="bg-background">Désactivé</option>
+                        </select>
+                      ) : item.type === "json" ? (
+                        <textarea
+                          id={item.key}
+                          value={current}
+                          rows={4}
+                          spellCheck={false}
+                          onChange={(e) =>
+                            setDrafts((p) => ({ ...p, [item.key]: e.target.value }))
+                          }
+                          className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm font-mono shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
                       ) : (
                         <div className="flex items-center gap-2">
                           {item.type === "color" && (

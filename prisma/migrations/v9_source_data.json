@@ -390,6 +390,9 @@
     {"key": "THEME_MODE", "value": "dark", "type": "enum", "category": "theme", "isPublic": true, "description": "Mode thème", "metadata": "[\"dark\",\"light\"]"},
     {"key": "CURRENCY", "value": "MAD", "type": "string", "category": "behavior", "isPublic": true, "description": "Devise"},
     {"key": "DECIMAL_SEPARATOR", "value": ",", "type": "string", "category": "behavior", "isPublic": true, "description": "Séparateur décimal"},
-    {"key": "THOUSANDS_SEPARATOR", "value": " ", "type": "string", "category": "behavior", "isPublic": true, "description": "Séparateur milliers"}
+    {"key": "THOUSANDS_SEPARATOR", "value": " ", "type": "string", "category": "behavior", "isPublic": true, "description": "Séparateur milliers"},
+    {"key": "SCORING_SECTORIAL_ENABLED", "value": "false", "type": "bool", "category": "scoring", "isPublic": false, "description": "Réintégrer le calibrage sectoriel dans le score global (ON = poids sectoriels + red flags/no-go + stress + malus/bonus ; OFF = socle V7++ seul)"},
+    {"key": "SCORING_DOMAIN_GRANULARITY", "value": "{}", "type": "json", "category": "scoring", "isPublic": false, "description": "Niveau de saisie du score par domaine : map { domainCode: \"DOMAIN\"|\"CRITERION\"|\"SUB_CRITERION\" }. Vide = niveau par défaut du nœud."},
+    {"key": "SCREENS_DYNAMIC_FORMS_ENABLED", "value": "false", "type": "bool", "category": "screens", "isPublic": true, "description": "Rendre les écrans Signalétique/Projet à partir de la configuration de champs (FieldConfiguration) au lieu du formulaire codé en dur"}
   ]
 }
