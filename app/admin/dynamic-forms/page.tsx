@@ -19,10 +19,10 @@ export default function DynamicFormsAdmin() {
   const checkStatus = async () => {
     try {
       setCheckingStatus(true);
-      const config = await apiGet('/api/config/public').then((res) =>
+      const config = (await apiGet('/api/config/public').then((res) =>
         res.ok ? res.json() : {}
-      );
-      setEnabled(config.SCREENS_DYNAMIC_FORMS_ENABLED === 'true' || config.SCREENS_DYNAMIC_FORMS_ENABLED === '1');
+      )) as Record<string, any>;
+      setEnabled(config?.SCREENS_DYNAMIC_FORMS_ENABLED === 'true' || config?.SCREENS_DYNAMIC_FORMS_ENABLED === '1');
 
       const projectConfig = await apiGet('/api/forms/configuration/project').then((res) =>
         res.ok ? res.json() : { success: false }
