@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -13,7 +13,7 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
-import { apiPost } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
 import { Tabs } from "@/components/ui/Tabs";
 
 export default function NewProjectPage() {
@@ -22,6 +22,19 @@ export default function NewProjectPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // Sector value-list (V9 reference). Empty → graceful fallback to free text.
+  const [sectorOptions, setSectorOptions] = useState<{ code: string; label: string }[]>([]);
+
+  useEffect(() => {
+    apiGet("/api/reference/sectors")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json?.data?.length) setSectorOptions(json.data);
+      })
+      .catch(() => {
+        /* fallback to free-text input */
+      });
+  }, []);
 
   const [formData, setFormData] = useState<any>({
     // Identification
@@ -138,9 +151,20 @@ export default function NewProjectPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">Secteur</label>
-              <input type="text" name="secteur" value={formData.secteur} onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
-              />
+              {sectorOptions.length > 0 ? (
+                <select name="secteur" value={formData.secteur} onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                >
+                  <option value="">— Sélectionner un secteur —</option>
+                  {sectorOptions.map((s) => (
+                    <option key={s.code} value={s.code}>{s.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input type="text" name="secteur" value={formData.secteur} onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                />
+              )}
               {fieldErrors.secteur && <p className="text-red-400 text-sm mt-1">{fieldErrors.secteur}</p>}
             </div>
             <div>

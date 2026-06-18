@@ -28,6 +28,19 @@ export default function EditProjectPage({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState<string | null>(null);
+  // Sector value-list (V9 reference). Empty → graceful fallback to free text.
+  const [sectorOptions, setSectorOptions] = useState<{ code: string; label: string }[]>([]);
+
+  useEffect(() => {
+    apiGet("/api/reference/sectors")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json?.data?.length) setSectorOptions(json.data);
+      })
+      .catch(() => {
+        /* fallback to free-text input */
+      });
+  }, []);
 
     const [formData, setFormData] = useState<any>({
     // Identification
@@ -176,9 +189,24 @@ export default function EditProjectPage({
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">Secteur</label>
-              <input type="text" name="secteur" value={formData.secteur} onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
-              />
+              {sectorOptions.length > 0 ? (
+                <select name="secteur" value={formData.secteur || ""} onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                >
+                  <option value="">— Sélectionner un secteur —</option>
+                  {/* Preserve a legacy free-text value not present in the list */}
+                  {formData.secteur && !sectorOptions.some((s) => s.code === formData.secteur) && (
+                    <option value={formData.secteur}>{formData.secteur} (existant)</option>
+                  )}
+                  {sectorOptions.map((s) => (
+                    <option key={s.code} value={s.code}>{s.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input type="text" name="secteur" value={formData.secteur} onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                />
+              )}
               {fieldErrors.secteur && <p className="text-red-400 text-sm mt-1">{fieldErrors.secteur}</p>}
             </div>
             <div>
