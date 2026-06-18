@@ -447,17 +447,29 @@ export class ScoringEngine {
     scores: Map<string, NodeScore>;
     summary: Record<string, unknown>;
   }> {
-    // Find root scores (nodes with no parent)
+    // Find root scores = nodes that never appear as a child of another node.
+    // (The previous `!nodeId.startsWith("child")` filter was always true since
+    //  node ids are UUIDs, so every node was wrongly treated as a root.)
+    const childIds = new Set<string>();
+    for (const score of results.values()) {
+      for (const child of score.childScores ?? []) {
+        childIds.add(child.nodeId);
+      }
+    }
     const rootScores = Array.from(results.values()).filter(
-      (score) => !score.nodeId.startsWith("child")
+      (score) => !childIds.has(score.nodeId)
     );
 
-    // Calculate global score as weighted average of roots
+    // Calculate global score as a TRUE weighted average of roots
+    // (Σ score·weight / Σ weight), falling back to a simple mean when no weights.
+    const totalWeight = rootScores.reduce((sum, s) => sum + (s.weight || 0), 0);
     const globalScore =
-      rootScores.length > 0
-        ? rootScores.reduce((sum, s) => sum + s.weightedScore, 0) /
-          rootScores.length
-        : 0;
+      totalWeight > 0
+        ? rootScores.reduce((sum, s) => sum + s.rawScore * (s.weight || 0), 0) /
+          totalWeight
+        : rootScores.length > 0
+          ? rootScores.reduce((sum, s) => sum + s.rawScore, 0) / rootScores.length
+          : 0;
 
     return {
       globalScore: Math.round(globalScore),

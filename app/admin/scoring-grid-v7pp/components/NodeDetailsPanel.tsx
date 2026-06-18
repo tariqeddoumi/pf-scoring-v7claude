@@ -149,19 +149,26 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
         </div>
       )}
 
-      {formData.answerType && (
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">Answer Type</label>
-          <select
-            value={formData.answerType}
-            onChange={(e) => handleChange("answerType", e.target.value)}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
-          >
-            <option value="OPTION_SINGLE">Option Unique</option>
-            <option value="NUMERIC_RANGE">Plage Numérique</option>
-          </select>
-        </div>
-      )}
+      {/* Always shown so a domain/criterion node (answerType=null by default)
+          can be made scoreable — required for DOMAIN-level granularity. */}
+      <div>
+        <label className="block text-sm font-medium text-slate-300 mb-2">Answer Type</label>
+        <select
+          value={formData.answerType ?? ""}
+          onChange={(e) =>
+            handleChange("answerType", e.target.value === "" ? null : e.target.value)
+          }
+          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+        >
+          <option value="">Aucun (agrégation des enfants)</option>
+          <option value="OPTION_SINGLE">Option Unique</option>
+          <option value="NUMERIC_RANGE">Plage Numérique</option>
+        </select>
+        <p className="text-xs text-slate-400 mt-1">
+          Choisir « Option Unique » ou « Plage » pour saisir un score directement
+          sur ce nœud (utile pour la granularité au niveau domaine/critère).
+        </p>
+      </div>
 
       <button
         onClick={handleSave}

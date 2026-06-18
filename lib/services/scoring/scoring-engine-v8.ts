@@ -3,6 +3,12 @@ import { ModelLoader, ModelTree, NodeMeta } from "./model-loader";
 import { ScoreCalculator, AggregationEngine } from "./score-calculator";
 import { ValueResolver, ResolvedValueSnapshot } from "./value-resolver";
 import { BindingResolver, BindingContext } from "./binding-resolver";
+import { resolveSectorWeighting, SectorWeighting } from "./sectorial";
+import {
+  getDomainGranularity,
+  GRANULARITY_DEPTH,
+  isSectorialEnabled,
+} from "@/lib/services/scoring-config-service";
 
 export interface RuleImpact {
   ruleId: string;
@@ -28,6 +34,25 @@ export interface NodeResult {
   childResults?: NodeResult[];
 }
 
+export interface SectorialTrace {
+  applied: boolean;
+  sectorCode: string;
+  sectorLabel: string;
+  /** Base global score before sectorial reweighting */
+  baseScore: number;
+  /** Global score after sectorial domain reweighting */
+  adjustedScore: number;
+  /** domainCode → applied weight factor */
+  weightFactors: Record<string, number>;
+  redFlags: Array<{
+    code: string;
+    description: string;
+    isNoGo: boolean;
+    penalty: number | null;
+  }>;
+  stressTests: Array<{ code: string; description: string }>;
+}
+
 export interface EvaluationTrace {
   evaluationId: string;
   modelVersionId: string;
@@ -38,6 +63,8 @@ export interface EvaluationTrace {
   rootResults: NodeResult[];
   traceJson: string;
   triggeredRuleIds: string[];
+  /** Present when sectorial calibration is enabled and a sector matched. */
+  sectorial?: SectorialTrace;
 }
 
 export class ScoringEngineV8 {
@@ -101,6 +128,14 @@ export class ScoringEngineV8 {
       rulesByNode.set(rule.nodeId, list);
     }
 
+    // Granularity: per-domain score-entry level (DOMAIN/CRITERION/SUB_CRITERION).
+    // A node is treated as a scoring leaf when its depth reaches the configured
+    // leaf depth of its root domain; otherwise it aggregates its children.
+    // When a domain has no explicit config, behaviour is unchanged (uses isScored).
+    const domainGranularity = await getDomainGranularity();
+    const rootCodeByNode = this.buildRootCodeMap(tree);
+    const effectiveLeafIds = new Set<string>();
+
     const nodeScores = new Map<string, NodeResult>();
     let triggeredRuleIds: string[] = [];
     let malusTotal = 0;
@@ -122,10 +157,27 @@ export class ScoringEngineV8 {
         valueSnapshot = ValueResolver.resolveValue(binding.resolvedValue, binding);
       }
 
+      // Decide whether this node is a scoring leaf (read its answer) or an
+      // aggregator (combine children). Per-domain granularity overrides the
+      // default isScored-based behaviour when configured.
+      const rootCode = rootCodeByNode.get(node.id);
+      const configuredLevel = rootCode ? domainGranularity[rootCode] : undefined;
+      let treatAsLeaf: boolean;
+      let treatAsAggregator: boolean;
+      if (configuredLevel) {
+        const leafDepth = GRANULARITY_DEPTH[configuredLevel];
+        treatAsLeaf = node.depth >= leafDepth;
+        treatAsAggregator = !treatAsLeaf && node.childrenCount > 0;
+      } else {
+        treatAsLeaf = node.isScored;
+        treatAsAggregator = !node.isScored && node.childrenCount > 0;
+      }
+      if (treatAsLeaf) effectiveLeafIds.add(node.id);
+
       let rawScore = 0;
       let explanation = "";
 
-      if (node.isScored && valueSnapshot) {
+      if (treatAsLeaf && valueSnapshot) {
         // FIX 1: Use the preloaded options/ranges
         const options = (optionsByNode.get(node.id) || []).map((o) => ({
           value: o.value ?? o.code ?? o.label,
@@ -147,7 +199,7 @@ export class ScoringEngineV8 {
         );
         rawScore = scoreOut.rawScore;
         explanation = scoreOut.explanation;
-      } else if (!node.isScored && node.childrenCount > 0) {
+      } else if (treatAsAggregator) {
         const childIds = tree.childrenOf.get(node.id) || [];
         const children = childIds.map((id) => nodeScores.get(id)).filter(Boolean) as NodeResult[];
         rawScore = AggregationEngine.aggregate(node.aggregationMethod ?? undefined, children as any);
@@ -196,21 +248,65 @@ export class ScoringEngineV8 {
     for (const rootId of tree.rootNodeIds) {
       const root = nodeScores.get(rootId);
       if (root) {
-        root.childResults = this.buildResultTree(rootId, nodeScores, tree);
+        // Prune below effective leaves so the trace reflects the active granularity.
+        root.childResults = effectiveLeafIds.has(rootId)
+          ? []
+          : this.buildResultTree(rootId, nodeScores, tree, effectiveLeafIds);
         rootResults.push(root);
       }
     }
 
-    // FIX 3: finalScore = sum of ALL domain weightedScores (not just first)
-    const totalWeight = rootResults.reduce((s, r) => s + (r.weight ?? 0), 0);
-    const rawFinalScore =
-      totalWeight > 0
-        ? rootResults.reduce((s, r) => s + r.rawScore * (r.weight ?? 0), 0) / totalWeight
+    // Sectorial calibration: when enabled and a sector matches the project,
+    // reweight the domains using the sector's weight FACTORS (multipliers).
+    const sectorialOn = await isSectorialEnabled();
+    let sectorWeighting: SectorWeighting | null = null;
+    if (sectorialOn) {
+      sectorWeighting = await resolveSectorWeighting(evaluation.project?.secteur);
+    }
+    const factorFor = (code: string): number =>
+      sectorWeighting?.weightFactors.get(code) ?? 1;
+
+    // FIX 3: finalScore = weighted average across ALL domains.
+    // Sectorial factors multiply each domain's base weight (no effect when null/1).
+    const baseTotalWeight = rootResults.reduce((s, r) => s + (r.weight ?? 0), 0);
+    const baseRawFinal =
+      baseTotalWeight > 0
+        ? rootResults.reduce((s, r) => s + r.rawScore * (r.weight ?? 0), 0) / baseTotalWeight
         : rootResults.reduce((s, r) => s + r.weightedScore, 0);
+
+    const adjTotalWeight = rootResults.reduce(
+      (s, r) => s + (r.weight ?? 0) * factorFor(r.code),
+      0
+    );
+    const adjRawFinal =
+      adjTotalWeight > 0
+        ? rootResults.reduce(
+            (s, r) => s + r.rawScore * (r.weight ?? 0) * factorFor(r.code),
+            0
+          ) / adjTotalWeight
+        : baseRawFinal;
+
+    const rawFinalScore = sectorWeighting ? adjRawFinal : baseRawFinal;
     const finalScoreAdjusted = Math.max(0, Math.min(100, rawFinalScore - malusTotal));
     const rating = this.scoreToRating(finalScoreAdjusted);
 
-    const traceJson = JSON.stringify(rootResults, null, 2);
+    let sectorial: SectorialTrace | undefined;
+    if (sectorWeighting) {
+      sectorial = {
+        applied: true,
+        sectorCode: sectorWeighting.code,
+        sectorLabel: sectorWeighting.label,
+        baseScore: Math.max(0, Math.min(100, baseRawFinal - malusTotal)),
+        adjustedScore: finalScoreAdjusted,
+        weightFactors: Object.fromEntries(
+          rootResults.map((r) => [r.code, factorFor(r.code)])
+        ),
+        redFlags: sectorWeighting.redFlags,
+        stressTests: sectorWeighting.stressTests,
+      };
+    }
+
+    const traceJson = JSON.stringify({ rootResults, sectorial }, null, 2);
 
     return {
       evaluationId,
@@ -222,20 +318,44 @@ export class ScoringEngineV8 {
       rootResults,
       traceJson,
       triggeredRuleIds,
+      sectorial,
     };
+  }
+
+  /**
+   * Map every node id to the code of its root (depth-0) domain ancestor.
+   * Used to look up per-domain granularity configuration.
+   */
+  private static buildRootCodeMap(tree: ModelTree): Map<string, string> {
+    const rootCodeByNode = new Map<string, string>();
+    for (const node of tree.nodesById.values()) {
+      let current: NodeMeta | undefined = node;
+      const guard = new Set<string>();
+      while (current && current.parentNodeId && !guard.has(current.id)) {
+        guard.add(current.id);
+        current = tree.nodesById.get(current.parentNodeId);
+      }
+      if (current) rootCodeByNode.set(node.id, current.code);
+    }
+    return rootCodeByNode;
   }
 
   private static buildResultTree(
     nodeId: string,
     nodeScores: Map<string, NodeResult>,
-    tree: ModelTree
+    tree: ModelTree,
+    effectiveLeafIds?: Set<string>
   ): NodeResult[] {
     const children: NodeResult[] = [];
     const childIds = tree.childrenOf.get(nodeId) || [];
     for (const childId of childIds) {
       const child = nodeScores.get(childId);
       if (child) {
-        child.childResults = this.buildResultTree(childId, nodeScores, tree);
+        // Stop at effective leaves so granularity-truncated branches aren't shown.
+        child.childResults =
+          effectiveLeafIds && effectiveLeafIds.has(childId)
+            ? []
+            : this.buildResultTree(childId, nodeScores, tree, effectiveLeafIds);
         children.push(child);
       }
     }

@@ -57,6 +57,7 @@ export async function POST(
         recommendation: trace.recommendation,
         malusTotal: trace.malusTotal,
         triggeredRuleCount: trace.triggeredRuleIds.length,
+        sectorial: trace.sectorial ?? null,
         traceUrl: `/api/scoring/evaluations/${evaluationId}/trace`,
       },
     });
