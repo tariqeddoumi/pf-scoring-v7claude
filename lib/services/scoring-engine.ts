@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma-client";
+import { getDomainLeafDepth } from "@/lib/services/scoring-config-service";
 import type { ScoringNode, ScoringEvaluationAnswer } from "@prisma/client";
 
 /**
@@ -30,10 +31,12 @@ export interface RuleImpact {
 
 /**
  * Generic recursive scoring engine
+ * Supports domain-level granularity configuration for flexible scoring levels
  */
 export class ScoringEngine {
   /**
    * Score an entire evaluation recursively
+   * Respects per-domain leaf depth configuration from SCORING_DOMAIN_GRANULARITY
    */
   static async scoreEvaluation(
     evaluationId: string,
@@ -82,11 +85,24 @@ export class ScoringEngine {
     for (const rootNode of rootNodes) {
       const nodeWithChildren = nodeMap.get(rootNode.id);
       if (nodeWithChildren) {
+        // Determine effective leaf depth for this domain
+        let effectiveLeafDepth: number | undefined;
+        if (rootNode.depth === 0 && rootNode.code) {
+          const configuredDepth = await getDomainLeafDepth(rootNode.code);
+          if (configuredDepth !== null) {
+            effectiveLeafDepth = configuredDepth;
+          }
+        }
+        if (effectiveLeafDepth === undefined) {
+          effectiveLeafDepth = rootNode.scoreLeafDepth ?? 1; // Default to CRITERION
+        }
+
         await this.scoreNodeRecursive(
           nodeWithChildren,
           evaluationId,
           answers,
-          results
+          results,
+          effectiveLeafDepth
         );
       }
     }
@@ -96,12 +112,14 @@ export class ScoringEngine {
 
   /**
    * Recursively score a node and its children
+   * respects the configured leaf depth for granular scoring
    */
   private static async scoreNodeRecursive(
     nodeWithChildren: ScoringNode & { children: unknown[] },
     _evaluationId: string,
     answers: ScoringEvaluationAnswer[],
-    results: Map<string, NodeScore>
+    results: Map<string, NodeScore>,
+    effectiveLeafDepth: number = 1
   ): Promise<NodeScore> {
     const node = nodeWithChildren;
 
@@ -113,7 +131,8 @@ export class ScoringEngine {
         childNode,
         _evaluationId,
         answers,
-        results
+        results,
+        effectiveLeafDepth
       );
       childScores.push(childScore);
       results.set(childNode.id, childScore);
@@ -122,7 +141,10 @@ export class ScoringEngine {
     // Score this node based on its scoring method
     let nodeScore: NodeScore;
 
-    if (childScores.length > 0 && node.aggregationMethod) {
+    // Check if this node should be treated as a leaf based on configured depth
+    const isAtLeafDepth = node.depth >= effectiveLeafDepth;
+
+    if (!isAtLeafDepth && childScores.length > 0 && node.aggregationMethod) {
       // This is a parent node - aggregate children
       nodeScore = await this.aggregateChildScores(
         node,
@@ -131,6 +153,7 @@ export class ScoringEngine {
       );
     } else {
       // This is a leaf node - score based on answer
+      // (either configured as leaf depth, or has no children, or marked as isScoringLeaf)
       nodeScore = await this.scoreLeafNode(node, answers);
     }
 

@@ -28,6 +28,14 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
+    id: "scoring-granularity",
+    title: "Granularité du Scoring ★",
+    description: "Configurez le niveau de saisie des scores (domaine, critère ou sous-critère) par domaine",
+    href: "/admin/scoring/granularity",
+    icon: "📐",
+    requiredRole: "system_admin",
+  },
+  {
     id: "scoring",
     title: "Modèle de Scoring PF V7++",
     description: "Visualisez les domaines, critères et barèmes du modèle actif",

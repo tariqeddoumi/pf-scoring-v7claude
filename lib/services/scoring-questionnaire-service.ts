@@ -1,4 +1,6 @@
 import prisma from "@/lib/prisma-client";
+import { getDomainLeafDepth } from "@/lib/services/scoring-config-service";
+import { buildScoringLeafTree } from "@/lib/services/scoring-leaves-service";
 
 export interface QuestionnaireNode {
   id: string;
@@ -12,12 +14,15 @@ export interface QuestionnaireNode {
   options?: { value: string; label: string; score: number }[];
   ranges?: { minValue: number; maxValue: number; score: number; label?: string }[];
   weight?: number;
+  scoreLeafDepth?: number | null;
+  isScoringLeaf?: boolean;
   children?: QuestionnaireNode[];
 }
 
 export class ScoringQuestionnaireService {
   /**
    * Get questionnaire for a specific ScoringModel version
+   * Respects per-domain granularity configuration to truncate trees at appropriate levels
    */
   static async getQuestionnaire(
     modelVersionId: string
@@ -61,6 +66,8 @@ export class ScoringQuestionnaireService {
         answerType: node.answerType || undefined,
         scoringMethod: node.scoringMethod || undefined,
         weight: node.weight || undefined,
+        scoreLeafDepth: node.scoreLeafDepth || undefined,
+        isScoringLeaf: node.isScoringLeaf || false,
         options:
           node.options && node.options.length > 0
             ? node.options.map((o: any) => ({
@@ -100,7 +107,40 @@ export class ScoringQuestionnaireService {
       }
     });
 
-    return rootNodes;
+    // Apply domain-level granularity truncation
+    const truncatedRoots: QuestionnaireNode[] = [];
+    for (const rootNode of rootNodes) {
+      // Get configured leaf depth for this domain (if it's a domain node)
+      let effectiveLeafDepth: number | undefined;
+
+      if (rootNode.depth === 0 && rootNode.code) {
+        // This is a domain - check for configured granularity
+        const configuredDepth = await getDomainLeafDepth(rootNode.code);
+        if (configuredDepth !== null) {
+          effectiveLeafDepth = configuredDepth;
+        }
+      }
+
+      // If no config, use node's scoreLeafDepth or default
+      if (effectiveLeafDepth === undefined) {
+        effectiveLeafDepth = rootNode.scoreLeafDepth ?? 1; // Default to CRITERION (depth 1)
+      }
+
+      // Set the effective leaf depth on the root for use in buildScoringLeafTree
+      rootNode.scoreLeafDepth = effectiveLeafDepth;
+
+      // Truncate tree to appropriate level
+      const truncated = buildScoringLeafTree(
+        rootNode as any,
+        effectiveLeafDepth
+      );
+
+      if (truncated) {
+        truncatedRoots.push(truncated);
+      }
+    }
+
+    return truncatedRoots;
   }
 
   /**
