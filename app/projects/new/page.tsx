@@ -15,6 +15,12 @@ import {
 } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { Tabs } from "@/components/ui/Tabs";
+import { DynamicEntityForm } from "@/components/form/DynamicEntityForm";
+import dynamic from "next/dynamic";
+
+const HardcodedProjectForm = dynamic(() => Promise.resolve(HardcodedForm), {
+  ssr: false,
+});
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -22,6 +28,7 @@ export default function NewProjectPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [useDynamicForms, setUseDynamicForms] = useState(false);
   // Sector value-list (V9 reference). Empty → graceful fallback to free text.
   const [sectorOptions, setSectorOptions] = useState<{ code: string; label: string }[]>([]);
 
@@ -33,6 +40,17 @@ export default function NewProjectPage() {
       })
       .catch(() => {
         /* fallback to free-text input */
+      });
+  }, []);
+
+  useEffect(() => {
+    apiGet("/api/config/public")
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((config) => {
+        setUseDynamicForms(config.SCREENS_DYNAMIC_FORMS_ENABLED === "true" || config.SCREENS_DYNAMIC_FORMS_ENABLED === "1");
+      })
+      .catch(() => {
+        /* fallback to hardcoded forms */
       });
   }, []);
 
@@ -440,7 +458,17 @@ export default function NewProjectPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <Tabs tabs={tabs} defaultTab="identification" />
+        {useDynamicForms ? (
+          <DynamicEntityForm
+            entity="project"
+            formData={formData}
+            fieldErrors={fieldErrors}
+            onChange={handleChange}
+            fallback={<HardcodedProjectForm tabs={tabs} formData={formData} handleChange={handleChange} fieldErrors={fieldErrors} />}
+          />
+        ) : (
+          <Tabs tabs={tabs} defaultTab="identification" />
+        )}
 
         {/* Form Actions */}
         <div className="flex gap-3 mt-8 pt-6 border-t border-slate-700">
@@ -455,4 +483,8 @@ export default function NewProjectPage() {
       </form>
     </div>
   );
+}
+
+function HardcodedForm({ tabs, formData, handleChange, fieldErrors }: any) {
+  return <Tabs tabs={tabs} defaultTab="identification" />;
 }

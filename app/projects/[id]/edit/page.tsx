@@ -16,6 +16,7 @@ import {
 import { apiGet, apiPut } from "@/lib/api-client";
 import { Project } from "@/lib/types/models";
 import { Tabs } from "@/components/ui/Tabs";
+import { DynamicEntityForm } from "@/components/form/DynamicEntityForm";
 
 export default function EditProjectPage({
   params,
@@ -28,6 +29,7 @@ export default function EditProjectPage({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [useDynamicForms, setUseDynamicForms] = useState(false);
   // Sector value-list (V9 reference). Empty → graceful fallback to free text.
   const [sectorOptions, setSectorOptions] = useState<{ code: string; label: string }[]>([]);
 
@@ -39,6 +41,17 @@ export default function EditProjectPage({
       })
       .catch(() => {
         /* fallback to free-text input */
+      });
+  }, []);
+
+  useEffect(() => {
+    apiGet("/api/config/public")
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((config) => {
+        setUseDynamicForms(config.SCREENS_DYNAMIC_FORMS_ENABLED === "true" || config.SCREENS_DYNAMIC_FORMS_ENABLED === "1");
+      })
+      .catch(() => {
+        /* fallback to hardcoded forms */
       });
   }, []);
 
@@ -482,7 +495,17 @@ export default function EditProjectPage({
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <Tabs tabs={tabs} defaultTab="identification" />
+        {useDynamicForms ? (
+          <DynamicEntityForm
+            entity="project"
+            formData={formData}
+            fieldErrors={fieldErrors}
+            onChange={handleChange}
+            fallback={<Tabs tabs={tabs} defaultTab="identification" />}
+          />
+        ) : (
+          <Tabs tabs={tabs} defaultTab="identification" />
+        )}
 
         {/* Form Actions */}
         <div className="flex gap-3 mt-8 pt-6 border-t border-slate-700">
