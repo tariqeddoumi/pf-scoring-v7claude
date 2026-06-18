@@ -3,9 +3,9 @@ import { withAuth } from "@/lib/auth-middleware";
 import { initializeFieldConfigurationsFromCode } from "@/lib/services/field-config-service";
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, async (user) => {
+  return withAuth(request, async (user: any) => {
     try {
-      if (user.role !== "system_admin") {
+      if (user?.role !== "system_admin") {
         return NextResponse.json(
           { success: false, error: "Unauthorized" },
           { status: 403 }

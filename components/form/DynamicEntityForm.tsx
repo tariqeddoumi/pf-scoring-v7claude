@@ -81,7 +81,7 @@ export function DynamicEntityForm({
     );
   }
 
-  const layout = sections[0]?.layout || "accordion";
+  const layout = (sections[0] as any)?.layout || "accordion";
 
   return (
     <DynamicForm
@@ -89,7 +89,7 @@ export function DynamicEntityForm({
       formData={formData}
       fieldErrors={fieldErrors}
       onChange={onChange}
-      layout={layout as "accordion" | "tabs"}
+      layout={(layout as "accordion" | "tabs") || "accordion"}
     />
   );
 }

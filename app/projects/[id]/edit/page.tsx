@@ -47,8 +47,8 @@ export default function EditProjectPage({
   useEffect(() => {
     apiGet("/api/config/public")
       .then((res) => (res.ok ? res.json() : {}))
-      .then((config) => {
-        setUseDynamicForms(config.SCREENS_DYNAMIC_FORMS_ENABLED === "true" || config.SCREENS_DYNAMIC_FORMS_ENABLED === "1");
+      .then((config: Record<string, any>) => {
+        setUseDynamicForms(config?.SCREENS_DYNAMIC_FORMS_ENABLED === "true" || config?.SCREENS_DYNAMIC_FORMS_ENABLED === "1");
       })
       .catch(() => {
         /* fallback to hardcoded forms */
