@@ -23,6 +23,7 @@
     "db:migrate:status": "prisma migrate status",
     "db:seed": "prisma db seed",
     "db:seed:v9": "tsx prisma/seed-v9.ts",
+    "db:seed:complete": "tsx prisma/seed-complete.ts",
     "schema:template": "node scripts/create-template.js",
     "schema:generate": "node scripts/generate-schema.js"
   },
