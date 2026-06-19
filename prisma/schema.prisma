@@ -171,6 +171,7 @@ model Project {
   grade                       String?
   creePar                     String        @db.Uuid
   countryCode                 String?
+  pays                        String?
   clientId                    String?
   dateCreation                DateTime      @default(now())
   dateMiseAJour               DateTime      @updatedAt

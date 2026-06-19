@@ -6,128 +6,11 @@
 
 import { PrismaClient } from "@prisma/client";
 import v9Data from "./migrations/v9_source_data.json";
+// Single source of truth for form configuration. Field names here map 1:1 to
+// the Project model / validation schema (see lib/field-config.ts header).
+import { PROJECT_SECTIONS } from "../lib/field-config";
 
 const prisma = new PrismaClient();
-
-// PROJECT_SECTIONS from lib/field-config.ts (embedded to avoid import issues)
-const PROJECT_SECTIONS = [
-  {
-    id: "identification",
-    title: "Identification",
-    description: "Informations principales du projet",
-    icon: "Briefcase",
-    columns: 2,
-    fields: [
-      { name: "nom", label: "Nom du Projet *", type: "text" as const, required: true, placeholder: "Nom du projet" },
-      { name: "projectId", label: "ID Projet", type: "text" as const, placeholder: "Identifiant unique" },
-      { name: "description", label: "Description", type: "textarea" as const, placeholder: "Description détaillée du projet" },
-      { name: "secteur", label: "Secteur *", type: "select" as const, required: true, options: [] },
-      { name: "sponsor", label: "Sponsor", type: "text" as const, placeholder: "Nom du sponsor" },
-      { name: "spvName", label: "Nom Commercial SPV", type: "text" as const, placeholder: "Société de projet" },
-      { name: "spvJurisdiction", label: "Juridiction SPV", type: "text" as const, placeholder: "Ex: Maroc" },
-    ],
-  },
-  {
-    id: "location",
-    title: "Localisation",
-    description: "Localisation géographique",
-    icon: "MapPin",
-    columns: 2,
-    fields: [
-      { name: "pays", label: "Pays *", type: "text" as const, required: true, placeholder: "Ex: Maroc" },
-      { name: "region", label: "Région", type: "text" as const, placeholder: "Ex: Grand Casablanca" },
-      { name: "city", label: "Ville", type: "text" as const, placeholder: "Ex: Casablanca" },
-      { name: "siteAddress", label: "Adresse du Site", type: "textarea" as const, placeholder: "Adresse complète du site" },
-      { name: "coordinates", label: "Coordonnées GPS", type: "text" as const, placeholder: "Latitude, Longitude" },
-      { name: "countryCode", label: "Code Pays ISO", type: "text" as const, placeholder: "MA" },
-    ],
-  },
-  {
-    id: "stakeholders",
-    title: "Parties Prenantes",
-    description: "Acteurs principaux du projet",
-    icon: "Users",
-    columns: 2,
-    fields: [
-      { name: "epcContractor", label: "Constructeur EPC", type: "text" as const, placeholder: "Entreprise de construction" },
-      { name: "omOperator", label: "O&M Opérateur", type: "text" as const, placeholder: "Opérateur de maintenance" },
-      { name: "offtaker", label: "Acheteur (Offtaker)", type: "text" as const, placeholder: "Acheteur de l'énergie" },
-      { name: "legalAdvisor", label: "Conseiller Juridique", type: "text" as const, placeholder: "Cabinet juridique" },
-      { name: "technicalAdvisor", label: "Conseiller Technique", type: "text" as const, placeholder: "Expert technique" },
-      { name: "insuranceAdvisor", label: "Conseiller Assurance", type: "text" as const, placeholder: "Courtier en assurance" },
-    ],
-  },
-  {
-    id: "technical",
-    title: "Caractéristiques Techniques",
-    description: "Spécifications techniques",
-    icon: "Zap",
-    columns: 2,
-    fields: [
-      { name: "technology", label: "Technologie", type: "text" as const, placeholder: "Ex: Énergie Solaire, Éolienne" },
-      { name: "capacity", label: "Capacité Installée", type: "text" as const, placeholder: "Ex: 100 MW" },
-      { name: "capacityUnit", label: "Unité Capacité", type: "select" as const, options: [] },
-      { name: "availabilityTarget", label: "Facteur de disponibilité cible (%)", type: "number" as const, placeholder: "90" },
-      { name: "designLife", label: "Durée de vie nominale (ans)", type: "number" as const, placeholder: "25" },
-    ],
-  },
-  {
-    id: "timeline",
-    title: "Calendrier",
-    description: "Chronologie du projet",
-    icon: "Calendar",
-    columns: 2,
-    fields: [
-      { name: "constructionStart", label: "Début Construction", type: "date" as const },
-      { name: "constructionEnd", label: "Fin Construction", type: "date" as const },
-      { name: "constructionDuration", label: "Durée Construction (mois)", type: "number" as const, placeholder: "36" },
-      { name: "codDate", label: "Date COD (Mise en Service)", type: "date" as const },
-      { name: "concessionEnd", label: "Fin du Concession", type: "date" as const },
-      { name: "operationalDuration", label: "Durée Exploitation (ans)", type: "number" as const, placeholder: "25" },
-      { name: "concessionDuration", label: "Durée du Contrat (ans)", type: "number" as const, placeholder: "30" },
-      { name: "omDuration", label: "Durée O&M (ans)", type: "number" as const, placeholder: "25" },
-    ],
-  },
-  {
-    id: "financing",
-    title: "Financement",
-    description: "Structure de financement",
-    icon: "DollarSign",
-    columns: 2,
-    fields: [
-      { name: "totalCost", label: "Coût Total (MAD)", type: "number" as const, placeholder: "Montant total" },
-      { name: "montant", label: "Montant Principal", type: "number" as const, placeholder: "Montant du projet" },
-      { name: "devise", label: "Devise", type: "select" as const, options: [] },
-      { name: "equityAmount", label: "Equity Amount (MAD)", type: "number" as const, placeholder: "Montant equity" },
-      { name: "equityPercentage", label: "Equity (%)", type: "number" as const, placeholder: "20" },
-      { name: "debtAmount", label: "Dette Senior (MAD)", type: "number" as const, placeholder: "Montant de la dette" },
-      { name: "dscrMinimum", label: "DSCR Minimum", type: "number" as const, step: "0.01", placeholder: "1.35" },
-      { name: "omCostAnnual", label: "Coût O&M Annuel (MAD)", type: "number" as const, placeholder: "Montant annuel" },
-    ],
-  },
-  {
-    id: "insurance",
-    title: "Assurance & Garanties",
-    description: "Couverture et sécurités",
-    icon: "Shield",
-    columns: 2,
-    fields: [
-      { name: "insuranceCoverage", label: "Couverture Assurance", type: "text" as const, placeholder: "Détails de la couverture" },
-      { name: "pledgedAssets", label: "Actifs Nantis", type: "textarea" as const, placeholder: "Détails des actifs" },
-      { name: "reserveAccounts", label: "Comptes de Réserve", type: "text" as const, placeholder: "Détails des réserves" },
-    ],
-  },
-  {
-    id: "administration",
-    title: "Administration",
-    description: "Paramètres administratifs",
-    icon: "Settings",
-    columns: 2,
-    fields: [
-      { name: "status", label: "Statut", type: "select" as const, options: [] },
-    ],
-  },
-];
 
 // V9 Sectors definition
 const V9_SECTORS = [
@@ -391,7 +274,9 @@ async function seedFormConfiguration() {
           visible: true,
           editable: true,
           sectionId: formSection.id,
-          customOptions: field.options ? JSON.stringify(field.options) : null,
+          // Store the option array as real JSON (the form-config API reads it
+          // back with Array.isArray); undefined leaves the column untouched.
+          customOptions: field.options ?? undefined,
         },
         create: {
           entity: "project",
@@ -407,7 +292,7 @@ async function seedFormConfiguration() {
           orderIndex: section.fields.indexOf(field),
           visible: true,
           editable: true,
-          customOptions: field.options ? JSON.stringify(field.options) : null,
+          customOptions: field.options ?? undefined,
         },
       });
     }
@@ -494,8 +379,8 @@ async function verifySeeding() {
     v9StressTests: 24,
     v9MalusBonus: 10,
     v9Models: 1,
-    formSections: 8,
-    fieldConfigs: 30,
+    formSections: 6,
+    fieldConfigs: 28,
     appConfigs: 3,
   };
 
