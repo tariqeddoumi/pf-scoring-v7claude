@@ -107,6 +107,22 @@ const ADMIN_SECTIONS: AdminSection[] = [
     icon: "📋",
     requiredRole: "risk_manager",
   },
+  {
+    id: "dynamic-forms",
+    title: "Formulaires Dynamiques ★",
+    description: "Activez les formulaires rendus depuis la base de données, sans code",
+    href: "/admin/dynamic-forms",
+    icon: "📝",
+    requiredRole: "system_admin",
+  },
+  {
+    id: "field-management",
+    title: "Gestion des Champs de Formulaire ★",
+    description: "Personnalisez les champs, sections et options des formulaires",
+    href: "/admin/field-management",
+    icon: "🏷️",
+    requiredRole: "system_admin",
+  },
 ];
 
 interface UserData {
