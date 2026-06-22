@@ -4,11 +4,11 @@ import prisma from "@/lib/prisma-client";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { entity: string } }
+  { params }: { params: Promise<{ entity: string }> }
 ) {
+  const { entity } = await params;
   return withAuth(request, async () => {
     try {
-      const { entity } = params;
 
       if (!entity) {
         return NextResponse.json(
