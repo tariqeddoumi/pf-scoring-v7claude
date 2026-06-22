@@ -1,0 +1,197 @@
+// ============================================================================
+// V9 BLUEPRINT — à fusionner dans prisma/schema.prisma
+// Couche sectorielle V9 + ajustements transversaux + paramétrage global.
+// Le SOCLE (9 domaines / 28 critères / 84 sous-critères / 336 options) reste
+// porté par BP_PF_v7pp_scoring_nodes / _options (NON dupliqué ici).
+// domain_code = clé douce "D1".."D9" vers le socle.
+// ============================================================================
+
+/// Métadonnées du modèle V9 (tool_name PARAMÉTRABLE)
+model V9ScoringModel {
+  id           String   @id @default(uuid())
+  version      String   @unique          // "9.0.0"
+  toolName     String                     // PARAMÉTRABLE (miroir APP_NAME)
+  description  String?                    // = feuille "Méthodologie V9"
+  socleVersion String   @default("V7++")
+  isActive     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("BP_PF_v9_scoring_models")
+}
+
+/// 12 secteurs Project Finance
+model V9Sector {
+  id         String   @id @default(uuid())
+  code       String   @unique            // ENR, EAU, TRA, ...
+  label      String
+  orderIndex Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  thresholds    V9SectorThreshold[]
+  domainWeights V9SectorDomainWeight[]
+  redFlags      V9RedFlag[]
+  indicators    V9Indicator[]
+  stressTests   V9StressTest[]
+
+  @@map("BP_PF_v9_sectors")
+}
+
+/// Seuils DSCR / LLCR / Leverage différenciés par secteur (12×3×4 = 144)
+model V9SectorThreshold {
+  id        String  @id @default(uuid())
+  sectorId  String
+  ratioType String  // 'DSCR' | 'LLCR' | 'LEVERAGE'
+  level     String  // 'EXCELLENT' | 'BON' | 'ACCEPTABLE' | 'INSUFFISANT'
+  minValue  Float?
+  maxValue  Float?
+  score     Float?
+  createdAt DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, ratioType, level])
+  @@index([sectorId])
+  @@map("BP_PF_v9_sector_thresholds")
+}
+
+/// Poids des 9 domaines ajustés par secteur (12×9 = 108, repris de V8)
+model V9SectorDomainWeight {
+  id             String  @id @default(uuid())
+  sectorId       String
+  domainCode     String  // D1..D9
+  weightAdjusted Float
+  createdAt      DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, domainCode])
+  @@index([sectorId])
+  @@map("BP_PF_v9_sector_domain_weights")
+}
+
+/// Red flags nominatifs (8/secteur = 96)
+model V9RedFlag {
+  id          String  @id @default(uuid())
+  sectorId    String
+  code        String  // RF_ENR_1
+  description String
+  isNoGo      Boolean @default(false)
+  penalty     Float?  // null si NO_GO
+  orderIndex  Int     @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId])
+  @@map("BP_PF_v9_red_flags")
+}
+
+/// Indicateurs métier sectoriels (6/secteur = 72)
+model V9Indicator {
+  id          String  @id @default(uuid())
+  sectorId    String
+  code        String
+  label       String
+  unit        String?
+  targetValue String? // borne/cible parsée du Excel
+  direction   String  // 'HIGHER_BETTER' | 'LOWER_BETTER' | 'RANGE'
+  orderIndex  Int     @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId])
+  @@map("BP_PF_v9_indicators")
+}
+
+/// Stress tests paramétrés par secteur (24)
+model V9StressTest {
+  id          String  @id @default(uuid())
+  sectorId    String
+  code        String
+  description String
+  variable    String? // variable du modèle financier
+  shockPct    Float?  // -0.25 = -25%
+  passDscrMin Float?  // DSCR mini requis sous choc
+  orderIndex  Int     @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId])
+  @@map("BP_PF_v9_stress_tests")
+}
+
+/// Barème malus-bonus formalisé (0.10 / 0.25 / NO_GO, plafonds, non-cumul)
+model V9MalusBonus {
+  id            String  @id @default(uuid())
+  code          String  @unique // MALUS_5A
+  scope         String  // 'DOMAIN' | 'GLOBAL'
+  domainCode    String? // D1..D9 si scope DOMAIN
+  kind          String  // 'MALUS' | 'BONUS'
+  condition     String
+  magnitude     String  // '0.10' | '0.25' | 'NO_GO'
+  capPerDomain  Float?
+  capGlobal     Float?
+  nonCumulGroup String?
+  rationale     String?
+  orderIndex    Int     @default(0)
+  createdAt     DateTime @default(now())
+
+  @@map("BP_PF_v9_malus_bonus")
+}
+
+/// Matrice anti-double-comptage : 8 facteurs transversaux × 9 domaines (72)
+model V9AntiDoubleCount {
+  id          String  @id @default(uuid())
+  factorCode  String  // FX, CONSTRUCTION, OFFTAKE, ...
+  factorLabel String
+  domainCode  String  // D1..D9
+  arbitration String  // 'PRIMARY' | 'SECONDARY' | 'EXCLUDED'
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@unique([factorCode, domainCode])
+  @@index([factorCode])
+  @@map("BP_PF_v9_anti_double_count")
+}
+
+// ============================================================================
+// PARAMÉTRAGE GLOBAL APPLICATION
+// ============================================================================
+
+model AppConfiguration {
+  key         String   @id            // APP_NAME, PRIMARY_COLOR, ...
+  value       String
+  type        String   // string|color|url|enum|bool|number
+  category    String   // branding|theme|behavior
+  description String?
+  isPublic    Boolean  @default(false)
+  metadata    String?  // JSON (ex. valeurs d'enum)
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  history AppConfigHistory[]
+
+  @@map("BP_PF_app_configuration")
+}
+
+model AppConfigHistory {
+  id        String   @id @default(uuid())
+  key       String
+  oldValue  String?
+  newValue  String
+  changedBy String?
+  changedAt DateTime @default(now())
+
+  config AppConfiguration @relation(fields: [key], references: [key], onDelete: Cascade)
+
+  @@index([key])
+  @@map("BP_PF_app_config_history")
+}

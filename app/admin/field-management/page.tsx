@@ -17,6 +17,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
+import { apiGet, apiPost, apiDelete, apiPut } from '@/lib/api-client';
 
 interface FormSection {
   id: string;
@@ -86,12 +87,6 @@ export default function FieldManagementPage() {
     helpText: '',
   });
 
-  const getAuthHeaders = (): Record<string, string> => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-    if (token) return { Authorization: `Bearer ${token}` };
-    return {};
-  };
-
   // Fetch sections and fields
   useEffect(() => {
     fetchSections();
@@ -100,9 +95,8 @@ export default function FieldManagementPage() {
   const fetchSections = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/admin/field-configurations?entity=${selectedEntity}&type=sections`,
-        { headers: { ...getAuthHeaders() } }
+      const response = await apiGet(
+        `/api/admin/field-configurations?entity=${selectedEntity}&type=sections`
       );
       if (!response.ok) throw new Error('Failed to fetch sections');
       const data = await response.json();
@@ -132,16 +126,12 @@ export default function FieldManagementPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/field-configurations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({
-          type: 'field',
-          entity: selectedEntity,
-          sectionId,
-          ...newField,
-          orderIndex: (sections.find((s) => s.id === sectionId)?.fields?.length || 0) + 1,
-        }),
+      const response = await apiPost('/api/admin/field-configurations', {
+        type: 'field',
+        entity: selectedEntity,
+        sectionId,
+        ...newField,
+        orderIndex: (sections.find((s) => s.id === sectionId)?.fields?.length || 0) + 1,
       });
 
       if (!response.ok) throw new Error('Failed to add field');
@@ -164,10 +154,7 @@ export default function FieldManagementPage() {
 
   const handleDeleteField = async (fieldId: string) => {
     try {
-      const response = await fetch(`/api/admin/field-configurations/${fieldId}`, {
-        method: 'DELETE',
-        headers: { ...getAuthHeaders() },
-      });
+      const response = await apiDelete(`/api/admin/field-configurations/${fieldId}`);
 
       if (!response.ok) throw new Error('Failed to delete field');
 
@@ -181,11 +168,7 @@ export default function FieldManagementPage() {
 
   const handleToggleFieldVisibility = async (fieldId: string, visible: boolean) => {
     try {
-      const response = await fetch(`/api/admin/field-configurations/${fieldId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ visible: !visible }),
-      });
+      const response = await apiPut(`/api/admin/field-configurations/${fieldId}`, { visible: !visible });
 
       if (!response.ok) throw new Error('Failed to update field');
 

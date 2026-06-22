@@ -10,6 +10,7 @@ import {
   XCircle,
   Lock,
 } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
 
 interface DiagnosticTest {
   name: string;
@@ -78,7 +79,7 @@ export default function DiagnosticPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/diagnostic/full");
+      const response = await apiGet("/api/diagnostic/full");
       const data = await response.json();
 
       if (!response.ok) {

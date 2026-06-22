@@ -29,8 +29,8 @@ export interface AuditEntry {
   entityId: string;
   userId: string;
   action: ActionType;
-  oldValues?: Record<string, any>;
-  newValues?: Record<string, any>;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
   ipAddress: string;
   sessionId: string;
   timestamp?: Date;
@@ -80,7 +80,7 @@ export class AuditLogger {
             status: entry.status,
             errorMessage: entry.errorMessage,
             changeDetails,
-          },
+          } as any,
           timestamp: entry.timestamp || new Date(),
         },
       });
@@ -97,7 +97,7 @@ export class AuditLogger {
     userId: string,
     entityType: EntityType,
     entityId: string,
-    newValues: Record<string, any>,
+    newValues: Record<string, unknown>,
     ipAddress: string,
     sessionId: string
   ): Promise<void> {
@@ -120,8 +120,8 @@ export class AuditLogger {
     userId: string,
     entityType: EntityType,
     entityId: string,
-    oldValues: Record<string, any>,
-    newValues: Record<string, any>,
+    oldValues: Record<string, unknown>,
+    newValues: Record<string, unknown>,
     ipAddress: string,
     sessionId: string
   ): Promise<void> {
@@ -145,7 +145,7 @@ export class AuditLogger {
     userId: string,
     entityType: EntityType,
     entityId: string,
-    oldValues: Record<string, any>,
+    oldValues: Record<string, unknown>,
     ipAddress: string,
     sessionId: string
   ): Promise<void> {
@@ -250,7 +250,7 @@ export class AuditLogger {
   async logCalculate(
     userId: string,
     entityId: string,
-    calculationResult: Record<string, any>,
+    calculationResult: Record<string, unknown>,
     ipAddress: string,
     sessionId: string
   ): Promise<void> {
@@ -296,7 +296,7 @@ export class AuditLogger {
   async getAuditTrail(
     entityId: string,
     options?: { limit?: number; offset?: number }
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     try {
       const limit = options?.limit || 100;
       const offset = options?.offset || 0;
@@ -322,7 +322,7 @@ export class AuditLogger {
         },
       });
 
-      return logs;
+      return logs as unknown as unknown[];
     } catch (error) {
       console.error("[AUDIT] Failed to retrieve audit trail:", error);
       return [];
@@ -334,12 +334,12 @@ export class AuditLogger {
    */
   async queryAuditLogs(
     options: AuditQueryOptions
-  ): Promise<{ entries: any[]; total: number }> {
+  ): Promise<{ entries: unknown[]; total: number }> {
     try {
       const limit = options.limit || 50;
       const offset = options.offset || 0;
 
-      const where: any = {};
+      const where: Record<string, unknown> = {};
 
       if (options.entityId) {
         where.evaluationId = options.entityId;

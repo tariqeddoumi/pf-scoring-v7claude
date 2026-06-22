@@ -13,20 +13,7 @@ import {
   STATUS_LABELS,
   RATING_COLORS,
 } from "@/lib/ui-constants";
-
-function authHeaders(extra?: Record<string, string>): Record<string, string> {
-  const headers: Record<string, string> = { "Content-Type": "application/json", ...extra };
-  if (typeof window !== "undefined") {
-    for (const cookie of document.cookie.split(";")) {
-      const [name, value] = cookie.trim().split("=");
-      if (name === "auth_token") {
-        try { headers["Authorization"] = `Bearer ${decodeURIComponent(value)}`; } catch {}
-        break;
-      }
-    }
-  }
-  return headers;
-}
+import { apiGet, apiDelete, apiPut } from "@/lib/api-client";
 
 interface EvaluationRow {
   id: string;
@@ -75,7 +62,7 @@ export default function EvaluationsPage() {
   const fetchEvaluations = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/evaluations?limit=100", { headers: authHeaders() });
+      const res = await apiGet("/api/evaluations?limit=100");
       if (!res.ok) throw new Error("Erreur lors du chargement des évaluations");
       const data = await res.json();
       const rows: EvaluationRow[] = (data.data || []).map((ev: any) => ({
@@ -103,10 +90,7 @@ export default function EvaluationsPage() {
   const handleDelete = async (evaluationId: string) => {
     try {
       setDeleting(true);
-      const res = await fetch(`/api/evaluations/${evaluationId}`, {
-        method: "DELETE",
-        headers: authHeaders(),
-      });
+      const res = await apiDelete(`/api/evaluations/${evaluationId}`);
       if (!res.ok) throw new Error("Erreur lors de la suppression");
       setEvaluations(evaluations.filter((e) => e.id !== evaluationId));
       setDeleteConfirm(null);
@@ -123,11 +107,7 @@ export default function EvaluationsPage() {
       const ev = evaluations.find((e) => e.id === evaluationId);
       if (!ev) return;
 
-      const res = await fetch(`/api/evaluations/${evaluationId}`, {
-        method: "PUT",
-        headers: authHeaders(),
-        body: JSON.stringify({ ...ev, isArchived: archive }),
-      });
+      const res = await apiPut(`/api/evaluations/${evaluationId}`, { ...ev, isArchived: archive });
       if (!res.ok) throw new Error("Erreur lors de l'archivage");
 
       setEvaluations(

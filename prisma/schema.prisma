@@ -171,6 +171,7 @@ model Project {
   grade                       String?
   creePar                     String        @db.Uuid
   countryCode                 String?
+  pays                        String?
   clientId                    String?
   dateCreation                DateTime      @default(now())
   dateMiseAJour               DateTime      @updatedAt
@@ -1645,4 +1646,290 @@ model ScoringRatingBucket {
   updatedAt      DateTime @updatedAt
 
   @@map("scoring_rating_buckets")
+}
+
+// ============================================================================
+// V8 SECTORAL ADJUSTMENT LAYER
+// ============================================================================
+
+/// V8 sector master list (12 sectors)
+model V8Sector {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  label      String
+  orderIndex Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  domainWeights  V8SectorDomainWeight[]
+  stressTests    V8SectorStressTest[]
+  redFlags       V8SectorRedFlag[]
+  domainImpacts  V8SectorDomainImpact[]
+
+  @@map("BP_PF_v8_sectors")
+}
+
+/// Adjusted domain weights per sector (D1-D9, sum = 100 per sector)
+model V8SectorDomainWeight {
+  id             String   @id @default(cuid())
+  sectorId       String
+  domainCode     String   // D1..D9
+  weightAdjusted Float
+  createdAt      DateTime @default(now())
+
+  sector V8Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, domainCode])
+  @@index([sectorId])
+  @@map("BP_PF_v8_sector_domain_weights")
+}
+
+/// Sector-specific mandatory stress test scenarios
+model V8SectorStressTest {
+  id          String   @id @default(cuid())
+  sectorId    String
+  description String
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V8Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@index([sectorId])
+  @@map("BP_PF_v8_sector_stress_tests")
+}
+
+/// Sector-specific red flags (isNoGo = true means automatic No-Go trigger)
+model V8SectorRedFlag {
+  id          String   @id @default(cuid())
+  sectorId    String
+  description String
+  isNoGo      Boolean  @default(false)
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V8Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@index([sectorId])
+  @@map("BP_PF_v8_sector_red_flags")
+}
+
+/// Relative domain emphasis adjustments per sector (positive = focus more, negative = focus less)
+model V8SectorDomainImpact {
+  id         String   @id @default(cuid())
+  sectorId   String
+  domainCode String   // D1..D9
+  impact     Int      // e.g. +2, -1, 0
+  createdAt  DateTime @default(now())
+
+  sector V8Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, domainCode])
+  @@index([sectorId])
+  @@map("BP_PF_v8_sector_domain_impacts")
+}
+
+/// V8 integration rules / bonus-malus configuration
+model V8IntegrationRule {
+  id         String   @id @default(cuid())
+  rubrique   String
+  regle      String
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@map("BP_PF_v8_integration_rules")
+}
+
+// ============================================================================
+// V9 SCORING MODEL — SOCLE V7++ + 12 SECTORIAL LAYERS
+// ============================================================================
+
+/// Métadonnées du modèle V9 (tool_name PARAMÉTRABLE)
+model V9ScoringModel {
+  id           String   @id @default(uuid())
+  version      String   @unique
+  toolName     String
+  description  String?
+  socleVersion String   @default("V7++")
+  isActive     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("BP_PF_v9_scoring_models")
+}
+
+/// 12 secteurs Project Finance
+model V9Sector {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  label      String
+  orderIndex Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  thresholds    V9SectorThreshold[]
+  domainWeights V9SectorDomainWeight[]
+  redFlags      V9RedFlag[]
+  indicators    V9Indicator[]
+  stressTests   V9StressTest[]
+
+  @@map("BP_PF_v9_sectors")
+}
+
+/// Seuils DSCR / LLCR / Leverage différenciés par secteur (12×3×4 = 144)
+model V9SectorThreshold {
+  id        String   @id @default(uuid())
+  sectorId  String
+  ratioType String
+  level     String
+  minValue  Float?
+  maxValue  Float?
+  score     Float?
+  createdAt DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, ratioType, level])
+  @@index([sectorId])
+  @@map("BP_PF_v9_sector_thresholds")
+}
+
+/// Poids des 9 domaines ajustés par secteur (12×9 = 108)
+model V9SectorDomainWeight {
+  id             String   @id @default(uuid())
+  sectorId       String
+  domainCode     String
+  weightAdjusted Float
+  createdAt      DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, domainCode])
+  @@index([sectorId])
+  @@map("BP_PF_v9_sector_domain_weights")
+}
+
+/// Red flags nominatifs (8/secteur = 96)
+model V9RedFlag {
+  id          String   @id @default(uuid())
+  sectorId    String
+  code        String
+  description String
+  isNoGo      Boolean  @default(false)
+  penalty     Float?
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId])
+  @@map("BP_PF_v9_red_flags")
+}
+
+/// Indicateurs métier sectoriels (6/secteur = 72)
+model V9Indicator {
+  id          String   @id @default(uuid())
+  sectorId    String
+  code        String
+  label       String
+  unit        String?
+  targetValue String?
+  direction   String
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId])
+  @@map("BP_PF_v9_indicators")
+}
+
+/// Stress tests paramétrés par secteur (24)
+model V9StressTest {
+  id          String   @id @default(uuid())
+  sectorId    String
+  code        String
+  description String
+  variable    String?
+  shockPct    Float?
+  passDscrMin Float?
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  sector V9Sector @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([sectorId, code])
+  @@index([sectorId])
+  @@map("BP_PF_v9_stress_tests")
+}
+
+/// Barème malus-bonus formalisé
+model V9MalusBonus {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  scope         String
+  domainCode    String?
+  kind          String
+  condition     String
+  magnitude     String
+  capPerDomain  Float?
+  capGlobal     Float?
+  nonCumulGroup String?
+  rationale     String?
+  orderIndex    Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@map("BP_PF_v9_malus_bonus")
+}
+
+/// Matrice anti-double-comptage : 8 facteurs transversaux × 9 domaines (72)
+model V9AntiDoubleCount {
+  id          String   @id @default(uuid())
+  factorCode  String
+  factorLabel String
+  domainCode  String
+  arbitration String
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@unique([factorCode, domainCode])
+  @@index([factorCode])
+  @@map("BP_PF_v9_anti_double_count")
+}
+
+// ============================================================================
+// PARAMÉTRAGE GLOBAL APPLICATION
+// ============================================================================
+
+model AppConfiguration {
+  key         String   @id
+  value       String
+  type        String
+  category    String
+  description String?
+  isPublic    Boolean  @default(false)
+  metadata    String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  history AppConfigHistory[]
+
+  @@map("BP_PF_app_configuration")
+}
+
+model AppConfigHistory {
+  id        String   @id @default(uuid())
+  key       String
+  oldValue  String?
+  newValue  String
+  changedBy String?
+  changedAt DateTime @default(now())
+
+  config AppConfiguration @relation(fields: [key], references: [key], onDelete: Cascade)
+
+  @@index([key])
+  @@map("BP_PF_app_config_history")
 }

@@ -2,6 +2,12 @@
  * Field Configuration for CRUD Operations
  * Centralized configuration for all entity fields
  * Allows easy customization without changing component code
+ *
+ * IMPORTANT: every `name` below MUST match the corresponding column on the
+ * Prisma model (and the Zod validation schema) for the entity. The dynamic
+ * form renderer (DynamicEntityForm) binds inputs to formData[name] and the
+ * payload is sent verbatim to the API, so a mismatch silently drops the value
+ * on save. Keep this file in sync with prisma/schema.prisma + validation-schemas.ts.
  */
 
 export interface FieldConfig {
@@ -25,8 +31,40 @@ export interface FormSection {
   columns?: number; // 1 or 2 columns layout
 }
 
+// Shared option lists (kept here so dynamic + hardcoded forms agree)
+export const SECTOR_OPTIONS: { label: string; value: string }[] = [
+  { label: "Énergies renouvelables", value: "ENR" },
+  { label: "Eau / Dessalement", value: "EAU" },
+  { label: "Transport / Autoroutes", value: "TRA" },
+  { label: "Ports / Logistique", value: "POR" },
+  { label: "Industrie / Manufacturing", value: "IND" },
+  { label: "Mines / Extraction", value: "MIN" },
+  { label: "Tourisme / Hôtellerie", value: "TOU" },
+  { label: "Télécom / Data Centers", value: "TEL" },
+  { label: "Santé / Cliniques", value: "SAN" },
+  { label: "Agro-industrie", value: "AGR" },
+  { label: "Énergie thermique / Gaz", value: "ETH" },
+  { label: "Immobilier / Promotion structurée", value: "IMM" },
+];
+
+const PROJECT_STATUS_OPTIONS = [
+  { label: "Brouillon", value: "brouillon" },
+  { label: "En cours", value: "en_cours" },
+  { label: "En revue", value: "en_revue" },
+  { label: "Approuvé", value: "approuve" },
+  { label: "Rejeté", value: "rejete" },
+];
+
+const DEVISE_OPTIONS = [
+  { label: "MAD (Dirham)", value: "MAD" },
+  { label: "EUR (Euro)", value: "EUR" },
+  { label: "USD (Dollar)", value: "USD" },
+  { label: "GBP (Livre)", value: "GBP" },
+];
+
 // ============================================
 // CLIENTS CONFIGURATION
+// Field names map 1:1 to the Client model / createClientSchema.
 // ============================================
 export const CLIENT_SECTIONS: FormSection[] = [
   {
@@ -44,16 +82,21 @@ export const CLIENT_SECTIONS: FormSection[] = [
         placeholder: "Nom légal de l'entreprise",
       },
       {
-        name: "trade_name",
+        name: "raisonSociale",
+        label: "Raison Sociale (officielle)",
+        type: "text",
+        placeholder: "Dénomination légale",
+      },
+      {
+        name: "nomCommercial",
         label: "Nom Commercial",
         type: "text",
         placeholder: "Nom d'exploitation",
       },
       {
-        name: "type",
-        label: "Type de Client *",
+        name: "typeClient",
+        label: "Type de Client",
         type: "select",
-        required: true,
         options: [
           { label: "Société Privée", value: "Société Privée" },
           { label: "Entreprise Publique", value: "Entreprise Publique" },
@@ -63,13 +106,13 @@ export const CLIENT_SECTIONS: FormSection[] = [
         ],
       },
       {
-        name: "legal_form",
+        name: "formeJuridique",
         label: "Forme Juridique",
         type: "select",
         options: [
           { label: "SARL", value: "SARL" },
-          { label: "SAPM", value: "SAPM" },
           { label: "SA", value: "SA" },
+          { label: "SAS", value: "SAS" },
           { label: "SNC", value: "SNC" },
           { label: "Autre", value: "Autre" },
         ],
@@ -85,19 +128,12 @@ export const CLIENT_SECTIONS: FormSection[] = [
     fields: [
       {
         name: "secteur",
-        label: "Secteur Principal *",
+        label: "Secteur Principal",
         type: "text",
-        required: true,
         placeholder: "Ex: Énergie, Banque, Retail",
       },
       {
-        name: "sub_sector",
-        label: "Sous-Secteur",
-        type: "text",
-        placeholder: "Ex: Énergie Solaire",
-      },
-      {
-        name: "segment",
+        name: "segmentClientele",
         label: "Segment de Clientèle",
         type: "select",
         options: [
@@ -108,16 +144,22 @@ export const CLIENT_SECTIONS: FormSection[] = [
         ],
       },
       {
-        name: "employees",
+        name: "effectifs",
         label: "Nombre d'Employés",
         type: "number",
         placeholder: "Effectifs",
       },
       {
-        name: "capital_amount",
+        name: "capitalSocial",
         label: "Capital Social (MAD)",
         type: "number",
         placeholder: "Montant",
+      },
+      {
+        name: "chiffreAffaires",
+        label: "Chiffre d'Affaires (MAD)",
+        type: "number",
+        placeholder: "Montant annuel",
       },
     ],
   },
@@ -136,19 +178,19 @@ export const CLIENT_SECTIONS: FormSection[] = [
         placeholder: "Ex: Maroc",
       },
       {
-        name: "city",
+        name: "ville",
         label: "Ville",
         type: "text",
         placeholder: "Ex: Casablanca",
       },
       {
-        name: "address",
+        name: "adresse",
         label: "Adresse",
         type: "textarea",
         placeholder: "Adresse complète",
       },
       {
-        name: "postal_code",
+        name: "codePostal",
         label: "Code Postal",
         type: "text",
         placeholder: "Code postal",
@@ -180,12 +222,6 @@ export const CLIENT_SECTIONS: FormSection[] = [
         type: "text",
         placeholder: "https://exemple.com",
       },
-      {
-        name: "contact",
-        label: "Personne de Contact",
-        type: "text",
-        placeholder: "Nom du contact",
-      },
     ],
   },
   {
@@ -196,19 +232,19 @@ export const CLIENT_SECTIONS: FormSection[] = [
     columns: 2,
     fields: [
       {
-        name: "business_center",
+        name: "centreAffaires",
         label: "Centre d'Affaires",
         type: "text",
         placeholder: "Agence",
       },
       {
-        name: "account_manager",
+        name: "gestionnaire",
         label: "Chargé d'Affaires",
         type: "text",
         placeholder: "Nom du chargé",
       },
       {
-        name: "rating",
+        name: "ratingInterne",
         label: "Rating Interne",
         type: "select",
         options: [
@@ -220,7 +256,7 @@ export const CLIENT_SECTIONS: FormSection[] = [
         ],
       },
       {
-        name: "banking_status",
+        name: "statutBancaire",
         label: "Statut Bancaire",
         type: "select",
         options: [
@@ -230,12 +266,12 @@ export const CLIENT_SECTIONS: FormSection[] = [
         ],
       },
       {
-        name: "relationship_start_date",
+        name: "dateRelation",
         label: "Date Début Relation",
         type: "date",
       },
       {
-        name: "exposure",
+        name: "exposition",
         label: "Exposition Globale (MAD)",
         type: "number",
         placeholder: "Montant total",
@@ -250,7 +286,7 @@ export const CLIENT_SECTIONS: FormSection[] = [
     columns: 2,
     fields: [
       {
-        name: "kyc_status",
+        name: "statusKYC",
         label: "Statut KYC",
         type: "select",
         options: [
@@ -260,12 +296,7 @@ export const CLIENT_SECTIONS: FormSection[] = [
         ],
       },
       {
-        name: "kyc_last_update",
-        label: "Dernière Mise à Jour KYC",
-        type: "date",
-      },
-      {
-        name: "compliance_status",
+        name: "statusConformite",
         label: "Statut Conformité",
         type: "select",
         options: [
@@ -274,12 +305,24 @@ export const CLIENT_SECTIONS: FormSection[] = [
           { label: "Non Conforme", value: "Non Conforme" },
         ],
       },
+      {
+        name: "status",
+        label: "Statut",
+        type: "select",
+        options: [
+          { label: "Actif", value: "Actif" },
+          { label: "Inactif", value: "Inactif" },
+        ],
+      },
     ],
   },
 ];
 
 // ============================================
 // PROJECTS CONFIGURATION
+// Field names map 1:1 to the Project model / createProjectSchema and mirror
+// the hardcoded tabs in app/projects/new/page.tsx so dynamic and hardcoded
+// rendering produce the exact same payload.
 // ============================================
 export const PROJECT_SECTIONS: FormSection[] = [
   {
@@ -297,12 +340,6 @@ export const PROJECT_SECTIONS: FormSection[] = [
         placeholder: "Nom du projet",
       },
       {
-        name: "projectId",
-        label: "ID Projet",
-        type: "text",
-        placeholder: "Identifiant unique",
-      },
-      {
         name: "description",
         label: "Description",
         type: "textarea",
@@ -313,33 +350,19 @@ export const PROJECT_SECTIONS: FormSection[] = [
         label: "Secteur *",
         type: "select",
         required: true,
-        options: [
-          { label: "Énergie - Solaire", value: "Énergie - Solaire" },
-          { label: "Énergie - Éolien", value: "Énergie - Éolien" },
-          { label: "Énergie - Hydro", value: "Énergie - Hydro" },
-          { label: "Eau - Dessalement", value: "Eau - Dessalement" },
-          { label: "Infrastructure", value: "Infrastructure" },
-          { label: "Télécom", value: "Télécom" },
-          { label: "Industrie", value: "Industrie" },
-        ],
+        options: SECTOR_OPTIONS,
       },
       {
-        name: "sponsor",
-        label: "Sponsor",
-        type: "text",
-        placeholder: "Nom du sponsor",
+        name: "status",
+        label: "Statut",
+        type: "select",
+        options: PROJECT_STATUS_OPTIONS,
       },
       {
-        name: "spvName",
-        label: "Nom Commercial SPV",
+        name: "countryCode",
+        label: "Code Pays ISO",
         type: "text",
-        placeholder: "Société de projet",
-      },
-      {
-        name: "spvJurisdiction",
-        label: "Juridiction SPV",
-        type: "text",
-        placeholder: "Ex: Maroc",
+        placeholder: "MA, FR, etc.",
       },
     ],
   },
@@ -352,128 +375,149 @@ export const PROJECT_SECTIONS: FormSection[] = [
     fields: [
       {
         name: "pays",
-        label: "Pays *",
+        label: "Pays",
         type: "text",
-        required: true,
         placeholder: "Ex: Maroc",
-      },
-      {
-        name: "region",
-        label: "Région",
-        type: "text",
-        placeholder: "Ex: Grand Casablanca",
-      },
-      {
-        name: "city",
-        label: "Ville",
-        type: "text",
-        placeholder: "Ex: Casablanca",
-      },
-      {
-        name: "siteAddress",
-        label: "Adresse du Site",
-        type: "textarea",
-        placeholder: "Adresse complète du site",
-      },
-      {
-        name: "coordinates",
-        label: "Coordonnées GPS",
-        type: "text",
-        placeholder: "Latitude, Longitude",
-      },
-      {
-        name: "countryCode",
-        label: "Code Pays ISO",
-        type: "text",
-        placeholder: "MA",
       },
     ],
   },
   {
-    id: "stakeholders",
-    title: "Parties Prenantes",
-    description: "Acteurs principaux du projet",
-    icon: "Users",
+    id: "financing",
+    title: "Finances",
+    description: "Structure de financement",
+    icon: "DollarSign",
     columns: 2,
     fields: [
       {
-        name: "epcContractor",
-        label: "Constructeur EPC",
-        type: "text",
-        placeholder: "Entreprise de construction",
+        name: "montant",
+        label: "Montant (MAD)",
+        type: "number",
+        step: "0.01",
+        placeholder: "Montant du projet",
       },
       {
-        name: "omOperator",
-        label: "O&M Opérateur",
-        type: "text",
-        placeholder: "Opérateur de maintenance",
+        name: "devise",
+        label: "Devise",
+        type: "select",
+        options: DEVISE_OPTIONS,
       },
       {
-        name: "offtaker",
-        label: "Acheteur (Offtaker)",
-        type: "text",
-        placeholder: "Acheteur de l'énergie",
+        name: "coutTotal",
+        label: "Coût Total (MAD)",
+        type: "number",
+        step: "0.01",
+        placeholder: "Coût total",
       },
       {
-        name: "legalAdvisor",
-        label: "Conseiller Juridique",
-        type: "text",
-        placeholder: "Cabinet juridique",
+        name: "financement",
+        label: "Financement (MAD)",
+        type: "number",
+        step: "0.01",
+        placeholder: "Montant financé",
       },
       {
-        name: "technicalAdvisor",
-        label: "Conseiller Technique",
-        type: "text",
-        placeholder: "Expert technique",
+        name: "apportPropre",
+        label: "Apport Propre (MAD)",
+        type: "number",
+        step: "0.01",
+        placeholder: "Equity",
       },
       {
-        name: "insuranceAdvisor",
-        label: "Conseiller Assurance",
+        name: "taux",
+        label: "Taux (%)",
+        type: "number",
+        step: "0.01",
+        placeholder: "Ex: 4.5",
+      },
+      {
+        name: "typeCredit",
+        label: "Type de Crédit",
         type: "text",
-        placeholder: "Courtier en assurance",
+        placeholder: "Ex: Senior Debt",
+      },
+      {
+        name: "dureeCredit",
+        label: "Durée du Crédit (ans)",
+        type: "number",
+        placeholder: "Ex: 18",
+      },
+      {
+        name: "tauxCouverture",
+        label: "Taux de Couverture / DSCR",
+        type: "number",
+        step: "0.01",
+        placeholder: "Ex: 1.35",
+      },
+      {
+        name: "ratio",
+        label: "Ratio",
+        type: "number",
+        step: "0.01",
+        placeholder: "Ex: 1.2",
       },
     ],
   },
   {
     id: "technical",
-    title: "Caractéristiques Techniques",
-    description: "Spécifications techniques",
+    title: "Technique & Parties Prenantes",
+    description: "Spécifications techniques et acteurs",
     icon: "Zap",
     columns: 2,
     fields: [
       {
-        name: "technology",
+        name: "sponsorPrincipal",
+        label: "Sponsor Principal",
+        type: "text",
+        placeholder: "Nom du sponsor",
+      },
+      {
+        name: "nomSPV",
+        label: "Nom du SPV",
+        type: "text",
+        placeholder: "Société de projet",
+      },
+      {
+        name: "constructeurEPC",
+        label: "Constructeur EPC",
+        type: "text",
+        placeholder: "Entreprise de construction",
+      },
+      {
+        name: "operateurOM",
+        label: "Opérateur O&M",
+        type: "text",
+        placeholder: "Opérateur de maintenance",
+      },
+      {
+        name: "technologie",
         label: "Technologie",
         type: "text",
-        placeholder: "Ex: Énergie Solaire, Éolienne",
+        placeholder: "Ex: Solaire PV, Éolien",
       },
       {
-        name: "capacity",
-        label: "Capacité Installée",
-        type: "text",
-        placeholder: "Ex: 100 MW",
-      },
-      {
-        name: "capacityUnit",
-        label: "Unité Capacité",
-        type: "select",
-        options: [
-          { label: "MW", value: "MW" },
-          { label: "kW", value: "kW" },
-          { label: "MWh", value: "MWh" },
-        ],
-      },
-      {
-        name: "availabilityTarget",
-        label: "Facteur de disponibilité cible (%)",
+        name: "capaciteInstallee",
+        label: "Capacité Installée (MW)",
         type: "number",
-        placeholder: "90",
+        step: "0.1",
+        placeholder: "Ex: 100",
       },
       {
-        name: "designLife",
-        label: "Durée de vie nominale (ans)",
+        name: "dureeProjet",
+        label: "Durée du Projet (ans)",
         type: "number",
-        placeholder: "25",
+        placeholder: "Ex: 25",
+      },
+      {
+        name: "periodeAmorce",
+        label: "Période d'Amorce (ans)",
+        type: "number",
+        placeholder: "Ex: 2",
+      },
+      {
+        name: "periodeRemboursement",
+        label: "Période de Remboursement (ans)",
+        type: "number",
+        placeholder: "Ex: 18",
       },
     ],
   },
@@ -485,158 +529,29 @@ export const PROJECT_SECTIONS: FormSection[] = [
     columns: 2,
     fields: [
       {
-        name: "constructionStart",
+        name: "debutConstruction",
         label: "Début Construction",
         type: "date",
       },
       {
-        name: "constructionEnd",
+        name: "finConstruction",
         label: "Fin Construction",
         type: "date",
       },
-      {
-        name: "constructionDuration",
-        label: "Durée Construction (mois)",
-        type: "number",
-        placeholder: "36",
-      },
-      {
-        name: "codDate",
-        label: "Date COD (Mise en Service)",
-        type: "date",
-      },
-      {
-        name: "concessionEnd",
-        label: "Fin du Concession",
-        type: "date",
-      },
-      {
-        name: "operationalDuration",
-        label: "Durée Exploitation (ans)",
-        type: "number",
-        placeholder: "25",
-      },
-      {
-        name: "concessionDuration",
-        label: "Durée du Contrat (ans)",
-        type: "number",
-        placeholder: "30",
-      },
-      {
-        name: "omDuration",
-        label: "Durée O&M (ans)",
-        type: "number",
-        placeholder: "25",
-      },
     ],
   },
   {
-    id: "financing",
-    title: "Financement",
-    description: "Structure de financement",
-    icon: "DollarSign",
-    columns: 2,
+    id: "structure",
+    title: "Structure Capital",
+    description: "Structure capitalistique",
+    icon: "Users",
+    columns: 1,
     fields: [
       {
-        name: "totalCost",
-        label: "Coût Total (MAD)",
-        type: "number",
-        placeholder: "Montant total",
-      },
-      {
-        name: "montant",
-        label: "Montant Principal",
-        type: "number",
-        placeholder: "Montant du projet",
-      },
-      {
-        name: "devise",
-        label: "Devise",
-        type: "select",
-        options: [
-          { label: "MAD (Dirham)", value: "MAD" },
-          { label: "EUR (Euro)", value: "EUR" },
-          { label: "USD (Dollar)", value: "USD" },
-          { label: "GBP (Livre)", value: "GBP" },
-        ],
-      },
-      {
-        name: "equityAmount",
-        label: "Equity Amount (MAD)",
-        type: "number",
-        placeholder: "Montant equity",
-      },
-      {
-        name: "equityPercentage",
-        label: "Equity (%)",
-        type: "number",
-        placeholder: "20",
-      },
-      {
-        name: "debtAmount",
-        label: "Dette Senior (MAD)",
-        type: "number",
-        placeholder: "Montant de la dette",
-      },
-      {
-        name: "dscrMinimum",
-        label: "DSCR Minimum",
-        type: "number",
-        step: "0.01",
-        placeholder: "1.35",
-      },
-      {
-        name: "omCostAnnual",
-        label: "Coût O&M Annuel (MAD)",
-        type: "number",
-        placeholder: "Montant annuel",
-      },
-    ],
-  },
-  {
-    id: "insurance",
-    title: "Assurance & Garanties",
-    description: "Couverture et sécurités",
-    icon: "Shield",
-    columns: 2,
-    fields: [
-      {
-        name: "insuranceCoverage",
-        label: "Couverture Assurance",
-        type: "text",
-        placeholder: "Détails de la couverture",
-      },
-      {
-        name: "pledgedAssets",
-        label: "Actifs Nantis",
+        name: "structureCapitalePrincipale",
+        label: "Structure Capitale Principale",
         type: "textarea",
-        placeholder: "Détails des actifs",
-      },
-      {
-        name: "reserveAccounts",
-        label: "Comptes de Réserve",
-        type: "text",
-        placeholder: "Détails des réserves",
-      },
-    ],
-  },
-  {
-    id: "administration",
-    title: "Administration",
-    description: "Paramètres administratifs",
-    icon: "Settings",
-    columns: 2,
-    fields: [
-      {
-        name: "status",
-        label: "Statut",
-        type: "select",
-        options: [
-          { label: "Actif", value: "Actif" },
-          { label: "Inactif", value: "Inactif" },
-          { label: "Suspendu", value: "Suspendu" },
-          { label: "Terminé", value: "Terminé" },
-        ],
+        placeholder: "Description de la structure capitalistique",
       },
     ],
   },

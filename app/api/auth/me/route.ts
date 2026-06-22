@@ -44,8 +44,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
+      ...userDetails,
       success: true,
-      data: userDetails,
     });
   } catch (error) {
     console.error("[AUTH/ME] Erreur:", error);

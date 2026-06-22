@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { apiGet } from "@/lib/api-client";
 
 interface DiagnosticTest {
   name: string;
@@ -44,7 +45,7 @@ export default function DiagnosticPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/admin/diagnostic/full");
+      const response = await apiGet("/api/admin/diagnostic/full");
       const data = await response.json();
 
       if (response.status === 401) {

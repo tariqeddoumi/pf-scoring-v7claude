@@ -35,8 +35,8 @@ export class EvaluationService {
         rating: "D",
         recommendation: "APPROVE",
         probabilityOfDefault: 0,
-        triggeredNOGOs: [],
-        appliedMALUS: [],
+        triggeredNOGOs: [] as any,
+        appliedMALUS: [] as any,
         malusTotal: 0,
         status: "brouillon",
         version: "7.0",
@@ -49,7 +49,7 @@ export class EvaluationService {
   /**
    * Get evaluation by ID
    */
-  static async getEvaluationById(id: string, userId?: string) {
+  static async getEvaluationById(id: string, _userId?: string) {
     const evaluation = await prisma.evaluation.findUnique({
       where: { id },
       include: {
@@ -71,11 +71,11 @@ export class EvaluationService {
   static async getAllEvaluations(
     page: number = 1,
     limit: number = 50,
-    filters?: any
+    filters?: Record<string, unknown>
   ) {
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (filters?.status) where.status = filters.status;
     if (filters?.projectId) where.projectId = filters.projectId;
     if (filters?.analystId) where.analystId = filters.analystId;
@@ -113,7 +113,7 @@ export class EvaluationService {
   static async submitEvaluation(
     id: string,
     data: z.infer<typeof submitEvaluationSchema>,
-    submittedBy: string
+    _submittedBy: string
   ) {
     const validated = submitEvaluationSchema.parse(data);
 
@@ -151,7 +151,7 @@ export class EvaluationService {
   static async validateEvaluation(
     id: string,
     data: z.infer<typeof validateEvaluationSchema>,
-    validatedBy: string
+    _validatedBy: string
   ) {
     const validated = validateEvaluationSchema.parse(data);
 
@@ -194,7 +194,7 @@ export class EvaluationService {
   static async rejectEvaluation(
     id: string,
     data: z.infer<typeof rejectEvaluationSchema>,
-    rejectedBy: string
+    _rejectedBy: string
   ) {
     const validated = rejectEvaluationSchema.parse(data);
 
@@ -272,8 +272,8 @@ export class EvaluationService {
    */
   static async createStressTest(
     evaluationId: string,
-    scenarioData: any,
-    createdBy: string
+    scenarioData: Record<string, unknown>,
+    _createdBy: string
   ) {
     const evaluation = await prisma.evaluation.findUnique({
       where: { id: evaluationId },
@@ -286,14 +286,14 @@ export class EvaluationService {
     const stressTest = await prisma.stressTestScenarioResult.create({
       data: {
         evaluationId,
-        scenarioId: scenarioData.scenarioId,
-        scenarioName: scenarioData.scenarioName,
-        dscrBase: scenarioData.dscrBase,
-        dscrStress: scenarioData.dscrStress,
-        llcrStress: scenarioData.llcrStress,
-        status: scenarioData.status,
-        margin: scenarioData.margin,
-        notes: scenarioData.notes,
+        scenarioId: scenarioData.scenarioId as string,
+        scenarioName: scenarioData.scenarioName as string,
+        dscrBase: scenarioData.dscrBase as number,
+        dscrStress: scenarioData.dscrStress as number,
+        llcrStress: scenarioData.llcrStress as number,
+        status: scenarioData.status as string,
+        margin: (scenarioData.margin as number | null | undefined) ?? 0,
+        notes: (scenarioData.notes as string | null | undefined) || null,
       },
     });
 

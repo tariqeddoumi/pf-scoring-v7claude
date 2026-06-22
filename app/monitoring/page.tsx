@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle, Clock, BarChart3 } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
 
 interface ProjectMonitoring {
   id: string;
@@ -24,7 +25,7 @@ export default function MonitoringPage() {
     const fetchProjects = async () => {
       try {
         // Fetch only approved/active projects for monitoring
-        const res = await fetch("/api/projects?limit=100");
+        const res = await apiGet("/api/projects?limit=100");
         if (res.ok) {
           const data = await res.json();
           const allProjects: ProjectMonitoring[] = data.data || [];

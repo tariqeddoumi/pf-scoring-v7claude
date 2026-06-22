@@ -17,6 +17,7 @@ import NodeModal from "@/components/scoring/NodeModal";
 import OptionModal from "@/components/scoring/OptionModal";
 import RangeModal from "@/components/scoring/RangeModal";
 import { ModelConfigurationPanel } from "@/components/admin/ModelConfigurationPanel";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 
 interface ScoringOption {
   id: string;
@@ -82,17 +83,17 @@ export default function ScoringBuilderPage() {
 
   // Modal states
   const [nodeModalOpen, setNodeModalOpen] = useState(false);
-  const [nodeModalData, setNodeModalData] = useState<any>(null);
+  const [nodeModalData, setNodeModalData] = useState<Partial<ScoringNode> | undefined>(undefined);
   const [nodeModalType, setNodeModalType] = useState<"DOMAIN" | "CRITERION">("DOMAIN");
   const [selectedDomainId, setSelectedDomainId] = useState("");
 
   const [optionModalOpen, setOptionModalOpen] = useState(false);
-  const [optionModalData, setOptionModalData] = useState<any>(null);
+  const [optionModalData, setOptionModalData] = useState<Partial<ScoringOption> | undefined>(undefined);
   const [selectedCriterionId, setSelectedCriterionId] = useState("");
   const [selectedCriterionCode, setSelectedCriterionCode] = useState("");
 
   const [rangeModalOpen, setRangeModalOpen] = useState(false);
-  const [rangeModalData, setRangeModalData] = useState<any>(null);
+  const [rangeModalData, setRangeModalData] = useState<Partial<ScoringRange> | undefined>(undefined);
 
   useEffect(() => {
     loadModel();
@@ -100,14 +101,14 @@ export default function ScoringBuilderPage() {
 
   const openCreateDomainModal = () => {
     setNodeModalType("DOMAIN");
-    setNodeModalData(null);
+    setNodeModalData(undefined);
     setSelectedDomainId("");
     setNodeModalOpen(true);
   };
 
   const openCreateCriterionModal = (domainId: string) => {
     setNodeModalType("CRITERION");
-    setNodeModalData(null);
+    setNodeModalData(undefined);
     setSelectedDomainId(domainId);
     setNodeModalOpen(true);
   };
@@ -121,14 +122,10 @@ export default function ScoringBuilderPage() {
     setNodeModalOpen(true);
   };
 
-  const handleNodeSubmit = async (data: any) => {
+  const handleNodeSubmit = async (data: Record<string, unknown>) => {
     if (nodeModalData?.id) {
       // Edit
-      const res = await fetch(`/api/admin/scoring/nodes?nodeId=${nodeModalData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await apiPut(`/api/admin/scoring/nodes?nodeId=${nodeModalData.id}`, data);
 
       if (!res.ok) {
         const err = await res.json();
@@ -145,11 +142,7 @@ export default function ScoringBuilderPage() {
         orderIndex: 0,
       };
 
-      const res = await fetch("/api/admin/scoring/nodes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiPost("/api/admin/scoring/nodes", payload);
 
       if (!res.ok) {
         const err = await res.json();
@@ -163,7 +156,7 @@ export default function ScoringBuilderPage() {
   const openCreateOptionModal = (criterionId: string, criterionCode: string) => {
     setSelectedCriterionId(criterionId);
     setSelectedCriterionCode(criterionCode);
-    setOptionModalData(null);
+    setOptionModalData(undefined);
     setOptionModalOpen(true);
   };
 
@@ -174,14 +167,10 @@ export default function ScoringBuilderPage() {
     setOptionModalOpen(true);
   };
 
-  const handleOptionSubmit = async (data: any) => {
+  const handleOptionSubmit = async (data: Record<string, unknown>) => {
     if (optionModalData?.id) {
       // Edit
-      const res = await fetch(`/api/admin/scoring/options?optionId=${optionModalData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await apiPut(`/api/admin/scoring/options?optionId=${optionModalData.id}`, data);
 
       if (!res.ok) {
         const err = await res.json();
@@ -194,11 +183,7 @@ export default function ScoringBuilderPage() {
         nodeId: selectedCriterionId,
       };
 
-      const res = await fetch("/api/admin/scoring/options", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiPost("/api/admin/scoring/options", payload);
 
       if (!res.ok) {
         const err = await res.json();
@@ -212,7 +197,7 @@ export default function ScoringBuilderPage() {
   const openCreateRangeModal = (criterionId: string, criterionCode: string) => {
     setSelectedCriterionId(criterionId);
     setSelectedCriterionCode(criterionCode);
-    setRangeModalData(null);
+    setRangeModalData(undefined);
     setRangeModalOpen(true);
   };
 
@@ -223,14 +208,10 @@ export default function ScoringBuilderPage() {
     setRangeModalOpen(true);
   };
 
-  const handleRangeSubmit = async (data: any) => {
+  const handleRangeSubmit = async (data: Record<string, unknown>) => {
     if (rangeModalData?.id) {
       // Edit
-      const res = await fetch(`/api/admin/scoring/ranges?rangeId=${rangeModalData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await apiPut(`/api/admin/scoring/ranges?rangeId=${rangeModalData.id}`, data);
 
       if (!res.ok) {
         const err = await res.json();
@@ -243,11 +224,7 @@ export default function ScoringBuilderPage() {
         nodeId: selectedCriterionId,
       };
 
-      const res = await fetch("/api/admin/scoring/ranges", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiPost("/api/admin/scoring/ranges", payload);
 
       if (!res.ok) {
         const err = await res.json();
@@ -261,7 +238,7 @@ export default function ScoringBuilderPage() {
   const loadModel = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/scoring/questionnaire");
+      const res = await apiGet("/api/scoring/questionnaire");
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error || "Erreur chargement");
@@ -275,8 +252,8 @@ export default function ScoringBuilderPage() {
       });
       const ids = new Set<string>((data.data || []).map((d: ScoringNode) => d.id));
       setExpandedDomains(ids);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -287,9 +264,7 @@ export default function ScoringBuilderPage() {
 
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/scoring/nodes?nodeId=${nodeId}`, {
-        method: "DELETE",
-      });
+      const res = await apiDelete(`/api/admin/scoring/nodes?nodeId=${nodeId}`);
 
       if (!res.ok) {
         const d = await res.json();
@@ -297,8 +272,8 @@ export default function ScoringBuilderPage() {
       }
 
       await loadModel();
-    } catch (e: any) {
-      alert(`Erreur: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Erreur: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setSaving(false);
     }
@@ -309,9 +284,7 @@ export default function ScoringBuilderPage() {
 
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/scoring/options?optionId=${optionId}`, {
-        method: "DELETE",
-      });
+      const res = await apiDelete(`/api/admin/scoring/options?optionId=${optionId}`);
 
       if (!res.ok) {
         const d = await res.json();
@@ -319,8 +292,8 @@ export default function ScoringBuilderPage() {
       }
 
       await loadModel();
-    } catch (e: any) {
-      alert(`Erreur: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Erreur: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setSaving(false);
     }
@@ -331,9 +304,7 @@ export default function ScoringBuilderPage() {
 
     try {
       setSaving(true);
-      const res = await fetch(`/api/admin/scoring/ranges?rangeId=${rangeId}`, {
-        method: "DELETE",
-      });
+      const res = await apiDelete(`/api/admin/scoring/ranges?rangeId=${rangeId}`);
 
       if (!res.ok) {
         const d = await res.json();
@@ -341,8 +312,8 @@ export default function ScoringBuilderPage() {
       }
 
       await loadModel();
-    } catch (e: any) {
-      alert(`Erreur: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Erreur: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setSaving(false);
     }
@@ -695,7 +666,15 @@ export default function ScoringBuilderPage() {
       <NodeModal
         isOpen={nodeModalOpen}
         nodeType={nodeModalType}
-        initialData={nodeModalData}
+        initialData={nodeModalData && 'code' in nodeModalData && 'label' in nodeModalData && typeof nodeModalData.code === 'string' && typeof nodeModalData.label === 'string' ? {
+          id: nodeModalData.id,
+          code: nodeModalData.code,
+          label: nodeModalData.label,
+          shortLabel: nodeModalData.shortLabel,
+          description: nodeModalData.description,
+          weight: nodeModalData.weight,
+          answerType: nodeModalData.answerType,
+        } : undefined}
         parentDomainCode={selectedDomainId ? questionnaire.find(d => d.id === selectedDomainId)?.code : undefined}
         onClose={() => setNodeModalOpen(false)}
         onSubmit={handleNodeSubmit}
@@ -705,7 +684,12 @@ export default function ScoringBuilderPage() {
       <OptionModal
         isOpen={optionModalOpen}
         criterionCode={selectedCriterionCode}
-        initialData={optionModalData}
+        initialData={optionModalData && 'label' in optionModalData && 'score' in optionModalData && typeof optionModalData.label === 'string' && typeof optionModalData.score === 'number' ? {
+          id: optionModalData.id,
+          label: optionModalData.label,
+          score: optionModalData.score,
+          description: undefined,
+        } : undefined}
         onClose={() => setOptionModalOpen(false)}
         onSubmit={handleOptionSubmit}
       />
@@ -713,7 +697,13 @@ export default function ScoringBuilderPage() {
       <RangeModal
         isOpen={rangeModalOpen}
         criterionCode={selectedCriterionCode}
-        initialData={rangeModalData}
+        initialData={rangeModalData && 'minValue' in rangeModalData && 'maxValue' in rangeModalData && 'score' in rangeModalData && typeof rangeModalData.minValue === 'number' && typeof rangeModalData.maxValue === 'number' && typeof rangeModalData.score === 'number' ? {
+          id: rangeModalData.id,
+          minValue: rangeModalData.minValue,
+          maxValue: rangeModalData.maxValue,
+          score: rangeModalData.score,
+          label: rangeModalData.label,
+        } : undefined}
         onClose={() => setRangeModalOpen(false)}
         onSubmit={handleRangeSubmit}
       />

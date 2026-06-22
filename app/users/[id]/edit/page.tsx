@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Loader2, Shield, Mail } from "lucide-react";
 import { Accordion, AccordionItem } from "@/components/ui/Accordion";
+import { apiGet, apiPut } from "@/lib/api-client";
 
 interface User {
   id: string;
@@ -41,7 +42,7 @@ export default function EditUserPage({
       try {
         const { id } = await params;
         setUserId(id);
-        const response = await fetch(`/api/users/${id}`);
+        const response = await apiGet(`/api/users/${id}`);
         if (!response.ok) throw new Error("Échec du chargement de l'utilisateur");
         const data = await response.json();
         const user = data.data || data;
@@ -113,13 +114,7 @@ export default function EditUserPage({
         updateData.password = formData.password;
       }
 
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
+      const response = await apiPut(`/api/users/${userId}`, updateData);
 
       const data = await response.json();
 

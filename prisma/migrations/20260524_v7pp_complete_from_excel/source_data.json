@@ -1,0 +1,3872 @@
+{
+  "domains": [
+    {
+      "code": "D1",
+      "label": "Sponsor & Shareholders",
+      "weight": 10.0,
+      "order": 1
+    },
+    {
+      "code": "D2",
+      "label": "Project Characteristics",
+      "weight": 10.0,
+      "order": 2
+    },
+    {
+      "code": "D3",
+      "label": "Construction Risk",
+      "weight": 15.0,
+      "order": 3
+    },
+    {
+      "code": "D4",
+      "label": "Market Risk",
+      "weight": 10.0,
+      "order": 4
+    },
+    {
+      "code": "D5",
+      "label": "Operational Risk",
+      "weight": 10.0,
+      "order": 5
+    },
+    {
+      "code": "D6",
+      "label": "Counterparty Risk",
+      "weight": 10.0,
+      "order": 6
+    },
+    {
+      "code": "D7",
+      "label": "Financial Structure & Cash Flow",
+      "weight": 15.0,
+      "order": 7
+    },
+    {
+      "code": "D8",
+      "label": "Legal & Documentation",
+      "weight": 10.0,
+      "order": 8
+    },
+    {
+      "code": "D9",
+      "label": "ESG & Climate Risk",
+      "weight": 10.0,
+      "order": 9
+    }
+  ],
+  "subcriteria": [
+    {
+      "code": "D1_SC1",
+      "parent_code": "D1",
+      "label": "Sponsor Strength",
+      "weight": 50.0,
+      "order": 1
+    },
+    {
+      "code": "D1_SC2",
+      "parent_code": "D1",
+      "label": "Shareholder Structure",
+      "weight": 30.0,
+      "order": 2
+    },
+    {
+      "code": "D1_SC3",
+      "parent_code": "D1",
+      "label": "Governance",
+      "weight": 20.0,
+      "order": 3
+    },
+    {
+      "code": "D2_SC1",
+      "parent_code": "D2",
+      "label": "Technical Complexity",
+      "weight": 40.0,
+      "order": 1
+    },
+    {
+      "code": "D2_SC2",
+      "parent_code": "D2",
+      "label": "Location Risk",
+      "weight": 30.0,
+      "order": 2
+    },
+    {
+      "code": "D2_SC3",
+      "parent_code": "D2",
+      "label": "Project Size & Structure",
+      "weight": 30.0,
+      "order": 3
+    },
+    {
+      "code": "D3_SC1",
+      "parent_code": "D3",
+      "label": "EPC Completion Risk",
+      "weight": 40.0,
+      "order": 1
+    },
+    {
+      "code": "D3_SC2",
+      "parent_code": "D3",
+      "label": "Interfaces Risk",
+      "weight": 30.0,
+      "order": 2
+    },
+    {
+      "code": "D3_SC3",
+      "parent_code": "D3",
+      "label": "Insurance Coverage",
+      "weight": 30.0,
+      "order": 3
+    },
+    {
+      "code": "D4_SC1",
+      "parent_code": "D4",
+      "label": "Demand Risk",
+      "weight": 40.0,
+      "order": 1
+    },
+    {
+      "code": "D4_SC2",
+      "parent_code": "D4",
+      "label": "Price Risk",
+      "weight": 30.0,
+      "order": 2
+    },
+    {
+      "code": "D4_SC3",
+      "parent_code": "D4",
+      "label": "Competition",
+      "weight": 30.0,
+      "order": 3
+    },
+    {
+      "code": "D5_SC1",
+      "parent_code": "D5",
+      "label": "O&M Capability",
+      "weight": 40.0,
+      "order": 1
+    },
+    {
+      "code": "D5_SC2",
+      "parent_code": "D5",
+      "label": "Operational Stability",
+      "weight": 30.0,
+      "order": 2
+    },
+    {
+      "code": "D5_SC3",
+      "parent_code": "D5",
+      "label": "Cost Control",
+      "weight": 30.0,
+      "order": 3
+    },
+    {
+      "code": "D6_SC1",
+      "parent_code": "D6",
+      "label": "Offtaker Risk",
+      "weight": 40.0,
+      "order": 1
+    },
+    {
+      "code": "D6_SC2",
+      "parent_code": "D6",
+      "label": "Supplier Risk",
+      "weight": 30.0,
+      "order": 2
+    },
+    {
+      "code": "D6_SC3",
+      "parent_code": "D6",
+      "label": "Financial Partners",
+      "weight": 30.0,
+      "order": 3
+    },
+    {
+      "code": "D7_SC1",
+      "parent_code": "D7",
+      "label": "Financial Structure",
+      "weight": 35.0,
+      "order": 1
+    },
+    {
+      "code": "D7_SC2",
+      "parent_code": "D7",
+      "label": "Cash Flow Predictability",
+      "weight": 30.0,
+      "order": 2
+    },
+    {
+      "code": "D7_SC3",
+      "parent_code": "D7",
+      "label": "Debt Service Capacity",
+      "weight": 35.0,
+      "order": 3
+    },
+    {
+      "code": "D8_SC1",
+      "parent_code": "D8",
+      "label": "Contractual Framework",
+      "weight": 40.0,
+      "order": 1
+    },
+    {
+      "code": "D8_SC2",
+      "parent_code": "D8",
+      "label": "Security Package",
+      "weight": 35.0,
+      "order": 2
+    },
+    {
+      "code": "D8_SC3",
+      "parent_code": "D8",
+      "label": "Legal Environment",
+      "weight": 25.0,
+      "order": 3
+    },
+    {
+      "code": "D9_SC1",
+      "parent_code": "D9",
+      "label": "Environmental",
+      "weight": 30.0,
+      "order": 1
+    },
+    {
+      "code": "D9_SC2",
+      "parent_code": "D9",
+      "label": "Social",
+      "weight": 20.0,
+      "order": 2
+    },
+    {
+      "code": "D9_SC3",
+      "parent_code": "D9",
+      "label": "Governance",
+      "weight": 20.0,
+      "order": 3
+    },
+    {
+      "code": "D9_SC4",
+      "parent_code": "D9",
+      "label": "Climate Risk",
+      "weight": 30.0,
+      "order": 4
+    }
+  ],
+  "subsubcriteria": [
+    {
+      "code": "D1_SC1_SSC1",
+      "parent_code": "D1_SC1",
+      "label": "Expérience sectorielle",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "Nombre de projets similaires, années d’expérience, taille des projets réalisés, conformité aux délais/budgets.",
+      "indicator_type": "Quantitatif + Qualitatif",
+      "thresholds": ">10 ans d’expérience ou >5 projets similaires réussis ; aucun échec majeur documenté.",
+      "sources": "Références sponsor, rapports annuels, due diligence technique, presse spécialisée."
+    },
+    {
+      "code": "D1_SC1_SSC2",
+      "parent_code": "D1_SC1",
+      "label": "Track record PF",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "Respect délais, respect budget, performance opérationnelle, absence de défaut.",
+      "indicator_type": "Quantitatif + Qualitatif",
+      "thresholds": "Dépassement budget <5%, retard <3 mois, aucun défaut projet.",
+      "sources": "Rapports projets, audits techniques, reporting prêteurs."
+    },
+    {
+      "code": "D1_SC1_SSC3",
+      "parent_code": "D1_SC1",
+      "label": "Solidité financière",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "Rating, gearing, EBITDA, liquidité, cash-flow, capacité d’injection equity.",
+      "indicator_type": "Quantitatif",
+      "thresholds": "Investment Grade ; gearing faible ; liquidité suffisante ; EBITDA stable.",
+      "sources": "États financiers audités, rating, analyse interne banque."
+    },
+    {
+      "code": "D1_SC2_SSC1",
+      "parent_code": "D1_SC2",
+      "label": "Répartition capital",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "Parts capital, droits de vote, pacte d’actionnaires.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Sponsor principal ≥50% ou contrôle clair ; pacte stable.",
+      "sources": "Registre commerce, statuts, pacte d’actionnaires."
+    },
+    {
+      "code": "D1_SC2_SSC2",
+      "parent_code": "D1_SC2",
+      "label": "Alignement intérêts",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "Equity investi, clauses de lock-up, obligations de support.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Equity significatif, lock-up, support agreement ferme.",
+      "sources": "Pacte d’actionnaires, term sheet, contrats de financement."
+    },
+    {
+      "code": "D1_SC2_SSC3",
+      "parent_code": "D1_SC2",
+      "label": "Engagement long terme",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "Lock-up, sponsor support, obligations equity.",
+      "indicator_type": "Qualitatif",
+      "thresholds": "Lock-up ≥ durée construction + ramp-up ; support ferme.",
+      "sources": "Pacte actionnaires, shareholder support agreement."
+    },
+    {
+      "code": "D1_SC3_SSC1",
+      "parent_code": "D1_SC3",
+      "label": "Structure décisionnelle",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "Comité projet, CA SPV, délégations, procédures.",
+      "indicator_type": "Qualitatif",
+      "thresholds": "Comités formalisés, seuils décisionnels, reporting régulier.",
+      "sources": "Statuts SPV, organigramme, procédures internes."
+    },
+    {
+      "code": "D1_SC3_SSC2",
+      "parent_code": "D1_SC3",
+      "label": "Transparence",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "Qualité data room, audits, reporting.",
+      "indicator_type": "Qualitatif",
+      "thresholds": "Data room complète ; comptes audités ; absence incohérence.",
+      "sources": "Data room, états financiers audités, DD."
+    },
+    {
+      "code": "D1_SC3_SSC3",
+      "parent_code": "D1_SC3",
+      "label": "Reporting",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "Fréquence, contenu, KPI, audits.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Mensuel pendant construction ; trimestriel exploitation ; KPI complets.",
+      "sources": "Contrats financement, procédures reporting."
+    },
+    {
+      "code": "D2_SC1_SSC1",
+      "parent_code": "D2_SC1",
+      "label": "Technologie",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D2_SC1_SSC2",
+      "parent_code": "D2_SC1",
+      "label": "Maturité technique",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D2_SC1_SSC3",
+      "parent_code": "D2_SC1",
+      "label": "Innovation",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D2_SC2_SSC1",
+      "parent_code": "D2_SC2",
+      "label": "Pays",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D2_SC2_SSC2",
+      "parent_code": "D2_SC2",
+      "label": "Site",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D2_SC2_SSC3",
+      "parent_code": "D2_SC2",
+      "label": "Accès infrastructure",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D2_SC3_SSC1",
+      "parent_code": "D2_SC3",
+      "label": "Taille CAPEX",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D2_SC3_SSC2",
+      "parent_code": "D2_SC3",
+      "label": "Complexité structure",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D2_SC3_SSC3",
+      "parent_code": "D2_SC3",
+      "label": "Planning",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D3_SC1_SSC1",
+      "parent_code": "D3_SC1",
+      "label": "Type contrat EPC",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "Prix fixe, scope, délai, LDs, performance tests.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Prix fixe ; LDs >10% CAPEX ; scope complet.",
+      "sources": "Contrat EPC, legal DD."
+    },
+    {
+      "code": "D3_SC1_SSC2",
+      "parent_code": "D3_SC1",
+      "label": "Expérience EPC",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "Projets similaires, rating, états financiers, litiges.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": ">5 projets similaires ; rating solide ; aucun litige majeur récent.",
+      "sources": "Due diligence technique, états financiers EPC."
+    },
+    {
+      "code": "D3_SC1_SSC3",
+      "parent_code": "D3_SC1",
+      "label": "Garanties performance",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "LDs, PCG, performance bond, caps.",
+      "indicator_type": "Quantitatif + Qualitatif",
+      "thresholds": "LDs >10% CAPEX + performance bond/PCG.",
+      "sources": "Contrat EPC, legal DD."
+    },
+    {
+      "code": "D3_SC2_SSC1",
+      "parent_code": "D3_SC2",
+      "label": "Complexité interfaces",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D3_SC2_SSC2",
+      "parent_code": "D3_SC2",
+      "label": "Coordinateur",
+      "weight": 40.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D3_SC2_SSC3",
+      "parent_code": "D3_SC2",
+      "label": "Gouvernance projet",
+      "weight": 20.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D3_SC3_SSC1",
+      "parent_code": "D3_SC3",
+      "label": "Type polices",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D3_SC3_SSC2",
+      "parent_code": "D3_SC3",
+      "label": "Couverture CAPEX",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "Montant assuré, dette couverte, valeur garantie.",
+      "indicator_type": "Quantitatif",
+      "thresholds": ">95% CAPEX ou >120% dette selon le cas.",
+      "sources": "Polices assurance, valorisation garanties."
+    },
+    {
+      "code": "D3_SC3_SSC3",
+      "parent_code": "D3_SC3",
+      "label": "Qualité assureur",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC1_SSC1",
+      "parent_code": "D4_SC1",
+      "label": "Stabilité demande",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC1_SSC2",
+      "parent_code": "D4_SC1",
+      "label": "Prévisions marché",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC1_SSC3",
+      "parent_code": "D4_SC1",
+      "label": "Sensibilité économique",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC2_SSC1",
+      "parent_code": "D4_SC2",
+      "label": "Volatilité prix",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC2_SSC2",
+      "parent_code": "D4_SC2",
+      "label": "Indexation",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC2_SSC3",
+      "parent_code": "D4_SC2",
+      "label": "Mécanisme pricing",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC3_SSC1",
+      "parent_code": "D4_SC3",
+      "label": "Intensité concurrentielle",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC3_SSC2",
+      "parent_code": "D4_SC3",
+      "label": "Barrières entrée",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D4_SC3_SSC3",
+      "parent_code": "D4_SC3",
+      "label": "Positionnement projet",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC1_SSC1",
+      "parent_code": "D5_SC1",
+      "label": "Expérience opérateur",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC1_SSC2",
+      "parent_code": "D5_SC1",
+      "label": "Performance historique",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC1_SSC3",
+      "parent_code": "D5_SC1",
+      "label": "Ressources techniques",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC2_SSC1",
+      "parent_code": "D5_SC2",
+      "label": "Fiabilité opérations",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC2_SSC2",
+      "parent_code": "D5_SC2",
+      "label": "Maintenance",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC2_SSC3",
+      "parent_code": "D5_SC2",
+      "label": "Dépendance fournisseurs",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC3_SSC1",
+      "parent_code": "D5_SC3",
+      "label": "Structure coûts",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC3_SSC2",
+      "parent_code": "D5_SC3",
+      "label": "Sensibilité inflation",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D5_SC3_SSC3",
+      "parent_code": "D5_SC3",
+      "label": "Capacité optimisation",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D6_SC1_SSC1",
+      "parent_code": "D6_SC1",
+      "label": "Qualité crédit",
+      "weight": 50.0,
+      "order": 1,
+      "indicators": "Rating, solvabilité, liquidité, historique paiement.",
+      "indicator_type": "Quantitatif + Qualitatif",
+      "thresholds": "Rating ≥BBB- ou équivalent interne fort ; aucun retard significatif.",
+      "sources": "Agences rating, états financiers, base interne."
+    },
+    {
+      "code": "D6_SC1_SSC2",
+      "parent_code": "D6_SC1",
+      "label": "Historique paiement",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D6_SC1_SSC3",
+      "parent_code": "D6_SC1",
+      "label": "Dépendance projet",
+      "weight": 20.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D6_SC2_SSC1",
+      "parent_code": "D6_SC2",
+      "label": "Fiabilité fournisseurs",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D6_SC2_SSC2",
+      "parent_code": "D6_SC2",
+      "label": "Diversification",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D6_SC2_SSC3",
+      "parent_code": "D6_SC2",
+      "label": "Risque supply chain",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D6_SC3_SSC1",
+      "parent_code": "D6_SC3",
+      "label": "Qualité prêteurs",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D6_SC3_SSC2",
+      "parent_code": "D6_SC3",
+      "label": "Structure financement",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D6_SC3_SSC3",
+      "parent_code": "D6_SC3",
+      "label": "Alignement intérêts",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D7_SC1_SSC1",
+      "parent_code": "D7_SC1",
+      "label": "Leverage",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "Debt/Equity, equity %, gearing projet.",
+      "indicator_type": "Quantitatif",
+      "thresholds": "D/E ≤70/30 ou equity ≥30%.",
+      "sources": "Term sheet, financial model."
+    },
+    {
+      "code": "D7_SC1_SSC2",
+      "parent_code": "D7_SC1",
+      "label": "Support sponsor",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D7_SC1_SSC3",
+      "parent_code": "D7_SC1",
+      "label": "Réserves",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D7_SC2_SSC1",
+      "parent_code": "D7_SC2",
+      "label": "Visibilité revenus",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D7_SC2_SSC2",
+      "parent_code": "D7_SC2",
+      "label": "Price risk",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D7_SC2_SSC3",
+      "parent_code": "D7_SC2",
+      "label": "Volume risk",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D7_SC3_SSC1",
+      "parent_code": "D7_SC3",
+      "label": "DSCR",
+      "weight": 50.0,
+      "order": 1,
+      "indicators": "DSCR min, DSCR moyen, DSCR stressé.",
+      "indicator_type": "Quantitatif",
+      "thresholds": "DSCR min ≥1.30x et DSCR moyen ≥1.40x.",
+      "sources": "Financial model audité, sensibilité banque."
+    },
+    {
+      "code": "D7_SC3_SSC2",
+      "parent_code": "D7_SC3",
+      "label": "LLCR",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "LLCR, valeur actuelle CFADS, dette restante.",
+      "indicator_type": "Quantitatif",
+      "thresholds": "LLCR ≥1.50x.",
+      "sources": "Financial model."
+    },
+    {
+      "code": "D7_SC3_SSC3",
+      "parent_code": "D7_SC3",
+      "label": "Stress resilience",
+      "weight": 20.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D8_SC1_SSC1",
+      "parent_code": "D8_SC1",
+      "label": "Complétude contrats",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D8_SC1_SSC2",
+      "parent_code": "D8_SC1",
+      "label": "Bankability",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D8_SC1_SSC3",
+      "parent_code": "D8_SC1",
+      "label": "Direct agreements",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D8_SC2_SSC1",
+      "parent_code": "D8_SC2",
+      "label": "Type garanties",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D8_SC2_SSC2",
+      "parent_code": "D8_SC2",
+      "label": "Enforceability",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D8_SC2_SSC3",
+      "parent_code": "D8_SC2",
+      "label": "Couverture",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "Montant assuré, dette couverte, valeur garantie.",
+      "indicator_type": "Quantitatif",
+      "thresholds": ">95% CAPEX ou >120% dette selon le cas.",
+      "sources": "Polices assurance, valorisation garanties."
+    },
+    {
+      "code": "D8_SC3_SSC1",
+      "parent_code": "D8_SC3",
+      "label": "Stabilité réglementaire",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D8_SC3_SSC2",
+      "parent_code": "D8_SC3",
+      "label": "Autorisations",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "Permis, EIE, licences, conformité réglementaire.",
+      "indicator_type": "Qualitatif",
+      "thresholds": "100% documents critiques obtenus ; aucune réserve majeure.",
+      "sources": "Autorisations, EIE, legal DD."
+    },
+    {
+      "code": "D8_SC3_SSC3",
+      "parent_code": "D8_SC3",
+      "label": "Litiges",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC1_SSC1",
+      "parent_code": "D9_SC1",
+      "label": "Impact environnemental",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC1_SSC2",
+      "parent_code": "D9_SC1",
+      "label": "Conformité",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "Permis, EIE, licences, conformité réglementaire.",
+      "indicator_type": "Qualitatif",
+      "thresholds": "100% documents critiques obtenus ; aucune réserve majeure.",
+      "sources": "Autorisations, EIE, legal DD."
+    },
+    {
+      "code": "D9_SC1_SSC3",
+      "parent_code": "D9_SC1",
+      "label": "Efficience ressources",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC2_SSC1",
+      "parent_code": "D9_SC2",
+      "label": "Impact communautés",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC2_SSC2",
+      "parent_code": "D9_SC2",
+      "label": "Conditions travail",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC2_SSC3",
+      "parent_code": "D9_SC2",
+      "label": "Engagement parties prenantes",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC3_SSC1",
+      "parent_code": "D9_SC3",
+      "label": "Reporting",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC3_SSC2",
+      "parent_code": "D9_SC3",
+      "label": "Structure gouvernance",
+      "weight": 30.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC3_SSC3",
+      "parent_code": "D9_SC3",
+      "label": "Politique ESG",
+      "weight": 30.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC4_SSC1",
+      "parent_code": "D9_SC4",
+      "label": "Risque physique",
+      "weight": 40.0,
+      "order": 1,
+      "indicators": "Cartes inondation/sécheresse/chaleur, historique sinistres.",
+      "indicator_type": "Quantitatif + Qualitatif",
+      "thresholds": "Zone faible risque ; événement critique rare (<1/20 ans).",
+      "sources": "Études climatiques, autorités locales, Banque mondiale."
+    },
+    {
+      "code": "D9_SC4_SSC2",
+      "parent_code": "D9_SC4",
+      "label": "Risque transition",
+      "weight": 40.0,
+      "order": 2,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    },
+    {
+      "code": "D9_SC4_SSC3",
+      "parent_code": "D9_SC4",
+      "label": "Intensité carbone",
+      "weight": 20.0,
+      "order": 3,
+      "indicators": "KPI spécifique, documents contractuels, benchmark sectoriel, avis DD.",
+      "indicator_type": "Qualitatif + Quantitatif",
+      "thresholds": "Performance meilleure que benchmark ; aucun point bloquant ; documentation complète.",
+      "sources": "Financial model, contrats, due diligence, rapports externes."
+    }
+  ],
+  "options": [
+    {
+      "code": "D1_SC1_SSC1_OPT1",
+      "parent_code": "D1_SC1_SSC1",
+      "label": "Expérience très forte",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Sponsor ayant déjà réalisé plusieurs projets comparables avec succès dans le même secteur et dans des marchés similaires."
+    },
+    {
+      "code": "D1_SC1_SSC1_OPT2",
+      "parent_code": "D1_SC1_SSC1",
+      "label": "Expérience solide",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Sponsor disposant d’une expérience sectorielle confirmée mais moins large ou sur des projets légèrement moins complexes."
+    },
+    {
+      "code": "D1_SC1_SSC1_OPT3",
+      "parent_code": "D1_SC1_SSC1",
+      "label": "Expérience limitée",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Sponsor ayant une expérience partielle, dans un secteur proche ou avec un historique encore insuffisant."
+    },
+    {
+      "code": "D1_SC1_SSC1_OPT4",
+      "parent_code": "D1_SC1_SSC1",
+      "label": "Aucune expérience pertinente",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Sponsor nouveau dans le secteur ou sans référence crédible en Project Finance."
+    },
+    {
+      "code": "D1_SC1_SSC2_OPT1",
+      "parent_code": "D1_SC1_SSC2",
+      "label": "Track record excellent",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Historique de projets livrés et exploités dans les délais, budgets et performances attendues."
+    },
+    {
+      "code": "D1_SC1_SSC2_OPT2",
+      "parent_code": "D1_SC1_SSC2",
+      "label": "Track record satisfaisant",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Historique globalement positif avec quelques écarts maîtrisés."
+    },
+    {
+      "code": "D1_SC1_SSC2_OPT3",
+      "parent_code": "D1_SC1_SSC2",
+      "label": "Track record moyen",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Historique mitigé avec incidents significatifs mais récupérés."
+    },
+    {
+      "code": "D1_SC1_SSC2_OPT4",
+      "parent_code": "D1_SC1_SSC2",
+      "label": "Track record faible",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Historique marqué par défauts, abandons, litiges ou incapacité à livrer."
+    },
+    {
+      "code": "D1_SC1_SSC3_OPT1",
+      "parent_code": "D1_SC1_SSC3",
+      "label": "Très solide",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Sponsor dispose d’une capacité financière élevée pour soutenir le projet en cas de stress."
+    },
+    {
+      "code": "D1_SC1_SSC3_OPT2",
+      "parent_code": "D1_SC1_SSC3",
+      "label": "Solide",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Sponsor financièrement sain mais non nécessairement investment grade."
+    },
+    {
+      "code": "D1_SC1_SSC3_OPT3",
+      "parent_code": "D1_SC1_SSC3",
+      "label": "Moyenne",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Sponsor avec capacité financière limitée ou dépendante de la conjoncture."
+    },
+    {
+      "code": "D1_SC1_SSC3_OPT4",
+      "parent_code": "D1_SC1_SSC3",
+      "label": "Fragile",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Sponsor présentant une tension financière ou une capacité de soutien incertaine."
+    },
+    {
+      "code": "D1_SC2_SSC1_OPT1",
+      "parent_code": "D1_SC2_SSC1",
+      "label": "Structure claire et équilibrée",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Actionnariat stable avec sponsor de référence clairement identifié et capacité de décision."
+    },
+    {
+      "code": "D1_SC2_SSC1_OPT2",
+      "parent_code": "D1_SC2_SSC1",
+      "label": "Structure acceptable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Actionnariat lisible avec gouvernance globalement claire."
+    },
+    {
+      "code": "D1_SC2_SSC1_OPT3",
+      "parent_code": "D1_SC2_SSC1",
+      "label": "Structure complexe",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Actionnariat dispersé ou avec plusieurs intérêts pouvant ralentir la décision."
+    },
+    {
+      "code": "D1_SC2_SSC1_OPT4",
+      "parent_code": "D1_SC2_SSC1",
+      "label": "Structure opaque",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Actionnariat peu transparent ou difficile à contrôler."
+    },
+    {
+      "code": "D1_SC2_SSC2_OPT1",
+      "parent_code": "D1_SC2_SSC2",
+      "label": "Alignement fort",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Les actionnaires ont des intérêts économiques convergents et restent engagés sur la durée."
+    },
+    {
+      "code": "D1_SC2_SSC2_OPT2",
+      "parent_code": "D1_SC2_SSC2",
+      "label": "Alignement correct",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Les intérêts sont globalement alignés avec quelques clauses à renforcer."
+    },
+    {
+      "code": "D1_SC2_SSC2_OPT3",
+      "parent_code": "D1_SC2_SSC2",
+      "label": "Alignement partiel",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Certains actionnaires peuvent avoir des objectifs divergents."
+    },
+    {
+      "code": "D1_SC2_SSC2_OPT4",
+      "parent_code": "D1_SC2_SSC2",
+      "label": "Alignement faible",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Risque d’abandon ou de désengagement d’un actionnaire clé."
+    },
+    {
+      "code": "D1_SC2_SSC3_OPT1",
+      "parent_code": "D1_SC2_SSC3",
+      "label": "Engagement ferme",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Sponsor engagé jusqu’à maturité ou période longue avec support contractuel."
+    },
+    {
+      "code": "D1_SC2_SSC3_OPT2",
+      "parent_code": "D1_SC2_SSC3",
+      "label": "Engagement satisfaisant",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Engagement prévu sur une période suffisante pour sécuriser le projet."
+    },
+    {
+      "code": "D1_SC2_SSC3_OPT3",
+      "parent_code": "D1_SC2_SSC3",
+      "label": "Engagement limité",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Engagement temporel ou financier insuffisant pour absorber les aléas."
+    },
+    {
+      "code": "D1_SC2_SSC3_OPT4",
+      "parent_code": "D1_SC2_SSC3",
+      "label": "Engagement absent",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Sponsor opportuniste ou absence d’obligation de soutien."
+    },
+    {
+      "code": "D1_SC3_SSC1_OPT1",
+      "parent_code": "D1_SC3_SSC1",
+      "label": "Gouvernance robuste",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Organes de décision clairs, comités définis, séparation des rôles."
+    },
+    {
+      "code": "D1_SC3_SSC1_OPT2",
+      "parent_code": "D1_SC3_SSC1",
+      "label": "Gouvernance correcte",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Structure de gouvernance présente mais perfectible."
+    },
+    {
+      "code": "D1_SC3_SSC1_OPT3",
+      "parent_code": "D1_SC3_SSC1",
+      "label": "Gouvernance faible",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Décisions centralisées ou responsabilités insuffisamment formalisées."
+    },
+    {
+      "code": "D1_SC3_SSC1_OPT4",
+      "parent_code": "D1_SC3_SSC1",
+      "label": "Gouvernance opaque",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Absence de gouvernance claire ou forte concentration du pouvoir."
+    },
+    {
+      "code": "D1_SC3_SSC2_OPT1",
+      "parent_code": "D1_SC3_SSC2",
+      "label": "Très transparente",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Informations fiables, auditées, accessibles et cohérentes."
+    },
+    {
+      "code": "D1_SC3_SSC2_OPT2",
+      "parent_code": "D1_SC3_SSC2",
+      "label": "Bonne transparence",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Information suffisante avec quelques compléments mineurs."
+    },
+    {
+      "code": "D1_SC3_SSC2_OPT3",
+      "parent_code": "D1_SC3_SSC2",
+      "label": "Transparence moyenne",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Informations partielles ou retards de transmission."
+    },
+    {
+      "code": "D1_SC3_SSC2_OPT4",
+      "parent_code": "D1_SC3_SSC2",
+      "label": "Transparence faible",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Information insuffisante ou non fiable."
+    },
+    {
+      "code": "D1_SC3_SSC3_OPT1",
+      "parent_code": "D1_SC3_SSC3",
+      "label": "Reporting complet",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Reporting régulier, standardisé et auditable."
+    },
+    {
+      "code": "D1_SC3_SSC3_OPT2",
+      "parent_code": "D1_SC3_SSC3",
+      "label": "Reporting satisfaisant",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Reporting régulier mais avec quelques limites."
+    },
+    {
+      "code": "D1_SC3_SSC3_OPT3",
+      "parent_code": "D1_SC3_SSC3",
+      "label": "Reporting limité",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Reporting peu détaillé ou peu fréquent."
+    },
+    {
+      "code": "D1_SC3_SSC3_OPT4",
+      "parent_code": "D1_SC3_SSC3",
+      "label": "Reporting absent/faible",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Absence de reporting structuré."
+    },
+    {
+      "code": "D2_SC1_SSC1_OPT1",
+      "parent_code": "D2_SC1_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC1_SSC1_OPT2",
+      "parent_code": "D2_SC1_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC1_SSC1_OPT3",
+      "parent_code": "D2_SC1_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC1_SSC1_OPT4",
+      "parent_code": "D2_SC1_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D2_SC1_SSC2_OPT1",
+      "parent_code": "D2_SC1_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC1_SSC2_OPT2",
+      "parent_code": "D2_SC1_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC1_SSC2_OPT3",
+      "parent_code": "D2_SC1_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC1_SSC2_OPT4",
+      "parent_code": "D2_SC1_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D2_SC1_SSC3_OPT1",
+      "parent_code": "D2_SC1_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC1_SSC3_OPT2",
+      "parent_code": "D2_SC1_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC1_SSC3_OPT3",
+      "parent_code": "D2_SC1_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC1_SSC3_OPT4",
+      "parent_code": "D2_SC1_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D2_SC2_SSC1_OPT1",
+      "parent_code": "D2_SC2_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC2_SSC1_OPT2",
+      "parent_code": "D2_SC2_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC2_SSC1_OPT3",
+      "parent_code": "D2_SC2_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC2_SSC1_OPT4",
+      "parent_code": "D2_SC2_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D2_SC2_SSC2_OPT1",
+      "parent_code": "D2_SC2_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC2_SSC2_OPT2",
+      "parent_code": "D2_SC2_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC2_SSC2_OPT3",
+      "parent_code": "D2_SC2_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC2_SSC2_OPT4",
+      "parent_code": "D2_SC2_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D2_SC2_SSC3_OPT1",
+      "parent_code": "D2_SC2_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC2_SSC3_OPT2",
+      "parent_code": "D2_SC2_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC2_SSC3_OPT3",
+      "parent_code": "D2_SC2_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC2_SSC3_OPT4",
+      "parent_code": "D2_SC2_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D2_SC3_SSC1_OPT1",
+      "parent_code": "D2_SC3_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC3_SSC1_OPT2",
+      "parent_code": "D2_SC3_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC3_SSC1_OPT3",
+      "parent_code": "D2_SC3_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC3_SSC1_OPT4",
+      "parent_code": "D2_SC3_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D2_SC3_SSC2_OPT1",
+      "parent_code": "D2_SC3_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC3_SSC2_OPT2",
+      "parent_code": "D2_SC3_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC3_SSC2_OPT3",
+      "parent_code": "D2_SC3_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC3_SSC2_OPT4",
+      "parent_code": "D2_SC3_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D2_SC3_SSC3_OPT1",
+      "parent_code": "D2_SC3_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D2_SC3_SSC3_OPT2",
+      "parent_code": "D2_SC3_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D2_SC3_SSC3_OPT3",
+      "parent_code": "D2_SC3_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D2_SC3_SSC3_OPT4",
+      "parent_code": "D2_SC3_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D3_SC1_SSC1_OPT1",
+      "parent_code": "D3_SC1_SSC1",
+      "label": "EPC lump sum turnkey",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Contrat clé en main, prix fixe, délai garanti, performance garantie."
+    },
+    {
+      "code": "D3_SC1_SSC1_OPT2",
+      "parent_code": "D3_SC1_SSC1",
+      "label": "Prix ferme ajustements limités",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Contrat globalement sécurisé avec ajustements encadrés."
+    },
+    {
+      "code": "D3_SC1_SSC1_OPT3",
+      "parent_code": "D3_SC1_SSC1",
+      "label": "Prix révisable",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Risque de surcoût partiellement porté par la SPV."
+    },
+    {
+      "code": "D3_SC1_SSC1_OPT4",
+      "parent_code": "D3_SC1_SSC1",
+      "label": "Non forfaitaire/cost plus",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Risque de coût largement porté par le projet."
+    },
+    {
+      "code": "D3_SC1_SSC2_OPT1",
+      "parent_code": "D3_SC1_SSC2",
+      "label": "EPC international majeur",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Constructeur très expérimenté et financièrement solide."
+    },
+    {
+      "code": "D3_SC1_SSC2_OPT2",
+      "parent_code": "D3_SC1_SSC2",
+      "label": "EPC régional solide",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Expérience confirmée dans la région/secteur."
+    },
+    {
+      "code": "D3_SC1_SSC2_OPT3",
+      "parent_code": "D3_SC1_SSC2",
+      "label": "EPC moyen",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Expérience partielle ou taille limitée."
+    },
+    {
+      "code": "D3_SC1_SSC2_OPT4",
+      "parent_code": "D3_SC1_SSC2",
+      "label": "EPC faible/nouveau",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Faible expérience ou fragilité financière."
+    },
+    {
+      "code": "D3_SC1_SSC3_OPT1",
+      "parent_code": "D3_SC1_SSC3",
+      "label": "Garanties fortes",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "LDs et garanties couvrent correctement retard/sous-performance."
+    },
+    {
+      "code": "D3_SC1_SSC3_OPT2",
+      "parent_code": "D3_SC1_SSC3",
+      "label": "Garanties correctes",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Garanties présentes mais caps moins élevés."
+    },
+    {
+      "code": "D3_SC1_SSC3_OPT3",
+      "parent_code": "D3_SC1_SSC3",
+      "label": "Garanties faibles",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Garanties limitées ou exclusions importantes."
+    },
+    {
+      "code": "D3_SC1_SSC3_OPT4",
+      "parent_code": "D3_SC1_SSC3",
+      "label": "Absence de garanties",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Aucune protection crédible contre retard/sous-performance."
+    },
+    {
+      "code": "D3_SC2_SSC1_OPT1",
+      "parent_code": "D3_SC2_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D3_SC2_SSC1_OPT2",
+      "parent_code": "D3_SC2_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D3_SC2_SSC1_OPT3",
+      "parent_code": "D3_SC2_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D3_SC2_SSC1_OPT4",
+      "parent_code": "D3_SC2_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D3_SC2_SSC2_OPT1",
+      "parent_code": "D3_SC2_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D3_SC2_SSC2_OPT2",
+      "parent_code": "D3_SC2_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D3_SC2_SSC2_OPT3",
+      "parent_code": "D3_SC2_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D3_SC2_SSC2_OPT4",
+      "parent_code": "D3_SC2_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D3_SC2_SSC3_OPT1",
+      "parent_code": "D3_SC2_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D3_SC2_SSC3_OPT2",
+      "parent_code": "D3_SC2_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D3_SC2_SSC3_OPT3",
+      "parent_code": "D3_SC2_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D3_SC2_SSC3_OPT4",
+      "parent_code": "D3_SC2_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D3_SC3_SSC1_OPT1",
+      "parent_code": "D3_SC3_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D3_SC3_SSC1_OPT2",
+      "parent_code": "D3_SC3_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D3_SC3_SSC1_OPT3",
+      "parent_code": "D3_SC3_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D3_SC3_SSC1_OPT4",
+      "parent_code": "D3_SC3_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D3_SC3_SSC2_OPT1",
+      "parent_code": "D3_SC3_SSC2",
+      "label": "Couverture très forte",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Assurances/garanties couvrent quasi totalement l’exposition."
+    },
+    {
+      "code": "D3_SC3_SSC2_OPT2",
+      "parent_code": "D3_SC3_SSC2",
+      "label": "Couverture bonne",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Couverture suffisante avec quelques limites."
+    },
+    {
+      "code": "D3_SC3_SSC2_OPT3",
+      "parent_code": "D3_SC3_SSC2",
+      "label": "Couverture partielle",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Couverture insuffisante nécessitant mitigants."
+    },
+    {
+      "code": "D3_SC3_SSC2_OPT4",
+      "parent_code": "D3_SC3_SSC2",
+      "label": "Couverture faible",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Sous-couverture importante."
+    },
+    {
+      "code": "D3_SC3_SSC3_OPT1",
+      "parent_code": "D3_SC3_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D3_SC3_SSC3_OPT2",
+      "parent_code": "D3_SC3_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D3_SC3_SSC3_OPT3",
+      "parent_code": "D3_SC3_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D3_SC3_SSC3_OPT4",
+      "parent_code": "D3_SC3_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC1_SSC1_OPT1",
+      "parent_code": "D4_SC1_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC1_SSC1_OPT2",
+      "parent_code": "D4_SC1_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC1_SSC1_OPT3",
+      "parent_code": "D4_SC1_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC1_SSC1_OPT4",
+      "parent_code": "D4_SC1_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC1_SSC2_OPT1",
+      "parent_code": "D4_SC1_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC1_SSC2_OPT2",
+      "parent_code": "D4_SC1_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC1_SSC2_OPT3",
+      "parent_code": "D4_SC1_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC1_SSC2_OPT4",
+      "parent_code": "D4_SC1_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC1_SSC3_OPT1",
+      "parent_code": "D4_SC1_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC1_SSC3_OPT2",
+      "parent_code": "D4_SC1_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC1_SSC3_OPT3",
+      "parent_code": "D4_SC1_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC1_SSC3_OPT4",
+      "parent_code": "D4_SC1_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC2_SSC1_OPT1",
+      "parent_code": "D4_SC2_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC2_SSC1_OPT2",
+      "parent_code": "D4_SC2_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC2_SSC1_OPT3",
+      "parent_code": "D4_SC2_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC2_SSC1_OPT4",
+      "parent_code": "D4_SC2_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC2_SSC2_OPT1",
+      "parent_code": "D4_SC2_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC2_SSC2_OPT2",
+      "parent_code": "D4_SC2_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC2_SSC2_OPT3",
+      "parent_code": "D4_SC2_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC2_SSC2_OPT4",
+      "parent_code": "D4_SC2_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC2_SSC3_OPT1",
+      "parent_code": "D4_SC2_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC2_SSC3_OPT2",
+      "parent_code": "D4_SC2_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC2_SSC3_OPT3",
+      "parent_code": "D4_SC2_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC2_SSC3_OPT4",
+      "parent_code": "D4_SC2_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC3_SSC1_OPT1",
+      "parent_code": "D4_SC3_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC3_SSC1_OPT2",
+      "parent_code": "D4_SC3_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC3_SSC1_OPT3",
+      "parent_code": "D4_SC3_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC3_SSC1_OPT4",
+      "parent_code": "D4_SC3_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC3_SSC2_OPT1",
+      "parent_code": "D4_SC3_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC3_SSC2_OPT2",
+      "parent_code": "D4_SC3_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC3_SSC2_OPT3",
+      "parent_code": "D4_SC3_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC3_SSC2_OPT4",
+      "parent_code": "D4_SC3_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D4_SC3_SSC3_OPT1",
+      "parent_code": "D4_SC3_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D4_SC3_SSC3_OPT2",
+      "parent_code": "D4_SC3_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D4_SC3_SSC3_OPT3",
+      "parent_code": "D4_SC3_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D4_SC3_SSC3_OPT4",
+      "parent_code": "D4_SC3_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC1_SSC1_OPT1",
+      "parent_code": "D5_SC1_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC1_SSC1_OPT2",
+      "parent_code": "D5_SC1_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC1_SSC1_OPT3",
+      "parent_code": "D5_SC1_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC1_SSC1_OPT4",
+      "parent_code": "D5_SC1_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC1_SSC2_OPT1",
+      "parent_code": "D5_SC1_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC1_SSC2_OPT2",
+      "parent_code": "D5_SC1_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC1_SSC2_OPT3",
+      "parent_code": "D5_SC1_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC1_SSC2_OPT4",
+      "parent_code": "D5_SC1_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC1_SSC3_OPT1",
+      "parent_code": "D5_SC1_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC1_SSC3_OPT2",
+      "parent_code": "D5_SC1_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC1_SSC3_OPT3",
+      "parent_code": "D5_SC1_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC1_SSC3_OPT4",
+      "parent_code": "D5_SC1_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC2_SSC1_OPT1",
+      "parent_code": "D5_SC2_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC2_SSC1_OPT2",
+      "parent_code": "D5_SC2_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC2_SSC1_OPT3",
+      "parent_code": "D5_SC2_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC2_SSC1_OPT4",
+      "parent_code": "D5_SC2_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC2_SSC2_OPT1",
+      "parent_code": "D5_SC2_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC2_SSC2_OPT2",
+      "parent_code": "D5_SC2_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC2_SSC2_OPT3",
+      "parent_code": "D5_SC2_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC2_SSC2_OPT4",
+      "parent_code": "D5_SC2_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC2_SSC3_OPT1",
+      "parent_code": "D5_SC2_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC2_SSC3_OPT2",
+      "parent_code": "D5_SC2_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC2_SSC3_OPT3",
+      "parent_code": "D5_SC2_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC2_SSC3_OPT4",
+      "parent_code": "D5_SC2_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC3_SSC1_OPT1",
+      "parent_code": "D5_SC3_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC3_SSC1_OPT2",
+      "parent_code": "D5_SC3_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC3_SSC1_OPT3",
+      "parent_code": "D5_SC3_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC3_SSC1_OPT4",
+      "parent_code": "D5_SC3_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC3_SSC2_OPT1",
+      "parent_code": "D5_SC3_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC3_SSC2_OPT2",
+      "parent_code": "D5_SC3_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC3_SSC2_OPT3",
+      "parent_code": "D5_SC3_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC3_SSC2_OPT4",
+      "parent_code": "D5_SC3_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D5_SC3_SSC3_OPT1",
+      "parent_code": "D5_SC3_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D5_SC3_SSC3_OPT2",
+      "parent_code": "D5_SC3_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D5_SC3_SSC3_OPT3",
+      "parent_code": "D5_SC3_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D5_SC3_SSC3_OPT4",
+      "parent_code": "D5_SC3_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D6_SC1_SSC1_OPT1",
+      "parent_code": "D6_SC1_SSC1",
+      "label": "Investment Grade / souverain fort",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Contrepartie très solvable avec historique impeccable."
+    },
+    {
+      "code": "D6_SC1_SSC1_OPT2",
+      "parent_code": "D6_SC1_SSC1",
+      "label": "Solide",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Contrepartie solvable mais non forcément IG."
+    },
+    {
+      "code": "D6_SC1_SSC1_OPT3",
+      "parent_code": "D6_SC1_SSC1",
+      "label": "Moyenne",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Solvabilité correcte mais vulnérable au cycle."
+    },
+    {
+      "code": "D6_SC1_SSC1_OPT4",
+      "parent_code": "D6_SC1_SSC1",
+      "label": "Fragile",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Risque élevé de non-paiement."
+    },
+    {
+      "code": "D6_SC1_SSC2_OPT1",
+      "parent_code": "D6_SC1_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D6_SC1_SSC2_OPT2",
+      "parent_code": "D6_SC1_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D6_SC1_SSC2_OPT3",
+      "parent_code": "D6_SC1_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D6_SC1_SSC2_OPT4",
+      "parent_code": "D6_SC1_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D6_SC1_SSC3_OPT1",
+      "parent_code": "D6_SC1_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D6_SC1_SSC3_OPT2",
+      "parent_code": "D6_SC1_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D6_SC1_SSC3_OPT3",
+      "parent_code": "D6_SC1_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D6_SC1_SSC3_OPT4",
+      "parent_code": "D6_SC1_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D6_SC2_SSC1_OPT1",
+      "parent_code": "D6_SC2_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D6_SC2_SSC1_OPT2",
+      "parent_code": "D6_SC2_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D6_SC2_SSC1_OPT3",
+      "parent_code": "D6_SC2_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D6_SC2_SSC1_OPT4",
+      "parent_code": "D6_SC2_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D6_SC2_SSC2_OPT1",
+      "parent_code": "D6_SC2_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D6_SC2_SSC2_OPT2",
+      "parent_code": "D6_SC2_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D6_SC2_SSC2_OPT3",
+      "parent_code": "D6_SC2_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D6_SC2_SSC2_OPT4",
+      "parent_code": "D6_SC2_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D6_SC2_SSC3_OPT1",
+      "parent_code": "D6_SC2_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D6_SC2_SSC3_OPT2",
+      "parent_code": "D6_SC2_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D6_SC2_SSC3_OPT3",
+      "parent_code": "D6_SC2_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D6_SC2_SSC3_OPT4",
+      "parent_code": "D6_SC2_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D6_SC3_SSC1_OPT1",
+      "parent_code": "D6_SC3_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D6_SC3_SSC1_OPT2",
+      "parent_code": "D6_SC3_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D6_SC3_SSC1_OPT3",
+      "parent_code": "D6_SC3_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D6_SC3_SSC1_OPT4",
+      "parent_code": "D6_SC3_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D6_SC3_SSC2_OPT1",
+      "parent_code": "D6_SC3_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D6_SC3_SSC2_OPT2",
+      "parent_code": "D6_SC3_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D6_SC3_SSC2_OPT3",
+      "parent_code": "D6_SC3_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D6_SC3_SSC2_OPT4",
+      "parent_code": "D6_SC3_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D6_SC3_SSC3_OPT1",
+      "parent_code": "D6_SC3_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D6_SC3_SSC3_OPT2",
+      "parent_code": "D6_SC3_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D6_SC3_SSC3_OPT3",
+      "parent_code": "D6_SC3_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D6_SC3_SSC3_OPT4",
+      "parent_code": "D6_SC3_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D7_SC1_SSC1_OPT1",
+      "parent_code": "D7_SC1_SSC1",
+      "label": "Leverage prudent",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Dette/fonds propres conservateur."
+    },
+    {
+      "code": "D7_SC1_SSC1_OPT2",
+      "parent_code": "D7_SC1_SSC1",
+      "label": "Leverage acceptable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Endettement cohérent avec le secteur."
+    },
+    {
+      "code": "D7_SC1_SSC1_OPT3",
+      "parent_code": "D7_SC1_SSC1",
+      "label": "Leverage élevé",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Structure tendue nécessitant protections fortes."
+    },
+    {
+      "code": "D7_SC1_SSC1_OPT4",
+      "parent_code": "D7_SC1_SSC1",
+      "label": "Leverage excessif",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Fonds propres insuffisants."
+    },
+    {
+      "code": "D7_SC1_SSC2_OPT1",
+      "parent_code": "D7_SC1_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D7_SC1_SSC2_OPT2",
+      "parent_code": "D7_SC1_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D7_SC1_SSC2_OPT3",
+      "parent_code": "D7_SC1_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D7_SC1_SSC2_OPT4",
+      "parent_code": "D7_SC1_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D7_SC1_SSC3_OPT1",
+      "parent_code": "D7_SC1_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D7_SC1_SSC3_OPT2",
+      "parent_code": "D7_SC1_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D7_SC1_SSC3_OPT3",
+      "parent_code": "D7_SC1_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D7_SC1_SSC3_OPT4",
+      "parent_code": "D7_SC1_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D7_SC2_SSC1_OPT1",
+      "parent_code": "D7_SC2_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D7_SC2_SSC1_OPT2",
+      "parent_code": "D7_SC2_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D7_SC2_SSC1_OPT3",
+      "parent_code": "D7_SC2_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D7_SC2_SSC1_OPT4",
+      "parent_code": "D7_SC2_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D7_SC2_SSC2_OPT1",
+      "parent_code": "D7_SC2_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D7_SC2_SSC2_OPT2",
+      "parent_code": "D7_SC2_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D7_SC2_SSC2_OPT3",
+      "parent_code": "D7_SC2_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D7_SC2_SSC2_OPT4",
+      "parent_code": "D7_SC2_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D7_SC2_SSC3_OPT1",
+      "parent_code": "D7_SC2_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D7_SC2_SSC3_OPT2",
+      "parent_code": "D7_SC2_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D7_SC2_SSC3_OPT3",
+      "parent_code": "D7_SC2_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D7_SC2_SSC3_OPT4",
+      "parent_code": "D7_SC2_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D7_SC3_SSC1_OPT1",
+      "parent_code": "D7_SC3_SSC1",
+      "label": "Très robuste",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "DSCR confortable en base case et en stress modéré."
+    },
+    {
+      "code": "D7_SC3_SSC1_OPT2",
+      "parent_code": "D7_SC3_SSC1",
+      "label": "Robuste",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Capacité de service de la dette satisfaisante."
+    },
+    {
+      "code": "D7_SC3_SSC1_OPT3",
+      "parent_code": "D7_SC3_SSC1",
+      "label": "Limité",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Marge de sécurité faible ; sensibilité importante."
+    },
+    {
+      "code": "D7_SC3_SSC1_OPT4",
+      "parent_code": "D7_SC3_SSC1",
+      "label": "Critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Projet insuffisamment couvert par les flux."
+    },
+    {
+      "code": "D7_SC3_SSC2_OPT1",
+      "parent_code": "D7_SC3_SSC2",
+      "label": "Très robuste",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Couverture long terme très confortable."
+    },
+    {
+      "code": "D7_SC3_SSC2_OPT2",
+      "parent_code": "D7_SC3_SSC2",
+      "label": "Robuste",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Couverture long terme correcte."
+    },
+    {
+      "code": "D7_SC3_SSC2_OPT3",
+      "parent_code": "D7_SC3_SSC2",
+      "label": "Moyen",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Couverture long terme faible."
+    },
+    {
+      "code": "D7_SC3_SSC2_OPT4",
+      "parent_code": "D7_SC3_SSC2",
+      "label": "Faible",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Capacité long terme insuffisante."
+    },
+    {
+      "code": "D7_SC3_SSC3_OPT1",
+      "parent_code": "D7_SC3_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D7_SC3_SSC3_OPT2",
+      "parent_code": "D7_SC3_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D7_SC3_SSC3_OPT3",
+      "parent_code": "D7_SC3_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D7_SC3_SSC3_OPT4",
+      "parent_code": "D7_SC3_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D8_SC1_SSC1_OPT1",
+      "parent_code": "D8_SC1_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D8_SC1_SSC1_OPT2",
+      "parent_code": "D8_SC1_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D8_SC1_SSC1_OPT3",
+      "parent_code": "D8_SC1_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D8_SC1_SSC1_OPT4",
+      "parent_code": "D8_SC1_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D8_SC1_SSC2_OPT1",
+      "parent_code": "D8_SC1_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D8_SC1_SSC2_OPT2",
+      "parent_code": "D8_SC1_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D8_SC1_SSC2_OPT3",
+      "parent_code": "D8_SC1_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D8_SC1_SSC2_OPT4",
+      "parent_code": "D8_SC1_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D8_SC1_SSC3_OPT1",
+      "parent_code": "D8_SC1_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D8_SC1_SSC3_OPT2",
+      "parent_code": "D8_SC1_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D8_SC1_SSC3_OPT3",
+      "parent_code": "D8_SC1_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D8_SC1_SSC3_OPT4",
+      "parent_code": "D8_SC1_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D8_SC2_SSC1_OPT1",
+      "parent_code": "D8_SC2_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D8_SC2_SSC1_OPT2",
+      "parent_code": "D8_SC2_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D8_SC2_SSC1_OPT3",
+      "parent_code": "D8_SC2_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D8_SC2_SSC1_OPT4",
+      "parent_code": "D8_SC2_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D8_SC2_SSC2_OPT1",
+      "parent_code": "D8_SC2_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D8_SC2_SSC2_OPT2",
+      "parent_code": "D8_SC2_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D8_SC2_SSC2_OPT3",
+      "parent_code": "D8_SC2_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D8_SC2_SSC2_OPT4",
+      "parent_code": "D8_SC2_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D8_SC2_SSC3_OPT1",
+      "parent_code": "D8_SC2_SSC3",
+      "label": "Couverture très forte",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Assurances/garanties couvrent quasi totalement l’exposition."
+    },
+    {
+      "code": "D8_SC2_SSC3_OPT2",
+      "parent_code": "D8_SC2_SSC3",
+      "label": "Couverture bonne",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Couverture suffisante avec quelques limites."
+    },
+    {
+      "code": "D8_SC2_SSC3_OPT3",
+      "parent_code": "D8_SC2_SSC3",
+      "label": "Couverture partielle",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Couverture insuffisante nécessitant mitigants."
+    },
+    {
+      "code": "D8_SC2_SSC3_OPT4",
+      "parent_code": "D8_SC2_SSC3",
+      "label": "Couverture faible",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Sous-couverture importante."
+    },
+    {
+      "code": "D8_SC3_SSC1_OPT1",
+      "parent_code": "D8_SC3_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D8_SC3_SSC1_OPT2",
+      "parent_code": "D8_SC3_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D8_SC3_SSC1_OPT3",
+      "parent_code": "D8_SC3_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D8_SC3_SSC1_OPT4",
+      "parent_code": "D8_SC3_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D8_SC3_SSC2_OPT1",
+      "parent_code": "D8_SC3_SSC2",
+      "label": "Conformité complète",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Toutes les autorisations et exigences sont obtenues sans réserve majeure."
+    },
+    {
+      "code": "D8_SC3_SSC2_OPT2",
+      "parent_code": "D8_SC3_SSC2",
+      "label": "Conformité quasi complète",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Quelques réserves mineures non bloquantes."
+    },
+    {
+      "code": "D8_SC3_SSC2_OPT3",
+      "parent_code": "D8_SC3_SSC2",
+      "label": "Conformité partielle",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Autorisations ou obligations importantes encore en cours."
+    },
+    {
+      "code": "D8_SC3_SSC2_OPT4",
+      "parent_code": "D8_SC3_SSC2",
+      "label": "Non conformité/absence critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Autorisation critique manquante ou non-conformité majeure."
+    },
+    {
+      "code": "D8_SC3_SSC3_OPT1",
+      "parent_code": "D8_SC3_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D8_SC3_SSC3_OPT2",
+      "parent_code": "D8_SC3_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D8_SC3_SSC3_OPT3",
+      "parent_code": "D8_SC3_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D8_SC3_SSC3_OPT4",
+      "parent_code": "D8_SC3_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC1_SSC1_OPT1",
+      "parent_code": "D9_SC1_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC1_SSC1_OPT2",
+      "parent_code": "D9_SC1_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC1_SSC1_OPT3",
+      "parent_code": "D9_SC1_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC1_SSC1_OPT4",
+      "parent_code": "D9_SC1_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC1_SSC2_OPT1",
+      "parent_code": "D9_SC1_SSC2",
+      "label": "Conformité complète",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Toutes les autorisations et exigences sont obtenues sans réserve majeure."
+    },
+    {
+      "code": "D9_SC1_SSC2_OPT2",
+      "parent_code": "D9_SC1_SSC2",
+      "label": "Conformité quasi complète",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Quelques réserves mineures non bloquantes."
+    },
+    {
+      "code": "D9_SC1_SSC2_OPT3",
+      "parent_code": "D9_SC1_SSC2",
+      "label": "Conformité partielle",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Autorisations ou obligations importantes encore en cours."
+    },
+    {
+      "code": "D9_SC1_SSC2_OPT4",
+      "parent_code": "D9_SC1_SSC2",
+      "label": "Non conformité/absence critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Autorisation critique manquante ou non-conformité majeure."
+    },
+    {
+      "code": "D9_SC1_SSC3_OPT1",
+      "parent_code": "D9_SC1_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC1_SSC3_OPT2",
+      "parent_code": "D9_SC1_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC1_SSC3_OPT3",
+      "parent_code": "D9_SC1_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC1_SSC3_OPT4",
+      "parent_code": "D9_SC1_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC2_SSC1_OPT1",
+      "parent_code": "D9_SC2_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC2_SSC1_OPT2",
+      "parent_code": "D9_SC2_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC2_SSC1_OPT3",
+      "parent_code": "D9_SC2_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC2_SSC1_OPT4",
+      "parent_code": "D9_SC2_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC2_SSC2_OPT1",
+      "parent_code": "D9_SC2_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC2_SSC2_OPT2",
+      "parent_code": "D9_SC2_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC2_SSC2_OPT3",
+      "parent_code": "D9_SC2_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC2_SSC2_OPT4",
+      "parent_code": "D9_SC2_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC2_SSC3_OPT1",
+      "parent_code": "D9_SC2_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC2_SSC3_OPT2",
+      "parent_code": "D9_SC2_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC2_SSC3_OPT3",
+      "parent_code": "D9_SC2_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC2_SSC3_OPT4",
+      "parent_code": "D9_SC2_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC3_SSC1_OPT1",
+      "parent_code": "D9_SC3_SSC1",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC3_SSC1_OPT2",
+      "parent_code": "D9_SC3_SSC1",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC3_SSC1_OPT3",
+      "parent_code": "D9_SC3_SSC1",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC3_SSC1_OPT4",
+      "parent_code": "D9_SC3_SSC1",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC3_SSC2_OPT1",
+      "parent_code": "D9_SC3_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC3_SSC2_OPT2",
+      "parent_code": "D9_SC3_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC3_SSC2_OPT3",
+      "parent_code": "D9_SC3_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC3_SSC2_OPT4",
+      "parent_code": "D9_SC3_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC3_SSC3_OPT1",
+      "parent_code": "D9_SC3_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC3_SSC3_OPT2",
+      "parent_code": "D9_SC3_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC3_SSC3_OPT3",
+      "parent_code": "D9_SC3_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC3_SSC3_OPT4",
+      "parent_code": "D9_SC3_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC4_SSC1_OPT1",
+      "parent_code": "D9_SC4_SSC1",
+      "label": "Faible exposition",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Site peu exposé aux aléas climatiques majeurs."
+    },
+    {
+      "code": "D9_SC4_SSC1_OPT2",
+      "parent_code": "D9_SC4_SSC1",
+      "label": "Exposition modérée",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Risques présents mais mitigables techniquement."
+    },
+    {
+      "code": "D9_SC4_SSC1_OPT3",
+      "parent_code": "D9_SC4_SSC1",
+      "label": "Exposition élevée",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Risque climatique significatif nécessitant CAPEX/adaptation."
+    },
+    {
+      "code": "D9_SC4_SSC1_OPT4",
+      "parent_code": "D9_SC4_SSC1",
+      "label": "Exposition critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Risque climatique pouvant compromettre la viabilité."
+    },
+    {
+      "code": "D9_SC4_SSC2_OPT1",
+      "parent_code": "D9_SC4_SSC2",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC4_SSC2_OPT2",
+      "parent_code": "D9_SC4_SSC2",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC4_SSC2_OPT3",
+      "parent_code": "D9_SC4_SSC2",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC4_SSC2_OPT4",
+      "parent_code": "D9_SC4_SSC2",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    },
+    {
+      "code": "D9_SC4_SSC3_OPT1",
+      "parent_code": "D9_SC4_SSC3",
+      "label": "Niveau très favorable",
+      "score": 10.0,
+      "order": 1,
+      "when_choose": "Choisir lorsque le sous-sous-critère présente une robustesse élevée, documentée et validée par des sources indépendantes."
+    },
+    {
+      "code": "D9_SC4_SSC3_OPT2",
+      "parent_code": "D9_SC4_SSC3",
+      "label": "Niveau favorable",
+      "score": 8.0,
+      "order": 2,
+      "when_choose": "Choisir lorsque le risque est maîtrisé avec quelques points d’amélioration mineurs."
+    },
+    {
+      "code": "D9_SC4_SSC3_OPT3",
+      "parent_code": "D9_SC4_SSC3",
+      "label": "Niveau moyen / vigilance",
+      "score": 5.0,
+      "order": 3,
+      "when_choose": "Choisir lorsque le risque est partiellement maîtrisé et nécessite des conditions ou mitigants."
+    },
+    {
+      "code": "D9_SC4_SSC3_OPT4",
+      "parent_code": "D9_SC4_SSC3",
+      "label": "Niveau défavorable / critique",
+      "score": 2.0,
+      "order": 4,
+      "when_choose": "Choisir lorsque le risque est élevé, peu documenté ou susceptible d’impacter la viabilité du projet."
+    }
+  ]
+}

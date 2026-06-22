@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Download } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
 
 interface Project {
   id: string;
@@ -22,7 +23,7 @@ export default function ComparePage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch("/api/projects?limit=100");
+        const res = await apiGet("/api/projects?limit=100");
         if (res.ok) {
           const data = await res.json();
           setProjects(data.data || []);

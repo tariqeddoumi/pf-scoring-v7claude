@@ -4,9 +4,13 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import { useState } from "react";
 import { UserProfile } from "./UserProfile";
+import { useAppConfig } from "@/components/providers/app-config-provider";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { config } = useAppConfig();
+  const appName = config.APP_NAME || "PF Scoring";
+  const logoUrl = config.APP_LOGO_URL;
 
   return (
     <nav className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700">
@@ -14,11 +18,17 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">PF</span>
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt={appName} className="w-8 h-8 rounded-lg object-contain" />
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {appName.slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+            )}
             <span className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">
-              PF Scoring V7++
+              {appName}
             </span>
           </Link>
 

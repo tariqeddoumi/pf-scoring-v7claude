@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import { withAuth, hasMinimumRole, type AuthPayload } from "@/lib/auth-middleware";
 import { UserService } from "@/lib/services/user-service";
 
 interface RouteParams {
@@ -9,7 +9,7 @@ interface RouteParams {
 /**
  * GET /api/users/[id] - Get user by ID
  */
-async function handleGET(request: NextRequest, user: any, params: any) {
+async function handleGET(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     if (!hasMinimumRole(user.role, "risk_manager")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -33,15 +33,16 @@ async function handleGET(request: NextRequest, user: any, params: any) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 /**
  * PUT /api/users/[id] - Update user
  */
-async function handlePUT(request: NextRequest, user: any, params: any) {
+async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     // Can update own profile or be admin
     if (user.userId !== params.id && user.role !== "system_admin") {
@@ -66,15 +67,16 @@ async function handlePUT(request: NextRequest, user: any, params: any) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 /**
  * DELETE /api/users/[id] - Delete user (admin only)
  */
-async function handleDELETE(request: NextRequest, user: any, params: any) {
+async function handleDELETE(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     if (user.role !== "system_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -91,8 +93,9 @@ async function handleDELETE(request: NextRequest, user: any, params: any) {
     await UserService.deleteUser(params.id, user.userId);
 
     return NextResponse.json({ message: "User deleted" }, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 

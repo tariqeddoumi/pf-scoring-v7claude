@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma-client";
+import type { ScoringNode } from "@prisma/client";
 
 /**
  * Applicability evaluation result
@@ -17,9 +18,9 @@ export interface ApplicabilityResult {
  */
 export interface ApplicabilityContext {
   evaluationId: string;
-  projectData?: any;
-  evaluationData?: any;
-  parentAnswers?: Map<string, any>;
+  projectData?: Record<string, unknown>;
+  evaluationData?: Record<string, unknown>;
+  parentAnswers?: Map<string, unknown>;
 }
 
 /**
@@ -52,7 +53,7 @@ export class ApplicabilityEngine {
    * Evaluate applicability of a single node
    */
   static async evaluateNodeApplicability(
-    node: any,
+    node: ScoringNode & { applicabilityRules: Array<{ id: string; conditionExpression: string; effectType: string }> },
     context: ApplicabilityContext
   ): Promise<ApplicabilityResult> {
     // Default: node is visible and optional
@@ -147,21 +148,21 @@ export class ApplicabilityEngine {
       // Pattern: field == value
       if (expression.includes("==")) {
         const [left, right] = expression.split("==").map((s) => s.trim());
-        const contextValue = (evalContext as any)[left];
+        const contextValue = (evalContext as Record<string, unknown>)[left];
         return contextValue === right || contextValue === parseFloat(right);
       }
 
       // Pattern: field != value
       if (expression.includes("!=")) {
         const [left, right] = expression.split("!=").map((s) => s.trim());
-        const contextValue = (evalContext as any)[left];
+        const contextValue = (evalContext as Record<string, unknown>)[left];
         return contextValue !== right && contextValue !== parseFloat(right);
       }
 
       // Pattern: field in [value1, value2]
       if (expression.includes(" in ")) {
         const [left, right] = expression.split(" in ").map((s) => s.trim());
-        const contextValue = (evalContext as any)[left];
+        const contextValue = (evalContext as Record<string, unknown>)[left];
         const values = right
           .replace(/[\[\]]/g, "")
           .split(",")
@@ -181,9 +182,9 @@ export class ApplicabilityEngine {
    * Filter nodes to show only applicable ones
    */
   static filterApplicableNodes(
-    nodes: any[],
+    nodes: Array<{ id: string }>,
     applicabilities: Map<string, ApplicabilityResult>
-  ): any[] {
+  ): Array<{ id: string }> {
     return nodes.filter((node) => {
       const applicability = applicabilities.get(node.id);
       return applicability?.visible ?? true;
@@ -206,7 +207,7 @@ export class ApplicabilityEngine {
    */
   static checkRequiredAnswers(
     requiredNodeIds: string[],
-    answers: Map<string, any>
+    answers: Map<string, unknown>
   ): { satisfied: boolean; missingNodes: string[] } {
     const missingNodes = requiredNodeIds.filter(
       (nodeId) => !answers.has(nodeId)

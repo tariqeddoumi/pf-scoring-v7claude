@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import { withAuth, hasMinimumRole, type AuthPayload } from "@/lib/auth-middleware";
 import { EvaluationService } from "@/lib/services/evaluation-service";
 
 interface RouteParams {
@@ -9,7 +9,7 @@ interface RouteParams {
 /**
  * GET /api/evaluations/[id]
  */
-async function handleGET(request: NextRequest, user: any, params: any) {
+async function handleGET(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     const evaluation = await EvaluationService.getEvaluationById(
       params.id,
@@ -24,15 +24,16 @@ async function handleGET(request: NextRequest, user: any, params: any) {
     }
 
     return NextResponse.json({ data: evaluation }, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 /**
  * PUT /api/evaluations/[id] - Update evaluation or toggle archive status
  */
-async function handlePUT(request: NextRequest, user: any, params: any) {
+async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     if (!["system_admin","scoring_admin","risk_manager","risk_analyst"].includes(user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -62,15 +63,16 @@ async function handlePUT(request: NextRequest, user: any, params: any) {
     );
 
     return NextResponse.json({ data: evaluation }, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 /**
  * DELETE /api/evaluations/[id] - Delete evaluation
  */
-async function handleDELETE(request: NextRequest, user: any, params: any) {
+async function handleDELETE(request: NextRequest, user: AuthPayload, params: { id: string }) {
   try {
     if (!["system_admin","scoring_admin","risk_manager","risk_analyst"].includes(user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -79,8 +81,9 @@ async function handleDELETE(request: NextRequest, user: any, params: any) {
     const result = await EvaluationService.deleteEvaluation(params.id);
 
     return NextResponse.json(result, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 

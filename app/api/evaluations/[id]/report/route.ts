@@ -28,7 +28,7 @@ export async function GET(
     }
 
     // Fetch audit logs for this evaluation
-    const auditLogs = await getAuditLogs(evaluationId);
+    const auditLogs = await getAuditLogs();
 
     // Build report from database evaluation
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

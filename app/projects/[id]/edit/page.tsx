@@ -16,6 +16,7 @@ import {
 import { apiGet, apiPut } from "@/lib/api-client";
 import { Project } from "@/lib/types/models";
 import { Tabs } from "@/components/ui/Tabs";
+import { DynamicEntityForm } from "@/components/form/DynamicEntityForm";
 
 export default function EditProjectPage({
   params,
@@ -28,6 +29,31 @@ export default function EditProjectPage({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [useDynamicForms, setUseDynamicForms] = useState(false);
+  // Sector value-list (V9 reference). Empty → graceful fallback to free text.
+  const [sectorOptions, setSectorOptions] = useState<{ code: string; label: string }[]>([]);
+
+  useEffect(() => {
+    apiGet("/api/reference/sectors")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json?.data?.length) setSectorOptions(json.data);
+      })
+      .catch(() => {
+        /* fallback to free-text input */
+      });
+  }, []);
+
+  useEffect(() => {
+    apiGet("/api/config/public")
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((config: Record<string, any>) => {
+        setUseDynamicForms(config?.SCREENS_DYNAMIC_FORMS_ENABLED === "true" || config?.SCREENS_DYNAMIC_FORMS_ENABLED === "1");
+      })
+      .catch(() => {
+        /* fallback to hardcoded forms */
+      });
+  }, []);
 
     const [formData, setFormData] = useState<any>({
     // Identification
@@ -176,9 +202,24 @@ export default function EditProjectPage({
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">Secteur</label>
-              <input type="text" name="secteur" value={formData.secteur} onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
-              />
+              {sectorOptions.length > 0 ? (
+                <select name="secteur" value={formData.secteur || ""} onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                >
+                  <option value="">— Sélectionner un secteur —</option>
+                  {/* Preserve a legacy free-text value not present in the list */}
+                  {formData.secteur && !sectorOptions.some((s) => s.code === formData.secteur) && (
+                    <option value={formData.secteur}>{formData.secteur} (existant)</option>
+                  )}
+                  {sectorOptions.map((s) => (
+                    <option key={s.code} value={s.code}>{s.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input type="text" name="secteur" value={formData.secteur} onChange={handleChange}
+                  className={`w-full px-4 py-2 bg-slate-700 border ${fieldErrors.secteur ? "border-red-500" : "border-slate-600"} rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                />
+              )}
               {fieldErrors.secteur && <p className="text-red-400 text-sm mt-1">{fieldErrors.secteur}</p>}
             </div>
             <div>
@@ -454,7 +495,17 @@ export default function EditProjectPage({
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <Tabs tabs={tabs} defaultTab="identification" />
+        {useDynamicForms ? (
+          <DynamicEntityForm
+            entity="project"
+            formData={formData}
+            fieldErrors={fieldErrors}
+            onChange={handleChange}
+            fallback={<Tabs tabs={tabs} defaultTab="identification" />}
+          />
+        ) : (
+          <Tabs tabs={tabs} defaultTab="identification" />
+        )}
 
         {/* Form Actions */}
         <div className="flex gap-3 mt-8 pt-6 border-t border-slate-700">

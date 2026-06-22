@@ -5,11 +5,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-interface RouteContext {
-  params: Promise<{ id: string }>;
-}
-
-export async function GET(request: NextRequest, { params }: RouteContext) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withAdminAuth(request, async () => {
     try {
       const { id } = await params;
@@ -44,7 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   });
 }
 
-export async function PATCH(request: NextRequest, { params }: RouteContext) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withAdminAuth(request, async (req, user) => {
     try {
       const { id } = await params;
@@ -90,7 +86,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   });
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteContext) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withAdminAuth(request, async () => {
     try {
       const { id } = await params;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { apiPost } from "@/lib/api-client";
 
 function LoginPageContent() {
   const router = useRouter();
@@ -26,11 +27,7 @@ function LoginPageContent() {
     try {
       // Attempt login directly without health check blocking it
       // The login endpoint will handle database errors properly
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await apiPost("/api/auth/login", { email, password });
 
       const data = await response.json();
 
@@ -67,11 +64,7 @@ function LoginPageContent() {
   const handleOAuthLogin = async (provider: string) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/auth/oauth-init", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider }),
-      });
+      const response = await apiPost("/api/auth/oauth-init", { provider });
 
       const data = await response.json();
       if (data.authUrl) {

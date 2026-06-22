@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, Shield } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Accordion, AccordionItem } from "@/components/ui/Accordion";
+import { apiPost } from "@/lib/api-client";
 
 export default function NewUserPage() {
   const router = useRouter();
@@ -65,18 +66,12 @@ export default function NewUserPage() {
         throw new Error("Le mot de passe doit contenir au moins un chiffre");
       }
 
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nom: formData.nom,
-          prenom: formData.prenom,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-        }),
+      const response = await apiPost("/api/users", {
+        nom: formData.nom,
+        prenom: formData.prenom,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
       });
 
       const data = await response.json();

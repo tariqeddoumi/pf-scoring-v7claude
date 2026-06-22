@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ArrowLeft, Edit2, Mail, Shield, Calendar } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
 
 interface User {
   id: string;
@@ -31,7 +32,7 @@ export default function UserDetailPage({
       try {
         const { id } = await params;
         setUserId(id);
-        const response = await fetch(`/api/users/${id}`);
+        const response = await apiGet(`/api/users/${id}`);
         if (!response.ok) throw new Error("Failed to fetch user");
         const data = await response.json();
         setUser(data.data || data);

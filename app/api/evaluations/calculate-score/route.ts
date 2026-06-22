@@ -3,11 +3,24 @@ import { withAuth } from "@/lib/auth-middleware";
 import { EvaluationService } from "@/lib/services/evaluation-service";
 import { ScoringQuestionnaireService } from "@/lib/services/scoring-questionnaire-service";
 import { ScoringEngine } from "@/lib/services/scoring-engine";
+import { scoreToRating } from "@/lib/utils/rating-converter";
 
 /**
- * POST /api/evaluations/calculate-score - Calculate score from answers
+ * POST /api/evaluations/calculate-score  — LEGACY / DEPRECATED
+ *
+ * This is NOT the route used by the evaluation UI. The live scoring path is
+ * `POST /api/scoring/evaluations/[id]/calculate` → `ScoringEngineV8`, which now
+ * handles BOTH per-domain granularity and sectorial calibration natively
+ * (see lib/services/scoring/scoring-engine-v8.ts + sectorial.ts).
+ *
+ * Sectorial re-integration was removed from this route: it previously relied on
+ * a server-side relative-URL fetch (broken in Node) and a V9→V8 shape bridge
+ * that produced degenerate adjustments. Use the live route for sectorial scoring.
+ *
+ * Kept only for backward compatibility of any external caller doing a one-shot
+ * "save answers + base score" against the legacy Evaluation table.
  */
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: { userId: string }) {
   try {
     const { evaluationId, modelVersionId, answers } = await request.json();
 
@@ -21,7 +34,7 @@ async function handlePOST(request: NextRequest, user: any) {
     // Save answers
     await ScoringQuestionnaireService.saveAnswers(evaluationId, answers);
 
-    // Run scoring engine
+    // Run scoring engine (granularity-aware via ScoringEngine)
     const scoreResults = await ScoringEngine.scoreEvaluation(
       evaluationId,
       modelVersionId
@@ -33,16 +46,11 @@ async function handlePOST(request: NextRequest, user: any) {
       scoreResults
     );
 
-    // Determine rating based on score
-    const rating = getRatingFromScore(globalScore);
+    const rating = scoreToRating(globalScore);
 
-    // Update evaluation with calculated scores
     await EvaluationService.updateEvaluation(
       evaluationId,
-      {
-        finalScore: globalScore,
-        rating,
-      },
+      { finalScore: globalScore, rating },
       user.userId
     );
 
@@ -52,40 +60,17 @@ async function handlePOST(request: NextRequest, user: any) {
           finalScore: globalScore,
           rating,
           scores: Object.fromEntries(scores),
+          deprecated: true,
+          liveRoute: "/api/scoring/evaluations/[id]/calculate",
         },
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error calculating score:", error);
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-}
-
-/**
- * Determine rating from score
- */
-function getRatingFromScore(score: number): string {
-  const thresholds: Record<string, { min: number; max: number }> = {
-    AAA: { min: 95, max: 100 },
-    AA: { min: 85, max: 94 },
-    A: { min: 75, max: 84 },
-    BBB: { min: 65, max: 74 },
-    BB: { min: 55, max: 64 },
-    B: { min: 45, max: 54 },
-    CCC: { min: 35, max: 44 },
-    CC: { min: 25, max: 34 },
-    C: { min: 15, max: 24 },
-    D: { min: 0, max: 14 },
-  };
-
-  for (const [rating, { min, max }] of Object.entries(thresholds)) {
-    if (score >= min && score <= max) {
-      return rating;
-    }
-  }
-
-  return "D"; // Default to lowest rating
 }
 
 export async function POST(request: NextRequest) {
