@@ -58,6 +58,7 @@ describe("BindingResolver", () => {
   test("resolveOne applies FORMAT transform for decimals", () => {
     const binding = {
       ...mockBinding,
+      sourceEntity: "PROJECT",
       sourcePath: "montant",
       transformType: "FORMAT",
       transformConfigJson: JSON.stringify({ decimals: 2 }),

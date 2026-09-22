@@ -4,6 +4,7 @@ import { ScoreCalculator, AggregationEngine } from "./score-calculator";
 import { ValueResolver, ResolvedValueSnapshot } from "./value-resolver";
 import { BindingResolver, BindingContext } from "./binding-resolver";
 import { resolveSectorWeighting, SectorWeighting } from "./sectorial";
+import { evaluateCondition, ConditionContext } from "./condition-evaluator";
 import {
   getDomainGranularity,
   GRANULARITY_DEPTH,
@@ -15,8 +16,19 @@ export interface RuleImpact {
   ruleCode: string;
   ruleType: string;
   severity: string;
+  actionType: string;
   penalty: number;
+  blocking: boolean;
   message: string;
+}
+
+/** A rule whose condition could not be evaluated — surfaced, never silently skipped. */
+export interface RuleDiagnostic {
+  ruleId: string;
+  ruleCode: string;
+  nodeCode: string;
+  expression: string;
+  reason: string;
 }
 
 export interface NodeResult {
@@ -63,6 +75,13 @@ export interface EvaluationTrace {
   rootResults: NodeResult[];
   traceJson: string;
   triggeredRuleIds: string[];
+  /** True when a NO_GO or HARD_STOP rule fired: the score cannot authorise approval. */
+  blocked: boolean;
+  blockingRuleCodes: string[];
+  /** True when a BLOCK_PUBLICATION rule fired. */
+  publicationBlocked: boolean;
+  /** Rules skipped because their condition could not be evaluated. */
+  ruleDiagnostics: RuleDiagnostic[];
   /** Present when sectorial calibration is enabled and a sector matched. */
   sectorial?: SectorialTrace;
 }
@@ -139,6 +158,9 @@ export class ScoringEngineV8 {
     const nodeScores = new Map<string, NodeResult>();
     let triggeredRuleIds: string[] = [];
     let malusTotal = 0;
+    const blockingRuleCodes: string[] = [];
+    const ruleDiagnostics: RuleDiagnostic[] = [];
+    let publicationBlocked = false;
 
     ModelLoader.traverseBottomUp(tree, (node) => {
       const answer = answersByNode.get(node.id);
@@ -212,19 +234,48 @@ export class ScoringEngineV8 {
 
       const rules = rulesByNode.get(node.id) || [];
       const ruleImpacts: RuleImpact[] = [];
+      const conditionCtx: ConditionContext = {
+        score: rawScore,
+        node: { code: node.code, label: node.label, depth: node.depth },
+        project: (evaluation.project ?? {}) as Record<string, unknown>,
+        evaluation: evaluation as unknown as Record<string, unknown>,
+      };
+
       for (const rule of rules) {
-        if (rule.actionType === "APPLY_MALUS" && rule.penaltyValue) {
-          ruleImpacts.push({
+        const verdict = evaluateCondition(rule.conditionExpression, conditionCtx);
+
+        if (!verdict.evaluated) {
+          ruleDiagnostics.push({
             ruleId: rule.id,
             ruleCode: rule.code,
-            ruleType: rule.ruleType,
-            severity: rule.severity,
-            penalty: rule.penaltyValue,
-            message: rule.messageUser || rule.label,
+            nodeCode: node.code,
+            expression: rule.conditionExpression ?? "",
+            reason: verdict.reason ?? "expression non évaluable",
           });
-          malusTotal += rule.penaltyValue;
-          triggeredRuleIds.push(rule.id);
+          continue;
         }
+        if (!verdict.triggered) continue;
+
+        const isBlocking =
+          rule.blocking || rule.ruleType === "NO_GO" || rule.ruleType === "HARD_STOP";
+        const penalty =
+          rule.actionType === "APPLY_MALUS" && rule.penaltyValue ? rule.penaltyValue : 0;
+
+        ruleImpacts.push({
+          ruleId: rule.id,
+          ruleCode: rule.code,
+          ruleType: rule.ruleType,
+          severity: rule.severity,
+          actionType: rule.actionType,
+          penalty,
+          blocking: isBlocking,
+          message: rule.messageUser || rule.label,
+        });
+        triggeredRuleIds.push(rule.id);
+
+        if (penalty) malusTotal += penalty;
+        if (isBlocking) blockingRuleCodes.push(rule.code);
+        if (rule.ruleType === "BLOCK_PUBLICATION") publicationBlocked = true;
       }
 
       const normalizedScore = AggregationEngine.normalize(rawScore, node.scoreMax || 100);
@@ -306,18 +357,29 @@ export class ScoringEngineV8 {
       };
     }
 
-    const traceJson = JSON.stringify({ rootResults, sectorial }, null, 2);
+    const blocked = blockingRuleCodes.length > 0;
+    const traceJson = JSON.stringify(
+      { rootResults, sectorial, blockingRuleCodes, ruleDiagnostics },
+      null,
+      2
+    );
 
     return {
       evaluationId,
       modelVersionId: evaluation.modelVersionId,
       finalScore: finalScoreAdjusted,
       rating,
-      recommendation: this.scoreToRecommendation(finalScoreAdjusted),
+      recommendation: blocked
+        ? `Blocage — condition rédhibitoire déclenchée (${blockingRuleCodes.join(", ")})`
+        : this.scoreToRecommendation(finalScoreAdjusted),
       malusTotal,
       rootResults,
       traceJson,
       triggeredRuleIds,
+      blocked,
+      blockingRuleCodes,
+      publicationBlocked,
+      ruleDiagnostics,
       sectorial,
     };
   }

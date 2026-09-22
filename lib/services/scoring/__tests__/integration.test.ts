@@ -173,7 +173,7 @@ describe("Scoring Engine V8 Integration", () => {
     test("should handle formula evaluation errors", () => {
       const result = ScoreCalculator.scoreFromFormula("invalid expression!", {}, 50);
       expect(result.rawScore).toBe(50);
-      expect(result.explanation).toContain("failed");
+      expect(result.explanation).toContain("Échec");
     });
 
     test("should handle missing answers gracefully", () => {
