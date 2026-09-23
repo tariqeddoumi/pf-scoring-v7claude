@@ -35,6 +35,12 @@ const OPERATORS = [">=", "<=", "!=", "==", "&&", "||", ">", "<", "=", "!"];
 
 class ParseError extends Error {}
 
+/**
+ * Valeur d'un champ dont on ignore tout — utilisée uniquement en mode validation,
+ * pour contrôler la syntaxe d'une condition sans disposer d'un dossier réel.
+ */
+const INCONNU = Symbol("valeur inconnue");
+
 function tokenize(src: string): Token[] {
   const out: Token[] = [];
   let i = 0;
@@ -98,7 +104,11 @@ function asNumber(v: unknown): number | null {
   return null;
 }
 
-function compare(op: string, left: unknown, right: unknown): boolean {
+function compare(op: string, left: unknown, right: unknown, lax = false): boolean {
+  // En validation, la valeur des champs est inconnue : toute comparaison est
+  // syntaxiquement acceptable et son résultat sans importance.
+  if (lax && (left === INCONNU || right === INCONNU)) return false;
+
   const ln = asNumber(left);
   const rn = asNumber(right);
   if (ln !== null && rn !== null) {
@@ -117,13 +127,23 @@ function compare(op: string, left: unknown, right: unknown): boolean {
     case "==": case "=": return ls === rs;
     case "!=": return ls !== rs;
     default:
+      if (lax) return false;
       throw new ParseError(`l'opérateur « ${op} » exige deux valeurs numériques`);
   }
 }
 
 class Parser {
   private pos = 0;
-  constructor(private toks: Token[], private ctx: ConditionContext) {}
+  /**
+   * En mode `lax`, l'absence d'un champ et les comparaisons impossibles ne sont plus
+   * des erreurs : seules les vraies fautes de syntaxe remontent. C'est ce qui permet
+   * de valider une condition à la saisie, avant qu'un dossier n'existe.
+   */
+  constructor(
+    private toks: Token[],
+    private ctx: ConditionContext,
+    private lax = false
+  ) {}
 
   private peek(): Token | undefined {
     return this.toks[this.pos];
@@ -194,7 +214,7 @@ class Parser {
     if (t && t.k === "op" && [">", ">=", "<", "<=", "==", "=", "!="].includes(t.v)) {
       this.pos++;
       const right = this.operand();
-      return compare(t.v, left, right);
+      return compare(t.v, left, right, this.lax);
     }
     if (t && t.k === "ident" && t.v.toLowerCase() === "in") {
       this.pos++;
@@ -208,10 +228,11 @@ class Parser {
         }
       }
       this.eat("punct", "]");
-      return list.some((item) => compare("==", left, item));
+      return list.some((item) => compare("==", left, item, this.lax));
     }
 
     if (typeof left === "boolean") return left;
+    if (this.lax) return false;
     throw new ParseError(
       `« ${String(left)} » n'est pas une condition : une comparaison ou un booléen est attendu`
     );
@@ -232,11 +253,68 @@ class Parser {
       if (low === "null") return null;
       const value = lookup(t.v, this.ctx);
       if (value === undefined) {
+        if (this.lax) return INCONNU;
         throw new ParseError(`le champ « ${t.v} » est absent du contexte d'évaluation`);
       }
       return value;
     }
     throw new ParseError(`opérande attendue, trouvé « ${String(t.v)} »`);
+  }
+}
+
+/** Mots réservés de la grammaire : ce ne sont pas des champs du dossier. */
+const MOTS_RESERVES = new Set(["true", "false", "null", "in"]);
+
+/**
+ * Liste les champs du dossier dont dépend une condition.
+ *
+ * Sert à montrer à l'administrateur ce qu'une règle interroge réellement, et à
+ * repérer une règle qui s'appuie sur un champ que le modèle ne produit pas.
+ */
+export function extractConditionFields(expression: string | null | undefined): string[] {
+  const src = (expression ?? "").trim();
+  if (src === "") return [];
+  try {
+    const champs = tokenize(src)
+      .filter((t) => t.k === "ident" && !MOTS_RESERVES.has(String(t.v).toLowerCase()))
+      .map((t) => String(t.v));
+    return Array.from(new Set(champs)).sort();
+  } catch {
+    return [];
+  }
+}
+
+export interface ConditionValidation {
+  valid: boolean;
+  /** Message en français décrivant la faute de syntaxe, le cas échéant. */
+  error?: string;
+  /** Champs interrogés par la condition, lorsqu'elle est syntaxiquement correcte. */
+  fields: string[];
+}
+
+/**
+ * Contrôle la syntaxe d'une condition sans dossier à évaluer.
+ *
+ * Une condition invalide était jusqu'ici acceptée à l'enregistrement et ne se
+ * manifestait qu'au calcul, sous forme de règle silencieusement ignorée. La refuser
+ * à la saisie évite de mettre en production une règle qui ne se déclenchera jamais.
+ */
+export function validateConditionExpression(
+  expression: string | null | undefined
+): ConditionValidation {
+  const src = (expression ?? "").trim();
+  if (src === "") {
+    return { valid: false, error: "La condition est vide.", fields: [] };
+  }
+  try {
+    new Parser(tokenize(src), {}, true).parse();
+    return { valid: true, fields: extractConditionFields(src) };
+  } catch (err) {
+    return {
+      valid: false,
+      error: err instanceof ParseError ? err.message : "Expression invalide.",
+      fields: [],
+    };
   }
 }
 

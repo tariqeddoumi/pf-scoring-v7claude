@@ -11,6 +11,7 @@ import {
   RatingSource,
   resolveRatingFromBands,
 } from "./rating-scale";
+import { actionRegle, bloquePublication, estBloquante } from "./rule-vocabulary";
 import { getRatingScales } from "@/lib/services/scoring-configuration-service";
 import {
   getDomainGranularity,
@@ -276,10 +277,10 @@ export class ScoringEngineV8 {
         }
         if (!verdict.triggered) continue;
 
-        const isBlocking =
-          rule.blocking || rule.ruleType === "NO_GO" || rule.ruleType === "HARD_STOP";
-        const penalty =
-          rule.actionType === "APPLY_MALUS" && rule.penaltyValue ? rule.penaltyValue : 0;
+        const isBlocking = estBloquante(rule);
+        const penalty = actionRegle(rule.actionType)?.exigeMalus
+          ? (rule.penaltyValue ?? 0)
+          : 0;
 
         ruleImpacts.push({
           ruleId: rule.id,
@@ -295,7 +296,7 @@ export class ScoringEngineV8 {
 
         if (penalty) malusTotal += penalty;
         if (isBlocking) blockingRuleCodes.push(rule.code);
-        if (rule.ruleType === "BLOCK_PUBLICATION") publicationBlocked = true;
+        if (bloquePublication(rule)) publicationBlocked = true;
       }
 
       const normalizedScore = AggregationEngine.normalize(rawScore, node.scoreMax || 100);

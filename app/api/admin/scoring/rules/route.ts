@@ -2,6 +2,36 @@ import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import { validateConditionExpression } from "@/lib/services/scoring/condition-evaluator";
+import { validerRegle } from "@/lib/services/scoring/rule-vocabulary";
+
+/**
+ * Contrôle commun à la création et à la modification d'une règle.
+ *
+ * La condition était auparavant enregistrée telle quelle, avec « true » pour défaut :
+ * une règle créée sans condition se déclenchait sur tous les dossiers, et une
+ * condition mal écrite n'était détectée qu'au calcul, sous forme de règle ignorée.
+ */
+function controlerRegle(input: {
+  ruleType?: string | null;
+  actionType?: string | null;
+  severity?: string | null;
+  penaltyValue?: number | null;
+  conditionExpression?: string | null;
+}): { errors: { field: string; message: string }[]; warnings: string[] } {
+  const { errors, warnings } = validerRegle(input);
+  const champs = errors.map((message) => ({ field: "rule", message }));
+
+  const condition = validateConditionExpression(input.conditionExpression);
+  if (!condition.valid) {
+    champs.push({
+      field: "conditionExpression",
+      message: `Condition invalide : ${condition.error}`,
+    });
+  }
+
+  return { errors: champs, warnings };
+}
 
 export async function GET(req: NextRequest) {
   return withAdminAuth(req, async () => {
@@ -68,6 +98,17 @@ export async function POST(req: NextRequest) {
         return validationError([{ field: "nodeId", message: "Nœud non trouvé dans cette version" }]);
       }
 
+      const controle = controlerRegle({
+        ruleType,
+        actionType: actionType || "SHOW_WARNING",
+        severity: severity || "MEDIUM",
+        penaltyValue,
+        conditionExpression,
+      });
+      if (controle.errors.length > 0) {
+        return validationError(controle.errors);
+      }
+
       const maxOrderIndex = await prisma.scoringNodeRule.findFirst({
         where: { nodeId },
         orderBy: { orderIndex: "desc" },
@@ -83,7 +124,9 @@ export async function POST(req: NextRequest) {
           ruleType,
           code,
           label: label || code,
-          conditionExpression: conditionExpression || "true",
+          // Pas de « true » par défaut : une règle sans condition explicite se
+          // déclencherait sur tous les dossiers. Le contrôle ci-dessus l'exige.
+          conditionExpression: String(conditionExpression).trim(),
           severity: severity || "MEDIUM",
           actionType: actionType || "SHOW_WARNING",
           penaltyValue: penaltyValue || 0,
@@ -97,7 +140,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return successResponse(rule, { status: 201 });
+      return successResponse(
+        { rule, warnings: controle.warnings },
+        { status: 201 }
+      );
     } catch (error: any) {
       console.error("[ADMIN/SCORING/RULES] POST error:", error);
       return serverError("Erreur lors de la création de la règle");
@@ -116,13 +162,33 @@ export async function PUT(req: NextRequest) {
       }
 
       const body = await req.json();
-      const { label, conditionExpression, severity, actionType, penaltyValue, messageUser, messageCommittee } = body;
+      const { label, conditionExpression, severity, actionType, penaltyValue, messageUser, messageCommittee, ruleType } = body;
+
+      const existante = await prisma.scoringNodeRule.findUnique({
+        where: { id: ruleId },
+        select: { ruleType: true },
+      });
+      if (!existante) {
+        return validationError([{ field: "id", message: "Règle introuvable" }]);
+      }
+
+      const controle = controlerRegle({
+        ruleType: ruleType ?? existante.ruleType,
+        actionType,
+        severity,
+        penaltyValue,
+        conditionExpression,
+      });
+      if (controle.errors.length > 0) {
+        return validationError(controle.errors);
+      }
 
       const updated = await prisma.scoringNodeRule.update({
         where: { id: ruleId },
         data: {
           label,
-          conditionExpression,
+          ruleType: ruleType ?? existante.ruleType,
+          conditionExpression: String(conditionExpression).trim(),
           severity,
           actionType,
           penaltyValue,
@@ -134,7 +200,7 @@ export async function PUT(req: NextRequest) {
         },
       });
 
-      return successResponse(updated);
+      return successResponse({ rule: updated, warnings: controle.warnings });
     } catch (error: any) {
       console.error("[ADMIN/SCORING/RULES] PUT error:", error);
       return serverError("Erreur lors de la mise à jour de la règle");
