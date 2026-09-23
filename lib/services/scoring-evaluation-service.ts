@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma-client";
-import { ScoringEngine } from "./scoring-engine";
+import { ScoringEngineV8 } from "./scoring";
 
 export class ScoringEvaluationService {
   /**
@@ -215,109 +215,24 @@ export class ScoringEvaluationService {
   }
 
   /**
-   * Calculate scores for evaluation using the generic scoring engine
+   * Calcule et persiste les scores via le moteur unique de l'application.
+   *
+   * Il n'existe plus qu'un seul moteur de scoring : ScoringEngineV8. Le score, le
+   * rating, les malus, les règles déclenchées et l'éventuel blocage en proviennent,
+   * et non plus d'une table de correspondance locale divergente.
    */
   static async calculateScores(evaluationId: string) {
-    const evaluation = await prisma.scoringEvaluation.findUnique({
-      where: { id: evaluationId },
-      select: { modelVersionId: true },
-    });
+    const trace = await ScoringEngineV8.scoreEvaluation(evaluationId);
+    await ScoringEngineV8.persistTrace(trace);
 
-    if (!evaluation) {
-      throw new Error("Evaluation not found");
-    }
-
-    // Use the generic scoring engine
-    const nodeResults = await ScoringEngine.scoreEvaluation(
-      evaluationId,
-      evaluation.modelVersionId
-    );
-
-    // Store results in database
-    for (const [nodeId, score] of nodeResults.entries()) {
-      await prisma.scoringEvaluationNodeResult.upsert({
-        where: {
-          evaluationId_nodeId: {
-            evaluationId,
-            nodeId,
-          },
-        },
-        create: {
-          evaluationId,
-          nodeId,
-          rawScore: score.rawScore,
-          weightedScore: score.weightedScore,
-          normalizedScore: score.normalizedScore,
-          explanation: score.explanation,
-          aggregationMethod: score.aggregationMethod,
-          ruleImpactJson: JSON.stringify(score.ruleImpacts),
-          traceJson: JSON.stringify({
-            weight: score.weight,
-            method: score.aggregationMethod,
-            ruleCount: score.ruleImpacts.length,
-          }),
-        },
-        update: {
-          rawScore: score.rawScore,
-          weightedScore: score.weightedScore,
-          normalizedScore: score.normalizedScore,
-          explanation: score.explanation,
-          aggregationMethod: score.aggregationMethod,
-          ruleImpactJson: JSON.stringify(score.ruleImpacts),
-          traceJson: JSON.stringify({
-            weight: score.weight,
-            method: score.aggregationMethod,
-            ruleCount: score.ruleImpacts.length,
-          }),
-        },
-      });
-    }
-
-    // Calculate and store global score
-    const finalScores = await ScoringEngine.getFinalScores(
-      evaluationId,
-      nodeResults
-    );
-
-    // Calculate rating from score
-    const rating = this.getRatingFromScore(finalScores.globalScore);
-
-    // Update evaluation with final score and rating
-    await prisma.scoringEvaluation.update({
-      where: { id: evaluationId },
-      data: {
-        finalScore: finalScores.globalScore,
-        rating,
-      },
-    });
-
-    return { nodeResults, finalScores, rating };
-  }
-
-  /**
-   * Determine rating (AAA-D scale) based on score (0-100)
-   */
-  private static getRatingFromScore(score: number): string {
-    const thresholds: Record<string, { min: number; max: number }> = {
-      AAA: { min: 95, max: 100 },
-      AA: { min: 85, max: 94 },
-      A: { min: 75, max: 84 },
-      BBB: { min: 65, max: 74 },
-      BB: { min: 55, max: 64 },
-      B: { min: 45, max: 54 },
-      CCC: { min: 35, max: 44 },
-      CC: { min: 25, max: 34 },
-      C: { min: 15, max: 24 },
-      D: { min: 0, max: 14 },
+    return {
+      finalScore: trace.finalScore,
+      rating: trace.rating,
+      recommendation: trace.recommendation,
+      malusTotal: trace.malusTotal,
+      blocked: trace.blocked,
+      blockingRuleCodes: trace.blockingRuleCodes,
     };
-
-    for (const [rating, { min, max }] of Object.entries(thresholds)) {
-      if (score >= min && score <= max) {
-        return rating;
-      }
-    }
-
-    return "D";
   }
 
   /**
