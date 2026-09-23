@@ -100,12 +100,23 @@ export function Sidebar() {
     },
   ];
 
+  // Les deux boutons du bas n'avaient aucun gestionnaire : ils donnaient
+  // l'impression d'un outil cassé à chaque écran.
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      localStorage.removeItem("auth_token");
+      window.location.href = "/login";
+    }
+  };
+
   return (
     <>
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors"
+        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-card hover:bg-accent text-foreground border border-border rounded-lg transition-colors"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -120,7 +131,7 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static w-64 bg-slate-900 border-r border-slate-700 min-h-screen flex flex-col transition-all z-40 ${
+        className={`fixed md:static w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border min-h-screen flex flex-col transition-all z-40 ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
@@ -139,8 +150,8 @@ export function Sidebar() {
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
-                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   }`}
                 >
                   <Icon size={20} />
@@ -155,12 +166,19 @@ export function Sidebar() {
         </div>
 
         {/* Bottom Actions */}
-        <div className="border-t border-slate-700 p-4 space-y-2">
-          <button className="w-full flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+        <div className="border-t border-sidebar-border p-4 space-y-2">
+          <Link
+            href="/admin"
+            onClick={() => setIsOpen(false)}
+            className="w-full flex items-center space-x-3 px-4 py-3 text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition-colors"
+          >
             <Settings size={20} />
-            <span className="text-sm">Paramètres</span>
-          </button>
-          <button className="w-full flex items-center space-x-3 px-4 py-3 text-slate-300 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors">
+            <span className="text-sm">Paramétrage</span>
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 px-4 py-3 text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-destructive rounded-lg transition-colors"
+          >
             <LogOut size={20} />
             <span className="text-sm">Déconnexion</span>
           </button>
