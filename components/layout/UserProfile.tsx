@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { LogOut, Settings, Users, BarChart3, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { hasMinimumRole } from "@/lib/permissions";
 
 interface User {
   id: string;
@@ -110,9 +111,17 @@ export function UserProfile() {
             <p className="text-sm font-medium text-white">{user.email}</p>
           </div>
 
-          {/* Admin Menu */}
-          {user.role === "admin" && (
+          {/* Admin Menu — même seuil de rôle que withAdminAuth côté API */}
+          {hasMinimumRole(user.role, "scoring_admin") && (
             <>
+              <Link
+                href="/admin"
+                className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-slate-700 transition-colors border-b border-slate-700"
+                onClick={() => setDropdownOpen(false)}
+              >
+                <Settings size={16} />
+                Paramétrage
+              </Link>
               <Link
                 href="/admin/users"
                 className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-slate-700 transition-colors border-b border-slate-700"
@@ -122,7 +131,7 @@ export function UserProfile() {
                 Gestion des utilisateurs
               </Link>
               <Link
-                href="/admin/scoring-grid"
+                href="/admin/scoring-grid-v7pp"
                 className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-slate-700 transition-colors border-b border-slate-700"
                 onClick={() => setDropdownOpen(false)}
               >
@@ -131,16 +140,6 @@ export function UserProfile() {
               </Link>
             </>
           )}
-
-          {/* Settings */}
-          <Link
-            href="/settings"
-            className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-slate-700 transition-colors border-b border-slate-700"
-            onClick={() => setDropdownOpen(false)}
-          >
-            <Settings size={16} />
-            Paramètres
-          </Link>
 
           {/* Logout */}
           <button
