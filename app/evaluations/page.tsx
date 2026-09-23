@@ -123,7 +123,7 @@ export default function EvaluationsPage() {
   };
 
   const getRatingColor = (rating: string | null) => {
-    if (!rating) return "bg-slate-600 text-slate-300";
+    if (!rating) return "bg-secondary text-secondary-foreground";
     if (rating.startsWith("AA")) return "bg-green-500/20 text-green-400";
     if (rating.startsWith("A")) return "bg-blue-500/20 text-blue-400";
     if (rating.startsWith("BBB")) return "bg-cyan-500/20 text-cyan-400";
@@ -131,7 +131,7 @@ export default function EvaluationsPage() {
   };
 
   const getStatusLabel = (status: string) => STATUS_LABELS[status] || status;
-  const getStatusColor = (status: string) => STATUS_COLORS[status] || "bg-slate-600 text-slate-300";
+  const getStatusColor = (status: string) => STATUS_COLORS[status] || "bg-secondary text-secondary-foreground";
 
   const formatDate = (dateStr: string) => {
     try {
@@ -162,8 +162,8 @@ export default function EvaluationsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Évaluations</h1>
-          <p className="text-slate-400 mt-2 text-sm md:text-base">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Évaluations</h1>
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">
             Gérez les évaluations de risque des projets
           </p>
         </div>
@@ -176,7 +176,7 @@ export default function EvaluationsPage() {
             <span>Nouvelle Évaluation</span>
           </Link>
         ) : (
-          <div className="inline-flex items-center space-x-2 bg-slate-700/50 text-slate-400 font-semibold px-4 py-2 rounded-lg w-full md:w-auto justify-center md:justify-start">
+          <div className="inline-flex items-center space-x-2 bg-muted/50 text-muted-foreground font-semibold px-4 py-2 rounded-lg w-full md:w-auto justify-center md:justify-start">
             <Lock size={20} />
             <span>Nouvelle Évaluation</span>
           </div>
@@ -193,13 +193,13 @@ export default function EvaluationsPage() {
       <div className="space-y-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 text-slate-500" size={20} />
+            <Search className="absolute left-3 top-3 text-muted-foreground" size={20} />
             <input
               type="text"
               placeholder="Rechercher par projet..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm md:text-base"
+              className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500 text-sm md:text-base"
             />
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function EvaluationsPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+            className="bg-card border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500"
           >
             <option value="">Tous les statuts</option>
             <option value="brouillon">Brouillon</option>
@@ -220,7 +220,7 @@ export default function EvaluationsPage() {
           <select
             value={filterRating}
             onChange={(e) => setFilterRating(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+            className="bg-card border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500"
           >
             <option value="">Tous les ratings</option>
             <option value="AAA">AAA</option>
@@ -238,7 +238,7 @@ export default function EvaluationsPage() {
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               showArchived
                 ? "bg-amber-600 text-white"
-                : "bg-slate-800 border border-slate-700 text-slate-400 hover:text-white"
+                : "bg-card border border-border text-muted-foreground hover:text-white"
             }`}
           >
             <Archive size={16} className="inline mr-2" />
@@ -246,36 +246,36 @@ export default function EvaluationsPage() {
           </button>
         </div>
 
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted-foreground">
           {filtered.length} évaluation{filtered.length !== 1 ? "s" : ""} trouvée{filtered.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800 overflow-hidden">
+      <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-900 border-b border-slate-700">
+            <thead className="bg-background border-b border-border">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Projet</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Score</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Rating</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Statut</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Date</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-slate-300">Actions</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-secondary-foreground">Projet</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-secondary-foreground">Score</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-secondary-foreground">Rating</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-secondary-foreground">Statut</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-secondary-foreground">Date</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-secondary-foreground">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700">
+            <tbody className="divide-y divide-border">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400">
+                  <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
                     Aucune évaluation trouvée
                   </td>
                 </tr>
               ) : (
                 filtered.map((ev) => (
-                  <tr key={ev.id} className="hover:bg-slate-700/50 transition-colors">
-                    <td className="px-6 py-3 font-semibold text-white">{ev.projectName}</td>
+                  <tr key={ev.id} className="hover:bg-accent/50 transition-colors">
+                    <td className="px-6 py-3 font-semibold text-foreground">{ev.projectName}</td>
                     <td className="px-6 py-3 font-bold text-cyan-400">
                       {ev.finalScore != null ? ev.finalScore.toFixed(2) : "—"}
                     </td>
@@ -289,12 +289,12 @@ export default function EvaluationsPage() {
                         {getStatusLabel(ev.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-slate-400 text-sm">{formatDate(ev.createdAt)}</td>
+                    <td className="px-6 py-3 text-muted-foreground text-sm">{formatDate(ev.createdAt)}</td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/evaluations/${ev.id}`}
-                          className="p-2 text-cyan-400 hover:bg-slate-600 rounded-lg transition-colors"
+                          className="p-2 text-cyan-400 hover:bg-secondary rounded-lg transition-colors"
                           title="Consulter"
                         >
                           <Eye size={16} />
@@ -304,7 +304,7 @@ export default function EvaluationsPage() {
                           can("evaluation", "update") && (
                             <Link
                               href={`/evaluations/${ev.id}/saisie`}
-                              className="p-2 text-blue-400 hover:bg-slate-600 rounded-lg transition-colors"
+                              className="p-2 text-blue-400 hover:bg-secondary rounded-lg transition-colors"
                               title="Reprendre la saisie"
                             >
                               <Edit2 size={16} />
@@ -317,14 +317,14 @@ export default function EvaluationsPage() {
                                 handleArchive(ev.id, !ev.isArchived)
                               }
                               disabled={archiving}
-                              className="p-2 text-amber-400 hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50"
+                              className="p-2 text-amber-400 hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
                               title={ev.isArchived ? "Restaurer" : "Archiver"}
                             >
                               <Archive size={16} />
                             </button>
                             <button
                               onClick={() => setDeleteConfirm(ev.id)}
-                              className="p-2 text-red-400 hover:bg-slate-600 rounded-lg transition-colors"
+                              className="p-2 text-red-400 hover:bg-secondary rounded-lg transition-colors"
                               title="Supprimer"
                             >
                               <Trash2 size={16} />
@@ -382,9 +382,9 @@ export default function EvaluationsPage() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-700 p-4">
-      <p className="text-slate-400 text-sm font-medium">{label}</p>
-      <p className="text-2xl font-bold text-white mt-2">{value}</p>
+    <div className="rounded-lg bg-gradient-to-br from-muted to-background border border-border p-4">
+      <p className="text-muted-foreground text-sm font-medium">{label}</p>
+      <p className="text-2xl font-bold text-foreground mt-2">{value}</p>
     </div>
   );
 }

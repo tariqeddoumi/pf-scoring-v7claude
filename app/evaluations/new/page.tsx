@@ -89,7 +89,7 @@ export default function NewEvaluationPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
           <Loader2 className="animate-spin text-cyan-400 mx-auto" size={40} />
-          <p className="text-slate-400 text-sm">Chargement du questionnaire…</p>
+          <p className="text-muted-foreground text-sm">Chargement du questionnaire…</p>
         </div>
       </div>
     );
@@ -102,13 +102,13 @@ export default function NewEvaluationPage() {
       <div className="flex items-center gap-4">
         <Link
           href="/evaluations"
-          className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+          className="p-2 hover:bg-card rounded-lg transition-colors"
         >
-          <ArrowLeft size={20} className="text-slate-400" />
+          <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white">Nouvelle Évaluation</h1>
-          <p className="text-slate-400 mt-1 text-sm">
+          <h1 className="text-3xl font-bold text-foreground">Nouvelle Évaluation</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
             Créez une évaluation de risque pour un projet
           </p>
         </div>
@@ -116,7 +116,7 @@ export default function NewEvaluationPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form card */}
-        <div className="lg:col-span-2 rounded-xl border border-slate-700 bg-slate-800 p-6">
+        <div className="lg:col-span-2 rounded-xl border border-border bg-card p-6">
           {error && (
             <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
               {error}
@@ -135,13 +135,13 @@ export default function NewEvaluationPage() {
 
           <form onSubmit={handleCreate} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-secondary-foreground mb-2">
                 Projet à évaluer <span className="text-red-400">*</span>
               </label>
               <select
                 value={formData.projectId}
                 onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none transition-colors"
+                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground focus:border-cyan-500 focus:outline-none transition-colors"
                 required
                 disabled={projects.length === 0}
               >
@@ -153,7 +153,7 @@ export default function NewEvaluationPage() {
                 ))}
               </select>
               {projects.length === 0 && (
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Aucun projet disponible.{" "}
                   <Link href="/projects/new" className="text-cyan-400 hover:underline">
                     Créer un projet
@@ -163,13 +163,13 @@ export default function NewEvaluationPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-secondary-foreground mb-2">
                 Recommandation initiale
               </label>
               <select
                 value={formData.recommendation}
                 onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none transition-colors"
+                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground focus:border-cyan-500 focus:outline-none transition-colors"
               >
                 <option value="APPROVE">Approuver</option>
                 <option value="REJECT">Rejeter</option>
@@ -178,13 +178,13 @@ export default function NewEvaluationPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-secondary-foreground mb-2">
                 Notes préliminaires
               </label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none transition-colors"
+                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:outline-none transition-colors"
                 rows={3}
                 placeholder="Contexte, informations importantes…"
               />
@@ -194,7 +194,7 @@ export default function NewEvaluationPage() {
               <button
                 type="submit"
                 disabled={submitting || !formData.projectId}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-muted disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
@@ -210,7 +210,7 @@ export default function NewEvaluationPage() {
               </button>
               <Link
                 href="/evaluations"
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all text-center"
+                className="px-6 py-3 bg-muted hover:bg-secondary text-foreground font-semibold rounded-lg transition-all text-center"
               >
                 Annuler
               </Link>
@@ -220,8 +220,8 @@ export default function NewEvaluationPage() {
 
         {/* Info panel */}
         <div className="space-y-4">
-          <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <BarChart3 size={16} className="text-cyan-400" />
               Questionnaire de scoring
             </h3>
@@ -232,13 +232,13 @@ export default function NewEvaluationPage() {
                     key={domain.id}
                     className="flex items-center justify-between text-xs"
                   >
-                    <span className="text-slate-400">{domain.label}</span>
-                    <span className="text-slate-500">
+                    <span className="text-muted-foreground">{domain.label}</span>
+                    <span className="text-muted-foreground">
                       {domain.children?.length ?? 0} critères
                     </span>
                   </div>
                 ))}
-                <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
+                <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
                   {questionnaire.length} domaines · {questionnaire.reduce(
                     (s, d) => s + (d.children?.length ?? 0),
                     0
@@ -247,12 +247,12 @@ export default function NewEvaluationPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-slate-500">Aucun modèle actif</p>
+              <p className="text-xs text-muted-foreground">Aucun modèle actif</p>
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-5 text-xs text-slate-500 space-y-2">
-            <p className="font-semibold text-slate-400">Processus d'évaluation</p>
+          <div className="rounded-xl border border-border bg-card/50 p-5 text-xs text-muted-foreground space-y-2">
+            <p className="font-semibold text-muted-foreground">Processus d'évaluation</p>
             <ol className="space-y-1.5 list-decimal list-inside">
               <li>Sélectionner le projet</li>
               <li>Renseigner les critères par domaine</li>

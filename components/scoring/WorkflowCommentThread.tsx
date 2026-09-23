@@ -65,11 +65,11 @@ export function WorkflowCommentThread({
     <div
       key={comment.id}
       className={`space-y-2 ${
-        isReply ? 'ml-8 border-l-2 border-gray-200 pl-4 py-2' : 'pb-4'
+        isReply ? 'ml-8 border-l-2 border-border pl-4 py-2' : 'pb-4'
       }`}
     >
       <div className={`p-3 rounded-lg ${
-        isInternal || comment.isInternal ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50 border border-gray-200'
+        isInternal || comment.isInternal ? 'bg-yellow-50 border border-yellow-200' : 'bg-muted border border-border'
       }`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-2 flex-1">
@@ -78,14 +78,14 @@ export function WorkflowCommentThread({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium text-sm text-gray-900">
+                <span className="font-medium text-sm text-foreground">
                   {comment.createdByUser?.prenom} {comment.createdByUser?.nom}
                 </span>
                 <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                   comment.commentType === 'QUESTION' ? 'bg-blue-100 text-blue-700' :
                   comment.commentType === 'ISSUE' ? 'bg-red-100 text-red-700' :
                   comment.commentType === 'SUGGESTION' ? 'bg-green-100 text-green-700' :
-                  'bg-gray-100 text-gray-700'
+                  'bg-muted text-secondary-foreground'
                 }`}>
                   {COMMENT_TYPES.find(t => t.value === comment.commentType)?.label}
                 </span>
@@ -95,7 +95,7 @@ export function WorkflowCommentThread({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {new Date(comment.createdAt).toLocaleString('fr-FR')}
               </p>
             </div>
@@ -106,7 +106,7 @@ export function WorkflowCommentThread({
             </span>
           )}
         </div>
-        <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{comment.content}</p>
+        <p className="text-sm text-secondary-foreground mt-2 whitespace-pre-wrap">{comment.content}</p>
       </div>
 
       {/* Render replies */}
@@ -122,12 +122,12 @@ export function WorkflowCommentThread({
     <div className="space-y-6">
       {/* Comments List */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Commentaires ({comments.length})</h3>
+        <h3 className="text-lg font-semibold text-foreground">Commentaires ({comments.length})</h3>
 
         {comments.length === 0 ? (
-          <div className="p-8 text-center bg-gray-50 rounded-lg border border-gray-200">
-            <MessageSquare className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-500">Aucun commentaire pour le moment</p>
+          <div className="p-8 text-center bg-muted rounded-lg border border-border">
+            <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground">Aucun commentaire pour le moment</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -137,18 +137,18 @@ export function WorkflowCommentThread({
       </div>
 
       {/* Add Comment Form */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-4">Ajouter un commentaire</h4>
+      <div className="bg-white border border-border rounded-lg p-4">
+        <h4 className="font-medium text-foreground mb-4">Ajouter un commentaire</h4>
         <form onSubmit={handleAddComment} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-foreground mb-1">
                 Type de commentaire
               </label>
               <select
                 value={commentType}
                 onChange={(e) => setCommentType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {COMMENT_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -164,9 +164,9 @@ export function WorkflowCommentThread({
                   type="checkbox"
                   checked={isInternal}
                   onChange={(e) => setIsInternal(e.target.checked)}
-                  className="rounded border-gray-300"
+                  className="rounded border-border"
                 />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-secondary-foreground">
                   Commentaire interne
                 </span>
               </label>
@@ -174,13 +174,13 @@ export function WorkflowCommentThread({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-secondary-foreground mb-2">
               Contenu du commentaire
             </label>
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               rows={3}
               placeholder="Entrez votre commentaire..."
             />
@@ -189,7 +189,7 @@ export function WorkflowCommentThread({
           <button
             type="submit"
             disabled={isSubmitting || isLoading || !newComment.trim()}
-            className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-secondary transition-colors"
           >
             <Send className="w-4 h-4" />
             {isSubmitting || isLoading ? 'Envoi...' : 'Envoyer'}

@@ -96,7 +96,7 @@ export default function ClientDetailPage({
       <div className="space-y-6">
         <Link
           href="/clients"
-          className="inline-flex items-center space-x-2 text-slate-400 hover:text-white"
+          className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft size={20} />
           <span>Retour aux clients</span>
@@ -110,7 +110,7 @@ export default function ClientDetailPage({
 
   const renderFieldValue = (value: any) => {
     if (value === null || value === undefined || value === "") {
-      return <span className="text-slate-500 italic">Non renseigné</span>;
+      return <span className="text-muted-foreground italic">Non renseigné</span>;
     }
     if (typeof value === "object" && value.toLocaleDateString) {
       return new Date(value).toLocaleDateString("fr-FR");
@@ -127,37 +127,37 @@ export default function ClientDetailPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Nom du client
               </label>
-              <p className="text-white">{renderFieldValue(client.nom)}</p>
+              <p className="text-foreground">{renderFieldValue(client.nom)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Raison sociale
               </label>
-              <p className="text-white">{renderFieldValue(client.raisonSociale)}</p>
+              <p className="text-foreground">{renderFieldValue(client.raisonSociale)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Nom commercial
               </label>
-              <p className="text-white">{renderFieldValue(client.nomCommercial)}</p>
+              <p className="text-foreground">{renderFieldValue(client.nomCommercial)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Type de client
               </label>
-              <p className="text-white">{renderFieldValue(client.typeClient)}</p>
+              <p className="text-foreground">{renderFieldValue(client.typeClient)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Forme juridique
               </label>
-              <p className="text-white">{renderFieldValue(client.formeJuridique)}</p>
+              <p className="text-foreground">{renderFieldValue(client.formeJuridique)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Statut
               </label>
               <span className={`inline-block px-3 py-1 rounded-full text-sm ${
@@ -180,41 +180,41 @@ export default function ClientDetailPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Secteur
               </label>
-              <p className="text-white">{renderFieldValue(client.secteur)}</p>
+              <p className="text-foreground">{renderFieldValue(client.secteur)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Segment clientèle
               </label>
-              <p className="text-white">{renderFieldValue(client.segmentClientele)}</p>
+              <p className="text-foreground">{renderFieldValue(client.segmentClientele)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Effectifs
               </label>
-              <p className="text-white">{renderFieldValue(client.effectifs)}</p>
+              <p className="text-foreground">{renderFieldValue(client.effectifs)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Capital social (MAD)
               </label>
-              <p className="text-white">{client.capitalSocial ? client.capitalSocial.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
+              <p className="text-foreground">{client.capitalSocial ? client.capitalSocial.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Chiffre d&apos;affaires (MAD)
               </label>
-              <p className="text-white">{client.chiffreAffaires ? client.chiffreAffaires.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
+              <p className="text-foreground">{client.chiffreAffaires ? client.chiffreAffaires.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
               Description / Activités
             </label>
-            <p className="text-white whitespace-pre-wrap">{renderFieldValue(client.description)}</p>
+            <p className="text-foreground whitespace-pre-wrap">{renderFieldValue(client.description)}</p>
           </div>
         </div>
       ),
@@ -227,29 +227,29 @@ export default function ClientDetailPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Pays
               </label>
-              <p className="text-white">{renderFieldValue(client.pays)}</p>
+              <p className="text-foreground">{renderFieldValue(client.pays)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Ville
               </label>
-              <p className="text-white">{renderFieldValue(client.ville)}</p>
+              <p className="text-foreground">{renderFieldValue(client.ville)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Code postal
               </label>
-              <p className="text-white">{renderFieldValue(client.codePostal)}</p>
+              <p className="text-foreground">{renderFieldValue(client.codePostal)}</p>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
               Adresse
             </label>
-            <p className="text-white whitespace-pre-wrap">{renderFieldValue(client.adresse)}</p>
+            <p className="text-foreground whitespace-pre-wrap">{renderFieldValue(client.adresse)}</p>
           </div>
         </div>
       ),
@@ -262,22 +262,22 @@ export default function ClientDetailPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Email
               </label>
-              <p className="text-white break-all">{renderFieldValue(client.email)}</p>
+              <p className="text-foreground break-all">{renderFieldValue(client.email)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Téléphone
               </label>
-              <p className="text-white">{renderFieldValue(client.telephone)}</p>
+              <p className="text-foreground">{renderFieldValue(client.telephone)}</p>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Site web
               </label>
-              <p className="text-white break-all">{renderFieldValue(client.website)}</p>
+              <p className="text-foreground break-all">{renderFieldValue(client.website)}</p>
             </div>
           </div>
         </div>
@@ -291,40 +291,40 @@ export default function ClientDetailPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Centre d&apos;affaires
               </label>
-              <p className="text-white">{renderFieldValue(client.centreAffaires)}</p>
+              <p className="text-foreground">{renderFieldValue(client.centreAffaires)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Gestionnaire
               </label>
-              <p className="text-white">{renderFieldValue(client.gestionnaire)}</p>
+              <p className="text-foreground">{renderFieldValue(client.gestionnaire)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Rating interne
               </label>
-              <p className="text-white">{renderFieldValue(client.ratingInterne)}</p>
+              <p className="text-foreground">{renderFieldValue(client.ratingInterne)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Statut bancaire
               </label>
-              <p className="text-white">{renderFieldValue(client.statutBancaire)}</p>
+              <p className="text-foreground">{renderFieldValue(client.statutBancaire)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Date du début de relation
               </label>
-              <p className="text-white">{client.dateRelation ? new Date(client.dateRelation).toLocaleDateString("fr-FR") : renderFieldValue(null)}</p>
+              <p className="text-foreground">{client.dateRelation ? new Date(client.dateRelation).toLocaleDateString("fr-FR") : renderFieldValue(null)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Exposition (MAD)
               </label>
-              <p className="text-white">{client.exposition ? client.exposition.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
+              <p className="text-foreground">{client.exposition ? client.exposition.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
             </div>
           </div>
         </div>
@@ -338,16 +338,16 @@ export default function ClientDetailPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Statut KYC
               </label>
-              <p className="text-white">{renderFieldValue(client.statusKYC)}</p>
+              <p className="text-foreground">{renderFieldValue(client.statusKYC)}</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
                 Statut conformité
               </label>
-              <p className="text-white">{renderFieldValue(client.statusConformite)}</p>
+              <p className="text-foreground">{renderFieldValue(client.statusConformite)}</p>
             </div>
           </div>
         </div>
@@ -362,13 +362,13 @@ export default function ClientDetailPage({
         <div className="flex items-center space-x-4">
           <Link
             href="/clients"
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
           >
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-white">{client.nom}</h1>
-            <p className="text-slate-400 mt-1 text-sm">ID: {client.id}</p>
+            <h1 className="text-3xl font-bold text-foreground">{client.nom}</h1>
+            <p className="text-muted-foreground mt-1 text-sm">ID: {client.id}</p>
           </div>
         </div>
         <button
@@ -381,27 +381,27 @@ export default function ClientDetailPage({
       </div>
 
       {/* Tabs Content */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+      <div className="bg-card rounded-lg border border-border p-6">
         <Tabs tabs={tabs} defaultTab="identity" />
       </div>
 
       {/* Meta Information */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Informations système</h3>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Informations système</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
               Créé le
             </label>
-            <p className="text-white">
+            <p className="text-foreground">
               {new Date(client.createdAt).toLocaleDateString("fr-FR")}
             </p>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
               Identifiant
             </label>
-            <p className="text-white font-mono text-sm">{client.id}</p>
+            <p className="text-foreground font-mono text-sm">{client.id}</p>
           </div>
         </div>
       </div>

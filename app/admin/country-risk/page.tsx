@@ -206,7 +206,7 @@ export default function CountryRiskPage() {
                         disabled={saving}
                         className="w-20"
                       />
-                      <div className="flex-1 h-2 bg-gray-700 rounded overflow-hidden min-w-32">
+                      <div className="flex-1 h-2 bg-card rounded overflow-hidden min-w-32">
                         <div
                           className={`h-full transition-all ${
                             country.riskScore > 70

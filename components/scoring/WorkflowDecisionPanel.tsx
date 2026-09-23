@@ -74,13 +74,13 @@ export function WorkflowDecisionPanel({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">Décision de Scoring</h3>
+    <div className="bg-white border border-border rounded-lg p-6">
+      <h3 className="text-lg font-semibold text-foreground mb-6">Décision de Scoring</h3>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Decision Type Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-secondary-foreground mb-3">
             Type de décision
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -92,7 +92,7 @@ export function WorkflowDecisionPanel({
                 className={`p-3 border-2 rounded-lg text-sm font-medium transition-all ${
                   formData.decisionType === type.value
                     ? type.color + ' border-current'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    : 'border-border bg-white hover:border-border'
                 }`}
               >
                 {type.label}
@@ -103,14 +103,14 @@ export function WorkflowDecisionPanel({
 
         {/* Risk Rating */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-secondary-foreground mb-2">
             Note de risque (Grade)
           </label>
           <select
             value={formData.riskRating}
             onChange={(e) => setFormData({ ...formData, riskRating: e.target.value })}
             className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.riskRating ? 'border-red-500' : 'border-gray-300'
+              errors.riskRating ? 'border-red-500' : 'border-border'
             }`}
           >
             {riskRatings.map((rating) => (
@@ -126,14 +126,14 @@ export function WorkflowDecisionPanel({
 
         {/* Justification */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-secondary-foreground mb-2">
             Justification *
           </label>
           <textarea
             value={formData.justification}
             onChange={(e) => setFormData({ ...formData, justification: e.target.value })}
             className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
-              errors.justification ? 'border-red-500' : 'border-gray-300'
+              errors.justification ? 'border-red-500' : 'border-border'
             }`}
             rows={4}
             placeholder="Fournir une justification détaillée de la décision..."
@@ -145,13 +145,13 @@ export function WorkflowDecisionPanel({
 
         {/* Recommendation */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-secondary-foreground mb-2">
             Recommandation (optionnel)
           </label>
           <textarea
             value={formData.recommendation || ''}
             onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             rows={3}
             placeholder="Recommandations supplémentaires pour les prochaines étapes..."
           />
@@ -164,22 +164,22 @@ export function WorkflowDecisionPanel({
               type="checkbox"
               checked={formData.hasConditions}
               onChange={(e) => setFormData({ ...formData, hasConditions: e.target.checked })}
-              className="rounded border-gray-300"
+              className="rounded border-border"
             />
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-secondary-foreground">
               Il y a des conditions à l'approbation
             </span>
           </label>
 
           {formData.hasConditions && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Conditions (une par ligne)
               </label>
               <textarea
                 value={formData.conditionsJson || ''}
                 onChange={(e) => setFormData({ ...formData, conditionsJson: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={3}
                 placeholder="Ex: Fournir les états financiers trimestriels&#10;Installer un système de monitoring..."
               />
@@ -195,9 +195,9 @@ export function WorkflowDecisionPanel({
               type="checkbox"
               checked={formData.requiresHigherApproval || false}
               onChange={(e) => setFormData({ ...formData, requiresHigherApproval: e.target.checked })}
-              className="rounded border-gray-300"
+              className="rounded border-border"
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-secondary-foreground">
               Escalade requise pour approbation supérieure
             </span>
           </label>
@@ -208,7 +208,7 @@ export function WorkflowDecisionPanel({
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-secondary transition-colors"
           >
             <Send className="w-4 h-4" />
             {isSubmitting || isLoading ? 'Envoi...' : 'Soumettre la décision'}

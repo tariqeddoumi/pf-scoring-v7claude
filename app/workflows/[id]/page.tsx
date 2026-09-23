@@ -70,7 +70,7 @@ async function getEvaluationNodes(evaluationId: string) {
 
 function WorkflowHeader({ workflow }: { workflow: any }) {
   const statusColor = {
-    DRAFT: 'bg-gray-100 text-gray-800',
+    DRAFT: 'bg-muted text-foreground',
     SUBMITTED: 'bg-blue-100 text-blue-800',
     UNDER_REVIEW: 'bg-yellow-100 text-yellow-800',
     REVIEWED: 'bg-purple-100 text-purple-800',
@@ -79,23 +79,23 @@ function WorkflowHeader({ workflow }: { workflow: any }) {
   };
 
   return (
-    <div className="bg-white border-b border-gray-200">
+    <div className="bg-white border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center gap-3 mb-4">
           <Link
             href="/dashboard"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 text-secondary-foreground" />
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Workflow de Scoring
           </h1>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
-            <p className="text-xs font-medium text-gray-600 uppercase">Statut</p>
+            <p className="text-xs font-medium text-secondary-foreground uppercase">Statut</p>
             <span className={`inline-block mt-1 px-3 py-1 rounded-lg text-sm font-medium ${
               statusColor[workflow.status as keyof typeof statusColor]
             }`}>
@@ -109,20 +109,20 @@ function WorkflowHeader({ workflow }: { workflow: any }) {
           </div>
 
           <div>
-            <p className="text-xs font-medium text-gray-600 uppercase">Étape actuelle</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{workflow.currentStep}</p>
+            <p className="text-xs font-medium text-secondary-foreground uppercase">Étape actuelle</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{workflow.currentStep}</p>
           </div>
 
           <div>
-            <p className="text-xs font-medium text-gray-600 uppercase">Projet</p>
-            <p className="text-sm font-medium text-gray-900 mt-1">
+            <p className="text-xs font-medium text-secondary-foreground uppercase">Projet</p>
+            <p className="text-sm font-medium text-foreground mt-1">
               {workflow.evaluation?.project?.nom}
             </p>
           </div>
 
           <div>
-            <p className="text-xs font-medium text-gray-600 uppercase">Analyste</p>
-            <p className="text-sm font-medium text-gray-900 mt-1">
+            <p className="text-xs font-medium text-secondary-foreground uppercase">Analyste</p>
+            <p className="text-sm font-medium text-foreground mt-1">
               {workflow.evaluation?.analyst?.prenom} {workflow.evaluation?.analyst?.nom}
             </p>
           </div>
@@ -143,7 +143,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
   const nodes = await getEvaluationNodes(workflow.evaluation?.id);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       <WorkflowHeader workflow={workflow} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -151,8 +151,8 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Workflow Timeline */}
-            <section className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <section className="bg-white rounded-lg border border-border p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-6">
                 Progression du Workflow
               </h2>
               <WorkflowTimeline
@@ -163,7 +163,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
             </section>
 
             {/* Comments Thread */}
-            <section className="bg-white rounded-lg border border-gray-200 p-6">
+            <section className="bg-white rounded-lg border border-border p-6">
               <Suspense fallback={<div className="flex items-center justify-center h-32"><Loader className="w-6 h-6 animate-spin" /></div>}>
                 <WorkflowCommentThread
                   comments={workflow.comments || []}
@@ -176,7 +176,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
             </section>
 
             {/* Documents */}
-            <section className="bg-white rounded-lg border border-gray-200 p-6">
+            <section className="bg-white rounded-lg border border-border p-6">
               <Suspense fallback={<div className="flex items-center justify-center h-32"><Loader className="w-6 h-6 animate-spin" /></div>}>
                 <DocumentUploadPanel
                   evaluationId={workflow.evaluation?.id}
@@ -194,7 +194,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
           <div className="space-y-8">
             {/* Decision Panel */}
             {workflow.status !== 'APPROVED' && workflow.status !== 'REJECTED' && (
-              <section className="bg-white rounded-lg border border-gray-200 p-6">
+              <section className="bg-white rounded-lg border border-border p-6">
                 <Suspense fallback={<div className="flex items-center justify-center h-32"><Loader className="w-6 h-6 animate-spin" /></div>}>
                   <WorkflowDecisionPanel
                     workflowId={id}
@@ -209,28 +209,28 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
 
             {/* Approvals Status */}
             {workflow.approvals && workflow.approvals.length > 0 && (
-              <section className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <section className="bg-white rounded-lg border border-border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
                   Approbations ({workflow.approvals.length})
                 </h3>
                 <div className="space-y-3">
                   {workflow.approvals.map((approval: any) => (
-                    <div key={approval.id} className="p-3 bg-gray-50 rounded-lg">
+                    <div key={approval.id} className="p-3 bg-muted rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-foreground">
                           {approval.approvalType}
                         </span>
                         <span className={`text-xs px-2 py-1 rounded font-medium ${
                           approval.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
                           approval.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
                           approval.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-100 text-gray-700'
+                          'bg-muted text-secondary-foreground'
                         }`}>
                           {approval.status}
                         </span>
                       </div>
                       {approval.dueDate && (
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-secondary-foreground">
                           Échéance: {new Date(approval.dueDate).toLocaleDateString('fr-FR')}
                         </p>
                       )}
@@ -241,7 +241,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
             )}
 
             {/* Score Overrides */}
-            <section className="bg-white rounded-lg border border-gray-200 p-6">
+            <section className="bg-white rounded-lg border border-border p-6">
               <Suspense fallback={<div className="flex items-center justify-center h-32"><Loader className="w-6 h-6 animate-spin" /></div>}>
                 <OverrideManagement
                   evaluationId={workflow.evaluation?.id}
@@ -257,27 +257,27 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
 
             {/* Evaluation Summary */}
             {workflow.evaluation && (
-              <section className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <section className="bg-white rounded-lg border border-border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
                   Résumé d'évaluation
                 </h3>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs font-medium text-gray-600">Score final</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-xs font-medium text-secondary-foreground">Score final</p>
+                    <p className="text-2xl font-bold text-foreground">
                       {workflow.evaluation.finalScore?.toFixed(1) || '-'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-600">Note de rating</p>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-xs font-medium text-secondary-foreground">Note de rating</p>
+                    <p className="text-lg font-bold text-foreground">
                       {workflow.evaluation.rating || '-'}
                     </p>
                   </div>
                   {workflow.evaluation.recommendation && (
                     <div>
-                      <p className="text-xs font-medium text-gray-600">Recommandation</p>
-                      <p className="text-sm text-gray-700">{workflow.evaluation.recommendation}</p>
+                      <p className="text-xs font-medium text-secondary-foreground">Recommandation</p>
+                      <p className="text-sm text-secondary-foreground">{workflow.evaluation.recommendation}</p>
                     </div>
                   )}
                 </div>

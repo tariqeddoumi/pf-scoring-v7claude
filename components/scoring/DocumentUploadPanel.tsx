@@ -144,20 +144,20 @@ export function DocumentUploadPanel({
       {/* Existing Documents */}
       {existingDocuments.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
             Documents chargés ({existingDocuments.length})
           </h3>
           <div className="space-y-2">
             {existingDocuments.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                className="flex items-center justify-between p-3 bg-muted border border-border rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   <FileIcon className="w-5 h-5 text-blue-600" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{doc.fileName}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-foreground">{doc.fileName}</p>
+                    <p className="text-xs text-muted-foreground">
                       {DOCUMENT_TYPES.find(t => t.value === doc.documentType)?.label} •{' '}
                       {new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}
                     </p>
@@ -171,8 +171,8 @@ export function DocumentUploadPanel({
       )}
 
       {/* Upload Form */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Charger un nouveau document</h3>
+      <div className="bg-white border border-border rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-6">Charger un nouveau document</h3>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Drop Zone */}
@@ -183,7 +183,7 @@ export function DocumentUploadPanel({
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
             className={`relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+              dragActive ? 'border-blue-500 bg-blue-50' : 'border-border hover:border-border'
             } ${errors.file ? 'border-red-500 bg-red-50' : ''}`}
           >
             <input
@@ -197,16 +197,16 @@ export function DocumentUploadPanel({
             {selectedFile ? (
               <div className="space-y-2">
                 <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto" />
-                <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                <p className="text-xs text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
               </div>
             ) : (
               <div className="space-y-2">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-                <p className="text-sm font-medium text-gray-900">
+                <Upload className="w-8 h-8 text-muted-foreground mx-auto" />
+                <p className="text-sm font-medium text-foreground">
                   Glissez un fichier ici ou cliquez pour le sélectionner
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   PDF, Word (max {MAX_FILE_SIZE / 1024 / 1024}MB)
                 </p>
               </div>
@@ -223,13 +223,13 @@ export function DocumentUploadPanel({
             <>
               {/* Document Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-secondary-foreground mb-2">
                   Type de document
                 </label>
                 <select
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {DOCUMENT_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -241,13 +241,13 @@ export function DocumentUploadPanel({
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-secondary-foreground mb-2">
                   Description (optionnel)
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   rows={2}
                   placeholder="Décrivez le contenu du document..."
                 />
@@ -258,7 +258,7 @@ export function DocumentUploadPanel({
                 <button
                   type="submit"
                   disabled={isUploading || isLoading}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-secondary transition-colors"
                 >
                   {isUploading || isLoading ? 'Chargement...' : 'Charger le document'}
                 </button>
@@ -268,7 +268,7 @@ export function DocumentUploadPanel({
                     setSelectedFile(null);
                     setErrors({});
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-border rounded-lg text-secondary-foreground font-medium hover:bg-muted transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>

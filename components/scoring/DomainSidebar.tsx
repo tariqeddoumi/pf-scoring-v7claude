@@ -34,7 +34,7 @@ function getDomainMeta(code?: string, label?: string) {
     (k) =>
       code?.toUpperCase().includes(k) || label?.toUpperCase().includes(k)
   );
-  return key ? DOMAIN_META[key] : { icon: "📋", color: "text-slate-400" };
+  return key ? DOMAIN_META[key] : { icon: "📋", color: "text-muted-foreground" };
 }
 
 function getScoreColor(score: number) {
@@ -54,17 +54,17 @@ export function DomainSidebar({
   const globalProgress = totalQuestions > 0 ? (totalAnswered / totalQuestions) * 100 : 0;
 
   return (
-    <div className="h-full bg-slate-900 border-r border-slate-700 flex flex-col w-64 flex-shrink-0">
+    <div className="h-full bg-background border-r border-border flex flex-col w-64 flex-shrink-0">
       {/* Header */}
-      <div className="p-4 border-b border-slate-700">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+      <div className="p-4 border-b border-border">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
           Domaines de Scoring
         </h2>
-        <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
           <span>{totalAnswered} / {totalQuestions} critères</span>
           <span>{Math.round(globalProgress)}%</span>
         </div>
-        <div className="bg-slate-700 rounded-full h-1.5">
+        <div className="bg-muted rounded-full h-1.5">
           <div
             className="h-1.5 rounded-full bg-cyan-500 transition-all duration-500"
             style={{ width: `${globalProgress}%` }}
@@ -88,7 +88,7 @@ export function DomainSidebar({
               className={`w-full text-left px-4 py-3 transition-all border-l-2 ${
                 isCurrent
                   ? "bg-cyan-500/10 border-cyan-500"
-                  : "border-transparent hover:bg-slate-800/60"
+                  : "border-transparent hover:bg-card/60"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -104,7 +104,7 @@ export function DomainSidebar({
                           ? "text-yellow-400"
                           : isCurrent
                           ? "text-cyan-400"
-                          : "text-slate-600"
+                          : "text-muted-foreground"
                       }
                     />
                   )}
@@ -116,7 +116,7 @@ export function DomainSidebar({
                     <span className="text-base leading-none">{meta.icon}</span>
                     <span
                       className={`text-sm font-medium truncate ${
-                        isCurrent ? "text-white" : "text-slate-300"
+                        isCurrent ? "text-foreground" : "text-secondary-foreground"
                       }`}
                     >
                       {domain.label}
@@ -126,21 +126,21 @@ export function DomainSidebar({
                   {/* Progress bar */}
                   {stat.total > 0 && (
                     <div className="mt-1.5 flex items-center gap-2">
-                      <div className="flex-1 bg-slate-700 rounded-full h-1">
+                      <div className="flex-1 bg-muted rounded-full h-1">
                         <div
                           className={`h-1 rounded-full transition-all duration-500 ${
                             isComplete
                               ? "bg-green-400"
                               : isPartial
                               ? "bg-yellow-400"
-                              : "bg-slate-600"
+                              : "bg-secondary"
                           }`}
                           style={{
                             width: `${(stat.answered / stat.total) * 100}%`,
                           }}
                         />
                       </div>
-                      <span className="text-xs text-slate-500 flex-shrink-0">
+                      <span className="text-xs text-muted-foreground flex-shrink-0">
                         {stat.answered}/{stat.total}
                       </span>
                     </div>
@@ -168,7 +168,7 @@ export function DomainSidebar({
       </div>
 
       {/* Footer info */}
-      <div className="p-4 border-t border-slate-700 text-xs text-slate-500">
+      <div className="p-4 border-t border-border text-xs text-muted-foreground">
         {Object.values(stats).filter((s) => s.total > 0 && s.answered === s.total).length}{" "}
         / {domains.length} domaines complétés
       </div>

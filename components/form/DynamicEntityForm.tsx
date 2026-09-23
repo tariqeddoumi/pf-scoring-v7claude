@@ -61,7 +61,7 @@ export function DynamicEntityForm({
       <div className="space-y-4">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-slate-700 rounded-lg" />
+            <div key={i} className="h-12 bg-muted rounded-lg" />
           ))}
         </div>
       </div>

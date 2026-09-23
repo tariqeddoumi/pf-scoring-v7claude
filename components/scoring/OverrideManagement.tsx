@@ -43,7 +43,7 @@ const STATUS_ICONS = {
   PENDING: <Clock className="w-4 h-4 text-yellow-500" />,
   APPROVED: <CheckCircle2 className="w-4 h-4 text-green-500" />,
   REJECTED: <XCircle className="w-4 h-4 text-red-500" />,
-  REVERTED: <XCircle className="w-4 h-4 text-gray-500" />
+  REVERTED: <XCircle className="w-4 h-4 text-muted-foreground" />
 };
 
 export function OverrideManagement({
@@ -107,23 +107,23 @@ export function OverrideManagement({
       {overrides.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs font-medium text-gray-600">Total</p>
+            <p className="text-xs font-medium text-secondary-foreground">Total</p>
             <p className="text-2xl font-bold text-blue-600">{overrides.length}</p>
           </div>
           <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-xs font-medium text-gray-600">En attente</p>
+            <p className="text-xs font-medium text-secondary-foreground">En attente</p>
             <p className="text-2xl font-bold text-yellow-600">
               {overrides.filter(o => o.status === 'PENDING').length}
             </p>
           </div>
           <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-xs font-medium text-gray-600">Approuvées</p>
+            <p className="text-xs font-medium text-secondary-foreground">Approuvées</p>
             <p className="text-2xl font-bold text-green-600">
               {overrides.filter(o => o.status === 'APPROVED').length}
             </p>
           </div>
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-xs font-medium text-gray-600">Rejetées</p>
+            <p className="text-xs font-medium text-secondary-foreground">Rejetées</p>
             <p className="text-2xl font-bold text-red-600">
               {overrides.filter(o => o.status === 'REJECTED').length}
             </p>
@@ -134,7 +134,7 @@ export function OverrideManagement({
       {/* Overrides List */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Surcharges {overrides.length > 0 && `(${overrides.length})`}
           </h3>
           {onCreateOverride && (
@@ -149,9 +149,9 @@ export function OverrideManagement({
         </div>
 
         {overrides.length === 0 && !showForm && (
-          <div className="p-8 text-center bg-gray-50 rounded-lg border border-gray-200">
-            <AlertTriangle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-500">Aucune surcharge de score</p>
+          <div className="p-8 text-center bg-muted rounded-lg border border-border">
+            <AlertTriangle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground">Aucune surcharge de score</p>
           </div>
         )}
 
@@ -161,12 +161,12 @@ export function OverrideManagement({
             {overrides.map((override) => (
               <div
                 key={override.id}
-                className="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow"
+                className="p-4 border border-border rounded-lg bg-white hover:shadow-sm transition-shadow"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-foreground">
                         {override.nodeName || override.nodeId}
                       </h4>
                       <span className={`px-2 py-1 text-xs font-medium rounded ${RISK_LEVEL_COLORS[override.riskLevel]}`}>
@@ -174,7 +174,7 @@ export function OverrideManagement({
                       </span>
                       <div className="flex items-center gap-1">
                         {STATUS_ICONS[override.status]}
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-secondary-foreground">
                           {override.status === 'PENDING' && 'En attente'}
                           {override.status === 'APPROVED' && 'Approuvée'}
                           {override.status === 'REJECTED' && 'Rejetée'}
@@ -186,29 +186,29 @@ export function OverrideManagement({
                     <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                       {override.originalScore !== undefined && (
                         <div>
-                          <p className="text-xs text-gray-600">Score original</p>
-                          <p className="font-medium text-gray-900">{override.originalScore.toFixed(1)}</p>
+                          <p className="text-xs text-secondary-foreground">Score original</p>
+                          <p className="font-medium text-foreground">{override.originalScore.toFixed(1)}</p>
                         </div>
                       )}
                       {override.overriddenScore !== undefined && (
                         <div>
-                          <p className="text-xs text-gray-600">Score surchargé</p>
-                          <p className="font-medium text-gray-900">{override.overriddenScore.toFixed(1)}</p>
+                          <p className="text-xs text-secondary-foreground">Score surchargé</p>
+                          <p className="font-medium text-foreground">{override.overriddenScore.toFixed(1)}</p>
                         </div>
                       )}
                     </div>
 
-                    <p className="text-sm text-gray-700 mb-2">
+                    <p className="text-sm text-secondary-foreground mb-2">
                       <span className="font-medium">Raison:</span> {override.reason}
                     </p>
 
                     {override.justification && (
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-secondary-foreground mb-2">
                         <span className="font-medium">Justification:</span> {override.justification}
                       </p>
                     )}
 
-                    <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                    <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
                       <span>Créée par {override.overriddenByName} le{' '}
                         {new Date(override.overriddenAt).toLocaleDateString('fr-FR')}</span>
                       {override.approvedAt && (
@@ -245,7 +245,7 @@ export function OverrideManagement({
                     <button
                       onClick={() => onDeleteOverride(override.id)}
                       disabled={isLoading}
-                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      className="p-1 text-muted-foreground hover:text-red-600 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -259,18 +259,18 @@ export function OverrideManagement({
 
       {/* Create Override Form */}
       {showForm && onCreateOverride && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <h4 className="font-medium text-gray-900 mb-4">Créer une surcharge</h4>
+        <div className="bg-white border border-border rounded-lg p-4">
+          <h4 className="font-medium text-foreground mb-4">Créer une surcharge</h4>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-foreground mb-1">
                 Nœud de scoring
               </label>
               <select
                 value={formData.nodeId}
                 onChange={(e) => setFormData({ ...formData, nodeId: e.target.value })}
                 className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.nodeId ? 'border-red-500' : 'border-gray-300'
+                  errors.nodeId ? 'border-red-500' : 'border-border'
                 }`}
               >
                 <option value="">-- Sélectionner un nœud --</option>
@@ -284,7 +284,7 @@ export function OverrideManagement({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-foreground mb-1">
                 Raison
               </label>
               <input
@@ -292,7 +292,7 @@ export function OverrideManagement({
                 value={formData.reason}
                 onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                 className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.reason ? 'border-red-500' : 'border-gray-300'
+                  errors.reason ? 'border-red-500' : 'border-border'
                 }`}
                 placeholder="Raison de la surcharge..."
               />
@@ -300,26 +300,26 @@ export function OverrideManagement({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-foreground mb-1">
                 Justification
               </label>
               <textarea
                 value={formData.justification}
                 onChange={(e) => setFormData({ ...formData, justification: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 rows={2}
                 placeholder="Justification détaillée..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-secondary-foreground mb-1">
                 Niveau de risque
               </label>
               <select
                 value={formData.riskLevel}
                 onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="LOW">Bas</option>
                 <option value="MEDIUM">Moyen</option>
@@ -332,14 +332,14 @@ export function OverrideManagement({
               <button
                 type="submit"
                 disabled={isSubmitting || isLoading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-secondary transition-colors"
               >
                 {isSubmitting || isLoading ? 'Création...' : 'Créer'}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-border rounded-lg text-secondary-foreground font-medium hover:bg-muted transition-colors"
               >
                 Annuler
               </button>

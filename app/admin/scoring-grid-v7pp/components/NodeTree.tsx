@@ -69,13 +69,13 @@ function NodeTreeItem({
     SUB_SUB_CRITERION: "text-emerald-400",
   };
 
-  const nodeColor = nodeTypeColors[node.nodeType] || "text-slate-400";
+  const nodeColor = nodeTypeColors[node.nodeType] || "text-muted-foreground";
 
   return (
     <div>
       <div
         className={`flex items-center gap-1 px-2 py-1 rounded cursor-pointer text-sm transition-colors ${
-          isSelected ? "bg-slate-700 text-white" : "hover:bg-slate-800 text-slate-300"
+          isSelected ? "bg-muted text-foreground" : "hover:bg-card text-secondary-foreground"
         }`}
         style={{ paddingLeft: `${8 + level * 16}px` }}
         onClick={() => onNodeSelect(node.id)}
@@ -86,19 +86,19 @@ function NodeTreeItem({
               e.stopPropagation();
               onToggleExpand(node.id);
             }}
-            className="p-0 hover:bg-slate-700 rounded"
+            className="p-0 hover:bg-accent rounded"
           >
             {isExpanded ? (
-              <ChevronDown size={16} className="text-slate-400" />
+              <ChevronDown size={16} className="text-muted-foreground" />
             ) : (
-              <ChevronRight size={16} className="text-slate-400" />
+              <ChevronRight size={16} className="text-muted-foreground" />
             )}
           </button>
         )}
         {!hasChildren && <div className="w-4" />}
 
         <span className={`font-medium ${nodeColor}`}>{node.code}</span>
-        <span className="text-slate-400 ml-1">{node.label}</span>
+        <span className="text-muted-foreground ml-1">{node.label}</span>
 
         {node.weight !== null && node.weight !== undefined && (
           <span className="ml-auto text-xs text-yellow-400">{node.weight}%</span>

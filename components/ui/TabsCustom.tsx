@@ -25,7 +25,7 @@ export function Tabs({ items, defaultValue, onChange, children }: TabsProps) {
   return (
     <div className="space-y-4">
       {/* Tab Navigation */}
-      <div className="flex gap-2 border-b border-slate-700 overflow-x-auto">
+      <div className="flex gap-2 border-b border-border overflow-x-auto">
         {items.map((item) => (
           <button
             key={item.value}
@@ -34,13 +34,13 @@ export function Tabs({ items, defaultValue, onChange, children }: TabsProps) {
             className={`px-4 py-3 font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
               activeTab === item.value
                 ? "text-cyan-400 border-b-2 border-cyan-400"
-                : "text-slate-400 hover:text-slate-300 border-b-2 border-transparent"
+                : "text-muted-foreground hover:text-foreground border-b-2 border-transparent"
             }`}
           >
             {item.icon && <span>{item.icon}</span>}
             <span>{item.label}</span>
             {item.badge !== undefined && (
-              <span className="ml-2 px-2 py-1 text-xs bg-slate-700 rounded-full">
+              <span className="ml-2 px-2 py-1 text-xs bg-muted rounded-full">
                 {item.badge}
               </span>
             )}

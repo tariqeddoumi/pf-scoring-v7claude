@@ -8,11 +8,11 @@ export default function HomePage() {
     <div className="space-y-12">
       {/* Hero Section */}
       <section className="pt-8">
-        <div className="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        <div className="rounded-2xl bg-gradient-to-br from-background to-background border border-border p-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             PF Scoring V7++
           </h1>
-          <p className="text-xl text-slate-300 mb-8 max-w-2xl">
+          <p className="text-xl text-secondary-foreground mb-8 max-w-2xl">
             Système de scoring Project Finance professionnel. Évaluez les
             projets selon une méthodologie conforme IFC, EBRD, Basel et Bank
             Al-Maghrib.
@@ -27,7 +27,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/methodology"
-              className="inline-flex items-center space-x-2 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white font-semibold px-6 py-3 rounded-lg transition-all"
+              className="inline-flex items-center space-x-2 border border-input hover:border-ring text-secondary-foreground hover:text-foreground font-semibold px-6 py-3 rounded-lg transition-all"
             >
               <span>Lire la méthodologie</span>
             </Link>
@@ -81,7 +81,7 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section>
-        <h2 className="text-2xl font-bold text-white mb-8">
+        <h2 className="text-2xl font-bold text-foreground mb-8">
           Fonctionnalités principales
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -109,13 +109,13 @@ export default function HomePage() {
             return (
               <div
                 key={i}
-                className="rounded-lg bg-slate-800 border border-slate-700 p-6 hover:border-slate-600 transition-all"
+                className="rounded-lg bg-card border border-border p-6 hover:border-ring transition-all"
               >
                 <Icon className="text-cyan-500 mb-4" size={32} />
-                <h3 className="text-lg font-semibold text-white mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-slate-400">{feature.description}</p>
+                <p className="text-muted-foreground">{feature.description}</p>
               </div>
             );
           })}
@@ -124,7 +124,7 @@ export default function HomePage() {
 
       {/* Quick Access */}
       <section>
-        <h2 className="text-2xl font-bold text-white mb-8">Accès rapide</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-8">Accès rapide</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <QuickAccessCard
             title="Clients"
@@ -170,17 +170,17 @@ function QuickAccessCard({
   return (
     <Link
       href={href}
-      className="group rounded-lg bg-slate-800 border border-slate-700 p-6 hover:border-slate-600 hover:bg-slate-700 transition-all"
+      className="group rounded-lg bg-card border border-border p-6 hover:border-ring hover:bg-accent transition-all"
     >
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
+          <h3 className="text-lg font-semibold text-foreground group-hover:text-cyan-400 transition-colors">
             {title}
           </h3>
-          <p className="text-slate-400">{description}</p>
+          <p className="text-muted-foreground">{description}</p>
         </div>
         <Icon
-          className="text-slate-500 group-hover:text-cyan-500 transition-colors"
+          className="text-muted-foreground group-hover:text-cyan-500 transition-colors"
           size={24}
         />
       </div>

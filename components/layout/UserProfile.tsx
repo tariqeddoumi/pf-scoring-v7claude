@@ -52,7 +52,7 @@ export function UserProfile() {
   };
 
   if (loading) {
-    return <div className="h-10 w-32 bg-slate-700 rounded animate-pulse"></div>;
+    return <div className="h-10 w-32 bg-muted rounded animate-pulse"></div>;
   }
 
   if (!user) {
@@ -70,7 +70,7 @@ export function UserProfile() {
     admin: "bg-red-500/20 text-red-400 border-red-500/30",
     manager: "bg-blue-500/20 text-blue-400 border-blue-500/30",
     analyst: "bg-green-500/20 text-green-400 border-green-500/30",
-    viewer: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+    viewer: "bg-secondary/20 text-muted-foreground border-input/30",
   };
 
   const roleLabelsFR: Record<string, string> = {
@@ -84,10 +84,10 @@ export function UserProfile() {
     <div className="relative">
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors border border-slate-600"
+        className="flex items-center gap-3 px-3 py-2 text-sm text-secondary-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors border border-input"
       >
         <div className="text-right">
-          <div className="font-medium text-white">
+          <div className="font-medium text-foreground">
             {user.prenom} {user.nom}
           </div>
           <div
@@ -104,11 +104,11 @@ export function UserProfile() {
 
       {/* Dropdown Menu */}
       {dropdownOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50">
           {/* User Info */}
-          <div className="px-4 py-3 border-b border-slate-700">
-            <p className="text-xs text-slate-400">Connecté en tant que</p>
-            <p className="text-sm font-medium text-white">{user.email}</p>
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-xs text-muted-foreground">Connecté en tant que</p>
+            <p className="text-sm font-medium text-foreground">{user.email}</p>
           </div>
 
           {/* Admin Menu — même seuil de rôle que withAdminAuth côté API */}
@@ -116,7 +116,7 @@ export function UserProfile() {
             <>
               <Link
                 href="/admin"
-                className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-slate-700 transition-colors border-b border-slate-700"
+                className="flex items-center gap-2 px-4 py-3 text-sm text-secondary-foreground hover:text-foreground hover:bg-accent transition-colors border-b border-border"
                 onClick={() => setDropdownOpen(false)}
               >
                 <Settings size={16} />
@@ -124,7 +124,7 @@ export function UserProfile() {
               </Link>
               <Link
                 href="/admin/users"
-                className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-slate-700 transition-colors border-b border-slate-700"
+                className="flex items-center gap-2 px-4 py-3 text-sm text-secondary-foreground hover:text-foreground hover:bg-accent transition-colors border-b border-border"
                 onClick={() => setDropdownOpen(false)}
               >
                 <Users size={16} />
@@ -132,7 +132,7 @@ export function UserProfile() {
               </Link>
               <Link
                 href="/admin/scoring-grid-v7pp"
-                className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:text-white hover:bg-slate-700 transition-colors border-b border-slate-700"
+                className="flex items-center gap-2 px-4 py-3 text-sm text-secondary-foreground hover:text-foreground hover:bg-accent transition-colors border-b border-border"
                 onClick={() => setDropdownOpen(false)}
               >
                 <BarChart3 size={16} />
@@ -144,7 +144,7 @@ export function UserProfile() {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-slate-700 transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-accent transition-colors"
           >
             <LogOut size={16} />
             Déconnexion

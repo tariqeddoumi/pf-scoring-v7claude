@@ -57,9 +57,9 @@ export function ModelConfigurationPanel({
   };
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-800 p-6 space-y-4">
+    <div className="rounded-xl border border-border bg-card p-6 space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-white mb-4">Configuration du Modèle</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Configuration du Modèle</h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -102,7 +102,7 @@ export function ModelConfigurationPanel({
         </div>
       )}
 
-      <div className="flex justify-end pt-4 border-t border-slate-700">
+      <div className="flex justify-end pt-4 border-t border-border">
         <button
           onClick={handleSave}
           disabled={saving}

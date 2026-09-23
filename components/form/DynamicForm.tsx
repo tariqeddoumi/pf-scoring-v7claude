@@ -38,9 +38,9 @@ export function DynamicForm({
       >
         {sections.map((section) => (
           <TabPane key={section.id} value={section.id}>
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+            <div className="bg-card border border-border rounded-lg p-6 space-y-4">
               {section.description && (
-                <p className="text-sm text-slate-400">{section.description}</p>
+                <p className="text-sm text-muted-foreground">{section.description}</p>
               )}
               <div
                 className={`grid gap-4 ${
@@ -75,7 +75,7 @@ export function DynamicForm({
           defaultOpen={sections.indexOf(section) === 0}
         >
           {section.description && (
-            <p className="text-sm text-slate-400 mb-4">{section.description}</p>
+            <p className="text-sm text-muted-foreground mb-4">{section.description}</p>
           )}
           <div
             className={`grid gap-4 ${
@@ -109,13 +109,13 @@ interface FormFieldProps {
 }
 
 export function FormField({ field, value, error, onChange }: FormFieldProps) {
-  const commonClasses = `w-full px-4 py-2 bg-slate-700 border rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-    error ? "border-red-500" : "border-slate-600"
+  const commonClasses = `w-full px-4 py-2 bg-muted border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
+    error ? "border-red-500" : "border-input"
   }`;
 
   return (
     <div>
-      <label className="block text-sm font-semibold text-white mb-2">
+      <label className="block text-sm font-semibold text-foreground mb-2">
         {field.label}
         {field.required && <span className="text-red-400"> *</span>}
       </label>
@@ -157,7 +157,7 @@ export function FormField({ field, value, error, onChange }: FormFieldProps) {
 
       {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
       {field.help && !error && (
-        <p className="mt-1 text-xs text-slate-400">{field.help}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{field.help}</p>
       )}
     </div>
   );

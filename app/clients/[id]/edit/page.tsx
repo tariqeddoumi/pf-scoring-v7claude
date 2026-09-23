@@ -176,7 +176,7 @@ export default function EditClientPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Nom du client
               </label>
               <input
@@ -184,16 +184,16 @@ export default function EditClientPage({
                 name="nom"
                 value={formData.nom}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${
-                  fieldErrors.nom ? "border-red-500" : "border-slate-600"
-                } rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${
+                  fieldErrors.nom ? "border-red-500" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
               />
               {fieldErrors.nom && (
                 <p className="text-red-400 text-sm mt-1">{fieldErrors.nom}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Raison sociale
               </label>
               <input
@@ -201,11 +201,11 @@ export default function EditClientPage({
                 name="raisonSociale"
                 value={formData.raisonSociale || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Nom commercial
               </label>
               <input
@@ -213,18 +213,18 @@ export default function EditClientPage({
                 name="nomCommercial"
                 value={formData.nomCommercial || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Type de client
               </label>
               <select
                 name="typeClient"
                 value={formData.typeClient || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               >
                 <option value="">Sélectionner</option>
                 <option value="Entreprise">Entreprise</option>
@@ -236,14 +236,14 @@ export default function EditClientPage({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Forme juridique
               </label>
               <select
                 name="formeJuridique"
                 value={formData.formeJuridique || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               >
                 <option value="">Sélectionner</option>
                 <option value="SARL">SARL</option>
@@ -254,14 +254,14 @@ export default function EditClientPage({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Statut
               </label>
               <select
                 name="status"
                 value={formData.status || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               >
                 <option value="Actif">Actif</option>
                 <option value="Inactif">Inactif</option>
@@ -280,7 +280,7 @@ export default function EditClientPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Secteur
               </label>
               <input
@@ -288,18 +288,18 @@ export default function EditClientPage({
                 name="secteur"
                 value={formData.secteur || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Segment clientèle
               </label>
               <select
                 name="segmentClientele"
                 value={formData.segmentClientele || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               >
                 <option value="">Sélectionner</option>
                 <option value="Particulier">Particulier</option>
@@ -311,7 +311,7 @@ export default function EditClientPage({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Effectifs
               </label>
               <input
@@ -319,11 +319,11 @@ export default function EditClientPage({
                 name="effectifs"
                 value={formData.effectifs || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Capital social (MAD)
               </label>
               <input
@@ -331,11 +331,11 @@ export default function EditClientPage({
                 name="capitalSocial"
                 value={formData.capitalSocial || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Chiffre d&apos;affaires (MAD)
               </label>
               <input
@@ -343,12 +343,12 @@ export default function EditClientPage({
                 name="chiffreAffaires"
                 value={formData.chiffreAffaires || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-secondary-foreground mb-2">
               Description / Activités
             </label>
             <textarea
@@ -356,7 +356,7 @@ export default function EditClientPage({
               value={formData.description || ""}
               onChange={handleChange}
               rows={3}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
             />
           </div>
         </div>
@@ -370,7 +370,7 @@ export default function EditClientPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Pays
               </label>
               <input
@@ -378,11 +378,11 @@ export default function EditClientPage({
                 name="pays"
                 value={formData.pays || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Ville
               </label>
               <input
@@ -390,11 +390,11 @@ export default function EditClientPage({
                 name="ville"
                 value={formData.ville || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Code postal
               </label>
               <input
@@ -402,12 +402,12 @@ export default function EditClientPage({
                 name="codePostal"
                 value={formData.codePostal || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-secondary-foreground mb-2">
               Adresse
             </label>
             <textarea
@@ -415,7 +415,7 @@ export default function EditClientPage({
               value={formData.adresse || ""}
               onChange={handleChange}
               rows={2}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
             />
           </div>
         </div>
@@ -429,7 +429,7 @@ export default function EditClientPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Email
               </label>
               <input
@@ -437,16 +437,16 @@ export default function EditClientPage({
                 name="email"
                 value={formData.email || ""}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${
-                  fieldErrors.email ? "border-red-500" : "border-slate-600"
-                } rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${
+                  fieldErrors.email ? "border-red-500" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
               />
               {fieldErrors.email && (
                 <p className="text-red-400 text-sm mt-1">{fieldErrors.email}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Téléphone
               </label>
               <input
@@ -454,9 +454,9 @@ export default function EditClientPage({
                 name="telephone"
                 value={formData.telephone || ""}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${
-                  fieldErrors.telephone ? "border-red-500" : "border-slate-600"
-                } rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${
+                  fieldErrors.telephone ? "border-red-500" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
               />
               {fieldErrors.telephone && (
                 <p className="text-red-400 text-sm mt-1">
@@ -465,7 +465,7 @@ export default function EditClientPage({
               )}
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Site web
               </label>
               <input
@@ -473,7 +473,7 @@ export default function EditClientPage({
                 name="website"
                 value={formData.website || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
@@ -488,7 +488,7 @@ export default function EditClientPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Centre d&apos;affaires
               </label>
               <input
@@ -496,11 +496,11 @@ export default function EditClientPage({
                 name="centreAffaires"
                 value={formData.centreAffaires || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Gestionnaire
               </label>
               <input
@@ -508,18 +508,18 @@ export default function EditClientPage({
                 name="gestionnaire"
                 value={formData.gestionnaire || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Rating interne
               </label>
               <select
                 name="ratingInterne"
                 value={formData.ratingInterne || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               >
                 <option value="">Sélectionner</option>
                 <option value="AAA">AAA</option>
@@ -533,14 +533,14 @@ export default function EditClientPage({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Statut bancaire
               </label>
               <select
                 name="statutBancaire"
                 value={formData.statutBancaire || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               >
                 <option value="Prospect">Prospect</option>
                 <option value="Client">Client</option>
@@ -550,7 +550,7 @@ export default function EditClientPage({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Date du début de relation
               </label>
               <input
@@ -558,11 +558,11 @@ export default function EditClientPage({
                 name="dateRelation"
                 value={formData.dateRelation || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Exposition (MAD)
               </label>
               <input
@@ -570,7 +570,7 @@ export default function EditClientPage({
                 name="exposition"
                 value={formData.exposition || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
@@ -585,14 +585,14 @@ export default function EditClientPage({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Statut KYC
               </label>
               <select
                 name="statusKYC"
                 value={formData.statusKYC || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               >
                 <option value="En attente">En attente</option>
                 <option value="Vérifiée">Vérifiée</option>
@@ -602,14 +602,14 @@ export default function EditClientPage({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Statut conformité
               </label>
               <select
                 name="statusConformite"
                 value={formData.statusConformite || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
               >
                 <option value="En attente">En attente</option>
                 <option value="Conforme">Conforme</option>
@@ -629,12 +629,12 @@ export default function EditClientPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Modifier le client</h1>
-          <p className="text-slate-400 mt-1">Mettez à jour les informations du client</p>
+          <h1 className="text-3xl font-bold text-foreground">Modifier le client</h1>
+          <p className="text-muted-foreground mt-1">Mettez à jour les informations du client</p>
         </div>
         <Link
           href={`/clients/${clientId}`}
-          className="inline-flex items-center space-x-2 text-slate-400 hover:text-slate-300 transition-colors"
+          className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft size={20} />
           <span>Retour</span>
@@ -649,15 +649,15 @@ export default function EditClientPage({
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+      <form onSubmit={handleSubmit} className="bg-card rounded-lg border border-border p-6">
         <Tabs tabs={tabs} defaultTab="identity" />
 
         {/* Form Actions */}
-        <div className="flex gap-3 mt-8 pt-6 border-t border-slate-700">
+        <div className="flex gap-3 mt-8 pt-6 border-t border-border">
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-secondary text-white font-semibold rounded-lg transition-colors"
           >
             {submitting ? (
               <>
@@ -670,7 +670,7 @@ export default function EditClientPage({
           </button>
           <Link
             href={`/clients/${clientId}`}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-muted hover:bg-secondary text-foreground font-semibold rounded-lg transition-colors"
           >
             Annuler
           </Link>

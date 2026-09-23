@@ -74,7 +74,7 @@ export default function SaisieEvaluationPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
           <Loader2 className="animate-spin text-cyan-400 mx-auto" size={40} />
-          <p className="text-slate-400 text-sm">Chargement de la saisie…</p>
+          <p className="text-muted-foreground text-sm">Chargement de la saisie…</p>
         </div>
       </div>
     );
@@ -92,7 +92,7 @@ export default function SaisieEvaluationPage() {
         </div>
         <Link
           href="/evaluations"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft size={16} />
           Retour aux évaluations
@@ -105,9 +105,9 @@ export default function SaisieEvaluationPage() {
   if (status !== "brouillon") {
     return (
       <div className="max-w-xl mx-auto mt-16 space-y-4">
-        <div className="rounded-lg bg-slate-800 border border-slate-700 p-5">
-          <p className="text-white font-semibold mb-1">Saisie clôturée</p>
-          <p className="text-sm text-slate-400">
+        <div className="rounded-lg bg-card border border-border p-5">
+          <p className="text-foreground font-semibold mb-1">Saisie clôturée</p>
+          <p className="text-sm text-muted-foreground">
             Cette évaluation est au statut « {status} » et n&apos;est plus modifiable.
           </p>
         </div>

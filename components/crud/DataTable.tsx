@@ -42,24 +42,24 @@ export function DataTable<T extends { id: string }>({
   }
 
   if (!data || data.length === 0) {
-    return <div className="text-center py-8 text-gray-500">{emptyMessage}</div>;
+    return <div className="text-center py-8 text-muted-foreground">{emptyMessage}</div>;
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+    <div className="rounded-lg border border-border bg-white overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-gray-50">
+          <TableRow className="bg-muted">
             {columns.map((column) => (
               <TableHead
                 key={String(column.key)}
-                className="text-gray-700 font-semibold"
+                className="text-secondary-foreground font-semibold"
               >
                 {column.label}
               </TableHead>
             ))}
             {(onView || onEdit || onDelete) && (
-              <TableHead className="text-gray-700 font-semibold">
+              <TableHead className="text-secondary-foreground font-semibold">
                 Actions
               </TableHead>
             )}
@@ -69,7 +69,7 @@ export function DataTable<T extends { id: string }>({
           {data.map((row, idx) => (
             <TableRow
               key={row.id}
-              className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+              className={idx % 2 === 0 ? "bg-white" : "bg-muted"}
             >
               {columns.map((column) => (
                 <TableCell key={String(column.key)} className="py-3 px-4">

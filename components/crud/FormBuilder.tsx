@@ -84,7 +84,7 @@ export function FormBuilder({
             name={field.name as any}
             render={({ field: fieldProps }) => (
               <FormItem>
-                <FormLabel className="text-gray-700 font-medium">
+                <FormLabel className="text-secondary-foreground font-medium">
                   {field.label}
                 </FormLabel>
                 <FormControl>

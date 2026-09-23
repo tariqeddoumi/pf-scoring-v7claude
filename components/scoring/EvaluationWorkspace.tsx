@@ -74,7 +74,7 @@ function NodeInput({
   onChange: (val: AnswerValue) => void;
 }) {
   const inputClass =
-    "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors";
+    "w-full px-3 py-2 bg-muted border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500 transition-colors";
 
   const selectedOption = node.options?.find((o) => o.value === answer?.valueString);
 
@@ -131,7 +131,7 @@ function NodeInput({
                   className={`text-xs px-2 py-0.5 rounded-full ${
                     active
                       ? "bg-cyan-500/20 text-cyan-300 font-semibold"
-                      : "bg-slate-700 text-slate-500"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {r.label || `${r.minValue}–${r.maxValue}`} → {r.score} pts
@@ -156,7 +156,7 @@ function NodeInput({
                 className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
                   active
                     ? "bg-cyan-600 border-cyan-500 text-white"
-                    : "bg-slate-700 border-slate-600 text-slate-400 hover:border-slate-500"
+                    : "bg-muted border-input text-muted-foreground hover:border-ring"
                 }`}
               >
                 {label}
@@ -184,7 +184,7 @@ function NodeInput({
           onChange({ ...answer, comment: e.target.value || undefined })
         }
         rows={1}
-        className={`${inputClass} resize-none text-xs text-slate-400`}
+        className={`${inputClass} resize-none text-xs text-muted-foreground`}
         placeholder="Commentaire / justification (optionnel)"
       />
     </div>
@@ -217,9 +217,9 @@ function CriteriaTree({
 
   // depth-based styles
   const depthStyles = [
-    "bg-slate-800 border border-slate-700 rounded-xl mb-3",
-    "bg-slate-750 border-l-2 border-slate-600 ml-2 mb-2",
-    "bg-slate-800/50 border-l border-slate-700 ml-4 mb-1.5",
+    "bg-card border border-border rounded-xl mb-3",
+    "bg-surface border-l-2 border-input ml-2 mb-2",
+    "bg-card/50 border-l border-border ml-4 mb-1.5",
     "ml-6 mb-1",
   ];
   const style = depthStyles[Math.min(depth, depthStyles.length - 1)];
@@ -235,7 +235,7 @@ function CriteriaTree({
       >
         {/* Toggle */}
         {hasChildren ? (
-          <div className="mt-0.5 text-slate-500 flex-shrink-0">
+          <div className="mt-0.5 text-muted-foreground flex-shrink-0">
             {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </div>
         ) : (
@@ -243,7 +243,7 @@ function CriteriaTree({
             {isAnswered ? (
               <CheckCircle2 size={14} className="text-green-400" />
             ) : (
-              <div className="w-3.5 h-3.5 rounded-full border border-slate-600 mt-px" />
+              <div className="w-3.5 h-3.5 rounded-full border border-input mt-px" />
             )}
           </div>
         )}
@@ -259,22 +259,22 @@ function CriteriaTree({
             <span
               className={`font-medium ${
                 depth === 0
-                  ? "text-white text-base"
+                  ? "text-foreground text-base"
                   : depth === 1
-                  ? "text-slate-200 text-sm"
-                  : "text-slate-300 text-sm"
+                  ? "text-foreground text-sm"
+                  : "text-secondary-foreground text-sm"
               }`}
             >
               {node.label}
             </span>
             {!hasChildren && (
-              <span className="text-xs text-slate-500 bg-slate-700 px-1.5 py-0.5 rounded">
+              <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                 {node.answerType?.replace("_", " ") || "TEXT"}
               </span>
             )}
           </div>
           {node.description && (
-            <p className="text-xs text-slate-500 mt-0.5 flex items-start gap-1">
+            <p className="text-xs text-muted-foreground mt-0.5 flex items-start gap-1">
               <Info size={10} className="mt-0.5 flex-shrink-0" />
               {node.description}
             </p>
@@ -283,7 +283,7 @@ function CriteriaTree({
 
         {/* Weight badge */}
         {node.weight !== undefined && node.weight !== null && depth > 0 && (
-          <span className="text-xs text-slate-500 flex-shrink-0">
+          <span className="text-xs text-muted-foreground flex-shrink-0">
             ×{node.weight}
           </span>
         )}
@@ -527,12 +527,12 @@ export function EvaluationWorkspace({
   }, [successMsg]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-950">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
       {/* ── Top Header ─────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-6 py-3 bg-slate-900 border-b border-slate-700 flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-3 bg-background border-b border-border flex-shrink-0">
         <div>
-          <h1 className="text-base font-bold text-white">{projectName}</h1>
-          <p className="text-xs text-slate-400">Évaluation de Scoring — {evaluationId.slice(0, 8)}…</p>
+          <h1 className="text-base font-bold text-foreground">{projectName}</h1>
+          <p className="text-xs text-muted-foreground">Évaluation de Scoring — {evaluationId.slice(0, 8)}…</p>
         </div>
 
         {/* Messages */}
@@ -552,13 +552,13 @@ export function EvaluationWorkspace({
         </div>
 
         {/* View mode toggle */}
-        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 flex-shrink-0 mr-3">
+        <div className="flex items-center gap-1 bg-card rounded-lg p-1 flex-shrink-0 mr-3">
           <button
             onClick={() => setViewMode("tabbed")}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all ${
               viewMode === "tabbed"
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Columns size={13} />
@@ -568,8 +568,8 @@ export function EvaluationWorkspace({
             onClick={() => setViewMode("accordion")}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all ${
               viewMode === "accordion"
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <LayoutList size={13} />
@@ -582,7 +582,7 @@ export function EvaluationWorkspace({
           <button
             onClick={() => saveAnswers(true)}
             disabled={isSaving}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary disabled:opacity-50 text-foreground text-sm rounded-lg transition-all"
           >
             <Save size={14} />
             {isSaving ? "Sauvegarde…" : "Sauvegarder"}
@@ -627,21 +627,21 @@ export function EvaluationWorkspace({
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <div className="flex items-center gap-3 mb-1">
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-card text-cyan-400 border border-border">
                         {currentDomain.code}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         {currentIndex + 1} / {questionnaire.length}
                       </span>
                     </div>
-                    <h2 className="text-2xl font-bold text-white">{currentDomain.label}</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{currentDomain.label}</h2>
                     {currentDomain.description && (
-                      <p className="text-sm text-slate-400 mt-1">{currentDomain.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{currentDomain.description}</p>
                     )}
                   </div>
                   <button
                     onClick={() => setExpandAll((v) => !v)}
-                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <RotateCcw size={12} />
                     {expandAll ? "Réduire tout" : "Tout ouvrir"}
@@ -650,15 +650,15 @@ export function EvaluationWorkspace({
 
                 {/* Progress for this domain */}
                 {stats[currentDomain.id] && (
-                  <div className="mb-6 p-3 bg-slate-800/50 rounded-lg border border-slate-700 flex items-center gap-4">
+                  <div className="mb-6 p-3 bg-card/50 rounded-lg border border-border flex items-center gap-4">
                     <div className="flex-1">
-                      <div className="flex justify-between text-xs text-slate-400 mb-1">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
                         <span>Progression du domaine</span>
                         <span>
                           {stats[currentDomain.id].answered} / {stats[currentDomain.id].total} critères
                         </span>
                       </div>
-                      <div className="bg-slate-700 rounded-full h-2">
+                      <div className="bg-muted rounded-full h-2">
                         <div
                           className="h-2 rounded-full bg-cyan-500 transition-all duration-500"
                           style={{
@@ -688,31 +688,31 @@ export function EvaluationWorkspace({
                       />
                     ))
                   ) : (
-                    <div className="text-center py-12 text-slate-500">
+                    <div className="text-center py-12 text-muted-foreground">
                       <p>Ce domaine n'a pas encore de critères configurés.</p>
                     </div>
                   )}
                 </div>
 
                 {/* Navigation prev/next */}
-                <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-800">
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
                   <button
                     onClick={goPrev}
                     disabled={currentIndex === 0}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed text-foreground rounded-lg text-sm transition-all"
                   >
                     <ChevronRight size={16} className="rotate-180" />
                     {currentIndex > 0 ? questionnaire[currentIndex - 1].label : "—"}
                   </button>
 
-                  <span className="text-xs text-slate-600">
+                  <span className="text-xs text-muted-foreground">
                     Domaine {currentIndex + 1} sur {questionnaire.length}
                   </span>
 
                   <button
                     onClick={goNext}
                     disabled={currentIndex >= questionnaire.length - 1}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed text-foreground rounded-lg text-sm transition-all"
                   >
                     {currentIndex < questionnaire.length - 1
                       ? questionnaire[currentIndex + 1].label

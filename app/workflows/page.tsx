@@ -21,7 +21,7 @@ interface Workflow {
 }
 
 const statusColor = {
-  DRAFT: 'bg-gray-100 text-gray-800',
+  DRAFT: 'bg-muted text-foreground',
   SUBMITTED: 'bg-blue-100 text-blue-800',
   UNDER_REVIEW: 'bg-yellow-100 text-yellow-800',
   REVIEWED: 'bg-purple-100 text-purple-800',
@@ -104,34 +104,34 @@ export default function WorkflowsPage() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Workflows de Scoring</h1>
-          <p className="text-gray-600 mt-2">Gestion des évaluations en cours et approuvées</p>
+          <h1 className="text-3xl font-bold text-foreground">Workflows de Scoring</h1>
+          <p className="text-secondary-foreground mt-2">Gestion des évaluations en cours et approuvées</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-sm font-medium text-gray-600">Total</p>
-            <p className="text-3xl font-bold text-gray-900">{workflows.length}</p>
+          <div className="bg-white p-4 rounded-lg border border-border">
+            <p className="text-sm font-medium text-secondary-foreground">Total</p>
+            <p className="text-3xl font-bold text-foreground">{workflows.length}</p>
           </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-sm font-medium text-gray-600">En revue</p>
+          <div className="bg-white p-4 rounded-lg border border-border">
+            <p className="text-sm font-medium text-secondary-foreground">En revue</p>
             <p className="text-3xl font-bold text-yellow-600">
               {workflows.filter(w => w.status === 'UNDER_REVIEW').length}
             </p>
           </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-sm font-medium text-gray-600">En attente d'approbation</p>
+          <div className="bg-white p-4 rounded-lg border border-border">
+            <p className="text-sm font-medium text-secondary-foreground">En attente d'approbation</p>
             <p className="text-3xl font-bold text-blue-600">{pendingApprovals}</p>
           </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-sm font-medium text-gray-600">Approuvées</p>
+          <div className="bg-white p-4 rounded-lg border border-border">
+            <p className="text-sm font-medium text-secondary-foreground">Approuvées</p>
             <p className="text-3xl font-bold text-green-600">
               {workflows.filter(w => w.status === 'APPROVED').length}
             </p>
@@ -144,23 +144,23 @@ export default function WorkflowsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
             <input
               type="text"
               placeholder="Rechercher un projet ou analyste..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Status Filter */}
           <div className="relative">
-            <Filter className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <Filter className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
             >
               <option value="">Tous les statuts</option>
               <option value="DRAFT">Brouillon</option>
@@ -181,7 +181,7 @@ export default function WorkflowsPage() {
             <div className="inline-block">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
-            <p className="text-gray-600 mt-4">Chargement des workflows...</p>
+            <p className="text-secondary-foreground mt-4">Chargement des workflows...</p>
           </div>
         ) : error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-start gap-3">
@@ -192,8 +192,8 @@ export default function WorkflowsPage() {
             </div>
           </div>
         ) : filteredWorkflows.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500">Aucun workflow trouvé</p>
+          <div className="text-center py-12 bg-white rounded-lg border border-border">
+            <p className="text-muted-foreground">Aucun workflow trouvé</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -201,12 +201,12 @@ export default function WorkflowsPage() {
               <Link
                 key={workflow.id}
                 href={`/workflows/${workflow.id}`}
-                className="group block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="group block bg-white border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                      <h3 className="text-lg font-medium text-foreground group-hover:text-blue-600 transition-colors">
                         {workflow.evaluation?.project?.nom || 'Projet sans nom'}
                       </h3>
                       <span className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap ${
@@ -218,31 +218,31 @@ export default function WorkflowsPage() {
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600">Analyste</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-secondary-foreground">Analyste</p>
+                        <p className="font-medium text-foreground">
                           {workflow.evaluation?.analyst?.prenom} {workflow.evaluation?.analyst?.nom}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Étape actuelle</p>
-                        <p className="font-medium text-gray-900">{workflow.currentStep}</p>
+                        <p className="text-secondary-foreground">Étape actuelle</p>
+                        <p className="font-medium text-foreground">{workflow.currentStep}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Score</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-secondary-foreground">Score</p>
+                        <p className="font-medium text-foreground">
                           {workflow.evaluation?.finalScore?.toFixed(1) || '-'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Créée le</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-secondary-foreground">Créée le</p>
+                        <p className="font-medium text-foreground">
                           {new Date(workflow.createdAt).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
+                  <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-blue-600 transition-colors flex-shrink-0" />
                 </div>
               </Link>
             ))}

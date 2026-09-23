@@ -50,10 +50,10 @@ export default function MonitoringPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Suivi Post-Clôture</h1>
-          <p className="text-slate-400 mt-2">Chargement...</p>
+          <h1 className="text-3xl font-bold text-foreground">Suivi Post-Clôture</h1>
+          <p className="text-muted-foreground mt-2">Chargement...</p>
         </div>
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-8 text-center">
+        <div className="rounded-lg border border-border bg-card p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto"></div>
         </div>
       </div>
@@ -64,11 +64,11 @@ export default function MonitoringPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">Suivi Post-Clôture</h1>
-          <p className="text-slate-400 mt-2">Monitoring des projets financés</p>
+          <h1 className="text-3xl font-bold text-foreground">Suivi Post-Clôture</h1>
+          <p className="text-muted-foreground mt-2">Monitoring des projets financés</p>
         </div>
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-8 text-center">
-          <p className="text-slate-400">
+        <div className="rounded-lg border border-border bg-card p-8 text-center">
+          <p className="text-muted-foreground">
             Aucun projet disponible pour le monitoring
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function MonitoringPage() {
       case "rejete":
         return "text-red-400";
       default:
-        return "text-slate-400";
+        return "text-muted-foreground";
     }
   };
 
@@ -157,13 +157,13 @@ export default function MonitoringPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Suivi Post-Clôture</h1>
-        <p className="text-slate-400 mt-2">Monitoring des projets financés</p>
+        <h1 className="text-3xl font-bold text-foreground">Suivi Post-Clôture</h1>
+        <p className="text-muted-foreground mt-2">Monitoring des projets financés</p>
       </div>
 
       {/* Project Selector */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
-        <label className="text-sm font-semibold text-white block mb-3">
+      <div className="rounded-lg border border-border bg-card p-4">
+        <label className="text-sm font-semibold text-foreground block mb-3">
           Sélectionner un Projet
         </label>
         <div className="flex flex-wrap gap-2">
@@ -174,7 +174,7 @@ export default function MonitoringPage() {
               className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                 selectedProject === p.id
                   ? "bg-cyan-600 text-white"
-                  : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                  : "bg-muted text-secondary-foreground hover:bg-secondary"
               }`}
             >
               {p.nom}
@@ -212,8 +212,8 @@ export default function MonitoringPage() {
           </div>
 
           {/* Covenants / Indicators */}
-          <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center space-x-2">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <CheckCircle size={24} />
               <span>Indicateurs de Suivi</span>
             </h2>
@@ -222,7 +222,7 @@ export default function MonitoringPage() {
               {covenants.map((covenant, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between p-3 bg-slate-700 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
                 >
                   <div className="flex items-center space-x-3 flex-1">
                     {covenant.status === "ok" ? (
@@ -233,10 +233,10 @@ export default function MonitoringPage() {
                       <AlertTriangle className="text-red-400" size={20} />
                     )}
                     <div>
-                      <p className="font-semibold text-white">
+                      <p className="font-semibold text-foreground">
                         {covenant.name}
                       </p>
-                      <p className="text-sm text-slate-400">{covenant.value}</p>
+                      <p className="text-sm text-muted-foreground">{covenant.value}</p>
                     </div>
                   </div>
                   <span
@@ -260,31 +260,31 @@ export default function MonitoringPage() {
           </div>
 
           {/* Project Summary */}
-          <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center space-x-2">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <BarChart3 size={24} />
               <span>Résumé du Projet</span>
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-slate-700 rounded-lg p-4">
-                <p className="text-sm text-slate-400">Nom</p>
-                <p className="text-white font-semibold mt-1">{project.nom}</p>
+              <div className="bg-muted rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">Nom</p>
+                <p className="text-foreground font-semibold mt-1">{project.nom}</p>
               </div>
-              <div className="bg-slate-700 rounded-lg p-4">
-                <p className="text-sm text-slate-400">Secteur</p>
-                <p className="text-white font-semibold mt-1">
+              <div className="bg-muted rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">Secteur</p>
+                <p className="text-foreground font-semibold mt-1">
                   {project.secteur || "Non défini"}
                 </p>
               </div>
-              <div className="bg-slate-700 rounded-lg p-4">
-                <p className="text-sm text-slate-400">Montant</p>
-                <p className="text-white font-semibold mt-1">
+              <div className="bg-muted rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">Montant</p>
+                <p className="text-foreground font-semibold mt-1">
                   {formatAmount(project.montant)}
                 </p>
               </div>
-              <div className="bg-slate-700 rounded-lg p-4">
-                <p className="text-sm text-slate-400">Statut</p>
+              <div className="bg-muted rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">Statut</p>
                 <p
                   className={`font-semibold mt-1 ${getStatusColor(project.status)}`}
                 >
@@ -295,12 +295,12 @@ export default function MonitoringPage() {
           </div>
 
           {/* Last Review / Actions */}
-          <div className="rounded-lg border border-slate-700 bg-slate-800 p-4 flex items-center justify-between">
+          <div className="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Clock className="text-cyan-400" size={20} />
               <div>
-                <p className="text-sm text-slate-400">Date de Création</p>
-                <p className="text-white font-semibold">
+                <p className="text-sm text-muted-foreground">Date de Création</p>
+                <p className="text-foreground font-semibold">
                   {new Date(project.dateCreation).toLocaleDateString("fr-FR")}
                 </p>
               </div>

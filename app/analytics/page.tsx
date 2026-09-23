@@ -69,12 +69,12 @@ function RadarChart({
 
   return (
     <div className="flex flex-col items-center">
-      <h3 className="font-semibold text-slate-100 mb-4">{title}</h3>
+      <h3 className="font-semibold text-foreground mb-4">{title}</h3>
       <svg
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="bg-slate-900 rounded"
+        className="bg-background rounded"
       >
         {/* Background grid */}
         {gridLines.map((gridPoints, i) => {
@@ -166,18 +166,18 @@ function HeatMap({ data, title }: { data: any[]; title: string }) {
 
   return (
     <div>
-      <h3 className="font-semibold text-slate-100 mb-4">{title}</h3>
+      <h3 className="font-semibold text-foreground mb-4">{title}</h3>
       <div className="space-y-2">
         {data.slice(0, 5).map((evaluation, idx) => (
           <div key={idx} className="flex items-center gap-3">
-            <div className="w-20 text-xs text-slate-400 truncate">
+            <div className="w-20 text-xs text-muted-foreground truncate">
               {evaluation.name}
             </div>
             <div className="flex gap-1">
               {domains.map((d, i) => (
                 <div
                   key={`${idx}-${i}`}
-                  className={`w-6 h-6 rounded text-xs flex items-center justify-center text-white font-semibold ${getColor(
+                  className={`w-6 h-6 rounded text-xs flex items-center justify-center text-foreground font-semibold ${getColor(
                     evaluation.scores?.[i] || 0
                   )}`}
                   title={`${d}: ${evaluation.scores?.[i]?.toFixed(1) || 0}`}
@@ -217,12 +217,12 @@ function TrendChart({ data, title }: { data: TrendData[]; title: string }) {
 
   return (
     <div>
-      <h3 className="font-semibold text-slate-100 mb-4">{title}</h3>
+      <h3 className="font-semibold text-foreground mb-4">{title}</h3>
       <svg
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className="bg-slate-900 rounded w-full"
+        className="bg-background rounded w-full"
       >
         {/* Grid */}
         {Array.from({ length: 5 }).map((_, i) => {
@@ -370,38 +370,38 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-100">
+        <h1 className="text-3xl font-bold text-foreground">
           Analytique & Tendances
         </h1>
-        <p className="text-slate-400 mt-2">
+        <p className="text-muted-foreground mt-2">
           Analyse approfondie des performances et tendances
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-3xl font-bold text-cyan-400">{avgScore}</div>
-            <div className="text-sm text-slate-400 mt-1">Score Moyen</div>
+            <div className="text-sm text-muted-foreground mt-1">Score Moyen</div>
             <div className="text-xs text-emerald-400 mt-2">
               {avgImprovement} vs mois précédent
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-3xl font-bold text-blue-400">{totalEvals}</div>
-            <div className="text-sm text-slate-400 mt-1">Total Évaluations</div>
+            <div className="text-sm text-muted-foreground mt-1">Total Évaluations</div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-3xl font-bold text-emerald-400">
               {validatedEvals}
             </div>
-            <div className="text-sm text-slate-400 mt-1">Validées</div>
-            <div className="text-xs text-slate-500 mt-2">
+            <div className="text-sm text-muted-foreground mt-1">Validées</div>
+            <div className="text-xs text-muted-foreground mt-2">
               {totalEvals > 0
                 ? Math.round((validatedEvals / totalEvals) * 100)
                 : 0}
@@ -409,10 +409,10 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <div className="text-3xl font-bold text-amber-400">72%</div>
-            <div className="text-sm text-slate-400 mt-1">
+            <div className="text-sm text-muted-foreground mt-1">
               Taux de Conformité
             </div>
           </CardContent>
@@ -426,7 +426,7 @@ export default function AnalyticsPage() {
           className={
             selectedMetric === "score"
               ? "bg-cyan-600 hover:bg-cyan-700"
-              : "bg-slate-700 hover:bg-slate-600"
+              : "bg-muted hover:bg-secondary"
           }
         >
           <TrendingUp className="w-4 h-4 mr-2" />
@@ -437,7 +437,7 @@ export default function AnalyticsPage() {
           className={
             selectedMetric === "rating"
               ? "bg-cyan-600 hover:bg-cyan-700"
-              : "bg-slate-700 hover:bg-slate-600"
+              : "bg-muted hover:bg-secondary"
           }
         >
           <Target className="w-4 h-4 mr-2" />
@@ -448,7 +448,7 @@ export default function AnalyticsPage() {
           className={
             selectedMetric === "domain"
               ? "bg-cyan-600 hover:bg-cyan-700"
-              : "bg-slate-700 hover:bg-slate-600"
+              : "bg-muted hover:bg-secondary"
           }
         >
           <BarChart3 className="w-4 h-4 mr-2" />
@@ -459,7 +459,7 @@ export default function AnalyticsPage() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Trend Chart */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-cyan-400" />
@@ -475,7 +475,7 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Rating Distribution */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="w-5 h-5 text-cyan-400" />
@@ -490,14 +490,14 @@ export default function AnalyticsPage() {
                 .map((r) => (
                   <div key={r.rating}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-slate-300">
+                      <span className="text-sm font-medium text-secondary-foreground">
                         {r.rating}
                       </span>
-                      <span className="text-sm text-slate-400">
+                      <span className="text-sm text-muted-foreground">
                         {r.count} ({r.percentage}%)
                       </span>
                     </div>
-                    <div className="h-2 bg-slate-700 rounded overflow-hidden">
+                    <div className="h-2 bg-muted rounded overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-cyan-600 to-blue-600"
                         style={{ width: `${r.percentage}%` }}
@@ -510,7 +510,7 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Radar Chart */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-cyan-400" />
@@ -524,14 +524,14 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Heat Map */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle>Matrice d'Évaluation</CardTitle>
             <CardDescription>Scores par domaine et évaluation</CardDescription>
           </CardHeader>
           <CardContent>
             <HeatMap data={heatMapData} title="" />
-            <div className="mt-4 flex justify-between text-xs text-slate-500">
+            <div className="mt-4 flex justify-between text-xs text-muted-foreground">
               <span>Score faible</span>
               <span>Score élevé</span>
             </div>
@@ -551,25 +551,25 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Insights */}
-      <Card className="bg-gradient-to-r from-slate-800 to-slate-900 border-cyan-600/30">
+      <Card className="bg-gradient-to-r from-background to-background border-cyan-600/30">
         <CardHeader>
           <CardTitle>Insights & Recommandations</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="p-3 bg-slate-900/50 rounded border border-slate-700">
-            <p className="text-sm text-slate-300">
+          <div className="p-3 bg-background/50 rounded border border-border">
+            <p className="text-sm text-secondary-foreground">
               ✓ <strong>Tendance Positive:</strong> Le score moyen augmente de
               0.4 points par mois
             </p>
           </div>
-          <div className="p-3 bg-slate-900/50 rounded border border-slate-700">
-            <p className="text-sm text-slate-300">
+          <div className="p-3 bg-background/50 rounded border border-border">
+            <p className="text-sm text-secondary-foreground">
               ⚠ <strong>Point d'Attention:</strong> Le domaine "Marché" affiche
               le score le plus faible (6.5/10)
             </p>
           </div>
-          <div className="p-3 bg-slate-900/50 rounded border border-slate-700">
-            <p className="text-sm text-slate-300">
+          <div className="p-3 bg-background/50 rounded border border-border">
+            <p className="text-sm text-secondary-foreground">
               ✓ <strong>Point Fort:</strong> Les domaines "Sponsor" et
               "Contrepartie" maintiennent des scores élevés (7.3-7.5/10)
             </p>

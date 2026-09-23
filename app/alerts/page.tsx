@@ -20,7 +20,7 @@ export default function AlertsPage() {
       warning: "border-yellow-500/50 bg-yellow-500/10",
       info: "border-blue-500/50 bg-blue-500/10",
     };
-    return colors[severity] || "border-slate-600 bg-slate-700";
+    return colors[severity] || "border-input bg-muted";
   };
 
   const getSeverityIcon = (severity: string) => {
@@ -51,10 +51,10 @@ export default function AlertsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-bold text-foreground">
             Alertes & Notifications
           </h1>
-          <p className="text-slate-400 mt-2">Gerez vos alertes système</p>
+          <p className="text-muted-foreground mt-2">Gerez vos alertes système</p>
         </div>
         {unreadCount > 0 && (
           <button
@@ -83,10 +83,10 @@ export default function AlertsPage() {
 
       <div className="space-y-3">
         {alerts.length === 0 ? (
-          <div className="rounded-lg border border-slate-700 bg-slate-800 p-8 text-center">
+          <div className="rounded-lg border border-border bg-card p-8 text-center">
             <CheckCircle className="mx-auto text-green-400 mb-3" size={32} />
-            <p className="text-white font-semibold">Aucune alerte</p>
-            <p className="text-slate-400 text-sm mt-1">Vous êtes à jour!</p>
+            <p className="text-foreground font-semibold">Aucune alerte</p>
+            <p className="text-muted-foreground text-sm mt-1">Vous êtes à jour!</p>
           </div>
         ) : (
           alerts.map((alert) => (
@@ -101,16 +101,16 @@ export default function AlertsPage() {
                   {getSeverityIcon(alert.severity)}
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="font-semibold text-white">
+                      <span className="font-semibold text-foreground">
                         {alert.projectName}
                       </span>
                       {!alert.read && (
                         <span className="w-2 h-2 bg-cyan-400 rounded-full"></span>
                       )}
                     </div>
-                    <p className="text-sm text-slate-300">{alert.message}</p>
-                    <div className="flex items-center space-x-2 mt-2 text-xs text-slate-400">
-                      <span className="bg-slate-700 px-2 py-1 rounded">
+                    <p className="text-sm text-secondary-foreground">{alert.message}</p>
+                    <div className="flex items-center space-x-2 mt-2 text-xs text-muted-foreground">
+                      <span className="bg-muted px-2 py-1 rounded">
                         {getTypeLabel(alert.type)}
                       </span>
                       <span>
@@ -124,7 +124,7 @@ export default function AlertsPage() {
                   {alert.actionUrl && (
                     <Link
                       href={alert.actionUrl}
-                      className="p-2 text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors"
+                      className="p-2 text-cyan-400 hover:bg-accent rounded-lg transition-colors"
                     >
                       <ArrowRight size={18} />
                     </Link>
@@ -134,7 +134,7 @@ export default function AlertsPage() {
                       if (!alert.read) markAsRead(alert.id);
                       deleteAlert(alert.id);
                     }}
-                    className="p-2 text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
+                    className="p-2 text-red-400 hover:bg-accent rounded-lg transition-colors"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -158,10 +158,10 @@ function Card({
   icon: string;
 }) {
   return (
-    <div className="rounded-lg bg-gradient-to-br from-slate-800 to-slate-700 border border-slate-700 p-6">
-      <p className="text-sm text-slate-400 mb-2">{label}</p>
+    <div className="rounded-lg bg-gradient-to-br from-background to-muted border border-border p-6">
+      <p className="text-sm text-muted-foreground mb-2">{label}</p>
       <div className="flex items-end justify-between">
-        <p className="text-3xl font-bold text-white">{value}</p>
+        <p className="text-3xl font-bold text-foreground">{value}</p>
         <span className="text-3xl">{icon}</span>
       </div>
     </div>

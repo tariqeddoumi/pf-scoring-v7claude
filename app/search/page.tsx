@@ -240,28 +240,28 @@ export default function SearchPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">Recherche Avancée</h1>
-        <p className="text-slate-400 mt-2">
+        <h1 className="text-3xl font-bold text-foreground">Recherche Avancée</h1>
+        <p className="text-muted-foreground mt-2">
           Recherchez et filtrez les projets, clients et évaluations
         </p>
       </div>
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-3 text-slate-500" size={20} />
+        <Search className="absolute left-3 top-3 text-muted-foreground" size={20} />
         <input
           type="text"
           placeholder="Rechercher par nom, client, secteur..."
           value={filters.query}
           onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-          className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+          className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
         />
       </div>
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">
+          <label className="text-sm font-semibold text-foreground block mb-2">
             Type
           </label>
           <select
@@ -269,7 +269,7 @@ export default function SearchPage() {
             onChange={(e) =>
               setFilters({ ...filters, type: e.target.value as any })
             }
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Tous les types</option>
             <option value="projects">Projets</option>
@@ -279,7 +279,7 @@ export default function SearchPage() {
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">
+          <label className="text-sm font-semibold text-foreground block mb-2">
             Rating
           </label>
           <select
@@ -287,7 +287,7 @@ export default function SearchPage() {
             onChange={(e) =>
               setFilters({ ...filters, ratingFilter: e.target.value })
             }
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Tous les ratings</option>
             <option value="AAA">AAA</option>
@@ -299,7 +299,7 @@ export default function SearchPage() {
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">
+          <label className="text-sm font-semibold text-foreground block mb-2">
             Statut
           </label>
           <select
@@ -307,7 +307,7 @@ export default function SearchPage() {
             onChange={(e) =>
               setFilters({ ...filters, statusFilter: e.target.value })
             }
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-cyan-500 focus:outline-none"
           >
             <option value="">Tous les statuts</option>
             <option value="brouillon">Brouillon</option>
@@ -321,7 +321,7 @@ export default function SearchPage() {
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-white block mb-2">
+          <label className="text-sm font-semibold text-foreground block mb-2">
             Score min
           </label>
           <input
@@ -335,7 +335,7 @@ export default function SearchPage() {
             }
             className="w-full"
           />
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Min: {filters.scoreMin.toFixed(1)}/10
           </p>
         </div>
@@ -345,14 +345,14 @@ export default function SearchPage() {
       <div className="flex gap-4">
         <button
           onClick={() => setShowSaveModal(true)}
-          className="inline-flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+          className="inline-flex items-center space-x-2 bg-muted hover:bg-secondary text-foreground font-semibold px-4 py-2 rounded-lg transition-all"
         >
           <Save size={18} />
           <span>Enregistrer Filtre</span>
         </button>
         <button
           onClick={handleClearFilters}
-          className="inline-flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+          className="inline-flex items-center space-x-2 bg-muted hover:bg-secondary text-foreground font-semibold px-4 py-2 rounded-lg transition-all"
         >
           <X size={18} />
           <span>Réinitialiser</span>
@@ -361,8 +361,8 @@ export default function SearchPage() {
 
       {/* Saved Filters */}
       {savedFilters.length > 0 && (
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-4">
-          <p className="text-sm font-semibold text-white mb-3">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-sm font-semibold text-foreground mb-3">
             Filtres Enregistrés
           </p>
           <div className="flex flex-wrap gap-2">
@@ -381,7 +381,7 @@ export default function SearchPage() {
 
       {/* Results */}
       <div className="space-y-3">
-        <p className="text-slate-400">
+        <p className="text-muted-foreground">
           {loading ? "Chargement..." : `${results.length} résultats trouvés`}
         </p>
 
@@ -389,36 +389,36 @@ export default function SearchPage() {
           <Link
             key={`${result.type}-${result.id}`}
             href={getLink(result)}
-            className="block rounded-lg border border-slate-700 bg-slate-800 p-4 hover:bg-slate-700 transition-colors"
+            className="block rounded-lg border border-border bg-card p-4 hover:bg-accent transition-colors"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   <span className="text-2xl">{getTypeIcon(result.type)}</span>
                   <div>
-                    <h3 className="font-semibold text-white">{result.title}</h3>
-                    <p className="text-xs text-slate-400">
+                    <h3 className="font-semibold text-foreground">{result.title}</h3>
+                    <p className="text-xs text-muted-foreground">
                       {getTypeLabel(result.type)}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
+                  <span className="px-2 py-1 bg-muted rounded text-xs text-secondary-foreground">
                     {getStatusLabel(result.status)}
                   </span>
                   {result.rating && (
-                    <span className="px-2 py-1 bg-slate-700 rounded text-xs text-cyan-400 font-semibold">
+                    <span className="px-2 py-1 bg-muted rounded text-xs text-cyan-400 font-semibold">
                       {result.rating}
                     </span>
                   )}
                   {result.score != null && (
-                    <span className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
+                    <span className="px-2 py-1 bg-muted rounded text-xs text-secondary-foreground">
                       Score: {result.score.toFixed(2)}/10
                     </span>
                   )}
                   {result.sector && (
-                    <span className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
+                    <span className="px-2 py-1 bg-muted rounded text-xs text-secondary-foreground">
                       {result.sector}
                     </span>
                   )}
@@ -427,7 +427,7 @@ export default function SearchPage() {
 
               {result.date && (
                 <div className="text-right">
-                  <p className="text-xs text-slate-500 flex items-center space-x-1">
+                  <p className="text-xs text-muted-foreground flex items-center space-x-1">
                     <Clock size={12} />
                     <span>{formatDate(result.date)}</span>
                   </p>
@@ -439,7 +439,7 @@ export default function SearchPage() {
 
         {!loading && results.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-slate-400">Aucun résultat trouvé</p>
+            <p className="text-muted-foreground">Aucun résultat trouvé</p>
           </div>
         )}
       </div>
@@ -447,8 +447,8 @@ export default function SearchPage() {
       {/* Save Filter Modal */}
       {showSaveModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-lg p-8 w-full max-w-md space-y-6">
-            <h2 className="text-2xl font-bold text-white">
+          <div className="bg-card rounded-lg p-8 w-full max-w-md space-y-6">
+            <h2 className="text-2xl font-bold text-foreground">
               Enregistrer le Filtre
             </h2>
             <input
@@ -456,7 +456,7 @@ export default function SearchPage() {
               placeholder="Nom du filtre"
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+              className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:outline-none"
             />
             <div className="flex gap-4">
               <button
@@ -467,7 +467,7 @@ export default function SearchPage() {
               </button>
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+                className="flex-1 bg-muted hover:bg-secondary text-foreground font-semibold px-4 py-2 rounded-lg transition-all"
               >
                 Annuler
               </button>

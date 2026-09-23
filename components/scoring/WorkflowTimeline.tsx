@@ -25,22 +25,22 @@ interface WorkflowTimelineProps {
 const getStepIcon = (status: string, isCompleted: boolean) => {
   if (status === 'COMPLETED') return <CheckCircle2 className="w-6 h-6 text-green-500" />;
   if (status === 'FAILED') return <XCircle className="w-6 h-6 text-red-500" />;
-  if (status === 'SKIPPED') return <AlertCircle className="w-6 h-6 text-gray-500" />;
+  if (status === 'SKIPPED') return <AlertCircle className="w-6 h-6 text-muted-foreground" />;
   if (status === 'IN_PROGRESS') return <Clock className="w-6 h-6 text-blue-500 animate-pulse" />;
-  return <Clock className="w-6 h-6 text-gray-400" />;
+  return <Clock className="w-6 h-6 text-muted-foreground" />;
 };
 
 const getStepColor = (status: string) => {
   if (status === 'COMPLETED') return 'bg-green-50 border-green-200';
   if (status === 'FAILED') return 'bg-red-50 border-red-200';
-  if (status === 'SKIPPED') return 'bg-gray-50 border-gray-200';
+  if (status === 'SKIPPED') return 'bg-muted border-border';
   if (status === 'IN_PROGRESS') return 'bg-blue-50 border-blue-200';
-  return 'bg-white border-gray-200';
+  return 'bg-white border-border';
 };
 
 export function WorkflowTimeline({ steps, currentStep, status }: WorkflowTimelineProps) {
   if (!steps || steps.length === 0) {
-    return <div className="text-gray-500 text-sm">Aucune étape disponible</div>;
+    return <div className="text-muted-foreground text-sm">Aucune étape disponible</div>;
   }
 
   return (
@@ -54,7 +54,7 @@ export function WorkflowTimeline({ steps, currentStep, status }: WorkflowTimelin
               <div className={`w-1 h-12 my-2 ${
                 step.status === 'COMPLETED' || idx < currentStep
                   ? 'bg-green-300'
-                  : 'bg-gray-200'
+                  : 'bg-muted'
               }`} />
             )}
           </div>
@@ -63,8 +63,8 @@ export function WorkflowTimeline({ steps, currentStep, status }: WorkflowTimelin
           <div className={`flex-1 p-4 border rounded-lg ${getStepColor(step.status)}`}>
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-medium text-sm text-gray-900">{step.stepName}</h4>
-                <p className="text-xs text-gray-500 mt-1">
+                <h4 className="font-medium text-sm text-foreground">{step.stepName}</h4>
+                <p className="text-xs text-muted-foreground mt-1">
                   Étape {step.stepNumber} • {step.stepType}
                 </p>
               </div>
@@ -72,8 +72,8 @@ export function WorkflowTimeline({ steps, currentStep, status }: WorkflowTimelin
                 step.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
                 step.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
                 step.status === 'FAILED' ? 'bg-red-100 text-red-800' :
-                step.status === 'SKIPPED' ? 'bg-gray-100 text-gray-800' :
-                'bg-gray-100 text-gray-800'
+                step.status === 'SKIPPED' ? 'bg-muted text-foreground' :
+                'bg-muted text-foreground'
               }`}>
                 {step.status === 'COMPLETED' && 'Complétée'}
                 {step.status === 'IN_PROGRESS' && 'En cours'}
@@ -84,17 +84,17 @@ export function WorkflowTimeline({ steps, currentStep, status }: WorkflowTimelin
             </div>
 
             {step.notes && (
-              <p className="text-sm text-gray-700 mt-2">{step.notes}</p>
+              <p className="text-sm text-secondary-foreground mt-2">{step.notes}</p>
             )}
 
             {step.assignedTo && (
-              <p className="text-xs text-gray-600 mt-2">
+              <p className="text-xs text-secondary-foreground mt-2">
                 Assignée à: {step.assignedTo}
               </p>
             )}
 
             {step.completedAt && (
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Complétée: {new Date(step.completedAt).toLocaleString('fr-FR')}
               </p>
             )}

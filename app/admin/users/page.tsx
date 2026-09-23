@@ -53,7 +53,7 @@ const ROLE_COLORS: Record<string, string> = {
   committee_member: "bg-purple-500/20 text-purple-300 border-purple-500/30",
   risk_analyst: "bg-green-500/20 text-green-300 border-green-500/30",
   auditor: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  read_only: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+  read_only: "bg-secondary/20 text-muted-foreground border-input/30",
 };
 
 const ROLE_ICONS: Record<string, string> = {
@@ -93,10 +93,10 @@ function Avatar({ nom, prenom, role }: { nom: string; prenom: string; role: stri
     committee_member: "bg-purple-600",
     risk_analyst: "bg-green-600",
     auditor: "bg-yellow-600",
-    read_only: "bg-slate-600",
+    read_only: "bg-secondary",
   };
   return (
-    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 ${bgMap[role] || "bg-slate-600"}`}>
+    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-foreground font-semibold text-sm flex-shrink-0 ${bgMap[role] || "bg-secondary"}`}>
       {initials}
     </div>
   );
@@ -166,23 +166,23 @@ function UserModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg">
+      <div className="relative bg-background border border-border rounded-2xl shadow-2xl w-full max-w-lg">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/20 rounded-lg">
               {mode === "create" ? <Plus size={18} className="text-blue-400" /> : <Edit2 size={18} className="text-blue-400" />}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-foreground">
                 {mode === "create" ? "Nouvel utilisateur" : "Modifier l'utilisateur"}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 {mode === "create" ? "Créer un nouveau compte utilisateur" : `Édition de ${user?.prenom} ${user?.nom}`}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg">
+          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg">
             <X size={18} />
           </button>
         </div>
@@ -198,40 +198,40 @@ function UserModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Prénom</label>
+              <label className="block text-sm font-medium text-secondary-foreground mb-1.5">Prénom</label>
               <input
                 value={form.prenom}
                 onChange={(e) => setForm({ ...form, prenom: e.target.value })}
                 placeholder="Mohamed"
-                className="w-full bg-slate-800 text-white text-sm px-3 py-2 rounded-lg border border-slate-600 focus:border-blue-400 outline-none transition-colors"
+                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-blue-400 outline-none transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Nom *</label>
+              <label className="block text-sm font-medium text-secondary-foreground mb-1.5">Nom *</label>
               <input
                 value={form.nom}
                 onChange={(e) => setForm({ ...form, nom: e.target.value })}
                 placeholder="Alaoui"
-                className={`w-full bg-slate-800 text-white text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.nom ? "border-red-500" : "border-slate-600"}`}
+                className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.nom ? "border-red-500" : "border-input"}`}
               />
               {fieldErrors.nom && <p className="text-red-400 text-xs mt-1">{fieldErrors.nom}</p>}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Email *</label>
+            <label className="block text-sm font-medium text-secondary-foreground mb-1.5">Email *</label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="m.alaoui@banque.ma"
-              className={`w-full bg-slate-800 text-white text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.email ? "border-red-500" : "border-slate-600"}`}
+              className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.email ? "border-red-500" : "border-input"}`}
             />
             {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Rôle</label>
+            <label className="block text-sm font-medium text-secondary-foreground mb-2">Rôle</label>
             <div className="grid grid-cols-2 gap-2">
               {(["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const).map((r) => (
                 <button
@@ -241,7 +241,7 @@ function UserModal({
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
                     form.role === r
                       ? "border-blue-500 bg-blue-500/10 text-blue-300"
-                      : "border-slate-600 text-slate-400 hover:border-slate-500"
+                      : "border-input text-muted-foreground hover:border-ring"
                   }`}
                 >
                   <span>{ROLE_ICONS[r]}</span>
@@ -253,15 +253,15 @@ function UserModal({
           </div>
 
           {mode === "edit" && (
-            <div className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-slate-700">
+            <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border">
               <div>
-                <p className="text-sm font-medium text-white">Compte actif</p>
-                <p className="text-xs text-slate-400">L&apos;utilisateur peut se connecter</p>
+                <p className="text-sm font-medium text-foreground">Compte actif</p>
+                <p className="text-xs text-muted-foreground">L&apos;utilisateur peut se connecter</p>
               </div>
               <button
                 type="button"
                 onClick={() => setForm({ ...form, isActive: !form.isActive })}
-                className={`relative w-11 h-6 rounded-full transition-colors ${form.isActive ? "bg-green-500" : "bg-slate-600"}`}
+                className={`relative w-11 h-6 rounded-full transition-colors ${form.isActive ? "bg-green-500" : "bg-secondary"}`}
               >
                 <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow ${form.isActive ? "translate-x-5" : "translate-x-0.5"}`} />
               </button>
@@ -272,14 +272,14 @@ function UserModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 border border-slate-600 text-slate-300 hover:text-white hover:border-slate-500 rounded-lg text-sm transition-colors"
+              className="flex-1 px-4 py-2.5 border border-input text-secondary-foreground hover:text-foreground hover:border-ring rounded-lg text-sm transition-colors"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-muted text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
             >
               {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
               {mode === "create" ? "Créer l'utilisateur" : "Enregistrer"}
@@ -390,12 +390,12 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <div className="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-20 backdrop-blur">
+      <div className="border-b border-border bg-background/80 sticky top-0 z-20 backdrop-blur">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/admin" className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+            <Link href="/admin" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
               <ArrowLeft size={20} />
             </Link>
             <div>
@@ -403,11 +403,11 @@ export default function AdminUsersPage() {
                 <Shield size={20} className="text-blue-400" />
                 Gestion des Utilisateurs
               </h1>
-              <p className="text-sm text-slate-400">Gérez les comptes, rôles et accès</p>
+              <p className="text-sm text-muted-foreground">Gérez les comptes, rôles et accès</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={fetchUsers} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg" title="Rafraîchir">
+            <button onClick={fetchUsers} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg" title="Rafraîchir">
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             </button>
             <button onClick={openCreate}
@@ -422,15 +422,15 @@ export default function AdminUsersPage() {
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: "Total", value: stats.total, color: "text-white", icon: "👥" },
+            { label: "Total", value: stats.total, color: "text-foreground", icon: "👥" },
             { label: "Actifs", value: stats.active, color: "text-green-400", icon: "✅" },
             { label: "Admins", value: stats.admins, color: "text-red-400", icon: "🔴" },
             { label: "Analystes", value: stats.analysts, color: "text-green-400", icon: "🟢" },
           ].map((s) => (
-            <div key={s.label} className="bg-slate-900 border border-slate-700 rounded-xl p-4">
+            <div key={s.label} className="bg-background border border-border rounded-xl p-4">
               <div className="text-2xl mb-1">{s.icon}</div>
               <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-              <div className="text-xs text-slate-400">{s.label}</div>
+              <div className="text-xs text-muted-foreground">{s.label}</div>
             </div>
           ))}
         </div>
@@ -453,33 +453,33 @@ export default function AdminUsersPage() {
         {/* Filters */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-48">
-            <Search size={15} className="absolute left-3 top-2.5 text-slate-400" />
+            <Search size={15} className="absolute left-3 top-2.5 text-muted-foreground" />
             <input
               placeholder="Rechercher par nom ou email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-800 text-white text-sm px-4 py-2 pl-9 rounded-lg border border-slate-600 focus:border-blue-400 outline-none"
+              className="w-full bg-card text-foreground text-sm px-4 py-2 pl-9 rounded-lg border border-input focus:border-blue-400 outline-none"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-2.5 text-slate-400 hover:text-white">
+              <button onClick={() => setSearch("")} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground">
                 <X size={14} />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-800 rounded-lg border border-slate-600 p-1">
+          <div className="flex items-center gap-1 bg-card rounded-lg border border-input p-1">
             {["ALL", "system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"].map((r) => (
               <button key={r} onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"}`}>
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-blue-600 text-white" : "text-muted-foreground hover:text-white"}`}>
                 {r === "ALL" ? "Tous" : ROLE_LABELS[r]}
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-800 rounded-lg border border-slate-600 p-1">
+          <div className="flex items-center gap-1 bg-card rounded-lg border border-input p-1">
             {[{ value: "active", label: "Actifs" }, { value: "all", label: "Tous" }].map((f) => (
               <button key={f.value} onClick={() => setActiveFilter(f.value)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${activeFilter === f.value ? "bg-slate-600 text-white" : "text-slate-400 hover:text-white"}`}>
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${activeFilter === f.value ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 {f.label}
               </button>
             ))}
@@ -487,47 +487,47 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-          <div className="border-b border-slate-700 px-4 py-3">
-            <span className="text-sm text-slate-400">
+        <div className="bg-background border border-border rounded-xl overflow-hidden">
+          <div className="border-b border-border px-4 py-3">
+            <span className="text-sm text-muted-foreground">
               {filtered.length} utilisateur{filtered.length !== 1 ? "s" : ""}
               {(search || roleFilter !== "ALL") ? ` (filtrés sur ${users.length})` : ""}
             </span>
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-slate-400 gap-3">
+            <div className="flex items-center justify-center py-16 text-muted-foreground gap-3">
               <RefreshCw size={20} className="animate-spin" /> Chargement...
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-3">
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
               <Shield size={36} />
               <p>{search || roleFilter !== "ALL" ? "Aucun résultat" : "Aucun utilisateur"}</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-800">
-              <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-2 bg-slate-800/50">
+            <div className="divide-y divide-border">
+              <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-2 bg-card/50">
                 <span />
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Utilisateur</span>
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Rôle</span>
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Statut</span>
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Dernière connexion</span>
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Actions</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Utilisateur</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Rôle</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Statut</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dernière connexion</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actions</span>
               </div>
 
               {filtered.map((user) => (
                 <div key={user.id}
-                  className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3 hover:bg-slate-800/30 transition-colors">
+                  className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3 hover:bg-card/30 transition-colors">
                   <Avatar nom={user.nom} prenom={user.prenom} role={user.role} />
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-white">{user.prenom} {user.nom}</span>
+                      <span className="font-medium text-foreground">{user.prenom} {user.nom}</span>
                       {!user.isActive && (
                         <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded">Inactif</span>
                       )}
                     </div>
-                    <span className="text-sm text-slate-400 truncate block">{user.email}</span>
+                    <span className="text-sm text-muted-foreground truncate block">{user.email}</span>
                   </div>
 
                   <Badge className={ROLE_COLORS[user.role]}>
@@ -540,23 +540,23 @@ export default function AdminUsersPage() {
                         <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Actif
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-500" /> Inactif
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="w-1.5 h-1.5 rounded-full bg-secondary" /> Inactif
                       </span>
                     )}
                   </div>
 
-                  <span className="text-xs text-slate-400 whitespace-nowrap">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {formatRelative(user.lastLoginAt)}
                   </span>
 
                   <div className="flex items-center gap-1">
                     <button onClick={() => openEdit(user)} title="Modifier"
-                      className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors">
+                      className="p-1.5 text-muted-foreground hover:text-blue-400 hover:bg-accent rounded-lg transition-colors">
                       <Edit2 size={14} />
                     </button>
                     <button onClick={() => setDeleteConfirm(user)} title="Supprimer"
-                      className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors">
+                      className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-accent rounded-lg transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -567,7 +567,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-6 text-xs text-slate-500">
+        <div className="flex items-center gap-6 text-xs text-muted-foreground">
           {Object.entries(ROLE_LABELS).map(([role, label]) => (
             <span key={role} className="flex items-center gap-1.5">
               <span>{ROLE_ICONS[role]}</span>
@@ -591,27 +591,27 @@ export default function AdminUsersPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
-          <div className="relative bg-slate-900 border border-red-500/40 rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="relative bg-background border border-red-500/40 rounded-2xl shadow-2xl w-full max-w-md p-6">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-red-500/20 rounded-xl flex-shrink-0">
                 <Trash2 size={20} className="text-red-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white mb-1">Supprimer l&apos;utilisateur</h3>
-                <p className="text-sm text-slate-400 mb-4">
+                <h3 className="text-lg font-semibold text-foreground mb-1">Supprimer l&apos;utilisateur</h3>
+                <p className="text-sm text-muted-foreground mb-4">
                   Êtes-vous sûr de vouloir supprimer{" "}
-                  <span className="font-semibold text-white">
+                  <span className="font-semibold text-foreground">
                     {deleteConfirm.prenom} {deleteConfirm.nom}
                   </span>{" "}
                   ({deleteConfirm.email}) ? Cette action est irréversible.
                 </p>
                 <div className="flex gap-3">
                   <button onClick={() => setDeleteConfirm(null)}
-                    className="flex-1 px-4 py-2 border border-slate-600 text-slate-300 hover:text-white rounded-lg text-sm transition-colors">
+                    className="flex-1 px-4 py-2 border border-input text-secondary-foreground hover:text-foreground rounded-lg text-sm transition-colors">
                     Annuler
                   </button>
                   <button onClick={handleDelete} disabled={deleting}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-muted text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                     {deleting ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     Supprimer
                   </button>

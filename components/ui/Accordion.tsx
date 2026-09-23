@@ -17,25 +17,25 @@ export function AccordionItem({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-slate-700 rounded-lg overflow-hidden">
+    <div className="border border-border rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 bg-slate-800 hover:bg-slate-750 flex items-center justify-between transition-colors"
+        className="w-full px-6 py-4 bg-card hover:bg-surface flex items-center justify-between transition-colors"
       >
         <div className="flex items-center space-x-3">
           {icon && <span className="text-cyan-400">{icon}</span>}
-          <h3 className="font-semibold text-white text-left">{title}</h3>
+          <h3 className="font-semibold text-foreground text-left">{title}</h3>
         </div>
         <ChevronDown
           size={20}
-          className={`text-slate-400 transition-transform ${
+          className={`text-muted-foreground transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
       {isOpen && (
-        <div className="px-6 py-4 bg-slate-700/30 border-t border-slate-700 space-y-4">
+        <div className="px-6 py-4 bg-muted/30 border-t border-border space-y-4">
           {children}
         </div>
       )}

@@ -5,13 +5,13 @@
 
 // Role Colors
 export const ROLE_COLORS: Record<string, string> = {
-  system_admin: "bg-red-500/20 text-red-400",
-  scoring_admin: "bg-purple-500/20 text-purple-400",
-  risk_manager: "bg-blue-500/20 text-blue-400",
-  committee_member: "bg-cyan-500/20 text-cyan-400",
-  risk_analyst: "bg-green-500/20 text-green-400",
-  auditor: "bg-yellow-500/20 text-yellow-400",
-  read_only: "bg-slate-500/20 text-slate-400",
+  system_admin: "bg-red-500/15 text-red-700 dark:text-red-300",
+  scoring_admin: "bg-purple-500/15 text-purple-700 dark:text-purple-300",
+  risk_manager: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
+  committee_member: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300",
+  risk_analyst: "bg-green-500/15 text-green-700 dark:text-green-300",
+  auditor: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
+  read_only: "bg-secondary text-secondary-foreground",
 };
 
 // Role Labels (French)
@@ -27,10 +27,10 @@ export const ROLE_LABELS: Record<string, string> = {
 
 // Status Colors for Evaluations
 export const STATUS_COLORS: Record<string, string> = {
-  brouillon: "bg-slate-500/20 text-slate-400",
-  soumis: "bg-yellow-500/20 text-yellow-400",
-  valide: "bg-green-500/20 text-green-400",
-  rejete: "bg-red-500/20 text-red-400",
+  brouillon: "bg-secondary text-secondary-foreground",
+  soumis: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
+  valide: "bg-green-500/15 text-green-700 dark:text-green-300",
+  rejete: "bg-red-500/15 text-red-700 dark:text-red-300",
 };
 
 // Status Labels (French)
@@ -88,17 +88,17 @@ export const BUTTON_STYLES = {
   primary:
     "bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all",
   secondary:
-    "bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg transition-all",
+    "bg-secondary hover:bg-accent text-secondary-foreground font-semibold px-4 py-2 rounded-lg transition-all",
   danger:
     "bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-all",
   outline:
-    "border border-slate-700 rounded-lg text-slate-400 hover:text-white hover:border-slate-600 transition-colors px-4 py-2",
+    "border border-border rounded-lg text-muted-foreground hover:text-foreground hover:border-ring transition-colors px-4 py-2",
 };
 
 // Common Input Styles
 export const INPUT_STYLES = {
   default:
-    "w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500",
+    "w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring",
   error:
-    "w-full px-4 py-2 bg-slate-700 border border-red-500 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500",
+    "w-full px-4 py-2 bg-muted border border-destructive rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-destructive focus:ring-1 focus:ring-destructive",
 };

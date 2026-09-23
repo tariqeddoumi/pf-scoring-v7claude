@@ -78,25 +78,25 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
     }
   };
 
-  if (isLoading) return <p className="text-slate-400">Chargement...</p>;
+  if (isLoading) return <p className="text-muted-foreground">Chargement...</p>;
 
   return (
     <div className="space-y-4">
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {bindings.length === 0 ? (
-          <p className="text-slate-400 text-sm">Aucune liaison pour ce nœud</p>
+          <p className="text-muted-foreground text-sm">Aucune liaison pour ce nœud</p>
         ) : (
           bindings.map((binding) => (
-            <div key={binding.id} className="p-3 bg-slate-800 rounded border border-slate-700">
+            <div key={binding.id} className="p-3 bg-card rounded border border-border">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1">
-                  <p className="text-white font-medium">{binding.sourceEntity}</p>
-                  <p className="text-slate-400 text-xs">{binding.sourceField}</p>
-                  <span className="text-xs bg-slate-700 px-2 py-0.5 rounded inline-block mt-1">{binding.bindingMode}</span>
+                  <p className="text-foreground font-medium">{binding.sourceEntity}</p>
+                  <p className="text-muted-foreground text-xs">{binding.sourceField}</p>
+                  <span className="text-xs bg-muted px-2 py-0.5 rounded inline-block mt-1">{binding.bindingMode}</span>
                 </div>
                 <button
                   onClick={() => handleDeleteBinding(binding.id)}
-                  className="p-1 hover:bg-slate-700 rounded text-red-400"
+                  className="p-1 hover:bg-accent rounded text-red-400"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -109,7 +109,7 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded hover:bg-slate-700 text-sm text-slate-300 flex items-center gap-2 justify-center"
+          className="w-full px-3 py-2 bg-card border border-input rounded hover:bg-accent text-sm text-secondary-foreground flex items-center gap-2 justify-center"
         >
           <Plus size={16} />
           Ajouter une liaison
@@ -117,12 +117,12 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
       )}
 
       {showForm && (
-        <div className="border-t border-slate-700 pt-4 space-y-3">
-          <h4 className="text-sm font-medium text-slate-300">Nouvelle liaison</h4>
+        <div className="border-t border-border pt-4 space-y-3">
+          <h4 className="text-sm font-medium text-secondary-foreground">Nouvelle liaison</h4>
           <select
             value={formData.sourceEntity}
             onChange={(e) => setFormData({ ...formData, sourceEntity: e.target.value })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           >
             <option>PROJECT</option>
             <option>CLIENT</option>
@@ -133,7 +133,7 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
             placeholder="Champ source"
             value={formData.sourceField}
             onChange={(e) => setFormData({ ...formData, sourceField: e.target.value })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <div className="flex gap-2">
             <button
@@ -145,7 +145,7 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="flex-1 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm"
+              className="flex-1 px-3 py-2 bg-muted hover:bg-secondary text-foreground rounded text-sm"
             >
               Annuler
             </button>
