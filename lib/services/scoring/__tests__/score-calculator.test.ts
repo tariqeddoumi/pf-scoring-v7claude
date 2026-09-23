@@ -120,6 +120,36 @@ describe("AggregationEngine", () => {
     expect(result).toBeCloseTo((10 * 2 + 20 * 1) / (2 + 1)); // 13.33
   });
 
+  test("aggregate FIRST retient le premier enfant", () => {
+    const children = [
+      { nodeId: "c1", rawScore: 42, weight: 1 },
+      { nodeId: "c2", rawScore: 99, weight: 5 },
+    ];
+
+    expect(AggregationEngine.aggregate("FIRST", children as any)).toBe(42);
+  });
+
+  test("aggregate refuse une méthode inconnue au lieu de renvoyer 0", () => {
+    const children = [{ nodeId: "c1", rawScore: 80, weight: 1 }];
+
+    // Un zéro silencieux passerait pour un score légitime : la faute de paramétrage
+    // doit remonter, pas se transformer en note nulle.
+    expect(() => AggregationEngine.aggregate("MOYENNE", children as any)).toThrow(
+      /Méthode d'agrégation inconnue/
+    );
+  });
+
+  test("aggregate couvre toutes les méthodes annoncées comme supportées", () => {
+    const children = [
+      { nodeId: "c1", rawScore: 10, weight: 1 },
+      { nodeId: "c2", rawScore: 20, weight: 1 },
+    ];
+
+    for (const methode of AggregationEngine.METHODES_SUPPORTEES) {
+      expect(() => AggregationEngine.aggregate(methode, children as any)).not.toThrow();
+    }
+  });
+
   test("normalize scales score to [0,1]", () => {
     const result = AggregationEngine.normalize(50, 100);
     expect(result).toBe(0.5);

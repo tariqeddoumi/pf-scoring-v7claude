@@ -6,6 +6,13 @@ import { BindingResolver, BindingContext } from "./binding-resolver";
 import { resolveSectorWeighting, SectorWeighting } from "./sectorial";
 import { evaluateCondition, ConditionContext } from "./condition-evaluator";
 import {
+  BAREME_REPLI,
+  RatingResolution,
+  RatingSource,
+  resolveRatingFromBands,
+} from "./rating-scale";
+import { getRatingScales } from "@/lib/services/scoring-configuration-service";
+import {
   getDomainGranularity,
   GRANULARITY_DEPTH,
   isSectorialEnabled,
@@ -82,6 +89,10 @@ export interface EvaluationTrace {
   publicationBlocked: boolean;
   /** Rules skipped because their condition could not be evaluated. */
   ruleDiagnostics: RuleDiagnostic[];
+  /** D'où vient la note : "referentiel" (table paramétrable) ou "repli" (barème codé). */
+  ratingSource: RatingSource;
+  /** Renseigné lorsque le score tombe dans un interstice du barème. */
+  ratingWarning?: string;
   /** Present when sectorial calibration is enabled and a sector matched. */
   sectorial?: SectorialTrace;
 }
@@ -224,7 +235,16 @@ export class ScoringEngineV8 {
       } else if (treatAsAggregator) {
         const childIds = tree.childrenOf.get(node.id) || [];
         const children = childIds.map((id) => nodeScores.get(id)).filter(Boolean) as NodeResult[];
-        rawScore = AggregationEngine.aggregate(node.aggregationMethod ?? undefined, children as any);
+        try {
+          rawScore = AggregationEngine.aggregate(
+            node.aggregationMethod ?? undefined,
+            children as any
+          );
+        } catch (e) {
+          throw new Error(
+            `Nœud « ${node.code} » : ${e instanceof Error ? e.message : String(e)}`
+          );
+        }
         explanation = `Aggregated ${children.length} children using ${node.aggregationMethod || "AVERAGE"}`;
       }
 
@@ -339,7 +359,7 @@ export class ScoringEngineV8 {
 
     const rawFinalScore = sectorWeighting ? adjRawFinal : baseRawFinal;
     const finalScoreAdjusted = Math.max(0, Math.min(100, rawFinalScore - malusTotal));
-    const rating = this.scoreToRating(finalScoreAdjusted);
+    const ratingResolution = await this.resolveRating(finalScoreAdjusted);
 
     let sectorial: SectorialTrace | undefined;
     if (sectorWeighting) {
@@ -359,7 +379,13 @@ export class ScoringEngineV8 {
 
     const blocked = blockingRuleCodes.length > 0;
     const traceJson = JSON.stringify(
-      { rootResults, sectorial, blockingRuleCodes, ruleDiagnostics },
+      {
+        rootResults,
+        sectorial,
+        blockingRuleCodes,
+        ruleDiagnostics,
+        rating: ratingResolution,
+      },
       null,
       2
     );
@@ -368,7 +394,9 @@ export class ScoringEngineV8 {
       evaluationId,
       modelVersionId: evaluation.modelVersionId,
       finalScore: finalScoreAdjusted,
-      rating,
+      rating: ratingResolution.rating,
+      ratingSource: ratingResolution.source,
+      ratingWarning: ratingResolution.warning,
       recommendation: blocked
         ? `Blocage — condition rédhibitoire déclenchée (${blockingRuleCodes.join(", ")})`
         : this.scoreToRecommendation(finalScoreAdjusted),
@@ -424,17 +452,38 @@ export class ScoringEngineV8 {
     return children;
   }
 
-  private static scoreToRating(score: number): string {
-    if (score >= 90) return "AAA";
-    if (score >= 80) return "AA";
-    if (score >= 70) return "A";
-    if (score >= 60) return "BBB";
-    if (score >= 50) return "BB";
-    if (score >= 40) return "B";
-    if (score >= 30) return "CCC";
-    if (score >= 20) return "CC";
-    if (score >= 10) return "C";
-    return "D";
+  /**
+   * Convertit le score en note via le barème paramétrable.
+   *
+   * Le barème vit en base (BP_PF_v7pp_rating_scales) et se modifie sans redéploiement.
+   * Le barème codé n'intervient que si la table est vide : une base non initialisée
+   * conserve alors l'ancien comportement au lieu de produire « D » pour tout le monde.
+   */
+  private static async resolveRating(score: number): Promise<RatingResolution> {
+    try {
+      const scales = await getRatingScales();
+      if (scales.length > 0) {
+        return resolveRatingFromBands(
+          score,
+          scales.map((s) => ({
+            rating: s.label,
+            minScore: Number(s.minScore),
+            maxScore: Number(s.maxScore),
+          })),
+          "referentiel"
+        );
+      }
+    } catch (e) {
+      // Le référentiel est indisponible : on note quand même, en le disant.
+      return {
+        ...resolveRatingFromBands(score, BAREME_REPLI, "repli"),
+        warning: `référentiel illisible (${e instanceof Error ? e.message : String(e)})`,
+      };
+    }
+    return {
+      ...resolveRatingFromBands(score, BAREME_REPLI, "repli"),
+      warning: "référentiel de notation vide",
+    };
   }
 
   private static scoreToRecommendation(score: number): string {

@@ -36,6 +36,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
+    id: "bareme",
+    title: "Barème de notation ★",
+    description:
+      "Correspondance score → note (AAA…D) appliquée par le moteur à chaque calcul",
+    href: "/admin/bareme",
+    icon: "🏷️",
+    requiredRole: "system_admin",
+  },
+  {
     id: "scoring",
     title: "Modèle de Scoring PF V7++",
     description: "Visualisez les domaines, critères et barèmes du modèle actif",

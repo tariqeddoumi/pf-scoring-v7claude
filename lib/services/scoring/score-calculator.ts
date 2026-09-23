@@ -290,10 +290,33 @@ export class AggregationEngine {
       case "COUNT":
         return children.length;
 
+      // Proposée par le référentiel BP_PF_v7pp_aggregation_methods : sans ce cas,
+      // un nœud paramétré sur « Premier uniquement » tombait dans le défaut et valait 0.
+      case "FIRST":
+        return children[0].rawScore;
+
       default:
-        return 0;
+        // Un zéro silencieux est un score inventé : une méthode inconnue en base
+        // (faute de frappe dans le paramétrage) donnerait une note nulle crédible
+        // au lieu d'un signal. On refuse de noter plutôt que de noter faux.
+        throw new Error(
+          `Méthode d'agrégation inconnue : « ${method_} ». ` +
+            `Valeurs acceptées : ${AggregationEngine.METHODES_SUPPORTEES.join(", ")}.`
+        );
     }
   }
+
+  /** Méthodes reconnues par aggregate(), pour le paramétrage et les messages d'erreur. */
+  static readonly METHODES_SUPPORTEES = [
+    "SUM",
+    "WEIGHTED_SUM",
+    "AVERAGE",
+    "WEIGHTED_AVERAGE",
+    "MIN",
+    "MAX",
+    "COUNT",
+    "FIRST",
+  ] as const;
 
   /**
    * Recursively compute weighted scores using hierarchy.
