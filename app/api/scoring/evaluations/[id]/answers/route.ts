@@ -1,28 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
+import { ScoringAnswerType } from "@prisma/client";
+import { normalizeAnswers } from "@/lib/services/scoring/answer-payload";
 
 /**
  * PATCH /api/scoring/evaluations/[id]/answers
  * Mise à jour en lot des réponses d'une évaluation.
  *
- * CORPS DE LA REQUÊTE :
- *   { answers: [{ nodeId: string, value: any, overrideReason?: string }] }
+ * Le corps accepte deux formes par réponse — colonnes typées (préférée) ou valeur
+ * unique héritée. La normalisation et ses règles sont dans
+ * lib/services/scoring/answer-payload.ts, où elles sont testées.
  *
- * Les valeurs sont stockées dans des colonnes typées séparées :
- *   - valueString  : texte / code d'option (ex: "FORT", "MOYEN")
- *   - valueNumber  : nombre décimal (ex: 1.45 pour le DSCR)
- *   - valueBoolean : oui/non
- *   - valueDate    : date ISO (ex: "2025-01-15")
- *
- * La base utilise un upsert : crée la réponse si elle n'existe pas, sinon la met à jour.
+ * Le type de réponse vient du nœud du référentiel, jamais deviné. Toute entrée non
+ * enregistrable est retournée dans `ignored` : une sauvegarde partielle ne doit
+ * jamais se présenter comme un succès complet.
  */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const evaluationId = id;
+    const { id: evaluationId } = await params;
     const { answers } = await req.json();
 
     if (!Array.isArray(answers)) {
@@ -36,11 +34,10 @@ export async function PATCH(
       );
     }
 
-    // Vérifier que l'évaluation existe avant de modifier ses réponses
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },
+      select: { id: true },
     });
-
     if (!evaluation) {
       return NextResponse.json(
         { success: false, error: "Évaluation introuvable", errorCode: "NOT_FOUND" },
@@ -48,64 +45,60 @@ export async function PATCH(
       );
     }
 
-    // Mettre à jour chaque réponse individuellement
-    const updated = [];
-    for (const { nodeId, value, overrideReason } of answers) {
-      if (!nodeId || value === undefined) continue;
+    const nodeIds = answers
+      .map((a: { nodeId?: string }) => a?.nodeId)
+      .filter((v: unknown): v is string => typeof v === "string");
 
-      // Détecter le type JavaScript de la valeur et mapper vers la bonne colonne DB.
-      // Note : les valeurs venant du JSON ne peuvent jamais être instanceof Date —
-      //        on traite les chaînes de date comme des strings pour préserver leur format.
-      let valueString: string | null = null;
-      let valueNumber: number | null = null;
-      let valueBoolean: boolean | null = null;
-      let valueDate: Date | null = null;
+    const nodes = await prisma.scoringNode.findMany({
+      where: { id: { in: nodeIds } },
+      select: { id: true, answerType: true },
+    });
+    const answerTypeByNode = new Map<string, string>(
+      nodes.map((n) => [n.id, n.answerType as unknown as string])
+    );
 
-      if (typeof value === "boolean") {
-        valueBoolean = value;
-      } else if (typeof value === "number") {
-        valueNumber = value;
-      } else if (typeof value === "string") {
-        // Détecter si la chaîne ressemble à une date ISO (ex: "2025-01-15T00:00:00Z")
-        const dateCandidate = new Date(value);
-        const isIsoDate = /^\d{4}-\d{2}-\d{2}/.test(value) && !isNaN(dateCandidate.getTime());
-        if (isIsoDate) {
-          valueDate = dateCandidate;
-        } else {
-          valueString = value;
-        }
-      }
+    const { writes, ignored } = normalizeAnswers(answers, answerTypeByNode);
 
-      const result = await prisma.scoringEvaluationAnswer.upsert({
-        where: { evaluationId_nodeId: { evaluationId, nodeId } },
-        create: {
-          evaluationId,
-          nodeId,
-          answerType: "TEXT",
-          valueString,
-          valueNumber,
-          valueBoolean,
-          valueDate,
-          isOverridden: !!overrideReason,
-          overrideReason,
-        },
-        update: {
-          valueString,
-          valueNumber,
-          valueBoolean,
-          valueDate,
-          isOverridden: !!overrideReason,
-          overrideReason,
-          updatedAt: new Date(),
-        },
-      });
-
-      updated.push(result);
-    }
+    const results = await prisma.$transaction(
+      writes.map((w) =>
+        prisma.scoringEvaluationAnswer.upsert({
+          where: { evaluationId_nodeId: { evaluationId, nodeId: w.nodeId } },
+          create: {
+            evaluationId,
+            nodeId: w.nodeId,
+            answerType: w.answerType as ScoringAnswerType,
+            valueString: w.valueString,
+            valueNumber: w.valueNumber,
+            valueBoolean: w.valueBoolean,
+            valueDate: w.valueDate,
+            comment: w.comment,
+            manualScore: w.manualScore,
+            isOverridden: w.isOverridden,
+            overrideReason: w.overrideReason,
+          },
+          update: {
+            answerType: w.answerType as ScoringAnswerType,
+            valueString: w.valueString,
+            valueNumber: w.valueNumber,
+            valueBoolean: w.valueBoolean,
+            valueDate: w.valueDate,
+            ...(w.touched.comment ? { comment: w.comment } : {}),
+            ...(w.touched.manualScore ? { manualScore: w.manualScore } : {}),
+            isOverridden: w.isOverridden,
+            overrideReason: w.overrideReason,
+            updatedAt: new Date(),
+          },
+        })
+      )
+    );
 
     return NextResponse.json({
       success: true,
-      data: { updatedCount: updated.length },
+      data: {
+        updatedCount: results.length,
+        receivedCount: answers.length,
+        ignored,
+      },
     });
   } catch (error) {
     console.error("PATCH /api/scoring/evaluations/[id]/answers error:", error);

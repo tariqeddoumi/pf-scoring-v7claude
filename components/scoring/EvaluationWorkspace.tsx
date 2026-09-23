@@ -343,17 +343,6 @@ export function EvaluationWorkspace({
   const currentIndex = questionnaire.findIndex((d) => d.id === currentDomainId);
   const stats = buildDomainStats(questionnaire, answers);
 
-  /* auto-save after 3 s idle */
-  const triggerAutoSave = useCallback(() => {
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => saveAnswers(false), 3000);
-  }, []);
-
-  const handleAnswer = (nodeId: string, val: AnswerValue) => {
-    setAnswers((prev) => ({ ...prev, [nodeId]: val }));
-    triggerAutoSave();
-  };
-
   /* ── Save answers ──────────────────────────────────────── */
   const saveAnswers = useCallback(
     async (showFeedback = true) => {
@@ -362,7 +351,6 @@ export function EvaluationWorkspace({
       try {
         const payload = Object.entries(answers).map(([nodeId, a]) => ({
           nodeId,
-          answerType: "VALUE",
           valueString: a.valueString,
           valueNumber: a.valueNumber,
           valueBoolean: a.valueBoolean,
@@ -376,8 +364,21 @@ export function EvaluationWorkspace({
         });
 
         if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
+
+        // Une sauvegarde partielle ne doit pas s'annoncer comme un succès.
+        const body = await res.json();
+        const ignored = body?.data?.ignored ?? [];
+        if (ignored.length > 0) {
+          setError(
+            `${ignored.length} réponse(s) non enregistrée(s) : ${ignored[0].reason}`
+          );
+          return;
+        }
+
         setLastSaved(new Date());
-        if (showFeedback) setSuccessMsg("Réponses sauvegardées ✓");
+        if (showFeedback) {
+          setSuccessMsg(`${body?.data?.updatedCount ?? 0} réponse(s) enregistrée(s) ✓`);
+        }
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -386,6 +387,24 @@ export function EvaluationWorkspace({
     },
     [answers, evaluationId]
   );
+
+  /* auto-save after 3 s idle — la référence est gardée dans un ref pour que le
+     minuteur appelle toujours la dernière version de saveAnswers, et non celle
+     capturée au premier rendu (qui ne voyait aucune réponse). */
+  const saveAnswersRef = useRef(saveAnswers);
+  useEffect(() => {
+    saveAnswersRef.current = saveAnswers;
+  }, [saveAnswers]);
+
+  const triggerAutoSave = useCallback(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => saveAnswersRef.current(false), 3000);
+  }, []);
+
+  const handleAnswer = (nodeId: string, val: AnswerValue) => {
+    setAnswers((prev) => ({ ...prev, [nodeId]: val }));
+    triggerAutoSave();
+  };
 
   /* ── Calculate ─────────────────────────────────────────── */
   const handleCalculate = async () => {
