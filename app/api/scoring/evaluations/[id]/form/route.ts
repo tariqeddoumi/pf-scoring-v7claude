@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { ModelLoader } from "@/lib/services/scoring";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * GET /api/scoring/evaluations/[id]/form
@@ -9,9 +10,10 @@ import { ModelLoader } from "@/lib/services/scoring";
  * - Current answers
  * - Binding info (optional - for UI to show where value comes from)
  */
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+async function handleGET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+  user: AuthPayload
 ) {
   try {
     const { id } = await params;
@@ -140,4 +142,11 @@ function buildNodeForForm(
       : null,
     children: children.filter((c: any) => c != null),
   };
+}
+
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return withAuth(req, (r, user) => handleGET(r, ctx, user));
 }

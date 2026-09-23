@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { ScoringAnswerType } from "@prisma/client";
 import { normalizeAnswers } from "@/lib/services/scoring/answer-payload";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * PATCH /api/scoring/evaluations/[id]/answers
@@ -15,9 +16,10 @@ import { normalizeAnswers } from "@/lib/services/scoring/answer-payload";
  * enregistrable est retournée dans `ignored` : une sauvegarde partielle ne doit
  * jamais se présenter comme un succès complet.
  */
-export async function PATCH(
+async function handlePATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
+  user: AuthPayload
 ) {
   try {
     const { id: evaluationId } = await params;
@@ -111,4 +113,11 @@ export async function PATCH(
       { status: 500 }
     );
   }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return withAuth(req, (r, user) => handlePATCH(r, ctx, user));
 }

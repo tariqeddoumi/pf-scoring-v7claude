@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * GET /api/scoring/bindings/[id]
  * Fetch a single binding.
  */
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+async function handleGET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+  user: AuthPayload
 ) {
   try {
     const { id } = await params;
@@ -43,9 +45,10 @@ export async function GET(
  * PUT /api/scoring/bindings/[id]
  * Update a binding.
  */
-export async function PUT(
+async function handlePUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
+  user: AuthPayload
 ) {
   try {
     const { id } = await params;
@@ -88,9 +91,10 @@ export async function PUT(
  * DELETE /api/scoring/bindings/[id]
  * Soft-delete a binding (set isActive = false).
  */
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+async function handleDELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+  user: AuthPayload
 ) {
   try {
     const { id } = await params;
@@ -120,4 +124,25 @@ export async function DELETE(
       { status: 500 }
     );
   }
+}
+
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return withAuth(req, (r, user) => handleGET(r, ctx, user));
+}
+
+export async function PUT(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return withAuth(req, (r, user) => handlePUT(r, ctx, user));
+}
+
+export async function DELETE(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return withAuth(req, (r, user) => handleDELETE(r, ctx, user));
 }

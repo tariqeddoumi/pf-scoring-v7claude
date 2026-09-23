@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { ScoringEngineV8 } from "@/lib/services/scoring";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * POST /api/scoring/evaluations/[id]/calculate
@@ -11,9 +12,10 @@ import { ScoringEngineV8 } from "@/lib/services/scoring";
  * 4. Persist results (node scores, final score, rating)
  * 5. Return trace with explanations
  */
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+async function handlePOST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+  user: AuthPayload
 ) {
   try {
     const { id } = await params;
@@ -72,4 +74,11 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+export async function POST(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return withAuth(req, (r, user) => handlePOST(r, ctx, user));
 }

@@ -18,6 +18,7 @@ import { DomainSidebar } from "./DomainSidebar";
 import { LiveScorePanel, type AnswerValue } from "./LiveScorePanel";
 import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
+import { apiPost, apiPatch } from "@/lib/api-client";
 
 interface EvaluationWorkspaceProps {
   evaluationId: string;
@@ -357,11 +358,10 @@ export function EvaluationWorkspace({
           comment: a.comment,
         }));
 
-        const res = await fetch(`/api/scoring/evaluations/${evaluationId}/answers`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ answers: payload }),
-        });
+        const res = await apiPatch(
+          `/api/scoring/evaluations/${evaluationId}/answers`,
+          { answers: payload }
+        );
 
         if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
 
@@ -414,9 +414,7 @@ export function EvaluationWorkspace({
     try {
       await saveAnswers(false);
 
-      const res = await fetch(`/api/scoring/evaluations/${evaluationId}/calculate`, {
-        method: "POST",
-      });
+      const res = await apiPost(`/api/scoring/evaluations/${evaluationId}/calculate`);
 
       if (!res.ok) {
         const data = await res.json();
@@ -442,17 +440,16 @@ export function EvaluationWorkspace({
     try {
       await saveAnswers(false);
 
-      const calcRes = await fetch(`/api/scoring/evaluations/${evaluationId}/calculate`, {
-        method: "POST",
-      });
+      const calcRes = await apiPost(
+        `/api/scoring/evaluations/${evaluationId}/calculate`
+      );
       if (!calcRes.ok) throw new Error("Calcul échoué");
       const { data } = await calcRes.json();
 
-      const subRes = await fetch(`/api/scoring/evaluations/${evaluationId}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: "" }),
-      });
+      const subRes = await apiPost(
+        `/api/scoring/evaluations/${evaluationId}/submit`,
+        { notes: "" }
+      );
       if (!subRes.ok) throw new Error("Soumission échouée");
 
       onComplete(evaluationId, data.finalScore, data.rating);

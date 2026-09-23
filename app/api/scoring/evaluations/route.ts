@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * POST /api/scoring/evaluations
  * Create a new evaluation for a project using a specific model version.
  * Initializes empty answers based on binding defaults.
  */
-export async function POST(req: NextRequest) {
+async function handlePOST(
+  req: NextRequest,
+  user: AuthPayload
+) {
   try {
     const { projectId, modelVersionId } = await req.json();
 
@@ -40,14 +44,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create evaluation in draft status
-    // Use null for analystId (can be set later when user logs in)
+    // L'évaluation porte l'identité de son auteur : une note de crédit anonyme
+    // n'est pas auditable, ce qu'exige le dispositif Bank Al-Maghrib.
     const evaluation = await prisma.scoringEvaluation.create({
       data: {
         projectId,
         modelId: version.modelId,
         modelVersionId,
-        analystId: null, // Optional - set when analyst reviews
+        analystId: user.userId,
         status: "brouillon",
       },
     });
@@ -96,7 +100,10 @@ export async function POST(req: NextRequest) {
  * GET /api/scoring/evaluations?projectId=...&modelVersionId=...
  * List evaluations for a project, optionally filtered by model version.
  */
-export async function GET(req: NextRequest) {
+async function handleGET(
+  req: NextRequest,
+  user: AuthPayload
+) {
   try {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
@@ -133,4 +140,12 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function POST(req: NextRequest) {
+  return withAuth(req, (r, user) => handlePOST(r, user));
+}
+
+export async function GET(req: NextRequest) {
+  return withAuth(req, (r, user) => handleGET(r, user));
 }
