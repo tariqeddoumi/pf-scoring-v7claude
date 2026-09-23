@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, BarChart3 } from "lucide-react";
 import Link from "next/link";
-import { EvaluationWorkspace } from "@/components/scoring/EvaluationWorkspace";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 import { apiGet, apiPost } from "@/lib/api-client";
 
@@ -20,11 +19,6 @@ export default function NewEvaluationPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireNode[]>([]);
   const [modelVersionId, setModelVersionId] = useState("");
-
-  /* state machine: "form" | "workspace" */
-  const [step, setStep] = useState<"form" | "workspace">("form");
-  const [evaluationId, setEvaluationId] = useState<string | null>(null);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   /* ui */
   const [loading, setLoading] = useState(true);
@@ -65,7 +59,7 @@ export default function NewEvaluationPage() {
     })();
   }, []);
 
-  /* ── Step 1: create evaluation ── */
+  /* ── Création puis redirection vers la saisie ── */
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.projectId) return;
@@ -81,19 +75,12 @@ export default function NewEvaluationPage() {
         throw new Error(d.error || "Erreur lors de la création");
       }
       const { data } = await res.json();
-      setEvaluationId(data.id);
-      setSelectedProject(projects.find((p) => p.id === formData.projectId) ?? null);
-      setStep("workspace");
+      // La saisie a sa propre URL : elle devient reprenable et partageable.
+      router.push(`/evaluations/${data.id}/saisie`);
     } catch (e: any) {
       setError(e.message);
-    } finally {
       setSubmitting(false);
     }
-  };
-
-  /* ── Step 2: workspace complete ── */
-  const handleComplete = (id: string, score: number, rating: string) => {
-    router.push(`/evaluations/${id}?score=${score.toFixed(1)}&rating=${rating}`);
   };
 
   /* ── Loading ── */
@@ -108,20 +95,7 @@ export default function NewEvaluationPage() {
     );
   }
 
-  /* ── Workspace (step 2) ── */
-  if (step === "workspace" && evaluationId) {
-    return (
-      <EvaluationWorkspace
-        evaluationId={evaluationId}
-        projectName={selectedProject?.nom ?? "Projet"}
-        questionnaire={questionnaire}
-        modelVersionId={modelVersionId}
-        onComplete={handleComplete}
-      />
-    );
-  }
-
-  /* ── Creation form (step 1) ── */
+  /* ── Formulaire de création ── */
   return (
     <div className="space-y-6">
       {/* Header */}

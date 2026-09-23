@@ -11,6 +11,7 @@ import {
   BarChart3,
   AlertCircle,
   Edit2,
+  FileSearch,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
 import { apiGet } from "@/lib/api-client";
@@ -257,13 +258,24 @@ export default function EvaluationDetailPage({
             </p>
           </div>
         </div>
-        <button
-          onClick={() => evalId && router.push(`/evaluations/${evalId}/edit`)}
-          className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
-        >
-          <Edit2 size={20} />
-          <span>Modifier</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/scoring/evaluations/${evalId}/results`}
+            className="inline-flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+          >
+            <FileSearch size={20} />
+            <span>Trace de calcul</span>
+          </Link>
+          {evaluation.status === "brouillon" && (
+            <button
+              onClick={() => evalId && router.push(`/evaluations/${evalId}/saisie`)}
+              className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+            >
+              <Edit2 size={20} />
+              <span>Reprendre la saisie</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Score Card */}

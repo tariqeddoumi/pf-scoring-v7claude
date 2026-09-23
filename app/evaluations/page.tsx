@@ -299,15 +299,17 @@ export default function EvaluationsPage() {
                         >
                           <Eye size={16} />
                         </Link>
-                        {!ev.isArchived && can("evaluation", "update") && (
-                          <Link
-                            href={`/evaluations/${ev.id}/edit`}
-                            className="p-2 text-blue-400 hover:bg-slate-600 rounded-lg transition-colors"
-                            title="Modifier"
-                          >
-                            <Edit2 size={16} />
-                          </Link>
-                        )}
+                        {!ev.isArchived &&
+                          ev.status === "brouillon" &&
+                          can("evaluation", "update") && (
+                            <Link
+                              href={`/evaluations/${ev.id}/saisie`}
+                              className="p-2 text-blue-400 hover:bg-slate-600 rounded-lg transition-colors"
+                              title="Reprendre la saisie"
+                            >
+                              <Edit2 size={16} />
+                            </Link>
+                          )}
                         {can("evaluation", "delete") && (
                           <>
                             <button
