@@ -15,7 +15,7 @@ import {
   Columns,
 } from "lucide-react";
 import { DomainSidebar } from "./DomainSidebar";
-import { LiveScorePanel, type AnswerValue } from "./LiveScorePanel";
+import { LiveScorePanel, type AnswerValue, type ServerScore } from "./LiveScorePanel";
 import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 import { apiPost, apiPatch } from "@/lib/api-client";
@@ -338,11 +338,47 @@ export function EvaluationWorkspace({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [expandAll, setExpandAll] = useState(false);
   const [viewMode, setViewMode] = useState<"tabbed" | "accordion">("tabbed");
+  // Le score affiché vient du moteur, jamais d'un calcul refait dans le navigateur.
+  const [serverScore, setServerScore] = useState<ServerScore | null>(null);
+  const [isScoring, setIsScoring] = useState(false);
+  const [isStale, setIsStale] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentDomain = questionnaire.find((d) => d.id === currentDomainId) ?? questionnaire[0];
   const currentIndex = questionnaire.findIndex((d) => d.id === currentDomainId);
   const stats = buildDomainStats(questionnaire, answers);
+
+  /* ── Score du moteur (aperçu, non persisté) ────────────── */
+  const refreshScore = useCallback(async () => {
+    setIsScoring(true);
+    try {
+      const res = await apiPost(
+        `/api/scoring/evaluations/${evaluationId}/calculate?apercu=1`
+      );
+      if (!res.ok) return;
+      const { data } = await res.json();
+      setServerScore({
+        finalScore: data.finalScore,
+        rating: data.rating,
+        malusTotal: data.malusTotal ?? 0,
+        blocked: !!data.blocked,
+        blockingRuleCodes: data.blockingRuleCodes ?? [],
+        domains: data.domains ?? [],
+      });
+      setIsStale(false);
+    } catch {
+      // Un aperçu qui échoue ne doit pas interrompre la saisie : le panneau
+      // conserve la dernière valeur connue et reste marqué obsolète.
+    } finally {
+      setIsScoring(false);
+    }
+  }, [evaluationId]);
+
+  // Premier calcul au montage : le panneau affiche l'état réel du dossier plutôt
+  // qu'un tiret jusqu'à la première sauvegarde.
+  useEffect(() => {
+    void refreshScore();
+  }, [refreshScore]);
 
   /* ── Save answers ──────────────────────────────────────── */
   const saveAnswers = useCallback(
@@ -379,13 +415,14 @@ export function EvaluationWorkspace({
         if (showFeedback) {
           setSuccessMsg(`${body?.data?.updatedCount ?? 0} réponse(s) enregistrée(s) ✓`);
         }
+        void refreshScore();
       } catch (e: any) {
         setError(e.message);
       } finally {
         setIsSaving(false);
       }
     },
-    [answers, evaluationId]
+    [answers, evaluationId, refreshScore]
   );
 
   /* auto-save after 3 s idle — la référence est gardée dans un ref pour que le
@@ -403,6 +440,7 @@ export function EvaluationWorkspace({
 
   const handleAnswer = (nodeId: string, val: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [nodeId]: val }));
+    setIsStale(true);
     triggerAutoSave();
   };
 
@@ -422,8 +460,19 @@ export function EvaluationWorkspace({
       }
 
       const { data } = await res.json();
+      setServerScore({
+        finalScore: data.finalScore,
+        rating: data.rating,
+        malusTotal: data.malusTotal ?? 0,
+        blocked: !!data.blocked,
+        blockingRuleCodes: data.blockingRuleCodes ?? [],
+        domains: data.domains ?? [],
+      });
+      setIsStale(false);
       setSuccessMsg(
-        `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
+        data.blocked
+          ? `Calcul effectué — BLOCAGE : ${data.blockingRuleCodes.join(", ")}`
+          : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
       );
     } catch (e: any) {
       setError(e.message);
@@ -684,8 +733,9 @@ export function EvaluationWorkspace({
 
         {/* Right: Live score panel */}
         <LiveScorePanel
-          questionnaire={questionnaire}
-          answers={answers}
+          score={serverScore}
+          isScoring={isScoring}
+          isStale={isStale}
           isSaving={isSaving}
           lastSaved={lastSaved}
         />
