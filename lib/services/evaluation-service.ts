@@ -7,67 +7,141 @@ import {
 } from "@/lib/validation-schemas";
 import type { z } from "zod";
 
+/**
+ * Service des évaluations — unifié sur le modèle ScoringEvaluation.
+ *
+ * Il existait deux tables d'évaluation : Evaluation (BP_PF_v7pp_evaluations) et
+ * ScoringEvaluation (BP_PF_v7pp_scoring_evaluations). Le parcours de saisie écrivait
+ * dans la seconde tandis que la liste et la fiche lisaient la première, si bien qu'une
+ * évaluation terminée renvoyait « non trouvée » et n'apparaissait jamais dans la liste.
+ *
+ * ScoringEvaluation est retenue comme table unique : elle porte la version de modèle
+ * utilisée (donc la reproductibilité de la note), les réponses, les résultats par nœud,
+ * la trace de calcul et le circuit de validation. La table héritée ne portait qu'un blob
+ * de résultat et huit scores de domaine figés dans le schéma.
+ */
+
+const EVALUATION_INCLUDE = {
+  project: { select: { id: true, nom: true, status: true } },
+  analyst: { select: { id: true, email: true, nom: true, prenom: true } },
+  version: { select: { id: true, versionNumber: true, status: true } },
+} as const;
+
+const LIST_INCLUDE = {
+  project: { select: { nom: true } },
+  analyst: { select: { nom: true, prenom: true } },
+} as const;
+
+/**
+ * Résout la version de modèle à utiliser pour une nouvelle évaluation.
+ * Une évaluation sans version de modèle ne serait pas reproductible : on refuse
+ * plutôt que de rattacher silencieusement à une version arbitraire.
+ */
+async function resolvePublishedVersion() {
+  const version = await prisma.scoringModelVersion.findFirst({
+    where: { isPublished: true, status: "PUBLISHED" },
+    orderBy: { versionNumber: "desc" },
+    select: { id: true, modelId: true },
+  });
+
+  if (!version) {
+    throw new Error(
+      "Aucune version de modèle publiée : impossible de créer une évaluation reproductible"
+    );
+  }
+  return version;
+}
+
+/** Sérialise les scores de domaine et le résultat détaillé dans summaryJson. */
+function buildSummaryJson(
+  existing: string | null | undefined,
+  patch: Record<string, unknown>
+): string | undefined {
+  const entries = Object.entries(patch).filter(([, v]) => v !== undefined);
+  if (entries.length === 0) return undefined;
+
+  let base: Record<string, unknown> = {};
+  if (existing) {
+    try {
+      base = JSON.parse(existing) as Record<string, unknown>;
+    } catch {
+      base = {};
+    }
+  }
+  return JSON.stringify({ ...base, ...Object.fromEntries(entries) });
+}
+
 export class EvaluationService {
-  /**
-   * Create new evaluation (draft)
-   */
+  /** Crée une évaluation à l'état brouillon, rattachée à la version publiée. */
   static async createEvaluation(
     data: z.infer<typeof createEvaluationSchema>,
     createdBy: string
   ) {
     const validated = createEvaluationSchema.parse(data);
 
-    // Ensure project exists
     const project = await prisma.project.findUnique({
       where: { id: validated.projectId },
+      select: { id: true },
     });
-
     if (!project) {
       throw new Error("Project not found");
     }
 
-    const evaluation = await prisma.evaluation.create({
+    const version = await resolvePublishedVersion();
+
+    return prisma.scoringEvaluation.create({
       data: {
         projectId: validated.projectId,
+        modelId: version.modelId,
+        modelVersionId: version.id,
         analystId: createdBy,
-        scoringResult: (validated.scoringResult || {}) as any,
-        finalScore: validated.finalScore || 0,
-        rating: "D",
-        recommendation: "APPROVE",
-        probabilityOfDefault: 0,
-        triggeredNOGOs: [] as any,
-        appliedMALUS: [] as any,
-        malusTotal: 0,
         status: "brouillon",
-        version: "7.0",
+        finalScore: validated.finalScore ?? null,
+        malusTotal: 0,
+        notes: validated.notes ?? null,
+        summaryJson: buildSummaryJson(null, {
+          scoringResult: validated.scoringResult,
+          stressTestResult: validated.stressTestResult,
+        }),
       },
+      include: EVALUATION_INCLUDE,
     });
-
-    return evaluation;
   }
 
   /**
-   * Get evaluation by ID
+   * Fiche d'évaluation, avec les scores par domaine tels qu'ils ont été réellement
+   * calculés et persistés (nœuds racine de la trace). Ils ne sont plus lus dans huit
+   * colonnes figées : le nombre de domaines est une donnée du référentiel.
    */
   static async getEvaluationById(id: string, _userId?: string) {
-    const evaluation = await prisma.evaluation.findUnique({
+    const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id },
-      include: {
-        project: {
-          select: { id: true, nom: true, status: true },
-        },
-        analyst: {
-          select: { id: true, email: true, nom: true, prenom: true },
-        },
+      include: EVALUATION_INCLUDE,
+    });
+    if (!evaluation) return null;
+
+    const nodeResults = await prisma.scoringEvaluationNodeResult.findMany({
+      where: { evaluationId: id, node: { depth: 0 } },
+      select: {
+        rawScore: true,
+        normalizedScore: true,
+        node: { select: { code: true, label: true, weight: true, orderIndex: true } },
       },
     });
 
-    return evaluation;
+    const domainScores = nodeResults
+      .sort((a, b) => (a.node.orderIndex ?? 0) - (b.node.orderIndex ?? 0))
+      .map((r) => ({
+        code: r.node.code,
+        label: r.node.label,
+        weight: r.node.weight,
+        score: r.rawScore,
+        normalizedScore: r.normalizedScore,
+      }));
+
+    return { ...evaluation, domainScores };
   }
 
-  /**
-   * Get all evaluations (paginated)
-   */
   static async getAllEvaluations(
     page: number = 1,
     limit: number = 50,
@@ -83,33 +157,22 @@ export class EvaluationService {
     if (typeof filters?.isArchived === "boolean") where.isArchived = filters.isArchived;
 
     const [evaluations, total] = await Promise.all([
-      prisma.evaluation.findMany({
+      prisma.scoringEvaluation.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        include: {
-          project: { select: { nom: true } },
-          analyst: { select: { nom: true, prenom: true } },
-        },
+        include: LIST_INCLUDE,
       }),
-      prisma.evaluation.count({ where }),
+      prisma.scoringEvaluation.count({ where }),
     ]);
 
     return {
       data: evaluations,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     };
   }
 
-  /**
-   * Submit evaluation for validation
-   */
   static async submitEvaluation(
     id: string,
     data: z.infer<typeof submitEvaluationSchema>,
@@ -117,37 +180,36 @@ export class EvaluationService {
   ) {
     const validated = submitEvaluationSchema.parse(data);
 
-    const oldEval = await prisma.evaluation.findUnique({ where: { id } });
-
-    if (!oldEval) {
-      throw new Error("Evaluation not found");
-    }
-
-    if (oldEval.status !== "brouillon") {
+    const current = await prisma.scoringEvaluation.findUnique({
+      where: { id },
+      select: { status: true, summaryJson: true },
+    });
+    if (!current) throw new Error("Evaluation not found");
+    if (current.status !== "brouillon") {
       throw new Error("Can only submit draft evaluations");
     }
 
-    const evaluation = await prisma.evaluation.update({
+    return prisma.scoringEvaluation.update({
       where: { id },
       data: {
         status: "soumis",
+        submittedAt: new Date(),
         finalScore: validated.finalScore,
         rating: validated.rating,
         probabilityOfDefault: validated.probabilityOfDefault,
-        triggeredNOGOs: validated.triggeredNOGOs as any,
-        appliedMALUS: validated.appliedMALUS as any,
         malusTotal: validated.malusTotal,
         notes: validated.notes,
-        updatedAt: new Date(),
+        triggeredRulesJson: validated.triggeredNOGOs
+          ? JSON.stringify(validated.triggeredNOGOs)
+          : undefined,
+        summaryJson: buildSummaryJson(current.summaryJson, {
+          appliedMALUS: validated.appliedMALUS,
+        }),
       },
+      include: EVALUATION_INCLUDE,
     });
-
-    return evaluation;
   }
 
-  /**
-   * Validate evaluation (manager/admin)
-   */
   static async validateEvaluation(
     id: string,
     data: z.infer<typeof validateEvaluationSchema>,
@@ -155,27 +217,26 @@ export class EvaluationService {
   ) {
     const validated = validateEvaluationSchema.parse(data);
 
-    const oldEval = await prisma.evaluation.findUnique({ where: { id } });
-
-    if (!oldEval) {
-      throw new Error("Evaluation not found");
-    }
-
-    if (oldEval.status !== "soumis") {
+    const current = await prisma.scoringEvaluation.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    if (!current) throw new Error("Evaluation not found");
+    if (current.status !== "soumis") {
       throw new Error("Can only validate submitted evaluations");
     }
 
-    const evaluation = await prisma.evaluation.update({
+    const evaluation = await prisma.scoringEvaluation.update({
       where: { id },
       data: {
         status: "valide",
+        validatedAt: new Date(),
         recommendation: validated.recommendation,
         notes: validated.notes,
-        updatedAt: new Date(),
       },
+      include: EVALUATION_INCLUDE,
     });
 
-    // Update project status and score
     await prisma.project.update({
       where: { id: evaluation.projectId },
       data: {
@@ -188,9 +249,6 @@ export class EvaluationService {
     return evaluation;
   }
 
-  /**
-   * Reject evaluation (manager/admin)
-   */
   static async rejectEvaluation(
     id: string,
     data: z.infer<typeof rejectEvaluationSchema>,
@@ -198,26 +256,26 @@ export class EvaluationService {
   ) {
     const validated = rejectEvaluationSchema.parse(data);
 
-    const oldEval = await prisma.evaluation.findUnique({ where: { id } });
-
-    if (!oldEval) {
-      throw new Error("Evaluation not found");
-    }
-
-    if (!["soumis", "valide"].includes(oldEval.status)) {
+    const current = await prisma.scoringEvaluation.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    if (!current) throw new Error("Evaluation not found");
+    if (!["soumis", "valide"].includes(current.status)) {
       throw new Error("Can only reject submitted or validated evaluations");
     }
 
-    const evaluation = await prisma.evaluation.update({
+    const evaluation = await prisma.scoringEvaluation.update({
       where: { id },
       data: {
         status: "rejete",
+        rejectedAt: new Date(),
+        rejectionReason: validated.reason ?? null,
         notes: validated.notes,
-        updatedAt: new Date(),
       },
+      include: EVALUATION_INCLUDE,
     });
 
-    // Update project status
     await prisma.project.update({
       where: { id: evaluation.projectId },
       data: { status: "rejete" },
@@ -226,19 +284,14 @@ export class EvaluationService {
     return evaluation;
   }
 
-  /**
-   * Get evaluations by project
-   */
   static async getEvaluationsByProject(projectId: string) {
-    return prisma.evaluation.findMany({
+    return prisma.scoringEvaluation.findMany({
       where: { projectId },
       orderBy: { createdAt: "desc" },
+      include: LIST_INCLUDE,
     });
   }
 
-  /**
-   * Get evaluations by analyst
-   */
   static async getEvaluationsByAnalyst(
     analystId: string,
     page: number = 1,
@@ -247,43 +300,34 @@ export class EvaluationService {
     const skip = (page - 1) * limit;
 
     const [evaluations, total] = await Promise.all([
-      prisma.evaluation.findMany({
+      prisma.scoringEvaluation.findMany({
         where: { analystId },
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
+        include: LIST_INCLUDE,
       }),
-      prisma.evaluation.count({ where: { analystId } }),
+      prisma.scoringEvaluation.count({ where: { analystId } }),
     ]);
 
     return {
       data: evaluations,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     };
   }
 
-  /**
-   * Create stress test result
-   */
   static async createStressTest(
     evaluationId: string,
     scenarioData: Record<string, unknown>,
     _createdBy: string
   ) {
-    const evaluation = await prisma.evaluation.findUnique({
+    const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },
+      select: { id: true },
     });
+    if (!evaluation) throw new Error("Evaluation not found");
 
-    if (!evaluation) {
-      throw new Error("Evaluation not found");
-    }
-
-    const stressTest = await prisma.stressTestScenarioResult.create({
+    return prisma.stressTestScenarioResult.create({
       data: {
         evaluationId,
         scenarioId: scenarioData.scenarioId as string,
@@ -296,13 +340,8 @@ export class EvaluationService {
         notes: (scenarioData.notes as string | null | undefined) || null,
       },
     });
-
-    return stressTest;
   }
 
-  /**
-   * Get stress test results
-   */
   static async getStressTests(evaluationId: string) {
     return prisma.stressTestScenarioResult.findMany({
       where: { evaluationId },
@@ -310,142 +349,83 @@ export class EvaluationService {
     });
   }
 
-  /**
-   * Update evaluation
-   */
-  static async updateEvaluation(
-    id: string,
-    data: any,
-    updatedBy: string
-  ) {
-    const evaluation = await prisma.evaluation.findUnique({
+  static async updateEvaluation(id: string, data: any, _updatedBy: string) {
+    const current = await prisma.scoringEvaluation.findUnique({
       where: { id },
+      select: { status: true, summaryJson: true },
     });
-
-    if (!evaluation) {
-      throw new Error("Evaluation not found");
-    }
-
-    // Only draft evaluations can be fully edited
-    if (evaluation.status !== "brouillon") {
+    if (!current) throw new Error("Evaluation not found");
+    if (current.status !== "brouillon") {
       throw new Error("Can only edit draft evaluations");
     }
 
-    const updatedEvaluation = await prisma.evaluation.update({
+    return prisma.scoringEvaluation.update({
       where: { id },
       data: {
-        finalScore: data.finalScore ?? evaluation.finalScore,
-        rating: data.rating ?? evaluation.rating,
-        recommendation: data.recommendation ?? evaluation.recommendation,
-        probabilityOfDefault: data.probabilityOfDefault ?? evaluation.probabilityOfDefault,
-        scoreFinancier: data.scoreFinancier ?? evaluation.scoreFinancier,
-        scoreTechnique: data.scoreTechnique ?? evaluation.scoreTechnique,
-        scoreMarche: data.scoreMarche ?? evaluation.scoreMarche,
-        scoreEnvironnemental: data.scoreEnvironnemental ?? evaluation.scoreEnvironnemental,
-        scoreSocial: data.scoreSocial ?? evaluation.scoreSocial,
-        scoreGouvenance: data.scoreGouvenance ?? evaluation.scoreGouvenance,
-        scoreJuridique: data.scoreJuridique ?? evaluation.scoreJuridique,
-        scorePays: data.scorePays ?? evaluation.scorePays,
-        malusTotal: data.malusTotal ?? evaluation.malusTotal,
-        notes: data.notes ?? evaluation.notes,
-        status: data.status ?? evaluation.status,
-        triggeredNOGOs: data.triggeredNOGOs ?? evaluation.triggeredNOGOs,
-        appliedMALUS: data.appliedMALUS ?? evaluation.appliedMALUS,
-        updatedAt: new Date(),
+        finalScore: data.finalScore ?? undefined,
+        rating: data.rating ?? undefined,
+        recommendation: data.recommendation ?? undefined,
+        probabilityOfDefault: data.probabilityOfDefault ?? undefined,
+        malusTotal: data.malusTotal ?? undefined,
+        notes: data.notes ?? undefined,
+        status: data.status ?? undefined,
+        triggeredRulesJson: data.triggeredNOGOs
+          ? JSON.stringify(data.triggeredNOGOs)
+          : undefined,
+        // Les scores par domaine ne sont plus des colonnes : le modèle a neuf domaines
+        // paramétrables, pas huit champs figés. Ils sont conservés dans summaryJson.
+        summaryJson: buildSummaryJson(current.summaryJson, {
+          scoreFinancier: data.scoreFinancier,
+          scoreTechnique: data.scoreTechnique,
+          scoreMarche: data.scoreMarche,
+          scoreEnvironnemental: data.scoreEnvironnemental,
+          scoreSocial: data.scoreSocial,
+          scoreGouvernance: data.scoreGouvenance ?? data.scoreGouvernance,
+          scoreJuridique: data.scoreJuridique,
+          scorePays: data.scorePays,
+          appliedMALUS: data.appliedMALUS,
+        }),
       },
-      include: {
-        project: {
-          select: { id: true, nom: true, status: true },
-        },
-        analyst: {
-          select: { id: true, email: true, nom: true, prenom: true },
-        },
-      },
+      include: EVALUATION_INCLUDE,
     });
-
-    return updatedEvaluation;
   }
 
-  /**
-   * Delete evaluation
-   */
   static async deleteEvaluation(id: string) {
-    const evaluation = await prisma.evaluation.findUnique({
+    const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id },
+      select: { id: true },
     });
+    if (!evaluation) throw new Error("Evaluation not found");
 
-    if (!evaluation) {
-      throw new Error("Evaluation not found");
-    }
-
-    await prisma.evaluation.delete({
-      where: { id },
-    });
-
+    await prisma.scoringEvaluation.delete({ where: { id } });
     return { success: true, id };
   }
 
-  /**
-   * Archive evaluation
-   */
   static async archiveEvaluation(id: string, archivedBy: string) {
-    const evaluation = await prisma.evaluation.findUnique({
+    const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id },
+      select: { id: true },
     });
+    if (!evaluation) throw new Error("Evaluation not found");
 
-    if (!evaluation) {
-      throw new Error("Evaluation not found");
-    }
-
-    const archivedEvaluation = await prisma.evaluation.update({
+    return prisma.scoringEvaluation.update({
       where: { id },
-      data: {
-        isArchived: true,
-        archivedAt: new Date(),
-        archivedBy,
-      },
-      include: {
-        project: {
-          select: { id: true, nom: true, status: true },
-        },
-        analyst: {
-          select: { id: true, email: true, nom: true, prenom: true },
-        },
-      },
+      data: { isArchived: true, archivedAt: new Date(), archivedBy },
+      include: EVALUATION_INCLUDE,
     });
-
-    return archivedEvaluation;
   }
 
-  /**
-   * Restore archived evaluation
-   */
   static async restoreEvaluation(id: string) {
-    const evaluation = await prisma.evaluation.findUnique({
+    const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id },
+      select: { id: true },
     });
+    if (!evaluation) throw new Error("Evaluation not found");
 
-    if (!evaluation) {
-      throw new Error("Evaluation not found");
-    }
-
-    const restoredEvaluation = await prisma.evaluation.update({
+    return prisma.scoringEvaluation.update({
       where: { id },
-      data: {
-        isArchived: false,
-        archivedAt: null,
-        archivedBy: null,
-      },
-      include: {
-        project: {
-          select: { id: true, nom: true, status: true },
-        },
-        analyst: {
-          select: { id: true, email: true, nom: true, prenom: true },
-        },
-      },
+      data: { isArchived: false, archivedAt: null, archivedBy: null },
+      include: EVALUATION_INCLUDE,
     });
-
-    return restoredEvaluation;
   }
 }

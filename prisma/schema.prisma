@@ -799,6 +799,11 @@ model ScoringEvaluation {
   submittedAt          DateTime?
   validatedAt          DateTime?
   approvedAt           DateTime?
+  rejectedAt           DateTime?
+  rejectionReason      String?
+  isArchived           Boolean          @default(false)
+  archivedAt           DateTime?
+  archivedBy           String?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 
@@ -821,6 +826,7 @@ model ScoringEvaluation {
   @@index([modelVersionId])
   @@index([analystId])
   @@index([status])
+  @@index([isArchived])
   @@map("BP_PF_v7pp_scoring_evaluations")
 }
 

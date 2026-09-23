@@ -25,14 +25,13 @@ interface Evaluation {
   recommendation: string;
   notes?: string;
   status: string;
-  scoreFinancier?: number;
-  scoreTechnique?: number;
-  scoreMarche?: number;
-  scoreEnvironnemental?: number;
-  scoreSocial?: number;
-  scoreGouvenance?: number;
-  scoreJuridique?: number;
-  scorePays?: number;
+  /** Scores par domaine issus de la trace de calcul persistée, pas de colonnes figées. */
+  domainScores?: Array<{
+    code: string;
+    label: string;
+    weight?: number | null;
+    score?: number | null;
+  }>;
   probabilityOfDefault?: number;
   malusTotal?: number;
   approvedBy?: string;
@@ -201,14 +200,15 @@ export default function EvaluationDetailPage({
             </div>
           </div>
           <div className="space-y-4">
-            <ScoreBar label="Financier" value={evaluation.scoreFinancier} />
-            <ScoreBar label="Technique" value={evaluation.scoreTechnique} />
-            <ScoreBar label="Marché" value={evaluation.scoreMarche} />
-            <ScoreBar label="Environnemental" value={evaluation.scoreEnvironnemental} />
-            <ScoreBar label="Social" value={evaluation.scoreSocial} />
-            <ScoreBar label="Gouvernance" value={evaluation.scoreGouvenance} />
-            <ScoreBar label="Juridique" value={evaluation.scoreJuridique} />
-            <ScoreBar label="Pays" value={evaluation.scorePays} />
+            {evaluation.domainScores && evaluation.domainScores.length > 0 ? (
+              evaluation.domainScores.map((d) => (
+                <ScoreBar key={d.code} label={d.label} value={d.score ?? undefined} />
+              ))
+            ) : (
+              <p className="text-sm text-slate-400">
+                Aucun score par domaine : l&apos;évaluation n&apos;a pas encore été calculée.
+              </p>
+            )}
           </div>
           <Field label="Total malus" value={evaluation.malusTotal?.toFixed(2)} />
         </div>
