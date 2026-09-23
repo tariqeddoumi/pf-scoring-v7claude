@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock, TrendingUp, AlertTriangle, Loader2, Ban } from "lucide-react";
+import { scoreClasses as getScoreColors } from "@/lib/score-colors";
 
 export interface AnswerValue {
   valueString?: string;
@@ -30,16 +31,6 @@ interface LiveScorePanelProps {
   lastSaved?: Date | null;
 }
 
-function getScoreColors(score: number | null) {
-  if (score === null)
-    return { text: "text-muted-foreground", bar: "bg-muted", badge: "text-muted-foreground bg-muted/50" };
-  if (score >= 70)
-    return { text: "text-green-400", bar: "bg-green-400", badge: "text-green-400 bg-green-400/10" };
-  if (score >= 50)
-    return { text: "text-yellow-400", bar: "bg-yellow-400", badge: "text-yellow-400 bg-yellow-400/10" };
-  return { text: "text-red-400", bar: "bg-red-400", badge: "text-red-400 bg-red-400/10" };
-}
-
 export function LiveScorePanel({
   score,
   isScoring,
@@ -54,7 +45,7 @@ export function LiveScorePanel({
     <div className="h-full bg-background border-l border-border flex flex-col w-56 flex-shrink-0">
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2 mb-1">
-          <TrendingUp size={14} className="text-cyan-400" />
+          <TrendingUp size={14} className="text-primary" />
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Score du moteur
           </h2>
@@ -94,12 +85,12 @@ export function LiveScorePanel({
 
         <div className="mt-3 min-h-[1.25rem]">
           {isScoring ? (
-            <span className="inline-flex items-center gap-1.5 text-xs text-cyan-400">
+            <span className="inline-flex items-center gap-1.5 text-xs text-primary">
               <Loader2 size={11} className="animate-spin" />
               Calcul en cours…
             </span>
           ) : isStale ? (
-            <span className="inline-flex items-center gap-1.5 text-xs text-amber-400">
+            <span className="inline-flex items-center gap-1.5 text-xs text-warning">
               <AlertTriangle size={11} />
               Réponses non enregistrées
             </span>
@@ -110,12 +101,12 @@ export function LiveScorePanel({
       </div>
 
       {score?.blocked && (
-        <div className="mx-4 mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-red-400 mb-1">
+        <div className="mx-4 mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-destructive mb-1">
             <Ban size={12} />
             Condition rédhibitoire
           </div>
-          <p className="text-xs text-red-300/80 leading-relaxed">
+          <p className="text-xs text-destructive/80 leading-relaxed">
             {score.blockingRuleCodes.join(", ")} — le dossier ne peut être approuvé
             quelle que soit la note.
           </p>
@@ -125,7 +116,7 @@ export function LiveScorePanel({
       {score !== null && score.malusTotal > 0 && (
         <div className="mx-4 mt-3 flex justify-between text-xs">
           <span className="text-muted-foreground">Malus appliqués</span>
-          <span className="font-bold text-orange-400">− {score.malusTotal.toFixed(1)}</span>
+          <span className="font-bold text-warning">− {score.malusTotal.toFixed(1)}</span>
         </div>
       )}
 

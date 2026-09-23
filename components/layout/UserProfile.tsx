@@ -59,7 +59,7 @@ export function UserProfile() {
     return (
       <Link
         href="/login"
-        className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+        className="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
       >
         Se connecter
       </Link>
@@ -67,9 +67,9 @@ export function UserProfile() {
   }
 
   const roleColors: Record<string, string> = {
-    admin: "bg-red-500/20 text-red-400 border-red-500/30",
-    manager: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    analyst: "bg-green-500/20 text-green-400 border-green-500/30",
+    admin: "bg-destructive/15 text-destructive border-destructive/30",
+    manager: "bg-primary/20 text-primary border-ring/30",
+    analyst: "bg-success/15 text-success border-success/30",
     viewer: "bg-secondary/20 text-muted-foreground border-input/30",
   };
 
@@ -144,7 +144,7 @@ export function UserProfile() {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-accent transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-destructive hover:text-destructive/80 hover:bg-accent transition-colors"
           >
             <LogOut size={16} />
             Déconnexion

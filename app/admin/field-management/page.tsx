@@ -209,7 +209,7 @@ export default function FieldManagementPage() {
             onClick={() => setSelectedEntity(entity.value)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedEntity === entity.value
-                ? 'bg-blue-600 text-white'
+                ? 'bg-primary text-white'
                 : 'bg-muted text-muted-foreground hover:text-white'
             }`}
           >
@@ -220,14 +220,14 @@ export default function FieldManagementPage() {
 
       {/* Alerts */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 flex gap-2">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive flex gap-2">
           <AlertCircle size={20} className="flex-shrink-0" />
           <p>{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 text-green-400 flex gap-2">
+        <div className="bg-success/10 border border-green-500/50 rounded-lg p-4 text-success flex gap-2">
           <CheckCircle size={20} className="flex-shrink-0" />
           <p>{success}</p>
         </div>
@@ -237,7 +237,7 @@ export default function FieldManagementPage() {
       {loading && (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <Loader2 size={32} className="animate-spin text-blue-500 mx-auto mb-4" />
+            <Loader2 size={32} className="animate-spin text-primary mx-auto mb-4" />
             <p className="text-muted-foreground">Chargement des champs...</p>
           </div>
         </div>
@@ -291,7 +291,7 @@ export default function FieldManagementPage() {
                         <p className="text-sm text-muted-foreground">
                           {field.fieldName} ({field.fieldType})
                           {field.required && (
-                            <span className="text-red-400"> *</span>
+                            <span className="text-destructive"> *</span>
                           )}
                         </p>
                       </div>
@@ -311,13 +311,13 @@ export default function FieldManagementPage() {
                         </button>
                         <button
                           onClick={() => setEditingField(field.id)}
-                          className="p-2 text-muted-foreground hover:text-blue-400 transition-colors"
+                          className="p-2 text-muted-foreground hover:text-primary transition-colors"
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(field.id)}
-                          className="p-2 text-muted-foreground hover:text-red-400 transition-colors"
+                          className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -347,7 +347,7 @@ export default function FieldManagementPage() {
                               })
                             }
                             placeholder="Ex: nomCommercial"
-                            className="w-full px-3 py-2 bg-secondary border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 bg-secondary border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
                           />
                         </div>
 
@@ -365,7 +365,7 @@ export default function FieldManagementPage() {
                               })
                             }
                             placeholder="Ex: Nom Commercial"
-                            className="w-full px-3 py-2 bg-secondary border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 bg-secondary border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
                           />
                         </div>
 
@@ -381,7 +381,7 @@ export default function FieldManagementPage() {
                                 fieldType: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-2 bg-secondary border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 bg-secondary border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                           >
                             {FIELD_TYPES.map((type) => (
                               <option key={type.value} value={type.value}>
@@ -412,7 +412,7 @@ export default function FieldManagementPage() {
                       <div className="flex gap-2 pt-2">
                         <button
                           onClick={() => handleAddField(section.id)}
-                          className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                         >
                           <Plus size={18} />
                           Ajouter
@@ -431,7 +431,7 @@ export default function FieldManagementPage() {
                   {showNewFieldForm !== section.id && (
                     <button
                       onClick={() => setShowNewFieldForm(section.id)}
-                      className="w-full px-3 py-2 text-blue-400 hover:text-blue-300 font-medium transition-colors flex items-center justify-center gap-2"
+                      className="w-full px-3 py-2 text-primary hover:text-blue-300 font-medium transition-colors flex items-center justify-center gap-2"
                     >
                       <Plus size={18} />
                       Ajouter un champ
@@ -457,7 +457,7 @@ export default function FieldManagementPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleDeleteField(deleteConfirm)}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-white rounded-lg font-medium transition-colors"
               >
                 Supprimer
               </button>

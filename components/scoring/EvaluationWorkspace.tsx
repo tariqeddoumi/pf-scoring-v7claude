@@ -74,7 +74,7 @@ function NodeInput({
   onChange: (val: AnswerValue) => void;
 }) {
   const inputClass =
-    "w-full px-3 py-2 bg-muted border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500 transition-colors";
+    "w-full px-3 py-2 bg-muted border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-colors";
 
   const selectedOption = node.options?.find((o) => o.value === answer?.valueString);
 
@@ -96,7 +96,7 @@ function NodeInput({
             ))}
           </select>
           {selectedOption && (
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-cyan-400">
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-primary">
               <CheckCircle2 size={11} />
               Score attribué : <span className="font-bold">{selectedOption.score} pts</span>
             </div>
@@ -130,7 +130,7 @@ function NodeInput({
                   key={i}
                   className={`text-xs px-2 py-0.5 rounded-full ${
                     active
-                      ? "bg-cyan-500/20 text-cyan-300 font-semibold"
+                      ? "bg-primary/15 text-primary font-semibold"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -155,7 +155,7 @@ function NodeInput({
                 onClick={() => onChange({ ...answer, valueBoolean: val })}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
                   active
-                    ? "bg-cyan-600 border-cyan-500 text-white"
+                    ? "bg-primary border-primary text-white"
                     : "bg-muted border-input text-muted-foreground hover:border-ring"
                 }`}
               >
@@ -241,7 +241,7 @@ function CriteriaTree({
         ) : (
           <div className="mt-0.5 w-4 flex-shrink-0">
             {isAnswered ? (
-              <CheckCircle2 size={14} className="text-green-400" />
+              <CheckCircle2 size={14} className="text-success" />
             ) : (
               <div className="w-3.5 h-3.5 rounded-full border border-input mt-px" />
             )}
@@ -252,7 +252,7 @@ function CriteriaTree({
           <div className="flex items-center gap-2 flex-wrap">
             {/* Depth badge */}
             {depth === 0 && (
-              <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">
+              <span className="text-xs px-2 py-0.5 rounded bg-primary/15 text-primary font-mono">
                 {node.code}
               </span>
             )}
@@ -538,13 +538,13 @@ export function EvaluationWorkspace({
         {/* Messages */}
         <div className="flex-1 px-8">
           {error && (
-            <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 px-3 py-1.5 rounded-lg">
               <AlertCircle size={14} />
               {error}
             </div>
           )}
           {successMsg && (
-            <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 border border-green-500/30 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-success bg-success/10 border border-success/30 px-3 py-1.5 rounded-lg">
               <CheckCircle2 size={14} />
               {successMsg}
             </div>
@@ -598,7 +598,7 @@ export function EvaluationWorkspace({
           <button
             onClick={handleSubmit}
             disabled={isCalculating}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
           >
             <Send size={14} />
             Soumettre
@@ -627,7 +627,7 @@ export function EvaluationWorkspace({
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <div className="flex items-center gap-3 mb-1">
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-card text-cyan-400 border border-border">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-card text-primary border border-border">
                         {currentDomain.code}
                       </span>
                       <span className="text-xs text-muted-foreground">

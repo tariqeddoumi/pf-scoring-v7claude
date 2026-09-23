@@ -86,7 +86,7 @@ export default function ClientDetailPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-blue-400" size={40} />
+        <Loader2 className="animate-spin text-primary" size={40} />
       </div>
     );
   }
@@ -101,7 +101,7 @@ export default function ClientDetailPage({
           <ArrowLeft size={20} />
           <span>Retour aux clients</span>
         </Link>
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive">
           {error || "Client non trouvé"}
         </div>
       </div>
@@ -162,8 +162,8 @@ export default function ClientDetailPage({
               </label>
               <span className={`inline-block px-3 py-1 rounded-full text-sm ${
                 client.status === "Actif"
-                  ? "bg-green-500/20 text-green-400"
-                  : "bg-yellow-500/20 text-yellow-400"
+                  ? "bg-success/15 text-success"
+                  : "bg-warning/15 text-warning"
               }`}>
                 {renderFieldValue(client.status)}
               </span>
@@ -373,7 +373,7 @@ export default function ClientDetailPage({
         </div>
         <button
           onClick={() => clientId && router.push(`/clients/${clientId}/edit`)}
-          className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+          className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
         >
           <Edit2 size={20} />
           <span>Modifier</span>

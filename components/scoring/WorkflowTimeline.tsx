@@ -23,18 +23,18 @@ interface WorkflowTimelineProps {
 }
 
 const getStepIcon = (status: string, isCompleted: boolean) => {
-  if (status === 'COMPLETED') return <CheckCircle2 className="w-6 h-6 text-green-500" />;
-  if (status === 'FAILED') return <XCircle className="w-6 h-6 text-red-500" />;
+  if (status === 'COMPLETED') return <CheckCircle2 className="w-6 h-6 text-success" />;
+  if (status === 'FAILED') return <XCircle className="w-6 h-6 text-destructive" />;
   if (status === 'SKIPPED') return <AlertCircle className="w-6 h-6 text-muted-foreground" />;
-  if (status === 'IN_PROGRESS') return <Clock className="w-6 h-6 text-blue-500 animate-pulse" />;
+  if (status === 'IN_PROGRESS') return <Clock className="w-6 h-6 text-primary animate-pulse" />;
   return <Clock className="w-6 h-6 text-muted-foreground" />;
 };
 
 const getStepColor = (status: string) => {
-  if (status === 'COMPLETED') return 'bg-green-50 border-green-200';
-  if (status === 'FAILED') return 'bg-red-50 border-red-200';
+  if (status === 'COMPLETED') return 'bg-success/10 border-green-200';
+  if (status === 'FAILED') return 'bg-destructive/10 border-red-200';
   if (status === 'SKIPPED') return 'bg-muted border-border';
-  if (status === 'IN_PROGRESS') return 'bg-blue-50 border-blue-200';
+  if (status === 'IN_PROGRESS') return 'bg-primary/10 border-blue-200';
   return 'bg-white border-border';
 };
 
@@ -69,9 +69,9 @@ export function WorkflowTimeline({ steps, currentStep, status }: WorkflowTimelin
                 </p>
               </div>
               <span className={`text-xs font-medium px-2 py-1 rounded ${
-                step.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                step.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
-                step.status === 'FAILED' ? 'bg-red-100 text-red-800' :
+                step.status === 'COMPLETED' ? 'bg-success/10 text-success' :
+                step.status === 'IN_PROGRESS' ? 'bg-primary/10 text-blue-800' :
+                step.status === 'FAILED' ? 'bg-destructive/10 text-destructive' :
                 step.status === 'SKIPPED' ? 'bg-muted text-foreground' :
                 'bg-muted text-foreground'
               }`}>

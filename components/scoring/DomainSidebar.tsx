@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Circle, ChevronRight } from "lucide-react";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
+import { scoreBadgeClass as getScoreColor } from "@/lib/score-colors";
 
 interface DomainStats {
   answered: number;
@@ -17,16 +18,16 @@ interface DomainSidebarProps {
 }
 
 const DOMAIN_META: Record<string, { icon: string; color: string }> = {
-  FINANCIER: { icon: "💰", color: "text-blue-400" },
+  FINANCIER: { icon: "💰", color: "text-primary" },
   TECHNIQUE: { icon: "⚙️", color: "text-purple-400" },
-  MARCHE: { icon: "📈", color: "text-green-400" },
-  MARCHÉ: { icon: "📈", color: "text-green-400" },
+  MARCHE: { icon: "📈", color: "text-success" },
+  MARCHÉ: { icon: "📈", color: "text-success" },
   ENVIRONNEMENTAL: { icon: "🌿", color: "text-emerald-400" },
   ENVIRONMENTAL: { icon: "🌿", color: "text-emerald-400" },
   SOCIAL: { icon: "👥", color: "text-pink-400" },
-  GOUVERNANCE: { icon: "🏛️", color: "text-amber-400" },
-  JURIDIQUE: { icon: "⚖️", color: "text-orange-400" },
-  PAYS: { icon: "🗺️", color: "text-cyan-400" },
+  GOUVERNANCE: { icon: "🏛️", color: "text-warning" },
+  JURIDIQUE: { icon: "⚖️", color: "text-warning" },
+  PAYS: { icon: "🗺️", color: "text-primary" },
 };
 
 function getDomainMeta(code?: string, label?: string) {
@@ -35,12 +36,6 @@ function getDomainMeta(code?: string, label?: string) {
       code?.toUpperCase().includes(k) || label?.toUpperCase().includes(k)
   );
   return key ? DOMAIN_META[key] : { icon: "📋", color: "text-muted-foreground" };
-}
-
-function getScoreColor(score: number) {
-  if (score >= 70) return "text-green-400 bg-green-400/10";
-  if (score >= 50) return "text-yellow-400 bg-yellow-400/10";
-  return "text-red-400 bg-red-400/10";
 }
 
 export function DomainSidebar({
@@ -87,7 +82,7 @@ export function DomainSidebar({
               onClick={() => onSelect(domain.id)}
               className={`w-full text-left px-4 py-3 transition-all border-l-2 ${
                 isCurrent
-                  ? "bg-cyan-500/10 border-cyan-500"
+                  ? "bg-cyan-500/10 border-primary"
                   : "border-transparent hover:bg-card/60"
               }`}
             >
@@ -95,15 +90,15 @@ export function DomainSidebar({
                 {/* Status icon */}
                 <div className="flex-shrink-0 w-5">
                   {isComplete ? (
-                    <CheckCircle2 size={16} className="text-green-400" />
+                    <CheckCircle2 size={16} className="text-success" />
                   ) : (
                     <Circle
                       size={16}
                       className={
                         isPartial
-                          ? "text-yellow-400"
+                          ? "text-warning"
                           : isCurrent
-                          ? "text-cyan-400"
+                          ? "text-primary"
                           : "text-muted-foreground"
                       }
                     />
@@ -130,9 +125,9 @@ export function DomainSidebar({
                         <div
                           className={`h-1 rounded-full transition-all duration-500 ${
                             isComplete
-                              ? "bg-green-400"
+                              ? "bg-success"
                               : isPartial
-                              ? "bg-yellow-400"
+                              ? "bg-warning"
                               : "bg-secondary"
                           }`}
                           style={{
@@ -159,7 +154,7 @@ export function DomainSidebar({
                 )}
 
                 {isCurrent && (
-                  <ChevronRight size={14} className="text-cyan-400 flex-shrink-0" />
+                  <ChevronRight size={14} className="text-primary flex-shrink-0" />
                 )}
               </div>
             </button>

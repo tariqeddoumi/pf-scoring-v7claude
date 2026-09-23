@@ -62,10 +62,10 @@ function NodeTreeItem({
   const isSelected = selectedNodeId === node.id;
 
   const nodeTypeColors: Record<string, string> = {
-    DOMAIN: "text-blue-400",
+    DOMAIN: "text-primary",
     GROUP: "text-purple-400",
     CRITERION: "text-indigo-400",
-    SUB_CRITERION: "text-cyan-400",
+    SUB_CRITERION: "text-primary",
     SUB_SUB_CRITERION: "text-emerald-400",
   };
 
@@ -101,7 +101,7 @@ function NodeTreeItem({
         <span className="text-muted-foreground ml-1">{node.label}</span>
 
         {node.weight !== null && node.weight !== undefined && (
-          <span className="ml-auto text-xs text-yellow-400">{node.weight}%</span>
+          <span className="ml-auto text-xs text-warning">{node.weight}%</span>
         )}
       </div>
 

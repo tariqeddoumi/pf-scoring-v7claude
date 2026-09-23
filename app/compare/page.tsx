@@ -99,7 +99,7 @@ export default function ComparePage() {
                 onClick={() => handleSelectProject(project.id)}
                 className={`rounded-lg border-2 p-4 text-left transition-all ${
                   selectedProjects.includes(project.id)
-                    ? "border-cyan-500 bg-cyan-500/10"
+                    ? "border-primary bg-cyan-500/10"
                     : "border-input bg-muted hover:border-ring"
                 }`}
               >
@@ -108,7 +108,7 @@ export default function ComparePage() {
                   {project.secteur || "Secteur non défini"}
                 </p>
                 <div className="flex items-center gap-3 mt-2">
-                  <p className="text-sm text-cyan-400 font-bold">
+                  <p className="text-sm text-primary font-bold">
                     {project.scoreGlobal != null
                       ? `Score: ${project.scoreGlobal.toFixed(2)}/10`
                       : "Non noté"}
@@ -182,7 +182,7 @@ export default function ComparePage() {
 
           {/* Export Button */}
           <div className="p-4 border-t border-border flex justify-end">
-            <button className="inline-flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all">
+            <button className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all">
               <Download size={18} />
               <span>Exporter Comparaison</span>
             </button>
@@ -216,7 +216,7 @@ function Row({
       {values.map((value, i) => (
         <td
           key={i}
-          className={`px-4 py-3 ${highlight ? "text-cyan-400 font-bold" : "text-secondary-foreground"}`}
+          className={`px-4 py-3 ${highlight ? "text-primary font-bold" : "text-secondary-foreground"}`}
         >
           {value}
         </td>

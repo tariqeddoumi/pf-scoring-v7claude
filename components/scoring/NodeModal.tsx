@@ -78,7 +78,7 @@ export default function NodeModal({
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-400">
+          <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -93,7 +93,7 @@ export default function NodeModal({
               value={formData.code}
               onChange={(e) => setFormData({ ...formData, code: e.target.value })}
               placeholder={nodeType === "DOMAIN" ? "D1" : "C1.1"}
-              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               required
               disabled={isEdit}
             />
@@ -108,7 +108,7 @@ export default function NodeModal({
               value={formData.label}
               onChange={(e) => setFormData({ ...formData, label: e.target.value })}
               placeholder="Nom du domaine/critère"
-              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               required
             />
           </div>
@@ -122,7 +122,7 @@ export default function NodeModal({
               value={formData.shortLabel}
               onChange={(e) => setFormData({ ...formData, shortLabel: e.target.value })}
               placeholder="Version abrégée"
-              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
             />
           </div>
 
@@ -135,7 +135,7 @@ export default function NodeModal({
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Description optionnelle"
               rows={2}
-              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
             />
           </div>
 
@@ -150,7 +150,7 @@ export default function NodeModal({
               min="0"
               max="1"
               step="0.01"
-              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               required
             />
           </div>
@@ -176,7 +176,7 @@ export default function NodeModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-medium transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors disabled:opacity-50"
               disabled={loading}
             >
               {loading ? "Sauvegarde..." : isEdit ? "Modifier" : "Créer"}

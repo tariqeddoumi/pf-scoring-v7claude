@@ -33,16 +33,16 @@ interface OverrideManagementProps {
 }
 
 const RISK_LEVEL_COLORS = {
-  LOW: 'bg-green-100 text-green-800',
-  MEDIUM: 'bg-yellow-100 text-yellow-800',
+  LOW: 'bg-success/10 text-success',
+  MEDIUM: 'bg-warning/10 text-warning',
   HIGH: 'bg-orange-100 text-orange-800',
-  CRITICAL: 'bg-red-100 text-red-800'
+  CRITICAL: 'bg-destructive/10 text-destructive'
 };
 
 const STATUS_ICONS = {
   PENDING: <Clock className="w-4 h-4 text-yellow-500" />,
-  APPROVED: <CheckCircle2 className="w-4 h-4 text-green-500" />,
-  REJECTED: <XCircle className="w-4 h-4 text-red-500" />,
+  APPROVED: <CheckCircle2 className="w-4 h-4 text-success" />,
+  REJECTED: <XCircle className="w-4 h-4 text-destructive" />,
   REVERTED: <XCircle className="w-4 h-4 text-muted-foreground" />
 };
 
@@ -106,25 +106,25 @@ export function OverrideManagement({
       {/* Overrides Summary */}
       {overrides.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="p-3 bg-primary/10 border border-blue-200 rounded-lg">
             <p className="text-xs font-medium text-secondary-foreground">Total</p>
-            <p className="text-2xl font-bold text-blue-600">{overrides.length}</p>
+            <p className="text-2xl font-bold text-primary">{overrides.length}</p>
           </div>
-          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="p-3 bg-warning/10 border border-yellow-200 rounded-lg">
             <p className="text-xs font-medium text-secondary-foreground">En attente</p>
-            <p className="text-2xl font-bold text-yellow-600">
+            <p className="text-2xl font-bold text-warning">
               {overrides.filter(o => o.status === 'PENDING').length}
             </p>
           </div>
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="p-3 bg-success/10 border border-green-200 rounded-lg">
             <p className="text-xs font-medium text-secondary-foreground">Approuvées</p>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-2xl font-bold text-success">
               {overrides.filter(o => o.status === 'APPROVED').length}
             </p>
           </div>
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-3 bg-destructive/10 border border-red-200 rounded-lg">
             <p className="text-xs font-medium text-secondary-foreground">Rejetées</p>
-            <p className="text-2xl font-bold text-red-600">
+            <p className="text-2xl font-bold text-destructive">
               {overrides.filter(o => o.status === 'REJECTED').length}
             </p>
           </div>
@@ -140,7 +140,7 @@ export function OverrideManagement({
           {onCreateOverride && (
             <button
               onClick={() => setShowForm(!showForm)}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Ajouter une surcharge
@@ -224,7 +224,7 @@ export function OverrideManagement({
                         <button
                           onClick={() => onApproveOverride(override.id)}
                           disabled={isLoading}
-                          className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm font-medium hover:bg-green-200 disabled:opacity-50 transition-colors"
+                          className="px-3 py-1 bg-success/10 text-success rounded text-sm font-medium hover:bg-green-200 disabled:opacity-50 transition-colors"
                         >
                           Approuver
                         </button>
@@ -233,7 +233,7 @@ export function OverrideManagement({
                         <button
                           onClick={() => onRejectOverride(override.id)}
                           disabled={isLoading}
-                          className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm font-medium hover:bg-red-200 disabled:opacity-50 transition-colors"
+                          className="px-3 py-1 bg-destructive/10 text-destructive rounded text-sm font-medium hover:bg-red-200 disabled:opacity-50 transition-colors"
                         >
                           Rejeter
                         </button>
@@ -245,7 +245,7 @@ export function OverrideManagement({
                     <button
                       onClick={() => onDeleteOverride(override.id)}
                       disabled={isLoading}
-                      className="p-1 text-muted-foreground hover:text-red-600 transition-colors"
+                      className="p-1 text-muted-foreground hover:text-destructive transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -269,8 +269,8 @@ export function OverrideManagement({
               <select
                 value={formData.nodeId}
                 onChange={(e) => setFormData({ ...formData, nodeId: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.nodeId ? 'border-red-500' : 'border-border'
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
+                  errors.nodeId ? 'border-destructive' : 'border-border'
                 }`}
               >
                 <option value="">-- Sélectionner un nœud --</option>
@@ -280,7 +280,7 @@ export function OverrideManagement({
                   </option>
                 ))}
               </select>
-              {errors.nodeId && <p className="text-red-500 text-xs mt-1">{errors.nodeId}</p>}
+              {errors.nodeId && <p className="text-destructive text-xs mt-1">{errors.nodeId}</p>}
             </div>
 
             <div>
@@ -291,12 +291,12 @@ export function OverrideManagement({
                 type="text"
                 value={formData.reason}
                 onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.reason ? 'border-red-500' : 'border-border'
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
+                  errors.reason ? 'border-destructive' : 'border-border'
                 }`}
                 placeholder="Raison de la surcharge..."
               />
-              {errors.reason && <p className="text-red-500 text-xs mt-1">{errors.reason}</p>}
+              {errors.reason && <p className="text-destructive text-xs mt-1">{errors.reason}</p>}
             </div>
 
             <div>
@@ -306,7 +306,7 @@ export function OverrideManagement({
               <textarea
                 value={formData.justification}
                 onChange={(e) => setFormData({ ...formData, justification: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 rows={2}
                 placeholder="Justification détaillée..."
               />
@@ -319,7 +319,7 @@ export function OverrideManagement({
               <select
                 value={formData.riskLevel}
                 onChange={(e) => setFormData({ ...formData, riskLevel: e.target.value as any })}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="LOW">Bas</option>
                 <option value="MEDIUM">Moyen</option>
@@ -332,7 +332,7 @@ export function OverrideManagement({
               <button
                 type="submit"
                 disabled={isSubmitting || isLoading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-secondary transition-colors"
+                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:bg-secondary transition-colors"
               >
                 {isSubmitting || isLoading ? 'Création...' : 'Créer'}
               </button>

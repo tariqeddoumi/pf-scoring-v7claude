@@ -101,7 +101,7 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
                 </div>
                 <button
                   onClick={() => handleDeleteRule(rule.id)}
-                  className="p-1 hover:bg-accent rounded text-red-400"
+                  className="p-1 hover:bg-accent rounded text-destructive"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -145,7 +145,7 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
             <button
               onClick={handleAddRule}
               disabled={!formData.code}
-              className="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white rounded text-sm font-medium"
+              className="flex-1 px-3 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded text-sm font-medium"
             >
               Créer
             </button>

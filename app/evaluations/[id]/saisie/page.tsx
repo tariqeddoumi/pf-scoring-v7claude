@@ -73,7 +73,7 @@ export default function SaisieEvaluationPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
-          <Loader2 className="animate-spin text-cyan-400 mx-auto" size={40} />
+          <Loader2 className="animate-spin text-primary mx-auto" size={40} />
           <p className="text-muted-foreground text-sm">Chargement de la saisie…</p>
         </div>
       </div>
@@ -83,12 +83,12 @@ export default function SaisieEvaluationPage() {
   if (error) {
     return (
       <div className="max-w-xl mx-auto mt-16 space-y-4">
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-5">
-          <div className="flex items-center gap-2 text-red-400 font-semibold mb-1">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-5">
+          <div className="flex items-center gap-2 text-destructive font-semibold mb-1">
             <AlertCircle size={18} />
             Saisie indisponible
           </div>
-          <p className="text-sm text-red-300/80">{error}</p>
+          <p className="text-sm text-destructive/80">{error}</p>
         </div>
         <Link
           href="/evaluations"
@@ -113,7 +113,7 @@ export default function SaisieEvaluationPage() {
         </div>
         <Link
           href={`/evaluations/${evaluationId}`}
-          className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary transition-colors"
         >
           <ArrowLeft size={16} />
           Voir la fiche d&apos;évaluation

@@ -277,7 +277,7 @@ export default function AdminPage() {
               <p className="text-sm text-muted-foreground">Modèle Actif</p>
               <p
                 className={`text-2xl font-bold ${
-                  state.v8Enabled ? "text-blue-400" : "text-amber-400"
+                  state.v8Enabled ? "text-primary" : "text-warning"
                 }`}
               >
                 {state.modelVersion}
@@ -285,7 +285,7 @@ export default function AdminPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Statut</p>
-              <p className="text-2xl font-bold text-green-400">✓ Actif</p>
+              <p className="text-2xl font-bold text-success">✓ Actif</p>
             </div>
           </div>
         </Card>

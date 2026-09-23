@@ -162,7 +162,7 @@ export default function EditClientPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-blue-400" size={40} />
+        <Loader2 className="animate-spin text-primary" size={40} />
       </div>
     );
   }
@@ -185,11 +185,11 @@ export default function EditClientPage({
                 value={formData.nom}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 bg-muted border ${
-                  fieldErrors.nom ? "border-red-500" : "border-input"
-                } rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
+                  fieldErrors.nom ? "border-destructive" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-ring`}
               />
               {fieldErrors.nom && (
-                <p className="text-red-400 text-sm mt-1">{fieldErrors.nom}</p>
+                <p className="text-destructive text-sm mt-1">{fieldErrors.nom}</p>
               )}
             </div>
             <div>
@@ -201,7 +201,7 @@ export default function EditClientPage({
                 name="raisonSociale"
                 value={formData.raisonSociale || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -213,7 +213,7 @@ export default function EditClientPage({
                 name="nomCommercial"
                 value={formData.nomCommercial || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -224,7 +224,7 @@ export default function EditClientPage({
                 name="typeClient"
                 value={formData.typeClient || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="">Sélectionner</option>
                 <option value="Entreprise">Entreprise</option>
@@ -243,7 +243,7 @@ export default function EditClientPage({
                 name="formeJuridique"
                 value={formData.formeJuridique || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="">Sélectionner</option>
                 <option value="SARL">SARL</option>
@@ -261,7 +261,7 @@ export default function EditClientPage({
                 name="status"
                 value={formData.status || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="Actif">Actif</option>
                 <option value="Inactif">Inactif</option>
@@ -288,7 +288,7 @@ export default function EditClientPage({
                 name="secteur"
                 value={formData.secteur || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -299,7 +299,7 @@ export default function EditClientPage({
                 name="segmentClientele"
                 value={formData.segmentClientele || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="">Sélectionner</option>
                 <option value="Particulier">Particulier</option>
@@ -319,7 +319,7 @@ export default function EditClientPage({
                 name="effectifs"
                 value={formData.effectifs || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -331,7 +331,7 @@ export default function EditClientPage({
                 name="capitalSocial"
                 value={formData.capitalSocial || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -343,7 +343,7 @@ export default function EditClientPage({
                 name="chiffreAffaires"
                 value={formData.chiffreAffaires || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -356,7 +356,7 @@ export default function EditClientPage({
               value={formData.description || ""}
               onChange={handleChange}
               rows={3}
-              className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
             />
           </div>
         </div>
@@ -378,7 +378,7 @@ export default function EditClientPage({
                 name="pays"
                 value={formData.pays || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -390,7 +390,7 @@ export default function EditClientPage({
                 name="ville"
                 value={formData.ville || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -402,7 +402,7 @@ export default function EditClientPage({
                 name="codePostal"
                 value={formData.codePostal || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -415,7 +415,7 @@ export default function EditClientPage({
               value={formData.adresse || ""}
               onChange={handleChange}
               rows={2}
-              className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
             />
           </div>
         </div>
@@ -438,11 +438,11 @@ export default function EditClientPage({
                 value={formData.email || ""}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 bg-muted border ${
-                  fieldErrors.email ? "border-red-500" : "border-input"
-                } rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
+                  fieldErrors.email ? "border-destructive" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-ring`}
               />
               {fieldErrors.email && (
-                <p className="text-red-400 text-sm mt-1">{fieldErrors.email}</p>
+                <p className="text-destructive text-sm mt-1">{fieldErrors.email}</p>
               )}
             </div>
             <div>
@@ -455,11 +455,11 @@ export default function EditClientPage({
                 value={formData.telephone || ""}
                 onChange={handleChange}
                 className={`w-full px-4 py-2 bg-muted border ${
-                  fieldErrors.telephone ? "border-red-500" : "border-input"
-                } rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
+                  fieldErrors.telephone ? "border-destructive" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-ring`}
               />
               {fieldErrors.telephone && (
-                <p className="text-red-400 text-sm mt-1">
+                <p className="text-destructive text-sm mt-1">
                   {fieldErrors.telephone}
                 </p>
               )}
@@ -473,7 +473,7 @@ export default function EditClientPage({
                 name="website"
                 value={formData.website || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -496,7 +496,7 @@ export default function EditClientPage({
                 name="centreAffaires"
                 value={formData.centreAffaires || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -508,7 +508,7 @@ export default function EditClientPage({
                 name="gestionnaire"
                 value={formData.gestionnaire || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -519,7 +519,7 @@ export default function EditClientPage({
                 name="ratingInterne"
                 value={formData.ratingInterne || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="">Sélectionner</option>
                 <option value="AAA">AAA</option>
@@ -540,7 +540,7 @@ export default function EditClientPage({
                 name="statutBancaire"
                 value={formData.statutBancaire || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="Prospect">Prospect</option>
                 <option value="Client">Client</option>
@@ -558,7 +558,7 @@ export default function EditClientPage({
                 name="dateRelation"
                 value={formData.dateRelation || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
@@ -570,7 +570,7 @@ export default function EditClientPage({
                 name="exposition"
                 value={formData.exposition || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -592,7 +592,7 @@ export default function EditClientPage({
                 name="statusKYC"
                 value={formData.statusKYC || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="En attente">En attente</option>
                 <option value="Vérifiée">Vérifiée</option>
@@ -609,7 +609,7 @@ export default function EditClientPage({
                 name="statusConformite"
                 value={formData.statusConformite || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="En attente">En attente</option>
                 <option value="Conforme">Conforme</option>
@@ -643,7 +643,7 @@ export default function EditClientPage({
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive text-sm">
           {error}
         </div>
       )}
@@ -657,7 +657,7 @@ export default function EditClientPage({
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-secondary text-white font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 disabled:bg-secondary text-white font-semibold rounded-lg transition-colors"
           >
             {submitting ? (
               <>

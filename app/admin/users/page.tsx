@@ -47,12 +47,12 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  system_admin: "bg-red-500/20 text-red-300 border-red-500/30",
+  system_admin: "bg-destructive/15 text-red-300 border-destructive/30",
   scoring_admin: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  risk_manager: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  risk_manager: "bg-primary/20 text-blue-300 border-ring/30",
   committee_member: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-  risk_analyst: "bg-green-500/20 text-green-300 border-green-500/30",
-  auditor: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+  risk_analyst: "bg-success/15 text-green-300 border-success/30",
+  auditor: "bg-warning/15 text-yellow-300 border-warning/30",
   read_only: "bg-secondary/20 text-muted-foreground border-input/30",
 };
 
@@ -87,11 +87,11 @@ function Badge({ children, className = "" }: { children: React.ReactNode; classN
 function Avatar({ nom, prenom, role }: { nom: string; prenom: string; role: string }) {
   const initials = `${prenom[0] || ""}${nom[0] || ""}`.toUpperCase() || "?";
   const bgMap: Record<string, string> = {
-    system_admin: "bg-red-600",
+    system_admin: "bg-destructive",
     scoring_admin: "bg-orange-600",
-    risk_manager: "bg-blue-600",
+    risk_manager: "bg-primary",
     committee_member: "bg-purple-600",
-    risk_analyst: "bg-green-600",
+    risk_analyst: "bg-success",
     auditor: "bg-yellow-600",
     read_only: "bg-secondary",
   };
@@ -170,8 +170,8 @@ function UserModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              {mode === "create" ? <Plus size={18} className="text-blue-400" /> : <Edit2 size={18} className="text-blue-400" />}
+            <div className="p-2 bg-primary/20 rounded-lg">
+              {mode === "create" ? <Plus size={18} className="text-primary" /> : <Edit2 size={18} className="text-primary" />}
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">
@@ -190,7 +190,7 @@ function UserModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {fieldErrors.global && (
-            <div className="bg-red-500/10 border border-red-500/40 rounded-lg p-3 flex items-center gap-2 text-red-400 text-sm">
+            <div className="bg-destructive/10 border border-destructive/40 rounded-lg p-3 flex items-center gap-2 text-destructive text-sm">
               <AlertCircle size={16} />
               {fieldErrors.global}
             </div>
@@ -212,9 +212,9 @@ function UserModal({
                 value={form.nom}
                 onChange={(e) => setForm({ ...form, nom: e.target.value })}
                 placeholder="Alaoui"
-                className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.nom ? "border-red-500" : "border-input"}`}
+                className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.nom ? "border-destructive" : "border-input"}`}
               />
-              {fieldErrors.nom && <p className="text-red-400 text-xs mt-1">{fieldErrors.nom}</p>}
+              {fieldErrors.nom && <p className="text-destructive text-xs mt-1">{fieldErrors.nom}</p>}
             </div>
           </div>
 
@@ -225,9 +225,9 @@ function UserModal({
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="m.alaoui@banque.ma"
-              className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.email ? "border-red-500" : "border-input"}`}
+              className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.email ? "border-destructive" : "border-input"}`}
             />
-            {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
+            {fieldErrors.email && <p className="text-destructive text-xs mt-1">{fieldErrors.email}</p>}
           </div>
 
           <div>
@@ -240,13 +240,13 @@ function UserModal({
                   onClick={() => setForm({ ...form, role: r })}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
                     form.role === r
-                      ? "border-blue-500 bg-blue-500/10 text-blue-300"
+                      ? "border-ring bg-primary/10 text-blue-300"
                       : "border-input text-muted-foreground hover:border-ring"
                   }`}
                 >
                   <span>{ROLE_ICONS[r]}</span>
                   <span>{ROLE_LABELS[r]}</span>
-                  {form.role === r && <span className="ml-auto text-blue-400">✓</span>}
+                  {form.role === r && <span className="ml-auto text-primary">✓</span>}
                 </button>
               ))}
             </div>
@@ -261,7 +261,7 @@ function UserModal({
               <button
                 type="button"
                 onClick={() => setForm({ ...form, isActive: !form.isActive })}
-                className={`relative w-11 h-6 rounded-full transition-colors ${form.isActive ? "bg-green-500" : "bg-secondary"}`}
+                className={`relative w-11 h-6 rounded-full transition-colors ${form.isActive ? "bg-success" : "bg-secondary"}`}
               >
                 <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow ${form.isActive ? "translate-x-5" : "translate-x-0.5"}`} />
               </button>
@@ -279,7 +279,7 @@ function UserModal({
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-muted text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary disabled:bg-muted text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
             >
               {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
               {mode === "create" ? "Créer l'utilisateur" : "Enregistrer"}
@@ -400,7 +400,7 @@ export default function AdminUsersPage() {
             </Link>
             <div>
               <h1 className="text-xl font-bold flex items-center gap-2">
-                <Shield size={20} className="text-blue-400" />
+                <Shield size={20} className="text-primary" />
                 Gestion des Utilisateurs
               </h1>
               <p className="text-sm text-muted-foreground">Gérez les comptes, rôles et accès</p>
@@ -411,7 +411,7 @@ export default function AdminUsersPage() {
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             </button>
             <button onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors">
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary text-white rounded-lg text-sm font-medium transition-colors">
               <Plus size={16} /> Nouvel utilisateur
             </button>
           </div>
@@ -423,9 +423,9 @@ export default function AdminUsersPage() {
         <div className="grid grid-cols-4 gap-4">
           {[
             { label: "Total", value: stats.total, color: "text-foreground", icon: "👥" },
-            { label: "Actifs", value: stats.active, color: "text-green-400", icon: "✅" },
-            { label: "Admins", value: stats.admins, color: "text-red-400", icon: "🔴" },
-            { label: "Analystes", value: stats.analysts, color: "text-green-400", icon: "🟢" },
+            { label: "Actifs", value: stats.active, color: "text-success", icon: "✅" },
+            { label: "Admins", value: stats.admins, color: "text-destructive", icon: "🔴" },
+            { label: "Analystes", value: stats.analysts, color: "text-success", icon: "🟢" },
           ].map((s) => (
             <div key={s.label} className="bg-background border border-border rounded-xl p-4">
               <div className="text-2xl mb-1">{s.icon}</div>
@@ -437,14 +437,14 @@ export default function AdminUsersPage() {
 
         {/* Alerts */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/40 rounded-xl p-4 flex items-center gap-3 text-red-400">
+          <div className="bg-destructive/10 border border-destructive/40 rounded-xl p-4 flex items-center gap-3 text-destructive">
             <AlertCircle size={18} />
             <span>{error}</span>
             <button onClick={() => setError(null)} className="ml-auto"><X size={16} /></button>
           </div>
         )}
         {success && (
-          <div className="bg-green-500/10 border border-green-500/40 rounded-xl p-4 flex items-center gap-3 text-green-400">
+          <div className="bg-success/10 border border-green-500/40 rounded-xl p-4 flex items-center gap-3 text-success">
             <UserCheck size={18} />
             <span>{success}</span>
           </div>
@@ -470,7 +470,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-1 bg-card rounded-lg border border-input p-1">
             {["ALL", "system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"].map((r) => (
               <button key={r} onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-blue-600 text-white" : "text-muted-foreground hover:text-white"}`}>
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-primary text-white" : "text-muted-foreground hover:text-white"}`}>
                 {r === "ALL" ? "Tous" : ROLE_LABELS[r]}
               </button>
             ))}
@@ -524,7 +524,7 @@ export default function AdminUsersPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-foreground">{user.prenom} {user.nom}</span>
                       {!user.isActive && (
-                        <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded">Inactif</span>
+                        <span className="text-xs bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded">Inactif</span>
                       )}
                     </div>
                     <span className="text-sm text-muted-foreground truncate block">{user.email}</span>
@@ -536,8 +536,8 @@ export default function AdminUsersPage() {
 
                   <div className="flex items-center gap-1.5">
                     {user.isActive ? (
-                      <span className="flex items-center gap-1 text-xs text-green-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> Actif
+                      <span className="flex items-center gap-1 text-xs text-success">
+                        <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" /> Actif
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -552,11 +552,11 @@ export default function AdminUsersPage() {
 
                   <div className="flex items-center gap-1">
                     <button onClick={() => openEdit(user)} title="Modifier"
-                      className="p-1.5 text-muted-foreground hover:text-blue-400 hover:bg-accent rounded-lg transition-colors">
+                      className="p-1.5 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors">
                       <Edit2 size={14} />
                     </button>
                     <button onClick={() => setDeleteConfirm(user)} title="Supprimer"
-                      className="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-accent rounded-lg transition-colors">
+                      className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-accent rounded-lg transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -591,10 +591,10 @@ export default function AdminUsersPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setDeleteConfirm(null)} />
-          <div className="relative bg-background border border-red-500/40 rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="relative bg-background border border-destructive/40 rounded-2xl shadow-2xl w-full max-w-md p-6">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-red-500/20 rounded-xl flex-shrink-0">
-                <Trash2 size={20} className="text-red-400" />
+              <div className="p-3 bg-destructive/15 rounded-xl flex-shrink-0">
+                <Trash2 size={20} className="text-destructive" />
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-foreground mb-1">Supprimer l&apos;utilisateur</h3>
@@ -611,7 +611,7 @@ export default function AdminUsersPage() {
                     Annuler
                   </button>
                   <button onClick={handleDelete} disabled={deleting}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-muted text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive disabled:bg-muted text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                     {deleting ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     Supprimer
                   </button>

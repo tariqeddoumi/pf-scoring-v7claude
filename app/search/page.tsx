@@ -254,7 +254,7 @@ export default function SearchPage() {
           placeholder="Rechercher par nom, client, secteur..."
           value={filters.query}
           onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-          className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+          className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
         />
       </div>
 
@@ -269,7 +269,7 @@ export default function SearchPage() {
             onChange={(e) =>
               setFilters({ ...filters, type: e.target.value as any })
             }
-            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-ring focus:outline-none"
           >
             <option value="">Tous les types</option>
             <option value="projects">Projets</option>
@@ -287,7 +287,7 @@ export default function SearchPage() {
             onChange={(e) =>
               setFilters({ ...filters, ratingFilter: e.target.value })
             }
-            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-ring focus:outline-none"
           >
             <option value="">Tous les ratings</option>
             <option value="AAA">AAA</option>
@@ -307,7 +307,7 @@ export default function SearchPage() {
             onChange={(e) =>
               setFilters({ ...filters, statusFilter: e.target.value })
             }
-            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground focus:border-ring focus:outline-none"
           >
             <option value="">Tous les statuts</option>
             <option value="brouillon">Brouillon</option>
@@ -370,7 +370,7 @@ export default function SearchPage() {
               <button
                 key={i}
                 onClick={() => handleLoadFilter(sf.filters)}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1 rounded-full text-sm transition-all"
+                className="bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded-full text-sm transition-all"
               >
                 {sf.name}
               </button>
@@ -408,7 +408,7 @@ export default function SearchPage() {
                     {getStatusLabel(result.status)}
                   </span>
                   {result.rating && (
-                    <span className="px-2 py-1 bg-muted rounded text-xs text-cyan-400 font-semibold">
+                    <span className="px-2 py-1 bg-muted rounded text-xs text-primary font-semibold">
                       {result.rating}
                     </span>
                   )}
@@ -456,12 +456,12 @@ export default function SearchPage() {
               placeholder="Nom du filtre"
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
-              className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:outline-none"
+              className="w-full bg-muted border border-input rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
             />
             <div className="flex gap-4">
               <button
                 onClick={handleSaveFilter}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+                className="flex-1 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
               >
                 Enregistrer
               </button>

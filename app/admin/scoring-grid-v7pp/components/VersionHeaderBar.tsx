@@ -108,7 +108,7 @@ export function VersionHeaderBar({
         <button
           onClick={handleCreateVersion}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600 disabled:opacity-50 rounded text-sm text-white transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary disabled:opacity-50 rounded text-sm text-white transition-colors"
         >
           {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
           Nouvelle Version
@@ -118,7 +118,7 @@ export function VersionHeaderBar({
           <button
             onClick={handlePublish}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600 disabled:opacity-50 rounded text-sm text-white transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-success hover:bg-green-700 disabled:bg-success disabled:opacity-50 rounded text-sm text-white transition-colors"
           >
             {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
             Publier

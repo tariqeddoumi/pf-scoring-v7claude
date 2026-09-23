@@ -111,7 +111,7 @@ export default function HomePage() {
                 key={i}
                 className="rounded-lg bg-card border border-border p-6 hover:border-ring transition-all"
               >
-                <Icon className="text-cyan-500 mb-4" size={32} />
+                <Icon className="text-primary mb-4" size={32} />
                 <h3 className="text-lg font-semibold text-foreground mb-2">
                   {feature.title}
                 </h3>
@@ -174,17 +174,17 @@ function QuickAccessCard({
     >
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-lg font-semibold text-foreground group-hover:text-cyan-400 transition-colors">
+          <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
             {title}
           </h3>
           <p className="text-muted-foreground">{description}</p>
         </div>
         <Icon
-          className="text-muted-foreground group-hover:text-cyan-500 transition-colors"
+          className="text-muted-foreground group-hover:text-primary transition-colors"
           size={24}
         />
       </div>
-      <div className="flex items-center text-cyan-500 text-sm font-medium">
+      <div className="flex items-center text-primary text-sm font-medium">
         Accéder
         <ArrowRight
           size={16}

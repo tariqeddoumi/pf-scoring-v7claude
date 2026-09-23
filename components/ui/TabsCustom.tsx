@@ -33,7 +33,7 @@ export function Tabs({ items, defaultValue, onChange, children }: TabsProps) {
             type="button"
             className={`px-4 py-3 font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
               activeTab === item.value
-                ? "text-cyan-400 border-b-2 border-cyan-400"
+                ? "text-primary border-b-2 border-cyan-400"
                 : "text-muted-foreground hover:text-foreground border-b-2 border-transparent"
             }`}
           >

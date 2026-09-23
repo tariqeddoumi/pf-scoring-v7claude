@@ -24,7 +24,7 @@ export function AccordionItem({
         className="w-full px-6 py-4 bg-card hover:bg-surface flex items-center justify-between transition-colors"
       >
         <div className="flex items-center space-x-3">
-          {icon && <span className="text-cyan-400">{icon}</span>}
+          {icon && <span className="text-primary">{icon}</span>}
           <h3 className="font-semibold text-foreground text-left">{title}</h3>
         </div>
         <ChevronDown

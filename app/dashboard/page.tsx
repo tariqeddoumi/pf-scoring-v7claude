@@ -11,6 +11,7 @@ import {
   Activity,
   ArrowRight,
 } from "lucide-react";
+import { ratingBadgeClass, ratingBarClass } from "@/lib/score-colors";
 
 interface Project {
   id: string;
@@ -190,26 +191,12 @@ export default function DashboardPage() {
   const getAlertBorder = (type: string) => {
     switch (type) {
       case "error":
-        return "border-red-500";
+        return "border-destructive";
       case "warning":
         return "border-yellow-500";
       default:
-        return "border-blue-500";
+        return "border-ring";
     }
-  };
-
-  const getRatingColor = (rating: string) => {
-    if (rating.startsWith("AA")) return "text-green-400";
-    if (rating.startsWith("A")) return "text-blue-400";
-    if (rating.startsWith("BBB")) return "text-cyan-400";
-    return "text-yellow-400";
-  };
-
-  const getRatingBarColor = (rating: string) => {
-    if (rating.startsWith("AA")) return "bg-green-500";
-    if (rating.startsWith("A")) return "bg-blue-500";
-    if (rating.startsWith("BBB")) return "bg-cyan-500";
-    return "bg-yellow-500";
   };
 
   const formatDate = (dateStr: string) => {
@@ -242,7 +229,7 @@ export default function DashboardPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4 text-destructive text-sm">
           {error}
         </div>
       )}
@@ -326,7 +313,7 @@ export default function DashboardPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-success"></div>
                   <span className="text-sm text-secondary-foreground">Approuvés</span>
                 </div>
                 <span className="text-lg font-bold text-foreground">
@@ -335,7 +322,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-warning"></div>
                   <span className="text-sm text-secondary-foreground">En Révision</span>
                 </div>
                 <span className="text-lg font-bold text-foreground">
@@ -344,7 +331,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-primary"></div>
                   <span className="text-sm text-secondary-foreground">En Cours</span>
                 </div>
                 <span className="text-lg font-bold text-foreground">
@@ -363,7 +350,7 @@ export default function DashboardPage() {
               {statusBreakdown.rejete > 0 && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-destructive"></div>
                     <span className="text-sm text-secondary-foreground">Rejetés</span>
                   </div>
                   <span className="text-lg font-bold text-foreground">
@@ -398,7 +385,7 @@ export default function DashboardPage() {
                     <div key={rating}>
                       <div className="flex items-center justify-between mb-2">
                         <span
-                          className={`font-semibold text-sm ${getRatingColor(rating)}`}
+                          className={`font-semibold text-sm ${ratingBadgeClass(rating)}`}
                         >
                           {rating}
                         </span>
@@ -408,7 +395,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full ${getRatingBarColor(rating)}`}
+                          className={`h-2 rounded-full ${ratingBarClass(rating)}`}
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         ></div>
                       </div>
@@ -442,7 +429,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-muted-foreground">
                         {sector.percentage.toFixed(1)}%
                       </p>
-                      <p className="text-sm font-bold text-cyan-400">
+                      <p className="text-sm font-bold text-primary">
                         {(sector.amount / 1000000).toFixed(0)}M
                       </p>
                     </div>
@@ -479,7 +466,7 @@ export default function DashboardPage() {
             >
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-xs font-semibold text-cyan-400">
+                  <span className="text-xs font-semibold text-primary">
                     {activity.action}
                   </span>
                   <span className="text-xs text-muted-foreground">•</span>
@@ -518,7 +505,7 @@ export default function DashboardPage() {
             </div>
             <ArrowRight
               size={20}
-              className="text-muted-foreground group-hover:text-cyan-400 transition-colors"
+              className="text-muted-foreground group-hover:text-primary transition-colors"
             />
           </div>
         </Link>
@@ -534,7 +521,7 @@ export default function DashboardPage() {
             </div>
             <ArrowRight
               size={20}
-              className="text-muted-foreground group-hover:text-cyan-400 transition-colors"
+              className="text-muted-foreground group-hover:text-primary transition-colors"
             />
           </div>
         </Link>
@@ -550,7 +537,7 @@ export default function DashboardPage() {
             </div>
             <ArrowRight
               size={20}
-              className="text-muted-foreground group-hover:text-cyan-400 transition-colors"
+              className="text-muted-foreground group-hover:text-primary transition-colors"
             />
           </div>
         </Link>

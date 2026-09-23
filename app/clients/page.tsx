@@ -135,14 +135,14 @@ export default function ClientsPage() {
             placeholder="Rechercher par nom ou email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
+            className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
             showFilters || activeFilterCount > 0
-              ? "bg-blue-600 text-white"
+              ? "bg-primary text-white"
               : "bg-card border border-border text-muted-foreground hover:text-white"
           }`}
         >
@@ -171,7 +171,7 @@ export default function ClientsPage() {
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">Statut</label>
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-blue-500">
+                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
                 <option value="">Tous</option>
                 <option value="Actif">Actif</option>
                 <option value="Inactif">Inactif</option>
@@ -180,7 +180,7 @@ export default function ClientsPage() {
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">Secteur</label>
               <select value={filterSecteur} onChange={(e) => setFilterSecteur(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-blue-500">
+                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
                 <option value="">Tous</option>
                 {uniqueSecteurs.map((s) => (<option key={s} value={s}>{s}</option>))}
               </select>
@@ -188,7 +188,7 @@ export default function ClientsPage() {
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">Type</label>
               <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-blue-500">
+                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
                 <option value="">Tous</option>
                 {uniqueTypes.map((t) => (<option key={t} value={t}>{t}</option>))}
               </select>
@@ -196,7 +196,7 @@ export default function ClientsPage() {
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">Pays</label>
               <select value={filterPays} onChange={(e) => setFilterPays(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-blue-500">
+                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
                 <option value="">Tous</option>
                 {uniquePays.map((p) => (<option key={p} value={p}>{p}</option>))}
               </select>
@@ -215,7 +215,7 @@ export default function ClientsPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive text-sm">
           {error}
         </div>
       )}
@@ -277,7 +277,7 @@ export default function ClientsPage() {
                     <span
                       className={`px-2 md:px-3 py-1 rounded-full text-xs font-medium inline-block ${
                         client.status === "Actif"
-                          ? "bg-green-500/20 text-green-400"
+                          ? "bg-success/15 text-success"
                           : "bg-secondary/20 text-muted-foreground"
                       }`}
                     >
@@ -288,7 +288,7 @@ export default function ClientsPage() {
                     <div className="flex justify-end space-x-1 md:space-x-2">
                       <button
                         onClick={() => router.push(`/clients/${client.id}`)}
-                        className="p-2 text-muted-foreground hover:text-cyan-400 hover:bg-accent rounded-lg transition-colors"
+                        className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
                         title="Consulter"
                       >
                         <Eye size={16} className="md:w-5 md:h-5" />
@@ -298,7 +298,7 @@ export default function ClientsPage() {
                           onClick={() =>
                             router.push(`/clients/${client.id}/edit`)
                           }
-                          className="p-2 text-muted-foreground hover:text-blue-400 hover:bg-accent rounded-lg transition-colors"
+                          className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
                           title="Modifier"
                         >
                           <Edit2 size={16} className="md:w-5 md:h-5" />
@@ -307,7 +307,7 @@ export default function ClientsPage() {
                       {can("client", "delete") && (
                         <button
                           onClick={() => setDeleteConfirm(client.id)}
-                          className="p-2 text-muted-foreground hover:text-red-400 hover:bg-accent rounded-lg transition-colors"
+                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-accent rounded-lg transition-colors"
                           title="Supprimer"
                         >
                           <Trash2 size={16} className="md:w-5 md:h-5" />

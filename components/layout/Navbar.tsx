@@ -27,7 +27,7 @@ export function Navbar() {
                 </span>
               </div>
             )}
-            <span className="text-xl font-bold text-foreground group-hover:text-cyan-400 transition-colors">
+            <span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
               {appName}
             </span>
           </Link>

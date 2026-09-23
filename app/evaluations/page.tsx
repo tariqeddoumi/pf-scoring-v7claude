@@ -14,6 +14,7 @@ import {
   RATING_COLORS,
 } from "@/lib/ui-constants";
 import { apiGet, apiDelete, apiPut } from "@/lib/api-client";
+import { ratingBadgeClass as getRatingColor } from "@/lib/score-colors";
 
 interface EvaluationRow {
   id: string;
@@ -122,14 +123,6 @@ export default function EvaluationsPage() {
     }
   };
 
-  const getRatingColor = (rating: string | null) => {
-    if (!rating) return "bg-secondary text-secondary-foreground";
-    if (rating.startsWith("AA")) return "bg-green-500/20 text-green-400";
-    if (rating.startsWith("A")) return "bg-blue-500/20 text-blue-400";
-    if (rating.startsWith("BBB")) return "bg-cyan-500/20 text-cyan-400";
-    return "bg-red-500/20 text-red-400";
-  };
-
   const getStatusLabel = (status: string) => STATUS_LABELS[status] || status;
   const getStatusColor = (status: string) => STATUS_COLORS[status] || "bg-secondary text-secondary-foreground";
 
@@ -184,7 +177,7 @@ export default function EvaluationsPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4 text-destructive text-sm">
           {error}
         </div>
       )}
@@ -199,7 +192,7 @@ export default function EvaluationsPage() {
               placeholder="Rechercher par projet..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500 text-sm md:text-base"
+              className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring text-sm md:text-base"
             />
           </div>
         </div>
@@ -208,7 +201,7 @@ export default function EvaluationsPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-card border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500"
+            className="bg-card border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-ring"
           >
             <option value="">Tous les statuts</option>
             <option value="brouillon">Brouillon</option>
@@ -220,7 +213,7 @@ export default function EvaluationsPage() {
           <select
             value={filterRating}
             onChange={(e) => setFilterRating(e.target.value)}
-            className="bg-card border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-cyan-500"
+            className="bg-card border border-border rounded-lg px-3 py-2 text-foreground text-sm focus:outline-none focus:border-ring"
           >
             <option value="">Tous les ratings</option>
             <option value="AAA">AAA</option>
@@ -276,7 +269,7 @@ export default function EvaluationsPage() {
                 filtered.map((ev) => (
                   <tr key={ev.id} className="hover:bg-accent/50 transition-colors">
                     <td className="px-6 py-3 font-semibold text-foreground">{ev.projectName}</td>
-                    <td className="px-6 py-3 font-bold text-cyan-400">
+                    <td className="px-6 py-3 font-bold text-primary">
                       {ev.finalScore != null ? ev.finalScore.toFixed(2) : "—"}
                     </td>
                     <td className="px-6 py-3">
@@ -294,7 +287,7 @@ export default function EvaluationsPage() {
                       <div className="flex items-center gap-2">
                         <Link
                           href={`/evaluations/${ev.id}`}
-                          className="p-2 text-cyan-400 hover:bg-secondary rounded-lg transition-colors"
+                          className="p-2 text-primary hover:bg-secondary rounded-lg transition-colors"
                           title="Consulter"
                         >
                           <Eye size={16} />
@@ -304,7 +297,7 @@ export default function EvaluationsPage() {
                           can("evaluation", "update") && (
                             <Link
                               href={`/evaluations/${ev.id}/saisie`}
-                              className="p-2 text-blue-400 hover:bg-secondary rounded-lg transition-colors"
+                              className="p-2 text-primary hover:bg-secondary rounded-lg transition-colors"
                               title="Reprendre la saisie"
                             >
                               <Edit2 size={16} />
@@ -317,14 +310,14 @@ export default function EvaluationsPage() {
                                 handleArchive(ev.id, !ev.isArchived)
                               }
                               disabled={archiving}
-                              className="p-2 text-amber-400 hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
+                              className="p-2 text-warning hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
                               title={ev.isArchived ? "Restaurer" : "Archiver"}
                             >
                               <Archive size={16} />
                             </button>
                             <button
                               onClick={() => setDeleteConfirm(ev.id)}
-                              className="p-2 text-red-400 hover:bg-secondary rounded-lg transition-colors"
+                              className="p-2 text-destructive hover:bg-secondary rounded-lg transition-colors"
                               title="Supprimer"
                             >
                               <Trash2 size={16} />

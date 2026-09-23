@@ -155,9 +155,9 @@ function RadarChart({
 // Custom Heat Map Component
 function HeatMap({ data, title }: { data: any[]; title: string }) {
   const getColor = (value: number) => {
-    if (value < 3) return "bg-red-500";
+    if (value < 3) return "bg-destructive";
     if (value < 5) return "bg-orange-500";
-    if (value < 7) return "bg-yellow-500";
+    if (value < 7) return "bg-warning";
     if (value < 8.5) return "bg-lime-500";
     return "bg-emerald-500";
   };
@@ -382,7 +382,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-card border-border">
           <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-cyan-400">{avgScore}</div>
+            <div className="text-3xl font-bold text-primary">{avgScore}</div>
             <div className="text-sm text-muted-foreground mt-1">Score Moyen</div>
             <div className="text-xs text-emerald-400 mt-2">
               {avgImprovement} vs mois précédent
@@ -391,7 +391,7 @@ export default function AnalyticsPage() {
         </Card>
         <Card className="bg-card border-border">
           <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-blue-400">{totalEvals}</div>
+            <div className="text-3xl font-bold text-primary">{totalEvals}</div>
             <div className="text-sm text-muted-foreground mt-1">Total Évaluations</div>
           </CardContent>
         </Card>
@@ -411,7 +411,7 @@ export default function AnalyticsPage() {
         </Card>
         <Card className="bg-card border-border">
           <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-amber-400">72%</div>
+            <div className="text-3xl font-bold text-warning">72%</div>
             <div className="text-sm text-muted-foreground mt-1">
               Taux de Conformité
             </div>
@@ -425,7 +425,7 @@ export default function AnalyticsPage() {
           onClick={() => setSelectedMetric("score")}
           className={
             selectedMetric === "score"
-              ? "bg-cyan-600 hover:bg-cyan-700"
+              ? "bg-primary hover:bg-primary/90"
               : "bg-muted hover:bg-secondary"
           }
         >
@@ -436,7 +436,7 @@ export default function AnalyticsPage() {
           onClick={() => setSelectedMetric("rating")}
           className={
             selectedMetric === "rating"
-              ? "bg-cyan-600 hover:bg-cyan-700"
+              ? "bg-primary hover:bg-primary/90"
               : "bg-muted hover:bg-secondary"
           }
         >
@@ -447,7 +447,7 @@ export default function AnalyticsPage() {
           onClick={() => setSelectedMetric("domain")}
           className={
             selectedMetric === "domain"
-              ? "bg-cyan-600 hover:bg-cyan-700"
+              ? "bg-primary hover:bg-primary/90"
               : "bg-muted hover:bg-secondary"
           }
         >
@@ -462,7 +462,7 @@ export default function AnalyticsPage() {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-cyan-400" />
+              <TrendingUp className="w-5 h-5 text-primary" />
               Tendance des Scores
             </CardTitle>
             <CardDescription>
@@ -478,7 +478,7 @@ export default function AnalyticsPage() {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="w-5 h-5 text-cyan-400" />
+              <PieChart className="w-5 h-5 text-primary" />
               Distribution des Ratings
             </CardTitle>
             <CardDescription>Répartition par grade de crédit</CardDescription>
@@ -513,7 +513,7 @@ export default function AnalyticsPage() {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-cyan-400" />
+              <Zap className="w-5 h-5 text-primary" />
               Performance par Domaine
             </CardTitle>
             <CardDescription>Score moyen pour chaque domaine</CardDescription>
@@ -537,9 +537,9 @@ export default function AnalyticsPage() {
             </div>
             <div className="flex gap-1 mt-2">
               {[
-                "bg-red-500",
+                "bg-destructive",
                 "bg-orange-500",
-                "bg-yellow-500",
+                "bg-warning",
                 "bg-lime-500",
                 "bg-emerald-500",
               ].map((color, i) => (

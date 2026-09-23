@@ -105,7 +105,7 @@ export function DataTable<T extends { id: string }>({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-600 hover:text-red-700"
+                        className="text-destructive hover:text-destructive"
                         onClick={() => onDelete(row)}
                         title="Delete"
                       >

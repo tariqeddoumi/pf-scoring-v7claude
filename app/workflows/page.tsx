@@ -22,11 +22,11 @@ interface Workflow {
 
 const statusColor = {
   DRAFT: 'bg-muted text-foreground',
-  SUBMITTED: 'bg-blue-100 text-blue-800',
-  UNDER_REVIEW: 'bg-yellow-100 text-yellow-800',
+  SUBMITTED: 'bg-primary/10 text-blue-800',
+  UNDER_REVIEW: 'bg-warning/10 text-warning',
   REVIEWED: 'bg-purple-100 text-purple-800',
-  APPROVED: 'bg-green-100 text-green-800',
-  REJECTED: 'bg-red-100 text-red-800'
+  APPROVED: 'bg-success/10 text-success',
+  REJECTED: 'bg-destructive/10 text-destructive'
 };
 
 export default function WorkflowsPage() {
@@ -122,17 +122,17 @@ export default function WorkflowsPage() {
           </div>
           <div className="bg-white p-4 rounded-lg border border-border">
             <p className="text-sm font-medium text-secondary-foreground">En revue</p>
-            <p className="text-3xl font-bold text-yellow-600">
+            <p className="text-3xl font-bold text-warning">
               {workflows.filter(w => w.status === 'UNDER_REVIEW').length}
             </p>
           </div>
           <div className="bg-white p-4 rounded-lg border border-border">
             <p className="text-sm font-medium text-secondary-foreground">En attente d'approbation</p>
-            <p className="text-3xl font-bold text-blue-600">{pendingApprovals}</p>
+            <p className="text-3xl font-bold text-primary">{pendingApprovals}</p>
           </div>
           <div className="bg-white p-4 rounded-lg border border-border">
             <p className="text-sm font-medium text-secondary-foreground">Approuvées</p>
-            <p className="text-3xl font-bold text-green-600">
+            <p className="text-3xl font-bold text-success">
               {workflows.filter(w => w.status === 'APPROVED').length}
             </p>
           </div>
@@ -150,7 +150,7 @@ export default function WorkflowsPage() {
               placeholder="Rechercher un projet ou analyste..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -160,7 +160,7 @@ export default function WorkflowsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer"
             >
               <option value="">Tous les statuts</option>
               <option value="DRAFT">Brouillon</option>
@@ -184,11 +184,11 @@ export default function WorkflowsPage() {
             <p className="text-secondary-foreground mt-4">Chargement des workflows...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-destructive/10 border border-red-200 rounded-lg p-6 flex items-start gap-3">
+            <AlertCircle className="w-6 h-6 text-destructive flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-medium text-red-900">Erreur</h3>
-              <p className="text-red-700 text-sm">{error}</p>
+              <p className="text-destructive text-sm">{error}</p>
             </div>
           </div>
         ) : filteredWorkflows.length === 0 ? (
@@ -206,7 +206,7 @@ export default function WorkflowsPage() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-medium text-foreground group-hover:text-blue-600 transition-colors">
+                      <h3 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
                         {workflow.evaluation?.project?.nom || 'Projet sans nom'}
                       </h3>
                       <span className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap ${
@@ -242,7 +242,7 @@ export default function WorkflowsPage() {
                     </div>
                   </div>
 
-                  <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-blue-600 transition-colors flex-shrink-0" />
+                  <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                 </div>
               </Link>
             ))}

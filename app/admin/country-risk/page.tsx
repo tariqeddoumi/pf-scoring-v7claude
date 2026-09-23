@@ -210,10 +210,10 @@ export default function CountryRiskPage() {
                         <div
                           className={`h-full transition-all ${
                             country.riskScore > 70
-                              ? "bg-red-500"
+                              ? "bg-destructive"
                               : country.riskScore > 40
-                                ? "bg-yellow-500"
-                                : "bg-green-500"
+                                ? "bg-warning"
+                                : "bg-success"
                           }`}
                           style={{
                             width: `${country.riskScore}%`,
@@ -244,15 +244,15 @@ export default function CountryRiskPage() {
           </p>
           <div className="grid grid-cols-3 gap-4 text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
+              <div className="w-3 h-3 bg-success rounded"></div>
               <span>Faible risque (0-40)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+              <div className="w-3 h-3 bg-warning rounded"></div>
               <span>Risque modéré (40-70)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded"></div>
+              <div className="w-3 h-3 bg-destructive rounded"></div>
               <span>Risque élevé (70-100)</span>
             </div>
           </div>

@@ -79,11 +79,11 @@ export default function MonitoringPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "approuve":
-        return "text-green-400";
+        return "text-success";
       case "en_revue":
-        return "text-yellow-400";
+        return "text-warning";
       case "rejete":
-        return "text-red-400";
+        return "text-destructive";
       default:
         return "text-muted-foreground";
     }
@@ -173,7 +173,7 @@ export default function MonitoringPage() {
               onClick={() => setSelectedProject(p.id)}
               className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                 selectedProject === p.id
-                  ? "bg-cyan-600 text-white"
+                  ? "bg-primary text-white"
                   : "bg-muted text-secondary-foreground hover:bg-secondary"
               }`}
             >
@@ -226,11 +226,11 @@ export default function MonitoringPage() {
                 >
                   <div className="flex items-center space-x-3 flex-1">
                     {covenant.status === "ok" ? (
-                      <CheckCircle className="text-green-400" size={20} />
+                      <CheckCircle className="text-success" size={20} />
                     ) : covenant.status === "warning" ? (
-                      <AlertTriangle className="text-yellow-400" size={20} />
+                      <AlertTriangle className="text-warning" size={20} />
                     ) : (
-                      <AlertTriangle className="text-red-400" size={20} />
+                      <AlertTriangle className="text-destructive" size={20} />
                     )}
                     <div>
                       <p className="font-semibold text-foreground">
@@ -242,10 +242,10 @@ export default function MonitoringPage() {
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       covenant.status === "ok"
-                        ? "bg-green-500/20 text-green-400"
+                        ? "bg-success/15 text-success"
                         : covenant.status === "warning"
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : "bg-red-500/20 text-red-400"
+                          ? "bg-warning/15 text-warning"
+                          : "bg-destructive/15 text-destructive"
                     }`}
                   >
                     {covenant.status === "ok"
@@ -297,7 +297,7 @@ export default function MonitoringPage() {
           {/* Last Review / Actions */}
           <div className="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Clock className="text-cyan-400" size={20} />
+              <Clock className="text-primary" size={20} />
               <div>
                 <p className="text-sm text-muted-foreground">Date de Création</p>
                 <p className="text-foreground font-semibold">
@@ -307,7 +307,7 @@ export default function MonitoringPage() {
             </div>
             <Link
               href={`/projects/${project.id}`}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+              className="bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
             >
               Voir Détails
             </Link>

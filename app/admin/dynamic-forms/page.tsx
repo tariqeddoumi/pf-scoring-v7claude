@@ -105,7 +105,7 @@ export default function DynamicFormsAdmin() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 size={40} className="animate-spin text-blue-500" />
+          <Loader2 size={40} className="animate-spin text-primary" />
           <p className="text-muted-foreground">Checking configuration status...</p>
         </div>
       </div>
@@ -131,8 +131,8 @@ export default function DynamicFormsAdmin() {
         <div
           className={`flex items-center gap-3 p-4 rounded-lg border ${
             message.type === 'success'
-              ? 'bg-green-500/10 border-green-500/50 text-green-400'
-              : 'bg-red-500/10 border-red-500/50 text-red-400'
+              ? 'bg-success/10 border-green-500/50 text-success'
+              : 'bg-destructive/10 border-destructive/50 text-destructive'
           }`}
         >
           {message.type === 'success' ? (
@@ -157,8 +157,8 @@ export default function DynamicFormsAdmin() {
             </div>
             <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
               enabled
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-yellow-500/20 text-yellow-400'
+                ? 'bg-success/15 text-success'
+                : 'bg-warning/15 text-warning'
             }`}>
               {enabled ? 'Enabled' : 'Disabled'}
             </div>
@@ -169,8 +169,8 @@ export default function DynamicFormsAdmin() {
             disabled={loading}
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               enabled
-                ? 'bg-red-600 hover:bg-red-700 disabled:bg-secondary text-white'
-                : 'bg-blue-600 hover:bg-blue-700 disabled:bg-secondary text-white'
+                ? 'bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-white'
+                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-white'
             }`}
           >
             {loading ? (
@@ -204,8 +204,8 @@ export default function DynamicFormsAdmin() {
             </div>
             <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
               initialized
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-yellow-500/20 text-yellow-400'
+                ? 'bg-success/15 text-success'
+                : 'bg-warning/15 text-warning'
             }`}>
               {initialized ? 'Initialized' : 'Pending'}
             </div>
@@ -217,7 +217,7 @@ export default function DynamicFormsAdmin() {
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               initialized
                 ? 'bg-secondary text-muted-foreground cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 disabled:bg-secondary text-white'
+                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-white'
             }`}
           >
             {loading ? (
@@ -245,8 +245,8 @@ export default function DynamicFormsAdmin() {
       </div>
 
       {/* Documentation */}
-      <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-400 mb-4">How It Works</h3>
+      <div className="bg-primary/10 border border-ring/50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-primary mb-4">How It Works</h3>
         <div className="text-secondary-foreground space-y-2 text-sm">
           <p><strong>Phase 1: Database Initialization</strong></p>
           <ul className="list-disc list-inside ml-2 mb-3">

@@ -98,14 +98,14 @@ export default function DiagnosticPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "success":
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+        return <CheckCircle2 className="h-5 w-5 text-success" />;
       case "warning":
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
       case "error":
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       default:
         return (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-ring border-t-transparent" />
         );
     }
   };
@@ -113,13 +113,13 @@ export default function DiagnosticPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "success":
-        return "border-green-500/30 bg-green-500/5";
+        return "border-success/30 bg-success/5";
       case "warning":
-        return "border-yellow-500/30 bg-yellow-500/5";
+        return "border-warning/30 bg-warning/5";
       case "error":
-        return "border-red-500/30 bg-red-500/5";
+        return "border-destructive/30 bg-destructive/5";
       default:
-        return "border-blue-500/30 bg-blue-500/5";
+        return "border-ring/30 bg-primary/5";
     }
   };
 
@@ -151,11 +151,11 @@ export default function DiagnosticPage() {
 
         {/* Error Alert */}
         {error && (
-          <Card className="mb-6 border-red-500/30 bg-red-500/5 p-4">
+          <Card className="mb-6 border-destructive/30 bg-destructive/5 p-4">
             <div className="flex items-start gap-3">
-              <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              <XCircle className="h-5 w-5 text-destructive mt-0.5" />
               <div>
-                <p className="font-medium text-red-400">Erreur</p>
+                <p className="font-medium text-destructive">Erreur</p>
                 <p className="text-sm text-secondary-foreground">{error}</p>
               </div>
             </div>
@@ -174,15 +174,15 @@ export default function DiagnosticPage() {
                   key={env.name}
                   className={`flex items-center justify-between rounded-lg border p-3 ${
                     env.defined
-                      ? "border-green-500/30 bg-green-500/5"
-                      : "border-red-500/30 bg-red-500/5"
+                      ? "border-success/30 bg-success/5"
+                      : "border-destructive/30 bg-destructive/5"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     {env.defined ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      <CheckCircle2 className="h-5 w-5 text-success" />
                     ) : (
-                      <XCircle className="h-5 w-5 text-red-500" />
+                      <XCircle className="h-5 w-5 text-destructive" />
                     )}
                     <div>
                       <p className="font-medium">{env.name}</p>
@@ -196,7 +196,7 @@ export default function DiagnosticPage() {
                     </div>
                   </div>
                   <span
-                    className={`text-sm font-medium ${env.defined ? "text-green-400" : "text-red-400"}`}
+                    className={`text-sm font-medium ${env.defined ? "text-success" : "text-destructive"}`}
                   >
                     {env.defined ? "✓ Défini" : "✗ Manquant"}
                   </span>
@@ -239,7 +239,7 @@ export default function DiagnosticPage() {
               ))
             ) : loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-ring border-t-transparent" />
               </div>
             ) : (
               <p className="text-muted-foreground">Aucun test exécuté</p>

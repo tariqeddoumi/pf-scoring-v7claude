@@ -173,7 +173,7 @@ export default function EditProjectPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-blue-400" size={40} />
+        <Loader2 className="animate-spin text-primary" size={40} />
       </div>
     );
   }
@@ -189,22 +189,22 @@ export default function EditProjectPage({
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Nom du projet</label>
               <input type="text" name="nom" value={formData.nom} onChange={handleChange}
-                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.nom ? "border-red-500" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.nom ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
               />
-              {fieldErrors.nom && <p className="text-red-400 text-sm mt-1">{fieldErrors.nom}</p>}
+              {fieldErrors.nom && <p className="text-destructive text-sm mt-1">{fieldErrors.nom}</p>}
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Description</label>
               <textarea name="description" value={formData.description} onChange={handleChange} rows={3}
-                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.description ? "border-red-500" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.description ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
               />
-              {fieldErrors.description && <p className="text-red-400 text-sm mt-1">{fieldErrors.description}</p>}
+              {fieldErrors.description && <p className="text-destructive text-sm mt-1">{fieldErrors.description}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Secteur</label>
               {sectorOptions.length > 0 ? (
                 <select name="secteur" value={formData.secteur || ""} onChange={handleChange}
-                  className={`w-full px-4 py-2 bg-muted border ${fieldErrors.secteur ? "border-red-500" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
+                  className={`w-full px-4 py-2 bg-muted border ${fieldErrors.secteur ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
                 >
                   <option value="">— Sélectionner un secteur —</option>
                   {/* Preserve a legacy free-text value not present in the list */}
@@ -217,15 +217,15 @@ export default function EditProjectPage({
                 </select>
               ) : (
                 <input type="text" name="secteur" value={formData.secteur} onChange={handleChange}
-                  className={`w-full px-4 py-2 bg-muted border ${fieldErrors.secteur ? "border-red-500" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
+                  className={`w-full px-4 py-2 bg-muted border ${fieldErrors.secteur ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
                 />
               )}
-              {fieldErrors.secteur && <p className="text-red-400 text-sm mt-1">{fieldErrors.secteur}</p>}
+              {fieldErrors.secteur && <p className="text-destructive text-sm mt-1">{fieldErrors.secteur}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Statut</label>
               <select name="status" value={formData.status} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500">
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring">
                 <option value="brouillon">Brouillon</option>
                 <option value="en_cours">En cours</option>
                 <option value="en_revue">En revue</option>
@@ -236,7 +236,7 @@ export default function EditProjectPage({
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Code pays</label>
               <input type="text" name="countryCode" value={formData.countryCode || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500" placeholder="MA, FR, etc."
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring" placeholder="MA, FR, etc."
               />
             </div>
           </div>
@@ -253,7 +253,7 @@ export default function EditProjectPage({
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Pays</label>
               <input type="text" name="pays" value={formData.pays || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -270,68 +270,68 @@ export default function EditProjectPage({
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Montant (MAD)</label>
               <input type="number" name="montant" value={formData.montant} onChange={handleChange}
-                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.montant ? "border-red-500" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.montant ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
                 step="0.01"
               />
-              {fieldErrors.montant && <p className="text-red-400 text-sm mt-1">{fieldErrors.montant}</p>}
+              {fieldErrors.montant && <p className="text-destructive text-sm mt-1">{fieldErrors.montant}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Devise</label>
               <input type="text" name="devise" value={formData.devise} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Coût total (MAD)</label>
               <input type="number" name="coutTotal" value={formData.coutTotal || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 step="0.01"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Financement (MAD)</label>
               <input type="number" name="financement" value={formData.financement || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 step="0.01"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Apport propre (MAD)</label>
               <input type="number" name="apportPropre" value={formData.apportPropre || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 step="0.01"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Taux (%)</label>
               <input type="number" name="taux" value={formData.taux || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 step="0.01"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Type de crédit</label>
               <input type="text" name="typeCredit" value={formData.typeCredit || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Durée du crédit (ans)</label>
               <input type="number" name="dureeCredit" value={formData.dureeCredit || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Taux de couverture (%)</label>
               <input type="number" name="tauxCouverture" value={formData.tauxCouverture || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 step="0.01"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Ratio</label>
               <input type="number" name="ratio" value={formData.ratio || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 step="0.01"
               />
             </div>
@@ -349,56 +349,56 @@ export default function EditProjectPage({
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Sponsor principal</label>
               <input type="text" name="sponsorPrincipal" value={formData.sponsorPrincipal || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Nom du SPV</label>
               <input type="text" name="nomSPV" value={formData.nomSPV || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Constructeur EPC</label>
               <input type="text" name="constructeurEPC" value={formData.constructeurEPC || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Opérateur O&M</label>
               <input type="text" name="operateurOM" value={formData.operateurOM || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Technologie</label>
               <input type="text" name="technologie" value={formData.technologie || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Capacité installée (MW)</label>
               <input type="number" name="capaciteInstallee" value={formData.capaciteInstallee || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 step="0.1"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Durée du projet (ans)</label>
               <input type="number" name="dureeProjet" value={formData.dureeProjet || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Période d&apos;amorce (ans)</label>
               <input type="number" name="periodeAmorce" value={formData.periodeAmorce || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Période de remboursement (ans)</label>
               <input type="number" name="periodeRemboursement" value={formData.periodeRemboursement || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -415,13 +415,13 @@ export default function EditProjectPage({
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Début de construction</label>
               <input type="date" name="debutConstruction" value={formData.debutConstruction || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Fin de construction</label>
               <input type="date" name="finConstruction" value={formData.finConstruction || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -438,7 +438,7 @@ export default function EditProjectPage({
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Structure capitaleprincipale</label>
               <textarea name="structureCapitalePrincipale" value={formData.structureCapitalePrincipale || ""} onChange={handleChange} rows={3}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -455,14 +455,14 @@ export default function EditProjectPage({
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Score global</label>
               <input type="number" name="scoreGlobal" value={formData.scoreGlobal || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 disabled
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-secondary-foreground mb-2">Grade</label>
               <input type="text" name="grade" value={formData.grade || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
                 disabled
               />
             </div>
@@ -488,7 +488,7 @@ export default function EditProjectPage({
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive text-sm">
           {error}
         </div>
       )}
@@ -510,7 +510,7 @@ export default function EditProjectPage({
         {/* Form Actions */}
         <div className="flex gap-3 mt-8 pt-6 border-t border-border">
           <button type="submit" disabled={submitting}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-secondary text-white font-semibold rounded-lg transition-colors">
+            className="inline-flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 disabled:bg-secondary text-white font-semibold rounded-lg transition-colors">
             {submitting ? (<><Loader2 size={18} className="animate-spin" /><span>Mise à jour...</span></>) : <span>Enregistrer les modifications</span>}
           </button>
           <Link href={`/projects/${projectId}`} className="inline-flex items-center gap-2 px-6 py-2 bg-muted hover:bg-secondary text-foreground font-semibold rounded-lg transition-colors">

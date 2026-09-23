@@ -26,7 +26,7 @@ function NodeInput({
   onChange: (val: AnswerValue) => void;
 }) {
   const inputClass =
-    "w-full px-3 py-2 bg-muted border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500 transition-colors";
+    "w-full px-3 py-2 bg-muted border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-colors";
 
   const selectedOption = node.options?.find((o) => o.value === answer?.valueString);
 
@@ -48,7 +48,7 @@ function NodeInput({
             ))}
           </select>
           {selectedOption && (
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-cyan-400">
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-primary">
               <CheckCircle2 size={11} />
               Score attribué : <span className="font-bold">{selectedOption.score} pts</span>
             </div>
@@ -82,7 +82,7 @@ function NodeInput({
                   key={i}
                   className={`text-xs px-2 py-0.5 rounded-full ${
                     active
-                      ? "bg-cyan-500/20 text-cyan-300 font-semibold"
+                      ? "bg-primary/15 text-primary font-semibold"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -107,7 +107,7 @@ function NodeInput({
                 onClick={() => onChange({ ...answer, valueBoolean: val })}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
                   active
-                    ? "bg-cyan-600 border-cyan-500 text-white"
+                    ? "bg-primary border-primary text-white"
                     : "bg-muted border-input text-muted-foreground hover:border-ring"
                 }`}
               >
@@ -190,7 +190,7 @@ function QuestionNode({
         ) : (
           <div className="mt-0.5 w-4 flex-shrink-0">
             {isAnswered ? (
-              <CheckCircle2 size={12} className="text-green-400" />
+              <CheckCircle2 size={12} className="text-success" />
             ) : (
               <div className="w-3 h-3 rounded-full border border-input mt-px" />
             )}
@@ -304,7 +304,7 @@ function DomainAccordion({
       >
         <div className="flex items-center gap-3 flex-1 text-left">
           {open ? (
-            <ChevronDown size={18} className="text-cyan-400 flex-shrink-0" />
+            <ChevronDown size={18} className="text-primary flex-shrink-0" />
           ) : (
             <ChevronRight size={18} className="text-muted-foreground flex-shrink-0" />
           )}

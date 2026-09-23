@@ -36,7 +36,7 @@ export function NodeDetailsPanel({
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab
-                  ? "border-cyan-400 text-cyan-400"
+                  ? "border-cyan-400 text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -172,7 +172,7 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
 
       <button
         onClick={handleSave}
-        className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm font-medium"
+        className="w-full px-4 py-2 bg-success hover:bg-green-700 rounded text-white text-sm font-medium"
       >
         Sauvegarder
       </button>
@@ -235,7 +235,7 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
               </div>
               <button
                 onClick={() => handleDeleteOption(option.id)}
-                className="p-1 hover:bg-accent rounded text-red-400"
+                className="p-1 hover:bg-accent rounded text-destructive"
               >
                 <Trash2 size={16} />
               </button>
@@ -277,7 +277,7 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
           />
           <button
             onClick={handleAddOption}
-            className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 bg-primary hover:bg-primary/90 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
           >
             <Plus size={16} />
             Ajouter
@@ -343,7 +343,7 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
               </div>
               <button
                 onClick={() => handleDeleteRange(range.id)}
-                className="p-1 hover:bg-accent rounded text-red-400"
+                className="p-1 hover:bg-accent rounded text-destructive"
               >
                 <Trash2 size={16} />
               </button>
@@ -387,7 +387,7 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
           />
           <button
             onClick={handleAddRange}
-            className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 bg-primary hover:bg-primary/90 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
           >
             <Plus size={16} />
             Ajouter
@@ -424,7 +424,7 @@ function ValidationTab({ node }: ValidationTabProps) {
       <button
         onClick={validateNode}
         disabled={loading}
-        className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 rounded text-white text-sm font-medium"
+        className="w-full px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 rounded text-white text-sm font-medium"
       >
         {loading ? "Validation en cours..." : "Valider le nœud"}
       </button>

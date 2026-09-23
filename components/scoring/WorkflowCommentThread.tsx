@@ -69,12 +69,12 @@ export function WorkflowCommentThread({
       }`}
     >
       <div className={`p-3 rounded-lg ${
-        isInternal || comment.isInternal ? 'bg-yellow-50 border border-yellow-200' : 'bg-muted border border-border'
+        isInternal || comment.isInternal ? 'bg-warning/10 border border-yellow-200' : 'bg-muted border border-border'
       }`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-2 flex-1">
             <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-blue-600" />
+              <User className="w-4 h-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -82,15 +82,15 @@ export function WorkflowCommentThread({
                   {comment.createdByUser?.prenom} {comment.createdByUser?.nom}
                 </span>
                 <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                  comment.commentType === 'QUESTION' ? 'bg-blue-100 text-blue-700' :
-                  comment.commentType === 'ISSUE' ? 'bg-red-100 text-red-700' :
-                  comment.commentType === 'SUGGESTION' ? 'bg-green-100 text-green-700' :
+                  comment.commentType === 'QUESTION' ? 'bg-primary/10 text-primary' :
+                  comment.commentType === 'ISSUE' ? 'bg-destructive/10 text-destructive' :
+                  comment.commentType === 'SUGGESTION' ? 'bg-success/10 text-success' :
                   'bg-muted text-secondary-foreground'
                 }`}>
                   {COMMENT_TYPES.find(t => t.value === comment.commentType)?.label}
                 </span>
                 {comment.isInternal && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">
+                  <span className="text-xs px-2 py-0.5 rounded bg-warning/10 text-warning font-medium">
                     Interne
                   </span>
                 )}
@@ -101,7 +101,7 @@ export function WorkflowCommentThread({
             </div>
           </div>
           {comment.isResolved && (
-            <span className="text-xs px-2 py-1 bg-green-100 text-green-700 font-medium rounded">
+            <span className="text-xs px-2 py-1 bg-success/10 text-success font-medium rounded">
               Résolu
             </span>
           )}
@@ -148,7 +148,7 @@ export function WorkflowCommentThread({
               <select
                 value={commentType}
                 onChange={(e) => setCommentType(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {COMMENT_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -180,7 +180,7 @@ export function WorkflowCommentThread({
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               rows={3}
               placeholder="Entrez votre commentaire..."
             />
@@ -189,7 +189,7 @@ export function WorkflowCommentThread({
           <button
             type="submit"
             disabled={isSubmitting || isLoading || !newComment.trim()}
-            className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-secondary transition-colors"
+            className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:bg-secondary transition-colors"
           >
             <Send className="w-4 h-4" />
             {isSubmitting || isLoading ? 'Envoi...' : 'Envoyer'}

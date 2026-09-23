@@ -16,18 +16,18 @@ export default function AlertsPage() {
 
   const getSeverityColor = (severity: string) => {
     const colors: Record<string, string> = {
-      critical: "border-red-500/50 bg-red-500/10",
-      warning: "border-yellow-500/50 bg-yellow-500/10",
-      info: "border-blue-500/50 bg-blue-500/10",
+      critical: "border-destructive/50 bg-destructive/10",
+      warning: "border-yellow-500/50 bg-warning/10",
+      info: "border-ring/50 bg-primary/10",
     };
     return colors[severity] || "border-input bg-muted";
   };
 
   const getSeverityIcon = (severity: string) => {
     const icons: Record<string, React.ReactNode> = {
-      critical: <AlertCircle className="text-red-400" size={20} />,
-      warning: <AlertCircle className="text-yellow-400" size={20} />,
-      info: <Info className="text-blue-400" size={20} />,
+      critical: <AlertCircle className="text-destructive" size={20} />,
+      warning: <AlertCircle className="text-warning" size={20} />,
+      info: <Info className="text-primary" size={20} />,
     };
     return icons[severity] || <Info size={20} />;
   };
@@ -59,7 +59,7 @@ export default function AlertsPage() {
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+            className="bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
           >
             Marquer tout comme lu
           </button>
@@ -84,7 +84,7 @@ export default function AlertsPage() {
       <div className="space-y-3">
         {alerts.length === 0 ? (
           <div className="rounded-lg border border-border bg-card p-8 text-center">
-            <CheckCircle className="mx-auto text-green-400 mb-3" size={32} />
+            <CheckCircle className="mx-auto text-success mb-3" size={32} />
             <p className="text-foreground font-semibold">Aucune alerte</p>
             <p className="text-muted-foreground text-sm mt-1">Vous êtes à jour!</p>
           </div>
@@ -124,7 +124,7 @@ export default function AlertsPage() {
                   {alert.actionUrl && (
                     <Link
                       href={alert.actionUrl}
-                      className="p-2 text-cyan-400 hover:bg-accent rounded-lg transition-colors"
+                      className="p-2 text-primary hover:bg-accent rounded-lg transition-colors"
                     >
                       <ArrowRight size={18} />
                     </Link>
@@ -134,7 +134,7 @@ export default function AlertsPage() {
                       if (!alert.read) markAsRead(alert.id);
                       deleteAlert(alert.id);
                     }}
-                    className="p-2 text-red-400 hover:bg-accent rounded-lg transition-colors"
+                    className="p-2 text-destructive hover:bg-accent rounded-lg transition-colors"
                   >
                     <Trash2 size={18} />
                   </button>

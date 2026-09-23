@@ -38,7 +38,7 @@ export function DeleteConfirmation({
           <button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-secondary text-white rounded-lg transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-white rounded-lg transition-colors disabled:opacity-50"
           >
             {isDeleting ? "Suppression..." : "Supprimer"}
           </button>

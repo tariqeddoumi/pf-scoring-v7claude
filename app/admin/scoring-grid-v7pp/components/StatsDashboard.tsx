@@ -28,7 +28,7 @@ export function StatsDashboard({ stats }: StatsDashboardProps) {
         {statItems.map((item, i) => (
           <div key={i} className="text-center">
             <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
-            <p className={`text-2xl font-bold ${item.isPercentage ? "text-cyan-400" : "text-foreground"}`}>
+            <p className={`text-2xl font-bold ${item.isPercentage ? "text-primary" : "text-foreground"}`}>
               {item.value}
             </p>
           </div>

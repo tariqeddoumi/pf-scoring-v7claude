@@ -88,7 +88,7 @@ export default function NewEvaluationPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
-          <Loader2 className="animate-spin text-cyan-400 mx-auto" size={40} />
+          <Loader2 className="animate-spin text-primary mx-auto" size={40} />
           <p className="text-muted-foreground text-sm">Chargement du questionnaire…</p>
         </div>
       </div>
@@ -118,13 +118,13 @@ export default function NewEvaluationPage() {
         {/* Form card */}
         <div className="lg:col-span-2 rounded-xl border border-border bg-card p-6">
           {error && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm mb-6">
+            <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4 text-destructive text-sm mb-6">
               {error}
             </div>
           )}
 
           {questionnaire.length === 0 && (
-            <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/30 p-4 text-yellow-400 text-sm mb-6">
+            <div className="rounded-lg bg-warning/10 border border-warning/30 p-4 text-warning text-sm mb-6">
               <strong>Attention:</strong> Aucun questionnaire de scoring n'est configuré. L'écran
               de saisie sera vide.{" "}
               <Link href="/admin/scoring" className="underline hover:text-yellow-300">
@@ -136,12 +136,12 @@ export default function NewEvaluationPage() {
           <form onSubmit={handleCreate} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-secondary-foreground mb-2">
-                Projet à évaluer <span className="text-red-400">*</span>
+                Projet à évaluer <span className="text-destructive">*</span>
               </label>
               <select
                 value={formData.projectId}
                 onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
-                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground focus:border-cyan-500 focus:outline-none transition-colors"
+                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground focus:border-ring focus:outline-none transition-colors"
                 required
                 disabled={projects.length === 0}
               >
@@ -155,7 +155,7 @@ export default function NewEvaluationPage() {
               {projects.length === 0 && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Aucun projet disponible.{" "}
-                  <Link href="/projects/new" className="text-cyan-400 hover:underline">
+                  <Link href="/projects/new" className="text-primary hover:underline">
                     Créer un projet
                   </Link>
                 </p>
@@ -169,7 +169,7 @@ export default function NewEvaluationPage() {
               <select
                 value={formData.recommendation}
                 onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
-                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground focus:border-cyan-500 focus:outline-none transition-colors"
+                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground focus:border-ring focus:outline-none transition-colors"
               >
                 <option value="APPROVE">Approuver</option>
                 <option value="REJECT">Rejeter</option>
@@ -184,7 +184,7 @@ export default function NewEvaluationPage() {
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-cyan-500 focus:outline-none transition-colors"
+                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none transition-colors"
                 rows={3}
                 placeholder="Contexte, informations importantes…"
               />
@@ -194,7 +194,7 @@ export default function NewEvaluationPage() {
               <button
                 type="submit"
                 disabled={submitting || !formData.projectId}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-muted disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                className="flex-1 bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
@@ -222,7 +222,7 @@ export default function NewEvaluationPage() {
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-5">
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <BarChart3 size={16} className="text-cyan-400" />
+              <BarChart3 size={16} className="text-primary" />
               Questionnaire de scoring
             </h3>
             {questionnaire.length > 0 ? (

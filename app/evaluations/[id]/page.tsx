@@ -63,7 +63,7 @@ const ScoreBar = ({ label, value }: { label: string; value?: number | null }) =>
     </div>
     <div className="h-2 bg-muted rounded-full">
       <div
-        className="h-2 bg-blue-500 rounded-full transition-all"
+        className="h-2 bg-primary rounded-full transition-all"
         style={{ width: value !== null && value !== undefined ? `${Math.min(value * 10, 100)}%` : "0%" }}
       />
     </div>
@@ -104,7 +104,7 @@ export default function EvaluationDetailPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-blue-400" size={40} />
+        <Loader2 className="animate-spin text-primary" size={40} />
       </div>
     );
   }
@@ -116,7 +116,7 @@ export default function EvaluationDetailPage({
           <ArrowLeft size={20} />
           <span>Retour aux évaluations</span>
         </Link>
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive">
           {error || "Évaluation non trouvée"}
         </div>
       </div>
@@ -136,9 +136,9 @@ export default function EvaluationDetailPage({
 
   const statusColors: Record<string, string> = {
     brouillon: "bg-secondary/20 text-muted-foreground",
-    soumis: "bg-yellow-500/20 text-yellow-400",
-    valide: "bg-green-500/20 text-green-400",
-    rejete: "bg-red-500/20 text-red-400",
+    soumis: "bg-warning/15 text-warning",
+    valide: "bg-success/15 text-success",
+    rejete: "bg-destructive/15 text-destructive",
   };
 
   const ratingColor = ratingColors[evaluation.rating || ""] || "from-secondary to-muted";
@@ -161,9 +161,9 @@ export default function EvaluationDetailPage({
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Recommandation</label>
               <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-                evaluation.recommendation === "APPROVE" ? "bg-green-500/20 text-green-400" :
-                evaluation.recommendation === "REJECT" ? "bg-red-500/20 text-red-400" :
-                "bg-yellow-500/20 text-yellow-400"
+                evaluation.recommendation === "APPROVE" ? "bg-success/15 text-success" :
+                evaluation.recommendation === "REJECT" ? "bg-destructive/15 text-destructive" :
+                "bg-warning/15 text-warning"
               }`}>
                 {evaluation.recommendation === "APPROVE" ? "Approuver" :
                  evaluation.recommendation === "REJECT" ? "Rejeter" : "Approuver sous conditions"}
@@ -269,7 +269,7 @@ export default function EvaluationDetailPage({
           {evaluation.status === "brouillon" && (
             <button
               onClick={() => evalId && router.push(`/evaluations/${evalId}/saisie`)}
-              className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+              className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
             >
               <Edit2 size={20} />
               <span>Reprendre la saisie</span>

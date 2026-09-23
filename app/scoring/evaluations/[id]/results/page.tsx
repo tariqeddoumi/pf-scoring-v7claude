@@ -52,7 +52,7 @@ export default function ResultsPage() {
 
   if (error) {
     return (
-      <div className="flex items-start gap-3 p-4 bg-red-900/20 text-red-400 border border-red-700 rounded">
+      <div className="flex items-start gap-3 p-4 bg-red-900/20 text-destructive border border-red-700 rounded">
         <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
         <div>
           <h3 className="font-semibold">Error</h3>
@@ -63,10 +63,10 @@ export default function ResultsPage() {
   }
 
   const ratingColor = (rating: string) => {
-    if (rating.includes("AAA") || rating.includes("AA")) return "text-green-400";
-    if (rating.includes("BBB") || rating.includes("BB")) return "text-yellow-400";
-    if (rating.includes("CCC") || rating.includes("CC")) return "text-orange-400";
-    return "text-red-400";
+    if (rating.includes("AAA") || rating.includes("AA")) return "text-success";
+    if (rating.includes("BBB") || rating.includes("BB")) return "text-warning";
+    if (rating.includes("CCC") || rating.includes("CC")) return "text-warning";
+    return "text-destructive";
   };
 
   return (
@@ -120,10 +120,10 @@ export default function ResultsPage() {
                     <div className="text-xs text-muted-foreground">{result.nodeCode}</div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right text-yellow-400">
+                <td className="px-4 py-3 text-right text-warning">
                   {result.rawScore.toFixed(2)}
                 </td>
-                <td className="px-4 py-3 text-right text-blue-400">
+                <td className="px-4 py-3 text-right text-primary">
                   {result.weightedScore.toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-right text-purple-400">
@@ -136,7 +136,7 @@ export default function ResultsPage() {
                   {result.ruleImpacts?.length > 0 && (
                     <div className="text-xs space-y-1">
                       {result.ruleImpacts.map((r: any) => (
-                        <div key={r.ruleId} className="text-orange-400">
+                        <div key={r.ruleId} className="text-warning">
                           {r.ruleCode} ({r.severity})
                         </div>
                       ))}

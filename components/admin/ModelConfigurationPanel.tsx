@@ -89,14 +89,14 @@ export function ModelConfigurationPanel({
       </div>
 
       {saveStatus === 'success' && (
-        <div className="rounded-lg bg-green-500/10 border border-green-500/30 p-3 flex items-center gap-2 text-green-400">
+        <div className="rounded-lg bg-success/10 border border-success/30 p-3 flex items-center gap-2 text-success">
           <CheckCircle2 size={18} />
           <span className="text-sm">{saveMessage}</span>
         </div>
       )}
 
       {saveStatus === 'error' && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 flex items-center gap-2 text-red-400">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 flex items-center gap-2 text-destructive">
           <AlertCircle size={18} />
           <span className="text-sm">{saveMessage}</span>
         </div>
@@ -106,7 +106,7 @@ export function ModelConfigurationPanel({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-medium transition-colors disabled:opacity-50"
+          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors disabled:opacity-50"
         >
           {saving ? 'Sauvegarde...' : 'Enregistrer Configuration'}
         </button>

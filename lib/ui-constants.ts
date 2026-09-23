@@ -5,12 +5,12 @@
 
 // Role Colors
 export const ROLE_COLORS: Record<string, string> = {
-  system_admin: "bg-red-500/15 text-red-700 dark:text-red-300",
+  system_admin: "bg-destructive/15 text-destructive dark:text-red-300",
   scoring_admin: "bg-purple-500/15 text-purple-700 dark:text-purple-300",
-  risk_manager: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
-  committee_member: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300",
-  risk_analyst: "bg-green-500/15 text-green-700 dark:text-green-300",
-  auditor: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
+  risk_manager: "bg-primary/15 text-primary dark:text-blue-300",
+  committee_member: "bg-cyan-500/15 text-cyan-700 dark:text-primary",
+  risk_analyst: "bg-success/15 text-success dark:text-green-300",
+  auditor: "bg-warning/15 text-warning dark:text-yellow-300",
   read_only: "bg-secondary text-secondary-foreground",
 };
 
@@ -28,9 +28,9 @@ export const ROLE_LABELS: Record<string, string> = {
 // Status Colors for Evaluations
 export const STATUS_COLORS: Record<string, string> = {
   brouillon: "bg-secondary text-secondary-foreground",
-  soumis: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300",
-  valide: "bg-green-500/15 text-green-700 dark:text-green-300",
-  rejete: "bg-red-500/15 text-red-700 dark:text-red-300",
+  soumis: "bg-warning/15 text-warning dark:text-yellow-300",
+  valide: "bg-success/15 text-success dark:text-green-300",
+  rejete: "bg-destructive/15 text-destructive dark:text-red-300",
 };
 
 // Status Labels (French)
@@ -86,11 +86,11 @@ export const EMPTY_STATES: Record<
 // Common Button Styles
 export const BUTTON_STYLES = {
   primary:
-    "bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all",
+    "bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all",
   secondary:
     "bg-secondary hover:bg-accent text-secondary-foreground font-semibold px-4 py-2 rounded-lg transition-all",
   danger:
-    "bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-all",
+    "bg-destructive hover:bg-destructive/90 text-white font-semibold px-4 py-2 rounded-lg transition-all",
   outline:
     "border border-border rounded-lg text-muted-foreground hover:text-foreground hover:border-ring transition-colors px-4 py-2",
 };

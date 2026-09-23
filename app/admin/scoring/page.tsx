@@ -42,15 +42,15 @@ interface ModelVersion {
 }
 
 const DOMAIN_META: Record<string, { icon: string; color: string }> = {
-  D1: { icon: "💰", color: "text-blue-400 bg-blue-400/10 border-blue-400/30" },
+  D1: { icon: "💰", color: "text-primary bg-blue-400/10 border-blue-400/30" },
   D2: { icon: "⚙️", color: "text-purple-400 bg-purple-400/10 border-purple-400/30" },
-  D3: { icon: "📈", color: "text-green-400 bg-green-400/10 border-green-400/30" },
+  D3: { icon: "📈", color: "text-success bg-success/10 border-green-400/30" },
   D4: { icon: "🌿", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" },
-  D5: { icon: "🏛️", color: "text-amber-400 bg-amber-400/10 border-amber-400/30" },
-  D6: { icon: "⚖️", color: "text-orange-400 bg-orange-400/10 border-orange-400/30" },
-  D7: { icon: "🗺️", color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30" },
+  D5: { icon: "🏛️", color: "text-warning bg-amber-400/10 border-amber-400/30" },
+  D6: { icon: "⚖️", color: "text-warning bg-orange-400/10 border-orange-400/30" },
+  D7: { icon: "🗺️", color: "text-primary bg-cyan-400/10 border-cyan-400/30" },
   D8: { icon: "🏗️", color: "text-pink-400 bg-pink-400/10 border-pink-400/30" },
-  D9: { icon: "📊", color: "text-red-400 bg-red-400/10 border-red-400/30" },
+  D9: { icon: "📊", color: "text-destructive bg-red-400/10 border-red-400/30" },
 };
 
 export default function ScoringAdminPage() {
@@ -114,7 +114,7 @@ export default function ScoringAdminPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
-          <Loader2 className="animate-spin text-cyan-400 mx-auto" size={40} />
+          <Loader2 className="animate-spin text-primary mx-auto" size={40} />
           <p className="text-muted-foreground text-sm">Chargement du modèle de scoring…</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function ScoringAdminPage() {
           </Link>
           <Link
             href="/evaluations/new"
-            className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <BarChart3 size={16} />
             Nouvelle Évaluation
@@ -153,7 +153,7 @@ export default function ScoringAdminPage() {
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm">
+        <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-4 text-destructive text-sm">
           {error === "No published scoring model found" ? (
             <>
               <strong>Aucun modèle publié.</strong> Exécutez le script SQL{" "}
@@ -168,7 +168,7 @@ export default function ScoringAdminPage() {
 
       {/* Model banner */}
       {modelVersion && (
-        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5 flex flex-wrap items-center gap-6">
+        <div className="rounded-xl border border-primary/30 bg-cyan-500/5 p-5 flex flex-wrap items-center gap-6">
           <div>
             <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Modèle actif</div>
             <div className="text-foreground font-bold text-lg">{modelVersion.modelCode}</div>
@@ -178,7 +178,7 @@ export default function ScoringAdminPage() {
           <div className="flex gap-6 flex-wrap">
             <div>
               <div className="text-xs text-muted-foreground mb-1">Version</div>
-              <div className="text-cyan-400 font-semibold">V{modelVersion.versionNumber}</div>
+              <div className="text-primary font-semibold">V{modelVersion.versionNumber}</div>
             </div>
             <div>
               <div className="text-xs text-muted-foreground mb-1">Domaines</div>
@@ -190,7 +190,7 @@ export default function ScoringAdminPage() {
             </div>
             <div>
               <div className="text-xs text-muted-foreground mb-1">Statut</div>
-              <div className="flex items-center gap-1.5 text-green-400 font-semibold">
+              <div className="flex items-center gap-1.5 text-success font-semibold">
                 <CheckCircle2 size={14} />
                 Publié
               </div>
@@ -262,7 +262,7 @@ export default function ScoringAdminPage() {
                                 <span className={`text-xs px-1.5 py-0.5 rounded flex items-center gap-1 ${
                                   criterion.answerType === "NUMERIC_RANGE"
                                     ? "bg-purple-500/10 text-purple-400"
-                                    : "bg-blue-500/10 text-blue-400"
+                                    : "bg-primary/10 text-primary"
                                 }`}>
                                   {criterion.answerType === "NUMERIC_RANGE" ? (
                                     <><Hash size={10} /> Numérique</>
@@ -301,8 +301,8 @@ export default function ScoringAdminPage() {
                                       <tr key={opt.value} className="text-secondary-foreground">
                                         <td className="px-3 py-2">{opt.label}</td>
                                         <td className={`px-3 py-2 text-right font-bold ${
-                                          opt.score >= 75 ? "text-green-400" :
-                                          opt.score >= 50 ? "text-yellow-400" : "text-red-400"
+                                          opt.score >= 75 ? "text-success" :
+                                          opt.score >= 50 ? "text-warning" : "text-destructive"
                                         }`}>{opt.score} pts</td>
                                       </tr>
                                     ))}
@@ -326,8 +326,8 @@ export default function ScoringAdminPage() {
                                         <td className="px-3 py-2 text-center font-mono">{r.minValue}</td>
                                         <td className="px-3 py-2 text-center font-mono">{r.maxValue === 999 ? "∞" : r.maxValue}</td>
                                         <td className={`px-3 py-2 text-right font-bold ${
-                                          r.score >= 75 ? "text-green-400" :
-                                          r.score >= 50 ? "text-yellow-400" : "text-red-400"
+                                          r.score >= 75 ? "text-success" :
+                                          r.score >= 50 ? "text-warning" : "text-destructive"
                                         }`}>{r.score} pts</td>
                                       </tr>
                                     ))}
@@ -352,7 +352,7 @@ export default function ScoringAdminPage() {
             <p className="text-muted-foreground font-medium">Aucun modèle de scoring configuré</p>
             <p className="text-muted-foreground text-sm mt-1">
               Exécutez le fichier{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-cyan-400">SUPABASE_INSERT_SCRIPT.sql</code>{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-primary">SUPABASE_INSERT_SCRIPT.sql</code>{" "}
               dans la console Supabase pour initialiser le modèle.
             </p>
           </div>

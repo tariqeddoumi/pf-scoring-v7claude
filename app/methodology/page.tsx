@@ -51,16 +51,16 @@ export default function MethodologyPage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
             <div className="text-emerald-400 font-bold">AAA (95-100)</div>
             <div className="text-emerald-500 font-bold">AA (85-94)</div>
-            <div className="text-green-500 font-bold">A (75-84)</div>
+            <div className="text-success font-bold">A (75-84)</div>
             <div className="text-lime-500 font-bold">BBB (65-74)</div>
             <div className="text-yellow-500 font-bold">BB (55-64)</div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm mt-2">
-            <div className="text-orange-400 font-bold">B (45-54)</div>
+            <div className="text-warning font-bold">B (45-54)</div>
             <div className="text-orange-500 font-bold">CCC (35-44)</div>
-            <div className="text-red-400 font-bold">CC (25-34)</div>
-            <div className="text-red-500 font-bold">C (15-24)</div>
-            <div className="text-red-600 font-bold">D (0-14)</div>
+            <div className="text-destructive font-bold">CC (25-34)</div>
+            <div className="text-destructive font-bold">C (15-24)</div>
+            <div className="text-destructive font-bold">D (0-14)</div>
           </div>
         </Card>
       </div>

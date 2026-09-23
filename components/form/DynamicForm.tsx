@@ -109,15 +109,15 @@ interface FormFieldProps {
 }
 
 export function FormField({ field, value, error, onChange }: FormFieldProps) {
-  const commonClasses = `w-full px-4 py-2 bg-muted border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 ${
-    error ? "border-red-500" : "border-input"
+  const commonClasses = `w-full px-4 py-2 bg-muted border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring ${
+    error ? "border-destructive" : "border-input"
   }`;
 
   return (
     <div>
       <label className="block text-sm font-semibold text-foreground mb-2">
         {field.label}
-        {field.required && <span className="text-red-400"> *</span>}
+        {field.required && <span className="text-destructive"> *</span>}
       </label>
 
       {field.type === "textarea" ? (
@@ -155,7 +155,7 @@ export function FormField({ field, value, error, onChange }: FormFieldProps) {
         />
       )}
 
-      {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
       {field.help && !error && (
         <p className="mt-1 text-xs text-muted-foreground">{field.help}</p>
       )}

@@ -106,7 +106,7 @@ export default function ProjectDetailPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-blue-400" size={40} />
+        <Loader2 className="animate-spin text-primary" size={40} />
       </div>
     );
   }
@@ -118,7 +118,7 @@ export default function ProjectDetailPage({
           <ArrowLeft size={20} />
           <span>Retour aux projets</span>
         </Link>
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive">
           {error || "Projet non trouvé"}
         </div>
       </div>
@@ -127,10 +127,10 @@ export default function ProjectDetailPage({
 
   const statusColors: Record<string, string> = {
     brouillon: "bg-secondary/20 text-muted-foreground",
-    en_cours: "bg-blue-500/20 text-blue-400",
-    en_revue: "bg-yellow-500/20 text-yellow-400",
-    approuve: "bg-green-500/20 text-green-400",
-    rejete: "bg-red-500/20 text-red-400",
+    en_cours: "bg-primary/20 text-primary",
+    en_revue: "bg-warning/15 text-warning",
+    approuve: "bg-success/15 text-success",
+    rejete: "bg-destructive/15 text-destructive",
   };
 
   const tabs = [
@@ -262,7 +262,7 @@ export default function ProjectDetailPage({
         </div>
         <button
           onClick={() => projectId && router.push(`/projects/${projectId}/edit`)}
-          className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+          className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
         >
           <Edit2 size={20} />
           <span>Modifier</span>

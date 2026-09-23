@@ -138,7 +138,7 @@ export default function DashboardConfigPage() {
       {/* Message */}
       {message && (
         <div
-          className={`p-4 rounded-lg flex items-center gap-3 ${message.type === "success" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}
+          className={`p-4 rounded-lg flex items-center gap-3 ${message.type === "success" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-destructive/10 text-destructive border border-destructive/20"}`}
         >
           {message.text}
         </div>
@@ -148,7 +148,7 @@ export default function DashboardConfigPage() {
       <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Layout className="w-5 h-5 text-cyan-400" />
+            <Layout className="w-5 h-5 text-primary" />
             Modèles Prédéfinis
           </CardTitle>
           <CardDescription>
@@ -161,7 +161,7 @@ export default function DashboardConfigPage() {
               onClick={() => handleLoadTemplate("default")}
               className={
                 activeTemplate === "default"
-                  ? "bg-cyan-600 hover:bg-cyan-700 justify-start"
+                  ? "bg-primary hover:bg-primary/90 justify-start"
                   : "bg-muted hover:bg-secondary justify-start border border-input"
               }
             >
@@ -172,7 +172,7 @@ export default function DashboardConfigPage() {
               onClick={() => handleLoadTemplate("executive")}
               className={
                 activeTemplate === "executive"
-                  ? "bg-cyan-600 hover:bg-cyan-700 justify-start"
+                  ? "bg-primary hover:bg-primary/90 justify-start"
                   : "bg-muted hover:bg-secondary justify-start border border-input"
               }
             >
@@ -183,7 +183,7 @@ export default function DashboardConfigPage() {
               onClick={() => handleLoadTemplate("analyst")}
               className={
                 activeTemplate === "analyst"
-                  ? "bg-cyan-600 hover:bg-cyan-700 justify-start"
+                  ? "bg-primary hover:bg-primary/90 justify-start"
                   : "bg-muted hover:bg-secondary justify-start border border-input"
               }
             >
@@ -371,7 +371,7 @@ export default function DashboardConfigPage() {
             <div className="flex gap-3">
               <Button
                 onClick={handleSaveTemplate}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                className="flex-1 bg-primary hover:bg-primary/90"
               >
                 Enregistrer
               </Button>

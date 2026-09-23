@@ -68,7 +68,7 @@ export default function OptionModal({
         <p className="text-xs text-muted-foreground">Critère: <span className="font-mono">{criterionCode}</span></p>
 
         {error && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-400">
+          <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -83,7 +83,7 @@ export default function OptionModal({
               value={formData.label}
               onChange={(e) => setFormData({ ...formData, label: e.target.value })}
               placeholder="Texte affiché à l'utilisateur"
-              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               required
             />
           </div>
@@ -99,7 +99,7 @@ export default function OptionModal({
               min="0"
               max="100"
               step="1"
-              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               required
             />
           </div>
@@ -113,7 +113,7 @@ export default function OptionModal({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Notes supplémentaires"
-              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500"
+              className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
             />
           </div>
 
@@ -128,7 +128,7 @@ export default function OptionModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-medium transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors disabled:opacity-50"
               disabled={loading}
             >
               {loading ? "Sauvegarde..." : isEdit ? "Modifier" : "Ajouter"}

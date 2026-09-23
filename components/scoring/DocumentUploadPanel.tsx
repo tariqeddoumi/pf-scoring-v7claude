@@ -154,7 +154,7 @@ export function DocumentUploadPanel({
                 className="flex items-center justify-between p-3 bg-muted border border-border rounded-lg"
               >
                 <div className="flex items-center gap-3">
-                  <FileIcon className="w-5 h-5 text-blue-600" />
+                  <FileIcon className="w-5 h-5 text-primary" />
                   <div>
                     <p className="text-sm font-medium text-foreground">{doc.fileName}</p>
                     <p className="text-xs text-muted-foreground">
@@ -163,7 +163,7 @@ export function DocumentUploadPanel({
                     </p>
                   </div>
                 </div>
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <CheckCircle2 className="w-5 h-5 text-success" />
               </div>
             ))}
           </div>
@@ -183,8 +183,8 @@ export function DocumentUploadPanel({
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
             className={`relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              dragActive ? 'border-blue-500 bg-blue-50' : 'border-border hover:border-border'
-            } ${errors.file ? 'border-red-500 bg-red-50' : ''}`}
+              dragActive ? 'border-ring bg-primary/10' : 'border-border hover:border-border'
+            } ${errors.file ? 'border-destructive bg-destructive/10' : ''}`}
           >
             <input
               ref={fileInputRef}
@@ -196,7 +196,7 @@ export function DocumentUploadPanel({
 
             {selectedFile ? (
               <div className="space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto" />
+                <CheckCircle2 className="w-8 h-8 text-success mx-auto" />
                 <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
                 <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
               </div>
@@ -213,8 +213,8 @@ export function DocumentUploadPanel({
             )}
 
             {errors.file && (
-              <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded">
-                <p className="text-xs text-red-700">{errors.file}</p>
+              <div className="mt-3 p-2 bg-destructive/10 border border-red-300 rounded">
+                <p className="text-xs text-destructive">{errors.file}</p>
               </div>
             )}
           </div>
@@ -229,7 +229,7 @@ export function DocumentUploadPanel({
                 <select
                   value={documentType}
                   onChange={(e) => setDocumentType(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   {DOCUMENT_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -247,7 +247,7 @@ export function DocumentUploadPanel({
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                   rows={2}
                   placeholder="Décrivez le contenu du document..."
                 />
@@ -258,7 +258,7 @@ export function DocumentUploadPanel({
                 <button
                   type="submit"
                   disabled={isUploading || isLoading}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-secondary transition-colors"
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:bg-secondary transition-colors"
                 >
                   {isUploading || isLoading ? 'Chargement...' : 'Charger le document'}
                 </button>

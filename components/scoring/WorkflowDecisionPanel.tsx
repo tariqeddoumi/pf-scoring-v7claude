@@ -23,10 +23,10 @@ interface WorkflowDecisionPanelProps {
 const RISK_RATINGS = ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'D'];
 
 const DECISION_TYPES = [
-  { value: 'APPROVE', label: 'Approuver', color: 'bg-green-100 border-green-300' },
-  { value: 'APPROVE_WITH_CONDITIONS', label: 'Approuver avec conditions', color: 'bg-blue-100 border-blue-300' },
-  { value: 'CONDITIONAL_APPROVAL', label: 'Approbation conditionnelle', color: 'bg-yellow-100 border-yellow-300' },
-  { value: 'REJECT', label: 'Rejeter', color: 'bg-red-100 border-red-300' }
+  { value: 'APPROVE', label: 'Approuver', color: 'bg-success/10 border-green-300' },
+  { value: 'APPROVE_WITH_CONDITIONS', label: 'Approuver avec conditions', color: 'bg-primary/10 border-blue-300' },
+  { value: 'CONDITIONAL_APPROVAL', label: 'Approbation conditionnelle', color: 'bg-warning/10 border-yellow-300' },
+  { value: 'REJECT', label: 'Rejeter', color: 'bg-destructive/10 border-red-300' }
 ];
 
 export function WorkflowDecisionPanel({
@@ -109,8 +109,8 @@ export function WorkflowDecisionPanel({
           <select
             value={formData.riskRating}
             onChange={(e) => setFormData({ ...formData, riskRating: e.target.value })}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.riskRating ? 'border-red-500' : 'border-border'
+            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
+              errors.riskRating ? 'border-destructive' : 'border-border'
             }`}
           >
             {riskRatings.map((rating) => (
@@ -120,7 +120,7 @@ export function WorkflowDecisionPanel({
             ))}
           </select>
           {errors.riskRating && (
-            <p className="text-red-500 text-xs mt-1">{errors.riskRating}</p>
+            <p className="text-destructive text-xs mt-1">{errors.riskRating}</p>
           )}
         </div>
 
@@ -132,14 +132,14 @@ export function WorkflowDecisionPanel({
           <textarea
             value={formData.justification}
             onChange={(e) => setFormData({ ...formData, justification: e.target.value })}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
-              errors.justification ? 'border-red-500' : 'border-border'
+            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none ${
+              errors.justification ? 'border-destructive' : 'border-border'
             }`}
             rows={4}
             placeholder="Fournir une justification détaillée de la décision..."
           />
           {errors.justification && (
-            <p className="text-red-500 text-xs mt-1">{errors.justification}</p>
+            <p className="text-destructive text-xs mt-1">{errors.justification}</p>
           )}
         </div>
 
@@ -151,7 +151,7 @@ export function WorkflowDecisionPanel({
           <textarea
             value={formData.recommendation || ''}
             onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             rows={3}
             placeholder="Recommandations supplémentaires pour les prochaines étapes..."
           />
@@ -179,7 +179,7 @@ export function WorkflowDecisionPanel({
               <textarea
                 value={formData.conditionsJson || ''}
                 onChange={(e) => setFormData({ ...formData, conditionsJson: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 rows={3}
                 placeholder="Ex: Fournir les états financiers trimestriels&#10;Installer un système de monitoring..."
               />
@@ -188,8 +188,8 @@ export function WorkflowDecisionPanel({
         </div>
 
         {/* Higher Approval */}
-        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
+        <div className="flex items-center gap-2 p-3 bg-primary/10 border border-blue-200 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-primary flex-shrink-0" />
           <label className="flex items-center gap-2 cursor-pointer flex-1">
             <input
               type="checkbox"
@@ -208,7 +208,7 @@ export function WorkflowDecisionPanel({
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-secondary transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 disabled:bg-secondary transition-colors"
           >
             <Send className="w-4 h-4" />
             {isSubmitting || isLoading ? 'Envoi...' : 'Soumettre la décision'}

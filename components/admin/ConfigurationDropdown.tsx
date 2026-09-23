@@ -75,7 +75,7 @@ export function ConfigurationDropdown({
     <div className="space-y-2">
       <label className="block text-sm font-medium text-secondary-foreground">{label}</label>
       <Select value={value || ''} onValueChange={onChange} disabled={disabled || loading}>
-        <SelectTrigger className={error ? 'border-red-500' : ''}>
+        <SelectTrigger className={error ? 'border-destructive' : ''}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -92,8 +92,8 @@ export function ConfigurationDropdown({
         </SelectContent>
       </Select>
       {loading && <p className="text-xs text-muted-foreground">Loading...</p>}
-      {error && <p className="text-xs text-red-500">{error}</p>}
-      {fetchError && <p className="text-xs text-red-500">{fetchError}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {fetchError && <p className="text-xs text-destructive">{fetchError}</p>}
     </div>
   );
 }

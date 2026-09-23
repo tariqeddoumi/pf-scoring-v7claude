@@ -71,11 +71,11 @@ async function getEvaluationNodes(evaluationId: string) {
 function WorkflowHeader({ workflow }: { workflow: any }) {
   const statusColor = {
     DRAFT: 'bg-muted text-foreground',
-    SUBMITTED: 'bg-blue-100 text-blue-800',
-    UNDER_REVIEW: 'bg-yellow-100 text-yellow-800',
+    SUBMITTED: 'bg-primary/10 text-blue-800',
+    UNDER_REVIEW: 'bg-warning/10 text-warning',
     REVIEWED: 'bg-purple-100 text-purple-800',
-    APPROVED: 'bg-green-100 text-green-800',
-    REJECTED: 'bg-red-100 text-red-800'
+    APPROVED: 'bg-success/10 text-success',
+    REJECTED: 'bg-destructive/10 text-destructive'
   };
 
   return (
@@ -221,9 +221,9 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
                           {approval.approvalType}
                         </span>
                         <span className={`text-xs px-2 py-1 rounded font-medium ${
-                          approval.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                          approval.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                          approval.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                          approval.status === 'APPROVED' ? 'bg-success/10 text-success' :
+                          approval.status === 'PENDING' ? 'bg-warning/10 text-warning' :
+                          approval.status === 'REJECTED' ? 'bg-destructive/10 text-destructive' :
                           'bg-muted text-secondary-foreground'
                         }`}>
                           {approval.status}
