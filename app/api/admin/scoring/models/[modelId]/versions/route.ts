@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import { duplicateVersion } from "@/lib/services/scoring/version-duplication";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ modelId: string }> }) {
   return withAdminAuth(req, async () => {
@@ -19,111 +20,62 @@ export async function GET(req: NextRequest, context: { params: Promise<{ modelId
   });
 }
 
+/**
+ * POST /api/admin/scoring/models/{modelId}/versions
+ * Corps : { sourceVersionId?, label?, changeReason? }
+ *
+ * Crée une version par duplication. À défaut de version source explicite, la version
+ * publiée fait foi ; à défaut de version publiée, la plus récente.
+ *
+ * La duplication qui vivait ici recopiait les nœuds, les options et les plages, mais
+ * ni les règles, ni les liaisons de données, et laissait de côté treize colonnes de
+ * nœud — dont « isScored », « scoringMethod » et « scoreMax », qui déterminent
+ * respectivement si un nœud se saisit ou s'agrège, comment il est noté et sur quelle
+ * échelle il est normalisé. Une version ainsi clonée ne notait pas comme son origine.
+ * Elle procédait en outre par créations successives hors transaction : une
+ * interruption laissait un modèle à moitié bâti.
+ */
 export async function POST(req: NextRequest, context: { params: Promise<{ modelId: string }> }) {
   return withAdminAuth(req, async (_, user) => {
     try {
       const { modelId } = await context.params;
       const body = await req.json().catch(() => ({}));
 
-      const lastVersion = await prisma.scoringModelVersion.findFirst({
-        where: { modelId },
-        orderBy: { versionNumber: "desc" },
-        include: {
-          nodes: {
-            include: {
-              options: true,
-              ranges: true,
-            },
+      const source = body.sourceVersionId
+        ? await prisma.scoringModelVersion.findFirst({
+            where: { id: body.sourceVersionId, modelId },
+          })
+        : ((await prisma.scoringModelVersion.findFirst({
+            where: { modelId, isPublished: true },
+          })) ??
+          (await prisma.scoringModelVersion.findFirst({
+            where: { modelId },
+            orderBy: { versionNumber: "desc" },
+          })));
+
+      if (!source) {
+        return validationError([
+          {
+            field: "sourceVersionId",
+            message: "Aucune version à dupliquer pour ce modèle",
           },
-        },
-      });
+        ]);
+      }
 
-      const newVersionNumber = (lastVersion?.versionNumber ?? 0) + 1;
-
-      // Find system/admin user for createdBy
       const adminUser = await prisma.user.findFirst({
         where: { role: "system_admin", isActive: true, deletedAt: null },
         orderBy: { createdAt: "asc" },
       });
-      const createdBy = adminUser?.id ?? user.userId;
 
-      const newVersion = await prisma.scoringModelVersion.create({
-        data: {
-          modelId,
-          versionNumber: newVersionNumber,
-          label: `v${newVersionNumber}`,
-          status: "DRAFT",
-          isPublished: false,
-          changeReason: body.changeReason ?? `Clone de v${lastVersion?.versionNumber ?? 0}`,
-          createdBy,
-        },
+      const resultat = await duplicateVersion({
+        sourceVersionId: source.id,
+        label: body.label,
+        changeReason:
+          body.changeReason ?? `Copie de la version ${source.versionNumber}`,
+        createdBy: adminUser?.id ?? user.userId,
       });
 
-      // Clone nodes + options + ranges from previous version
-      if (lastVersion?.nodes?.length) {
-        const oldToNew = new Map<string, string>();
-
-        // First pass: create all nodes (preserve hierarchy order)
-        const sortedNodes = [...lastVersion.nodes].sort((a, b) => a.depth - b.depth || a.orderIndex - b.orderIndex);
-
-        for (const node of sortedNodes) {
-          const newNode = await prisma.scoringNode.create({
-            data: {
-              versionId: newVersion.id,
-              parentNodeId: node.parentNodeId ? (oldToNew.get(node.parentNodeId) ?? null) : null,
-              nodeType: node.nodeType as any,
-              code: node.code,
-              label: node.label,
-              shortLabel: node.shortLabel,
-              description: node.description,
-              depth: node.depth,
-              orderIndex: node.orderIndex,
-              weight: node.weight,
-              aggregationMethod: node.aggregationMethod as any,
-              answerType: node.answerType as any,
-              isScoringLeaf: node.isScoringLeaf,
-              isTerminal: node.isTerminal,
-              isActive: node.isActive,
-            },
-          });
-          oldToNew.set(node.id, newNode.id);
-
-          // Clone options
-          for (const opt of node.options) {
-            await prisma.scoringNodeOption.create({
-              data: {
-                nodeId: newNode.id,
-                label: opt.label,
-                code: opt.code,
-                value: opt.value,
-                score: opt.score,
-                orderIndex: opt.orderIndex,
-                isActive: opt.isActive,
-                color: opt.color,
-              },
-            });
-          }
-
-          // Clone ranges
-          for (const range of node.ranges) {
-            await prisma.scoringNodeRange.create({
-              data: {
-                nodeId: newNode.id,
-                label: range.label,
-                minValue: range.minValue,
-                maxValue: range.maxValue,
-                minIncluded: range.minIncluded,
-                maxIncluded: range.maxIncluded,
-                score: range.score,
-                orderIndex: range.orderIndex,
-                isActive: range.isActive,
-              },
-            });
-          }
-        }
-      }
-
-      return successResponse(newVersion, { status: 201 });
+      return successResponse(resultat, { status: 201 });
     } catch (error) {
       console.error("[SCORING/VERSIONS] POST error:", error);
       return serverError("Erreur lors de la création de la version");

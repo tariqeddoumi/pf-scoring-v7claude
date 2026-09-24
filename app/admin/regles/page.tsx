@@ -52,7 +52,8 @@ interface Version {
 export default function ReglesPage() {
   const router = useRouter();
   const [regles, setRegles] = useState<Regle[]>([]);
-  const [version, setVersion] = useState<Version | null>(null);
+  const [versions, setVersions] = useState<Version[]>([]);
+  const [versionId, setVersionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState("");
 
@@ -71,16 +72,21 @@ export default function ReglesPage() {
       const resVersions = await apiGet(
         `/api/admin/scoring/models/${modeles[0].id}/versions`
       );
-      const versions: Version[] = (await resVersions.json()).data ?? [];
-      const publiee = versions.find((v) => v.isPublished) ?? versions[0];
-      if (!publiee) {
+      const liste: Version[] = (await resVersions.json()).data ?? [];
+      if (liste.length === 0) {
         setErreur("Ce modèle ne comporte aucune version.");
         return;
       }
-      setVersion(publiee);
+      setVersions(liste);
+
+      // La version publiée fait foi par défaut, mais un brouillon doit pouvoir être
+      // inspecté avant publication : c'est là que se préparent les nouveaux seuils.
+      const choisie =
+        versionId ?? (liste.find((v) => v.isPublished) ?? liste[0]).id;
+      setVersionId(choisie);
 
       const resRegles = await apiGet(
-        `/api/admin/scoring/rules?versionId=${publiee.id}`
+        `/api/admin/scoring/rules?versionId=${choisie}`
       );
       setRegles((await resRegles.json()).data ?? []);
     } catch {
@@ -88,7 +94,7 @@ export default function ReglesPage() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, versionId]);
 
   useEffect(() => {
     charger();
@@ -132,6 +138,11 @@ export default function ReglesPage() {
     return out;
   }, [regles]);
 
+  const versionActive = useMemo(
+    () => versions.find((v) => v.id === versionId) ?? null,
+    [versions, versionId]
+  );
+
   const parType = useMemo(() => {
     const groupes = new Map<string, Regle[]>();
     for (const r of regles) {
@@ -164,9 +175,8 @@ export default function ReglesPage() {
           Règles et seuils rédhibitoires
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Toutes les règles du modèle{" "}
-          {version?.label ?? `version ${version?.versionNumber ?? "?"}`}, quel que soit
-          le critère auquel elles sont rattachées. Les règles s&apos;éditent depuis{" "}
+          Toutes les règles du modèle, quel que soit le critère auquel elles sont
+          rattachées. Elles s&apos;éditent depuis{" "}
           <Link
             href="/admin/scoring-grid-v7pp"
             className="text-primary hover:underline"
@@ -175,6 +185,36 @@ export default function ReglesPage() {
           </Link>
           , sur le critère concerné.
         </p>
+
+        {versions.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <label
+              htmlFor="version-regles"
+              className="text-sm text-muted-foreground"
+            >
+              Version :
+            </label>
+            <select
+              id="version-regles"
+              value={versionId ?? ""}
+              onChange={(e) => setVersionId(e.target.value)}
+              className="px-3 py-1.5 bg-card border border-input rounded text-sm text-foreground"
+            >
+              {versions.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.label ?? `v${v.versionNumber}`}
+                  {v.isPublished ? " — publiée" : ` — ${v.status ?? "brouillon"}`}
+                </option>
+              ))}
+            </select>
+            {versionActive && !versionActive.isPublished && (
+              <span className="text-xs text-warning">
+                Cette version n&apos;est pas publiée : ses règles ne s&apos;appliquent
+                à aucun dossier tant qu&apos;elle ne l&apos;est pas.
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {erreur && (
