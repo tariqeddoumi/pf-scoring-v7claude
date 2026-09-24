@@ -60,17 +60,20 @@ export class EmailService {
     this.fromEmail = process.env.EMAIL_FROM || "noreply@pfscoring.ma";
   }
 
+  /**
+   * Aucun fournisseur d'envoi n'est raccordé.
+   *
+   * Cette méthode renvoyait « true » dès qu'une clé d'API était configurée, sans rien
+   * envoyer : renseigner EMAIL_API_KEY aurait suffi à faire disparaître silencieusement
+   * toutes les notifications de validation et de rejet, en les déclarant délivrées.
+   * Tant qu'un fournisseur n'est pas branché ici, l'échec est annoncé comme tel.
+   */
   async send(to: string, template: EmailTemplate): Promise<boolean> {
-    if (!this.apiKey) {
-      return false;
-    }
-
-    try {
-      // Mock implementation - replace with actual email provider
-      return true;
-    } catch (error) {
-      return false;
-    }
+    console.warn(
+      `[EMAIL] Envoi non effectué vers ${to} (« ${template.subject} ») : ` +
+        "aucun fournisseur d'envoi n'est raccordé au service."
+    );
+    return false;
   }
 
   async sendEvaluationSubmitted(email: string, name: string, evalId: string) {
