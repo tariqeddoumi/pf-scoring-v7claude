@@ -19,6 +19,7 @@ import { LiveScorePanel, type AnswerValue, type ServerScore } from "./LiveScoreP
 import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 import { apiPost, apiPatch } from "@/lib/api-client";
+import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 
 interface EvaluationWorkspaceProps {
   evaluationId: string;
@@ -195,12 +196,15 @@ function NodeInput({
 
 function CriteriaTree({
   node,
+  sommeNiveau,
   depth,
   answers,
   onAnswer,
   expandedAll,
 }: {
   node: QuestionnaireNode;
+  /** Somme des poids de la fratrie : un poids ne se lit que rapporté à elle. */
+  sommeNiveau: number;
   depth: number;
   answers: Record<string, AnswerValue>;
   onAnswer: (nodeId: string, val: AnswerValue) => void;
@@ -283,8 +287,11 @@ function CriteriaTree({
 
         {/* Weight badge */}
         {node.weight !== undefined && node.weight !== null && depth > 0 && (
-          <span className="text-xs text-muted-foreground flex-shrink-0">
-            ×{node.weight}
+          <span
+            className="text-xs text-muted-foreground flex-shrink-0"
+            title={formatPoidsDetail(node.weight, sommeNiveau)}
+          >
+            {formatPart(node.weight, sommeNiveau) ?? `poids ${node.weight}`}
           </span>
         )}
       </div>
@@ -307,6 +314,7 @@ function CriteriaTree({
             <CriteriaTree
               key={child.id}
               node={child}
+              sommeNiveau={sommeFratrie(node.children)}
               depth={depth + 1}
               answers={answers}
               onAnswer={onAnswer}
@@ -681,6 +689,7 @@ export function EvaluationWorkspace({
                       <CriteriaTree
                         key={child.id}
                         node={child}
+                        sommeNiveau={sommeFratrie(currentDomain.children)}
                         depth={0}
                         answers={answers}
                         onAnswer={handleAnswer}

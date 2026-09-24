@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 import type { AnswerValue } from "./LiveScorePanel";
+import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 
 interface EvaluationAccordionViewProps {
   questionnaire: QuestionnaireNode[];
@@ -145,12 +146,15 @@ function NodeInput({
 
 function QuestionNode({
   node,
+  sommeNiveau,
   depth,
   answers,
   onAnswer,
   expandedAll,
 }: {
   node: QuestionnaireNode;
+  /** Somme des poids de la fratrie : un poids ne se lit que rapporté à elle. */
+  sommeNiveau: number;
   depth: number;
   answers: Record<string, AnswerValue>;
   onAnswer: (nodeId: string, val: AnswerValue) => void;
@@ -226,8 +230,11 @@ function QuestionNode({
 
         {/* Weight badge */}
         {node.weight !== undefined && node.weight !== null && depth > 0 && (
-          <span className="text-xs text-muted-foreground flex-shrink-0">
-            ×{node.weight}
+          <span
+            className="text-xs text-muted-foreground flex-shrink-0"
+            title={formatPoidsDetail(node.weight, sommeNiveau)}
+          >
+            {formatPart(node.weight, sommeNiveau) ?? `poids ${node.weight}`}
           </span>
         )}
       </div>
@@ -250,6 +257,7 @@ function QuestionNode({
             <QuestionNode
               key={child.id}
               node={child}
+              sommeNiveau={sommeFratrie(node.children)}
               depth={depth + 1}
               answers={answers}
               onAnswer={onAnswer}
@@ -339,6 +347,7 @@ function DomainAccordion({
               <QuestionNode
                 key={child.id}
                 node={child}
+                sommeNiveau={sommeFratrie(domain.children)}
                 depth={0}
                 answers={answers}
                 onAnswer={onAnswer}

@@ -18,6 +18,7 @@ import OptionModal from "@/components/scoring/OptionModal";
 import RangeModal from "@/components/scoring/RangeModal";
 import { ModelConfigurationPanel } from "@/components/admin/ModelConfigurationPanel";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
+import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 
 interface ScoringOption {
   id: string;
@@ -421,8 +422,15 @@ export default function ScoringBuilderPage() {
                       </span>
                       <span className="text-foreground font-semibold">{domain.label}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Poids: <strong>{((domain.weight ?? 0) * 100).toFixed(0)}%</strong> • {domain.children?.length ?? 0} critères
+                    <div
+                      className="text-xs text-muted-foreground mt-1"
+                      title={formatPoidsDetail(domain.weight, sommeFratrie(questionnaire))}
+                    >
+                      Poids :{" "}
+                      <strong>
+                        {formatPart(domain.weight, sommeFratrie(questionnaire)) ?? "—"}
+                      </strong>{" "}
+                      • {domain.children?.length ?? 0} critères
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">

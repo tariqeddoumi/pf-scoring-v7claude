@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import type { ScoringNode } from "@/lib/types/scoring-grid";
+import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 
 interface NodeTreeProps {
   nodes: ScoringNode[];
@@ -12,6 +13,7 @@ interface NodeTreeProps {
 
 export function NodeTree({ nodes, selectedNodeId, onNodeSelect }: NodeTreeProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const sommeRacines = sommeFratrie(nodes);
 
   const toggleExpand = (nodeId: string) => {
     const newExpanded = new Set(expandedNodes);
@@ -29,6 +31,7 @@ export function NodeTree({ nodes, selectedNodeId, onNodeSelect }: NodeTreeProps)
         <NodeTreeItem
           key={node.id}
           node={node}
+          sommeNiveau={sommeRacines}
           level={0}
           selectedNodeId={selectedNodeId}
           expandedNodes={expandedNodes}
@@ -42,6 +45,8 @@ export function NodeTree({ nodes, selectedNodeId, onNodeSelect }: NodeTreeProps)
 
 interface NodeTreeItemProps {
   node: ScoringNode;
+  /** Somme des poids de la fratrie : le poids seul ne veut rien dire. */
+  sommeNiveau: number;
   level: number;
   selectedNodeId: string | null;
   expandedNodes: Set<string>;
@@ -51,6 +56,7 @@ interface NodeTreeItemProps {
 
 function NodeTreeItem({
   node,
+  sommeNiveau,
   level,
   selectedNodeId,
   expandedNodes,
@@ -58,6 +64,7 @@ function NodeTreeItem({
   onToggleExpand,
 }: NodeTreeItemProps) {
   const hasChildren = node.childNodes && node.childNodes.length > 0;
+  const sommeEnfants = sommeFratrie(node.childNodes);
   const isExpanded = expandedNodes.has(node.id);
   const isSelected = selectedNodeId === node.id;
 
@@ -101,7 +108,12 @@ function NodeTreeItem({
         <span className="text-muted-foreground ml-1">{node.label}</span>
 
         {node.weight !== null && node.weight !== undefined && (
-          <span className="ml-auto text-xs text-warning">{node.weight}%</span>
+          <span
+            className="ml-auto text-xs text-warning"
+            title={formatPoidsDetail(node.weight, sommeNiveau)}
+          >
+            {formatPart(node.weight, sommeNiveau) ?? `poids ${node.weight}`}
+          </span>
         )}
       </div>
 
@@ -111,6 +123,7 @@ function NodeTreeItem({
             <NodeTreeItem
               key={child.id}
               node={child}
+              sommeNiveau={sommeEnfants}
               level={level + 1}
               selectedNodeId={selectedNodeId}
               expandedNodes={expandedNodes}

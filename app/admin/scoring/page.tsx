@@ -14,6 +14,7 @@ import {
   Hash,
 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
+import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 
 interface ScoringNode {
   id: string;
@@ -55,6 +56,8 @@ const DOMAIN_META: Record<string, { icon: string; color: string }> = {
 
 export default function ScoringAdminPage() {
   const [questionnaire, setQuestionnaire] = useState<ScoringNode[]>([]);
+  // Les poids sont relatifs à leur fratrie : leur part n'a de sens que rapportée à ce total.
+  const sommeDomaines = sommeFratrie(questionnaire);
   const [modelVersion, setModelVersion] = useState<ModelVersion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -227,7 +230,12 @@ export default function ScoringAdminPage() {
                     </div>
                     <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground">
                       <span>{criteriaCount} critères</span>
-                      <span>Poids : <strong className="text-secondary-foreground">{((domain.weight ?? 0) * 100).toFixed(0)}%</strong></span>
+                      <span title={formatPoidsDetail(domain.weight, sommeDomaines)}>
+                        Poids :{" "}
+                        <strong className="text-secondary-foreground">
+                          {formatPart(domain.weight, sommeDomaines) ?? "—"}
+                        </strong>
+                      </span>
                     </div>
                   </div>
                   {isExpanded ? (
@@ -276,7 +284,10 @@ export default function ScoringAdminPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-3 flex-shrink-0 text-xs text-muted-foreground mt-0.5">
-                              <span>Poids {((criterion.weight ?? 0) * 100).toFixed(0)}%</span>
+                              <span title={formatPoidsDetail(criterion.weight, sommeFratrie(domain.children))}>
+                                Poids{" "}
+                                {formatPart(criterion.weight, sommeFratrie(domain.children)) ?? "—"}
+                              </span>
                               {hasDetails && (
                                 isExpCrit
                                   ? <ChevronDown size={14} />
@@ -362,10 +373,10 @@ export default function ScoringAdminPage() {
       {/* Footer summary */}
       {questionnaire.length > 0 && (
         <div className="rounded-xl border border-border bg-card/50 p-4 text-xs text-muted-foreground flex flex-wrap gap-6">
-          <span>
-            Total poids :{" "}
+          <span title="Les poids sont relatifs : le moteur divise chacun par ce total.">
+            Total des poids de domaine :{" "}
             <strong className="text-secondary-foreground">
-              {(questionnaire.reduce((s, d) => s + (d.weight ?? 0), 0) * 100).toFixed(0)}%
+              {String(sommeDomaines).replace(".", ",")}
             </strong>
           </span>
           <span>
