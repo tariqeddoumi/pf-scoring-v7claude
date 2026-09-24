@@ -1,6 +1,8 @@
 import {
+  CHAMPS_CONCRETS,
   CHAMPS_CONDITION,
   buildConditionContext,
+  buildCriteresContext,
   champReconnu,
 } from "@/lib/services/scoring/condition-context";
 import { evaluateCondition } from "@/lib/services/scoring/condition-evaluator";
@@ -76,6 +78,89 @@ describe("buildConditionContext", () => {
   });
 });
 
+describe("buildCriteresContext", () => {
+  const catalogue = () =>
+    buildCriteresContext({
+      nodes: [
+        { id: "n1", code: "D7_SC3_SSC1" },
+        { id: "n2", code: "D1_SC1_SSC1" },
+        { id: "n3", code: "D3_SC2_SSC1" },
+      ],
+      nodeScores: new Map([
+        ["n1", { rawScore: 30 }],
+        ["n2", { rawScore: 80 }],
+      ]),
+      answersByNode: new Map<string, any>([
+        ["n1", { valueNumber: 1.05 }],
+        ["n2", { valueString: "OPT_A" }],
+      ]),
+      optionsByNode: new Map<string, any[]>([
+        ["n2", [{ value: "OPT_A", label: "Plus de 10 ans d'expérience" }]],
+      ]),
+    });
+
+  test("un seuil s'écrit contre le code du critère, pas contre une colonne héritée", () => {
+    const ctx = buildConditionContext({
+      score: 0,
+      node: noeud,
+      project: {},
+      evaluation: {},
+      malusTotal: 0,
+      criteres: catalogue(),
+    });
+    expect(
+      evaluateCondition("criteres.D7_SC3_SSC1.valeur < 1.1", ctx).triggered
+    ).toBe(true);
+  });
+
+  test("expose le libellé de l'option retenue, pas son identifiant", () => {
+    const c = catalogue();
+    expect(c.D1_SC1_SSC1.option).toBe("Plus de 10 ans d'expérience");
+    expect(c.D1_SC1_SSC1.valeur).toBe("OPT_A");
+  });
+
+  test("expose le score de chaque critère noté", () => {
+    expect(catalogue().D7_SC3_SSC1.score).toBe(30);
+  });
+
+  test("distingue un critère non répondu d'un critère répondu à zéro", () => {
+    const c = catalogue();
+    expect(c.D3_SC2_SSC1.repondu).toBe(false);
+    expect(c.D3_SC2_SSC1.valeur).toBeNull();
+    expect(c.D7_SC3_SSC1.repondu).toBe(true);
+  });
+
+  test("une condition sur un critère non répondu n'est pas évaluable", () => {
+    const ctx = buildConditionContext({
+      score: 0,
+      node: noeud,
+      project: {},
+      evaluation: {},
+      malusTotal: 0,
+      criteres: catalogue(),
+    });
+    // Le critère existe mais n'a pas de valeur : mieux vaut un défaut signalé qu'une
+    // règle rédhibitoire déclenchée sur une absence de réponse.
+    expect(
+      evaluateCondition("criteres.D3_SC2_SSC1.valeur < 1.1", ctx).evaluated
+    ).toBe(false);
+  });
+
+  test("un code de critère inexistant rend la condition non évaluable", () => {
+    const ctx = buildConditionContext({
+      score: 0,
+      node: noeud,
+      project: {},
+      evaluation: {},
+      malusTotal: 0,
+      criteres: catalogue(),
+    });
+    const r = evaluateCondition("criteres.INEXISTANT.valeur < 1", ctx);
+    expect(r.evaluated).toBe(false);
+    expect(r.reason).toMatch(/absent du contexte/);
+  });
+});
+
 describe("champReconnu", () => {
   test("accepte tous les champs du catalogue", () => {
     for (const c of CHAMPS_CONDITION) {
@@ -113,7 +198,7 @@ describe("cohérence du catalogue", () => {
       capaciteInstallee: 120,
     });
 
-    for (const champ of CHAMPS_CONDITION) {
+    for (const champ of CHAMPS_CONCRETS) {
       const valeur = champ.path
         .split(".")
         .reduce<unknown>(

@@ -20,9 +20,16 @@ import {
   validateConditionExpression,
 } from "@/lib/services/scoring/condition-evaluator";
 import {
-  CHAMPS_CONDITION,
+  CHAMPS_CONCRETS,
   champReconnu,
 } from "@/lib/services/scoring/condition-context";
+
+interface CritereModele {
+  id: string;
+  code: string;
+  label: string;
+  depth: number;
+}
 
 interface Rule {
   id: string;
@@ -91,6 +98,8 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Brouillon>(BROUILLON_VIDE);
   const [erreursServeur, setErreursServeur] = useState<string[]>([]);
+  const [criteres, setCriteres] = useState<CritereModele[]>([]);
+  const [rechercheCritere, setRechercheCritere] = useState("");
 
   const loadRules = useCallback(async () => {
     try {
@@ -112,6 +121,38 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
   useEffect(() => {
     loadRules();
   }, [loadRules]);
+
+  // Les critères servent à composer les conditions : une règle peut interroger
+  // n'importe lequel d'entre eux, pas seulement celui auquel elle est rattachée.
+  useEffect(() => {
+    let annule = false;
+    (async () => {
+      try {
+        const res = await apiGet(
+          `/api/admin/scoring/nodes?versionId=${versionId}&format=light`
+        );
+        if (!res.ok || annule) return;
+        const data = await res.json();
+        if (!annule) setCriteres(data.data ?? []);
+      } catch (e) {
+        console.error("Load criteria error:", e);
+      }
+    })();
+    return () => {
+      annule = true;
+    };
+  }, [versionId]);
+
+  const criteresFiltres = useMemo(() => {
+    const q = rechercheCritere.trim().toLowerCase();
+    const liste = q
+      ? criteres.filter(
+          (c) =>
+            c.code.toLowerCase().includes(q) || c.label.toLowerCase().includes(q)
+        )
+      : criteres;
+    return liste.slice(0, 40);
+  }, [criteres, rechercheCritere]);
 
   const condition = useMemo(
     () => validateConditionExpression(formData.conditionExpression),
@@ -385,10 +426,53 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
 
             <details className="mt-2">
               <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                Champs interrogeables ({CHAMPS_CONDITION.length})
+                Critères du modèle ({criteres.length})
+              </summary>
+              <div className="mt-2 space-y-1 border border-border rounded p-2">
+                <input
+                  type="text"
+                  value={rechercheCritere}
+                  onChange={(e) => setRechercheCritere(e.target.value)}
+                  placeholder="Rechercher un critère…"
+                  className="w-full px-2 py-1 bg-card border border-input rounded text-foreground text-xs"
+                />
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {criteresFiltres.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() =>
+                        maj(
+                          "conditionExpression",
+                          `${formData.conditionExpression}${formData.conditionExpression ? " " : ""}criteres.${c.code}.valeur`
+                        )
+                      }
+                      className="block w-full text-left text-xs hover:bg-accent rounded px-1 py-0.5"
+                      style={{ paddingLeft: `${4 + c.depth * 10}px` }}
+                    >
+                      <code className="text-secondary-foreground">{c.code}</code>
+                      <span className="text-muted-foreground"> — {c.label}</span>
+                    </button>
+                  ))}
+                  {criteresFiltres.length === 0 && (
+                    <p className="text-xs text-muted-foreground px-1">
+                      Aucun critère ne correspond.
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground px-1">
+                  Suffixes : <code>.valeur</code>, <code>.option</code>,{" "}
+                  <code>.score</code>, <code>.repondu</code>.
+                </p>
+              </div>
+            </details>
+
+            <details className="mt-2">
+              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                Autres champs interrogeables ({CHAMPS_CONCRETS.length})
               </summary>
               <div className="mt-2 max-h-40 overflow-y-auto space-y-1 border border-border rounded p-2">
-                {CHAMPS_CONDITION.map((c) => (
+                {CHAMPS_CONCRETS.map((c) => (
                   <button
                     key={c.path}
                     type="button"

@@ -11,7 +11,7 @@ import {
   RatingSource,
   resolveRatingFromBands,
 } from "./rating-scale";
-import { buildConditionContext } from "./condition-context";
+import { buildConditionContext, buildCriteresContext } from "./condition-context";
 import { actionRegle, bloquePublication, estBloquante } from "./rule-vocabulary";
 import { getRatingScales } from "@/lib/services/scoring-configuration-service";
 import {
@@ -169,7 +169,7 @@ export class ScoringEngineV8 {
     const effectiveLeafIds = new Set<string>();
 
     const nodeScores = new Map<string, NodeResult>();
-    let triggeredRuleIds: string[] = [];
+    const triggeredRuleIds: string[] = [];
     let malusTotal = 0;
     const blockingRuleCodes: string[] = [];
     const ruleDiagnostics: RuleDiagnostic[] = [];
@@ -254,14 +254,49 @@ export class ScoringEngineV8 {
       const weight = node.weight ?? null;
       const weightedScore = weight !== null ? rawScore * weight : rawScore;
 
-      const rules = rulesByNode.get(node.id) || [];
+      // Les règles sont évaluées après la traversée, une fois tous les nœuds notés :
+      // une condition peut ainsi interroger n'importe quel critère du modèle, et pas
+      // seulement ceux que l'ordre de parcours a déjà rencontrés.
       const ruleImpacts: RuleImpact[] = [];
+
+      const normalizedScore = AggregationEngine.normalize(rawScore, node.scoreMax || 100);
+
+      nodeScores.set(node.id, {
+        nodeId: node.id,
+        code: node.code,
+        label: node.label,
+        depth: node.depth,
+        rawScore,
+        weightedScore,
+        normalizedScore,
+        weight: node.weight,
+        aggregationMethod: node.aggregationMethod,
+        ruleImpacts,
+        explanation,
+      });
+    });
+
+    // --- Seconde passe : évaluation des règles ---------------------------------
+    // Le contexte est construit une fois, complet, et partagé par toutes les règles.
+    const criteres = buildCriteresContext({
+      nodes: Array.from(tree.nodesById.values()),
+      nodeScores,
+      answersByNode,
+      optionsByNode,
+    });
+
+    for (const [nodeId, rules] of rulesByNode) {
+      const resultat = nodeScores.get(nodeId);
+      const node = tree.nodesById.get(nodeId);
+      if (!resultat || !node) continue;
+
       const conditionCtx: ConditionContext = buildConditionContext({
-        score: rawScore,
+        score: resultat.rawScore,
         node: { code: node.code, label: node.label, depth: node.depth },
         project: evaluation.project as Record<string, unknown> | null,
         evaluation: evaluation as unknown as Record<string, unknown>,
         malusTotal,
+        criteres,
       });
 
       for (const rule of rules) {
@@ -284,7 +319,7 @@ export class ScoringEngineV8 {
           ? (rule.penaltyValue ?? 0)
           : 0;
 
-        ruleImpacts.push({
+        resultat.ruleImpacts.push({
           ruleId: rule.id,
           ruleCode: rule.code,
           ruleType: rule.ruleType,
@@ -300,23 +335,7 @@ export class ScoringEngineV8 {
         if (isBlocking) blockingRuleCodes.push(rule.code);
         if (bloquePublication(rule)) publicationBlocked = true;
       }
-
-      const normalizedScore = AggregationEngine.normalize(rawScore, node.scoreMax || 100);
-
-      nodeScores.set(node.id, {
-        nodeId: node.id,
-        code: node.code,
-        label: node.label,
-        depth: node.depth,
-        rawScore,
-        weightedScore,
-        normalizedScore,
-        weight: node.weight,
-        aggregationMethod: node.aggregationMethod,
-        ruleImpacts,
-        explanation,
-      });
-    });
+    }
 
     const rootResults: NodeResult[] = [];
     for (const rootId of tree.rootNodeIds) {

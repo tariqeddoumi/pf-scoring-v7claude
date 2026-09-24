@@ -24,6 +24,8 @@ export interface ChampCondition {
   description: string;
   /** Champ calculé par le moteur plutôt que lu tel quel en base. */
   derive?: boolean;
+  /** Le chemin comporte un <CODE> à remplacer : il ne s'écrit pas tel quel. */
+  gabarit?: boolean;
 }
 
 export const CHAMPS_CONDITION: ChampCondition[] = [
@@ -140,6 +142,42 @@ export const CHAMPS_CONDITION: ChampCondition[] = [
     derive: true,
   },
 
+  // — Critères du modèle, adressés par leur code —
+  {
+    path: "criteres.<CODE>.valeur",
+    label: "Valeur saisie d'un critère",
+    type: "nombre",
+    description:
+      "Réponse saisie pour le critère dont on indique le code, par exemple " +
+      "« criteres.D7_SC3_SSC1.valeur ». Remplacer <CODE> par le code du critère.",
+    gabarit: true,
+  },
+  {
+    path: "criteres.<CODE>.option",
+    label: "Option retenue d'un critère",
+    type: "texte",
+    description:
+      "Libellé de l'option choisie pour un critère à choix, par exemple " +
+      "« criteres.D7_SC3_SSC1.option ».",
+    gabarit: true,
+  },
+  {
+    path: "criteres.<CODE>.score",
+    label: "Score d'un critère",
+    type: "nombre",
+    description:
+      "Score obtenu par le critère indiqué. Tous les critères sont notés avant " +
+      "l'évaluation des règles : l'ordre de l'arbre n'a pas d'incidence.",
+    gabarit: true,
+  },
+  {
+    path: "criteres.<CODE>.repondu",
+    label: "Critère renseigné",
+    type: "booleen",
+    description: "Vrai si le critère a reçu une réponse.",
+    gabarit: true,
+  },
+
   // — Évaluation en cours —
   {
     path: "evaluation.status",
@@ -155,12 +193,91 @@ export const CHAMPS_CONDITION: ChampCondition[] = [
   },
 ];
 
+/**
+ * Un critère du modèle, tel qu'une condition peut l'interroger.
+ *
+ * Les seuils métier du Project Finance — DSCR, part de fonds propres, levier — sont
+ * des propriétés du dossier, pas des colonnes de la table projet. Les adresser par le
+ * code du critère évite d'avoir à deviner quelle colonne héritée porte quoi, et rend
+ * exprimable tout seuil dès que le critère correspondant existe au modèle.
+ */
+export interface CritereContext {
+  /** Valeur saisie, quel que soit son type (nombre, texte, booléen). */
+  valeur: string | number | boolean | null;
+  /** Libellé de l'option retenue, pour les critères à choix. */
+  option: string | null;
+  /** Score obtenu par le critère. */
+  score: number | null;
+  /** Le critère a-t-il reçu une réponse ? */
+  repondu: boolean;
+}
+
+/**
+ * Construit le répertoire des critères, indexé par code.
+ *
+ * Il est bâti après le calcul de tous les nœuds : une condition posée sur un domaine
+ * peut donc interroger un sous-critère, et réciproquement, sans dépendre de l'ordre
+ * de parcours de l'arbre.
+ */
+export function buildCriteresContext(input: {
+  nodes: { id: string; code: string }[];
+  nodeScores: Map<string, { rawScore: number }>;
+  answersByNode: Map<
+    string,
+    {
+      valueString?: string | null;
+      valueNumber?: number | null;
+      valueBoolean?: boolean | null;
+    }
+  >;
+  optionsByNode: Map<
+    string,
+    { value?: string | null; code?: string | null; label?: string | null }[]
+  >;
+}): Record<string, CritereContext> {
+  const out: Record<string, CritereContext> = {};
+
+  for (const node of input.nodes) {
+    const reponse = input.answersByNode.get(node.id);
+    const valeur =
+      reponse?.valueNumber ?? reponse?.valueBoolean ?? reponse?.valueString ?? null;
+
+    let option: string | null = null;
+    if (reponse?.valueString) {
+      const choix = (input.optionsByNode.get(node.id) ?? []).find(
+        (o) => o.value === reponse.valueString || o.code === reponse.valueString
+      );
+      option = choix?.label ?? reponse.valueString;
+    }
+
+    out[node.code] = {
+      valeur,
+      option,
+      score: input.nodeScores.get(node.id)?.rawScore ?? null,
+      repondu: reponse !== undefined,
+    };
+  }
+
+  return out;
+}
+
 export function champCondition(path: string): ChampCondition | undefined {
   return CHAMPS_CONDITION.find((c) => c.path === path);
 }
 
+/** Chemins qui s'écrivent tels quels, gabarits exclus. */
+export const CHAMPS_CONCRETS = CHAMPS_CONDITION.filter((c) => !c.gabarit);
+
 /** Racines acceptées : tout ce qui commence par l'une d'elles est interrogeable. */
-const RACINES = ["score", "node", "projet", "ratios", "evaluation", "project"];
+const RACINES = [
+  "score",
+  "node",
+  "projet",
+  "ratios",
+  "evaluation",
+  "project",
+  "criteres",
+];
 
 /**
  * Le champ figure-t-il au catalogue, ou du moins sous une racine connue ?
@@ -196,6 +313,7 @@ export function buildConditionContext(input: {
   project: Record<string, unknown> | null | undefined;
   evaluation: Record<string, unknown>;
   malusTotal: number;
+  criteres?: Record<string, CritereContext>;
 }): ConditionContext {
   const projet = (input.project ?? {}) as Record<string, unknown>;
 
@@ -204,6 +322,7 @@ export function buildConditionContext(input: {
     node: input.node,
     projet,
     project: projet,
+    criteres: input.criteres ?? {},
     ratios: {
       apportPct: pourcentage(projet.apportPropre, projet.coutTotal),
       levierPct: pourcentage(projet.financement, projet.coutTotal),
