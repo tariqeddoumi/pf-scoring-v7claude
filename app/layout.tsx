@@ -4,9 +4,6 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Footer } from "@/components/layout/Footer";
 import { EvaluationProvider } from "@/lib/evaluation-context";
 import { UserProvider } from "@/lib/user-context";
-import { AlertProvider } from "@/lib/alert-context";
-import { CommentProvider } from "@/lib/comments-context";
-import { DocumentProvider } from "@/lib/documents-context";
 import { DashboardConfigProvider } from "@/lib/dashboard-config-context";
 import { ReactQueryProvider } from "@/lib/react-query-provider";
 import { AppConfigProvider } from "@/components/providers/app-config-provider";
@@ -34,36 +31,30 @@ export default async function RootLayout({
         <AppConfigProvider initial={config}>
           <ThemeWrapper>
             <ReactQueryProvider>
-              <AlertProvider>
-                <CommentProvider>
-                  <DocumentProvider>
-                    <DashboardConfigProvider>
-                      <UserProvider>
-                        <EvaluationProvider>
-                          {/* Navbar */}
-                          <Navbar />
+              <DashboardConfigProvider>
+                <UserProvider>
+                  <EvaluationProvider>
+                    {/* Navbar */}
+                    <Navbar />
 
-                          {/* Main Layout with Sidebar */}
-                          <div className="flex min-h-[calc(100vh-64px)]">
-                            {/* Sidebar */}
-                            <Sidebar />
+                    {/* Main Layout with Sidebar */}
+                    <div className="flex min-h-[calc(100vh-64px)]">
+                      {/* Sidebar */}
+                      <Sidebar />
 
-                            {/* Main Content */}
-                            <main className="flex-1 flex flex-col w-full md:w-auto">
-                              <div className="flex-1 p-3 md:p-6 max-w-7xl w-full mx-auto">
-                                {children}
-                              </div>
+                      {/* Main Content */}
+                      <main className="flex-1 flex flex-col w-full md:w-auto">
+                        <div className="flex-1 p-3 md:p-6 max-w-7xl w-full mx-auto">
+                          {children}
+                        </div>
 
-                              {/* Footer */}
-                              <Footer />
-                            </main>
-                          </div>
-                        </EvaluationProvider>
-                      </UserProvider>
-                    </DashboardConfigProvider>
-                  </DocumentProvider>
-                </CommentProvider>
-              </AlertProvider>
+                        {/* Footer */}
+                        <Footer />
+                      </main>
+                    </div>
+                  </EvaluationProvider>
+                </UserProvider>
+              </DashboardConfigProvider>
             </ReactQueryProvider>
           </ThemeWrapper>
         </AppConfigProvider>

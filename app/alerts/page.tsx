@@ -1,144 +1,176 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { AlertCircle, ArrowRight, CheckCircle, Info, Loader2 } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
+import { Card } from "@/components/ui/card";
 import {
-  AlertCircle,
-  CheckCircle,
-  Info,
-  Trash2,
-  ArrowRight,
-} from "lucide-react";
-import { useAlerts } from "@/lib/alert-context";
+  LIBELLES_SEVERITE,
+  LIBELLES_TYPE,
+  type Alerte,
+  type SeveriteAlerte,
+} from "@/lib/services/alert-derivation";
 
+const STYLE_SEVERITE: Record<SeveriteAlerte, string> = {
+  critique: "border-destructive/50 bg-destructive/10",
+  vigilance: "border-warning/50 bg-warning/10",
+  information: "border-ring/50 bg-primary/10",
+};
+
+function IconeSeverite({ severite }: { severite: SeveriteAlerte }) {
+  if (severite === "critique")
+    return <AlertCircle className="text-destructive shrink-0" size={20} />;
+  if (severite === "vigilance")
+    return <AlertCircle className="text-warning shrink-0" size={20} />;
+  return <Info className="text-primary shrink-0" size={20} />;
+}
+
+/**
+ * Alertes du portefeuille.
+ *
+ * L'écran affichait quatre alertes fabriquées, nommant des projets inexistants avec
+ * des ratios inventés. Les alertes sont désormais dérivées des évaluations réellement
+ * calculées. Elles ne se suppriment ni ne se marquent comme lues : une alerte n'est
+ * pas un message, c'est l'état d'un dossier — elle disparaît quand la condition qui
+ * l'a produite cesse, et écarter d'un clic un seuil rédhibitoire n'aurait aucun sens.
+ */
 export default function AlertsPage() {
-  const { alerts, unreadCount, markAsRead, markAllAsRead, deleteAlert } =
-    useAlerts();
+  const [alertes, setAlertes] = useState<Alerte[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [erreur, setErreur] = useState("");
+  const [filtre, setFiltre] = useState<SeveriteAlerte | "toutes">("toutes");
 
-  const getSeverityColor = (severity: string) => {
-    const colors: Record<string, string> = {
-      critical: "border-destructive/50 bg-destructive/10",
-      warning: "border-yellow-500/50 bg-warning/10",
-      info: "border-ring/50 bg-primary/10",
-    };
-    return colors[severity] || "border-input bg-muted";
-  };
+  const charger = useCallback(async () => {
+    try {
+      const res = await apiGet("/api/alerts");
+      if (!res.ok) {
+        const corps = await res.json().catch(() => ({}));
+        throw new Error(corps.error ?? "Chargement impossible.");
+      }
+      setAlertes((await res.json()).data ?? []);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Chargement impossible.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const getSeverityIcon = (severity: string) => {
-    const icons: Record<string, React.ReactNode> = {
-      critical: <AlertCircle className="text-destructive" size={20} />,
-      warning: <AlertCircle className="text-warning" size={20} />,
-      info: <Info className="text-primary" size={20} />,
-    };
-    return icons[severity] || <Info size={20} />;
-  };
+  useEffect(() => {
+    charger();
+  }, [charger]);
 
-  const getTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      score_low: "Score Faible",
-      nogo_triggered: "NO-GO Déclenché",
-      dscr_breach: "Breache DSCR",
-      equity_low: "Equity Faible",
-      deadline: "Deadline",
-      document_missing: "Document Manquant",
-    };
-    return labels[type] || type;
-  };
+  const parSeverite = useMemo(
+    () => ({
+      critique: alertes.filter((a) => a.severite === "critique").length,
+      vigilance: alertes.filter((a) => a.severite === "vigilance").length,
+      information: alertes.filter((a) => a.severite === "information").length,
+    }),
+    [alertes]
+  );
 
-  const criticalCount = alerts.filter((a) => a.severity === "critical").length;
-  const warningCount = alerts.filter((a) => a.severity === "warning").length;
+  const visibles = useMemo(
+    () => (filtre === "toutes" ? alertes : alertes.filter((a) => a.severite === filtre)),
+    [alertes, filtre]
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="animate-spin text-primary" size={36} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Alertes & Notifications
-          </h1>
-          <p className="text-muted-foreground mt-2">Gerez vos alertes système</p>
-        </div>
-        {unreadCount > 0 && (
-          <button
-            onClick={markAllAsRead}
-            className="bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
-          >
-            Marquer tout comme lu
-          </button>
-        )}
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Alertes</h1>
+        <p className="text-muted-foreground mt-2">
+          Conditions relevées sur les évaluations calculées. Une alerte disparaît
+          d&apos;elle-même lorsque la situation qui l&apos;a produite est corrigée.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card
-          label="Total Alertes"
-          value={alerts.length.toString()}
-          icon="🔔"
+      {erreur && (
+        <Card className="border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+          {erreur}
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <BoutonFiltre
+          actif={filtre === "toutes"}
+          onClick={() => setFiltre("toutes")}
+          label="Toutes"
+          valeur={alertes.length}
         />
-        <Card label="Non Lues" value={unreadCount.toString()} icon="⚠️" />
-        <Card label="Critiques" value={criticalCount.toString()} icon="🔴" />
-        <Card
-          label="Avertissements"
-          value={warningCount.toString()}
-          icon="🟡"
-        />
+        {(["critique", "vigilance", "information"] as SeveriteAlerte[]).map((s) => (
+          <BoutonFiltre
+            key={s}
+            actif={filtre === s}
+            onClick={() => setFiltre(s)}
+            label={LIBELLES_SEVERITE[s]}
+            valeur={parSeverite[s]}
+          />
+        ))}
       </div>
 
       <div className="space-y-3">
-        {alerts.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card p-8 text-center">
+        {visibles.length === 0 ? (
+          <Card className="p-8 text-center">
             <CheckCircle className="mx-auto text-success mb-3" size={32} />
-            <p className="text-foreground font-semibold">Aucune alerte</p>
-            <p className="text-muted-foreground text-sm mt-1">Vous êtes à jour!</p>
-          </div>
+            <p className="text-foreground font-semibold">
+              {alertes.length === 0
+                ? "Aucune alerte"
+                : "Aucune alerte de ce niveau"}
+            </p>
+            <p className="text-muted-foreground text-sm mt-1">
+              {alertes.length === 0
+                ? "Aucune évaluation calculée ne présente de condition à signaler."
+                : "Changez de filtre pour voir les autres."}
+            </p>
+          </Card>
         ) : (
-          alerts.map((alert) => (
+          visibles.map((alerte) => (
             <div
-              key={alert.id}
-              className={`rounded-lg border p-4 transition-all ${getSeverityColor(alert.severity)} ${
-                !alert.read ? "ring-2 ring-cyan-500" : ""
-              }`}
+              key={alerte.id}
+              className={`rounded-lg border p-4 ${STYLE_SEVERITE[alerte.severite]}`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4 flex-1">
-                  {getSeverityIcon(alert.severity)}
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <IconeSeverite severite={alerte.severite} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-2">
                       <span className="font-semibold text-foreground">
-                        {alert.projectName}
+                        {alerte.titre}
                       </span>
-                      {!alert.read && (
-                        <span className="w-2 h-2 bg-cyan-400 rounded-full"></span>
-                      )}
+                      <span className="text-sm text-muted-foreground truncate">
+                        {alerte.projectName}
+                      </span>
                     </div>
-                    <p className="text-sm text-secondary-foreground">{alert.message}</p>
-                    <div className="flex items-center space-x-2 mt-2 text-xs text-muted-foreground">
-                      <span className="bg-muted px-2 py-1 rounded">
-                        {getTypeLabel(alert.type)}
+                    <p className="text-sm text-secondary-foreground mt-1">
+                      {alerte.message}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
+                      <span className="bg-muted px-2 py-0.5 rounded">
+                        {LIBELLES_TYPE[alerte.type]}
                       </span>
                       <span>
-                        {new Date(alert.createdAt).toLocaleString("fr-FR")}
+                        Dernier calcul :{" "}
+                        {new Date(alerte.date).toLocaleString("fr-FR")}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  {alert.actionUrl && (
-                    <Link
-                      href={alert.actionUrl}
-                      className="p-2 text-primary hover:bg-accent rounded-lg transition-colors"
-                    >
-                      <ArrowRight size={18} />
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (!alert.read) markAsRead(alert.id);
-                      deleteAlert(alert.id);
-                    }}
-                    className="p-2 text-destructive hover:bg-accent rounded-lg transition-colors"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
+                <Link
+                  href={alerte.lienAction}
+                  className="p-2 text-primary hover:bg-accent rounded-lg transition-colors shrink-0"
+                  aria-label={`Ouvrir l'évaluation — ${alerte.titre}`}
+                >
+                  <ArrowRight size={18} />
+                </Link>
               </div>
             </div>
           ))
@@ -148,22 +180,29 @@ export default function AlertsPage() {
   );
 }
 
-function Card({
+function BoutonFiltre({
+  actif,
+  onClick,
   label,
-  value,
-  icon,
+  valeur,
 }: {
+  actif: boolean;
+  onClick: () => void;
   label: string;
-  value: string;
-  icon: string;
+  valeur: number;
 }) {
   return (
-    <div className="rounded-lg bg-gradient-to-br from-background to-muted border border-border p-6">
-      <p className="text-sm text-muted-foreground mb-2">{label}</p>
-      <div className="flex items-end justify-between">
-        <p className="text-3xl font-bold text-foreground">{value}</p>
-        <span className="text-3xl">{icon}</span>
-      </div>
-    </div>
+    <button
+      onClick={onClick}
+      aria-pressed={actif}
+      className={`rounded-lg border p-4 text-left transition-colors ${
+        actif
+          ? "border-primary bg-primary/10"
+          : "border-border bg-card hover:bg-accent"
+      }`}
+    >
+      <p className="text-sm text-muted-foreground mb-1">{label}</p>
+      <p className="text-2xl font-bold text-foreground">{valeur}</p>
+    </button>
   );
 }
