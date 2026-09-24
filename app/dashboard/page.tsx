@@ -10,6 +10,7 @@ import {
   PieChart,
   Activity,
   ArrowRight,
+  Sliders,
 } from "lucide-react";
 import { ratingBadgeClass, ratingBarClass } from "@/lib/score-colors";
 
@@ -221,11 +222,22 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
-        <p className="text-muted-foreground mt-2">
-          Vue d&apos;ensemble du portefeuille de projets
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
+          <p className="text-muted-foreground mt-2">
+            Vue d&apos;ensemble du portefeuille de projets
+          </p>
+        </div>
+        {/* La personnalisation occupait une entrée de menu à part entière, au même
+            rang que les dossiers ; sa place est sur l'écran qu'elle configure. */}
+        <Link
+          href="/dashboard-config"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-secondary-foreground hover:text-foreground border border-input rounded-lg hover:bg-accent transition-colors"
+        >
+          <Sliders size={16} />
+          Personnaliser
+        </Link>
       </div>
 
       {error && (
