@@ -153,8 +153,14 @@ export class ScoringEngineV8 {
       where: { versionId: evaluation.modelVersionId, isActive: true },
     });
     const rulesByNode = new Map<string, typeof allRules>();
+    const reglesOrphelines: typeof allRules = [];
     for (const rule of allRules) {
-      if (!rule.nodeId) continue;
+      // Une règle sans critère de rattachement était écartée sans un mot : active en
+      // base, visible à l'administration, et jamais évaluée.
+      if (!rule.nodeId) {
+        reglesOrphelines.push(rule);
+        continue;
+      }
       const list = rulesByNode.get(rule.nodeId) || [];
       list.push(rule);
       rulesByNode.set(rule.nodeId, list);
@@ -277,6 +283,17 @@ export class ScoringEngineV8 {
     });
 
     // --- Seconde passe : évaluation des règles ---------------------------------
+    for (const rule of reglesOrphelines) {
+      ruleDiagnostics.push({
+        ruleId: rule.id,
+        ruleCode: rule.code,
+        nodeCode: "—",
+        expression: rule.conditionExpression ?? "",
+        reason:
+          "règle rattachée à aucun critère : le moteur ne sait pas quand l'évaluer",
+      });
+    }
+
     // Le contexte est construit une fois, complet, et partagé par toutes les règles.
     const criteres = buildCriteresContext({
       nodes: Array.from(tree.nodesById.values()),
