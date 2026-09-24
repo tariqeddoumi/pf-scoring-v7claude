@@ -11,6 +11,7 @@ import {
   RatingSource,
   resolveRatingFromBands,
 } from "./rating-scale";
+import { buildConditionContext } from "./condition-context";
 import { actionRegle, bloquePublication, estBloquante } from "./rule-vocabulary";
 import { getRatingScales } from "@/lib/services/scoring-configuration-service";
 import {
@@ -255,12 +256,13 @@ export class ScoringEngineV8 {
 
       const rules = rulesByNode.get(node.id) || [];
       const ruleImpacts: RuleImpact[] = [];
-      const conditionCtx: ConditionContext = {
+      const conditionCtx: ConditionContext = buildConditionContext({
         score: rawScore,
         node: { code: node.code, label: node.label, depth: node.depth },
-        project: (evaluation.project ?? {}) as Record<string, unknown>,
+        project: evaluation.project as Record<string, unknown> | null,
         evaluation: evaluation as unknown as Record<string, unknown>,
-      };
+        malusTotal,
+      });
 
       for (const rule of rules) {
         const verdict = evaluateCondition(rule.conditionExpression, conditionCtx);

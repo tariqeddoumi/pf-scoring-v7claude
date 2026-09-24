@@ -45,6 +45,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
+    id: "regles",
+    title: "Règles et seuils rédhibitoires ★",
+    description:
+      "Vue d'ensemble des règles du modèle, dont les seuils NO-GO, et des règles sans effet",
+    href: "/admin/regles",
+    icon: "🚫",
+    requiredRole: "system_admin",
+  },
+  {
     id: "scoring",
     title: "Modèle de Scoring PF V7++",
     description: "Visualisez les domaines, critères et barèmes du modèle actif",

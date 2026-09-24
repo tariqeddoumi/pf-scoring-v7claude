@@ -19,6 +19,10 @@ import {
   extractConditionFields,
   validateConditionExpression,
 } from "@/lib/services/scoring/condition-evaluator";
+import {
+  CHAMPS_CONDITION,
+  champReconnu,
+} from "@/lib/services/scoring/condition-context";
 
 interface Rule {
   id: string;
@@ -63,11 +67,12 @@ const BROUILLON_VIDE: Brouillon = {
   messageCommittee: "",
 };
 
+/** Exemples écrits avec les chemins réellement exposés par le moteur. */
 const EXEMPLES = [
-  'dscrMin < 1.05',
-  'garantieEtat == false && montantMAD > 500000000',
-  'paysCode != "MA"',
-  'secteur in ["ENERGIE", "EAU"]',
+  "ratios.apportPct < 20",
+  "score < 40",
+  'projet.countryCode != "MA"',
+  'projet.secteur in ["ENERGIE", "EAU"]',
 ];
 
 /**
@@ -111,6 +116,17 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
   const condition = useMemo(
     () => validateConditionExpression(formData.conditionExpression),
     [formData.conditionExpression]
+  );
+
+  /** Champs cités par la condition qui ne correspondent à rien d'interrogeable. */
+  const champsInconnus = useMemo(
+    () =>
+      condition.valid
+        ? extractConditionFields(formData.conditionExpression).filter(
+            (c) => !champReconnu(c)
+          )
+        : [],
+    [condition.valid, formData.conditionExpression]
   );
 
   const coherence = useMemo(
@@ -334,11 +350,21 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
                 {condition.error}
               </p>
             ) : condition.valid ? (
-              <p className="text-xs text-success mt-1 inline-flex items-center gap-1">
-                <Check size={12} />
-                Champs interrogés :{" "}
-                {extractConditionFields(formData.conditionExpression).join(", ") || "aucun"}
-              </p>
+              champsInconnus.length > 0 ? (
+                <p className="text-xs text-warning mt-1 inline-flex items-start gap-1">
+                  <AlertTriangle size={12} className="mt-0.5 shrink-0" />
+                  Le moteur n&apos;expose aucun champ nommé{" "}
+                  {champsInconnus.map((c) => `« ${c} »`).join(", ")} : la règle ne se
+                  déclenchera jamais.
+                </p>
+              ) : (
+                <p className="text-xs text-success mt-1 inline-flex items-center gap-1">
+                  <Check size={12} />
+                  Champs interrogés :{" "}
+                  {extractConditionFields(formData.conditionExpression).join(", ") ||
+                    "aucun"}
+                </p>
+              )
             ) : (
               <p className="text-xs text-muted-foreground mt-1">
                 Opérateurs : <code>&gt; &gt;= &lt; &lt;= == != &amp;&amp; || !</code>,{" "}
@@ -356,6 +382,34 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
                 ))}
               </p>
             )}
+
+            <details className="mt-2">
+              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                Champs interrogeables ({CHAMPS_CONDITION.length})
+              </summary>
+              <div className="mt-2 max-h-40 overflow-y-auto space-y-1 border border-border rounded p-2">
+                {CHAMPS_CONDITION.map((c) => (
+                  <button
+                    key={c.path}
+                    type="button"
+                    onClick={() =>
+                      maj(
+                        "conditionExpression",
+                        `${formData.conditionExpression}${formData.conditionExpression ? " " : ""}${c.path}`
+                      )
+                    }
+                    className="block w-full text-left text-xs hover:bg-accent rounded px-1 py-0.5"
+                  >
+                    <code className="text-secondary-foreground">{c.path}</code>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      — {c.label}
+                      {c.derive ? " (calculé)" : ""}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </details>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
