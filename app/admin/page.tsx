@@ -54,6 +54,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
+    id: "secteurs",
+    title: "Calibrage sectoriel ★",
+    description:
+      "Facteurs de pondération par secteur, points d'alerte et tests de résistance",
+    href: "/admin/secteurs",
+    icon: "🏭",
+    requiredRole: "system_admin",
+  },
+  {
     id: "scoring",
     title: "Modèle de Scoring PF V7++",
     description: "Visualisez les domaines, critères et barèmes du modèle actif",
