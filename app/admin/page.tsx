@@ -15,11 +15,44 @@ interface AdminSection {
   href: string;
   icon: string;
   requiredRole?: string;
+  /** Famille de paramétrage : onze tuiles à plat ne disent pas par où commencer. */
+  famille: FamilleAdmin;
 }
+
+type FamilleAdmin = "modele" | "referentiels" | "formulaires" | "exploitation";
+
+/**
+ * Les familles suivent la question que se pose l'administrateur : qu'est-ce que je
+ * veux changer ? La façon dont on note, ce sur quoi on s'appuie pour noter, ce qu'on
+ * demande à l'analyste de saisir, ou le fonctionnement de l'outil lui-même.
+ */
+const FAMILLES: { id: FamilleAdmin; titre: string; sousTitre: string }[] = [
+  {
+    id: "modele",
+    titre: "Modèle de scoring",
+    sousTitre: "Ce qui est noté, comment, et ce qui bloque",
+  },
+  {
+    id: "referentiels",
+    titre: "Référentiels",
+    sousTitre: "Les données sur lesquelles le modèle s'appuie",
+  },
+  {
+    id: "formulaires",
+    titre: "Formulaires",
+    sousTitre: "Ce qui est demandé à la saisie",
+  },
+  {
+    id: "exploitation",
+    titre: "Exploitation",
+    sousTitre: "Utilisateurs, apparence et santé de l'outil",
+  },
+];
 
 const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "configuration",
+    famille: "exploitation",
     title: "Paramétrage de l'outil ★",
     description:
       "Nom affiché, logo, couleurs, police et thème — appliqués en direct dans toute l'application",
@@ -29,6 +62,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   },
   {
     id: "scoring-granularity",
+    famille: "modele",
     title: "Granularité du Scoring ★",
     description: "Configurez le niveau de saisie des scores (domaine, critère ou sous-critère) par domaine",
     href: "/admin/scoring/granularity",
@@ -36,7 +70,38 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
+    id: "bareme",
+    famille: "modele",
+    title: "Barème de notation ★",
+    description:
+      "Correspondance score → note (AAA…D) appliquée par le moteur à chaque calcul",
+    href: "/admin/bareme",
+    icon: "🏷️",
+    requiredRole: "system_admin",
+  },
+  {
+    id: "regles",
+    famille: "modele",
+    title: "Règles et seuils rédhibitoires ★",
+    description:
+      "Vue d'ensemble des règles du modèle, dont les seuils NO-GO, et des règles sans effet",
+    href: "/admin/regles",
+    icon: "🚫",
+    requiredRole: "system_admin",
+  },
+  {
+    id: "secteurs",
+    famille: "referentiels",
+    title: "Calibrage sectoriel ★",
+    description:
+      "Facteurs de pondération par secteur, points d'alerte et tests de résistance",
+    href: "/admin/secteurs",
+    icon: "🏭",
+    requiredRole: "system_admin",
+  },
+  {
     id: "scoring",
+    famille: "modele",
     title: "Modèle de Scoring PF V7++",
     description: "Visualisez les domaines, critères et barèmes du modèle actif",
     href: "/admin/scoring",
@@ -45,6 +110,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   },
   {
     id: "scoring-grid-v7pp",
+    famille: "modele",
     title: "Paramétrage Grille V7++ ★",
     description: "Éditeur hiérarchique complet — domaines, critères, sous-critères, options et plages numériques",
     href: "/admin/scoring-grid-v7pp",
@@ -52,15 +118,8 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
-    id: "scoring-grid",
-    title: "Grille de Scoring (legacy)",
-    description: "Ancienne grille — critères plats sans hiérarchie",
-    href: "/admin/scoring-grid",
-    icon: "⚙️",
-    requiredRole: "system_admin",
-  },
-  {
     id: "country-risk",
+    famille: "referentiels",
     title: "Risque Pays",
     description: "Configurez les scores de risque par pays",
     href: "/admin/country-risk",
@@ -68,23 +127,8 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
-    id: "auth",
-    title: "Authentification",
-    description: "Paramétrez les méthodes d'authentification et les politiques",
-    href: "/admin/auth-settings",
-    icon: "🔐",
-    requiredRole: "system_admin",
-  },
-  {
-    id: "system",
-    title: "Paramètres Système",
-    description: "Configurez les paramètres généraux de l'application",
-    href: "/admin/system-settings",
-    icon: "🛠️",
-    requiredRole: "system_admin",
-  },
-  {
     id: "diagnostic",
+    famille: "exploitation",
     title: "Diagnostic Système",
     description: "Tests de santé et vérification de la configuration",
     href: "/admin/diagnostic",
@@ -93,6 +137,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   },
   {
     id: "users",
+    famille: "exploitation",
     title: "Gestion des Utilisateurs",
     description: "Gérez les utilisateurs et leurs rôles",
     href: "/admin/users",
@@ -100,15 +145,8 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
-    id: "audit",
-    title: "Journal d'Audit",
-    description: "Consultez l'historique complet des modifications",
-    href: "/admin/audit-logs",
-    icon: "📋",
-    requiredRole: "risk_manager",
-  },
-  {
     id: "dynamic-forms",
+    famille: "formulaires",
     title: "Formulaires Dynamiques ★",
     description: "Activez les formulaires rendus depuis la base de données, sans code",
     href: "/admin/dynamic-forms",
@@ -117,6 +155,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   },
   {
     id: "field-management",
+    famille: "formulaires",
     title: "Gestion des Champs de Formulaire ★",
     description: "Personnalisez les champs, sections et options des formulaires",
     href: "/admin/field-management",
@@ -260,37 +299,44 @@ export default function AdminPage() {
           </p>
         </Card>
 
-        {/* Admin Sections Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {visibleSections.map((section) => (
-            <Link key={section.id} href={section.href}>
-              <Card className="p-6 h-full hover:border-primary transition-colors cursor-pointer">
-                <div className="flex items-start gap-4">
-                  <div className="text-3xl">{section.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-2">
-                      {section.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {section.description}
-                    </p>
-                  </div>
+        {/* Écrans de paramétrage, rangés par famille */}
+        <div className="space-y-10">
+          {FAMILLES.map((famille) => {
+            const sections = visibleSections.filter((s) => s.famille === famille.id);
+            if (sections.length === 0) return null;
+
+            return (
+              <section key={famille.id}>
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {famille.titre}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {famille.sousTitre}
+                  </p>
                 </div>
-                <div className="mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={(e) => {
-                      e.preventDefault();
-                    }}
-                  >
-                    Configurer →
-                  </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sections.map((section) => (
+                    <Link key={section.id} href={section.href} className="group">
+                      <Card className="p-5 h-full hover:border-primary transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="text-2xl shrink-0">{section.icon}</div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                              {section.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {section.description}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
                 </div>
-              </Card>
-            </Link>
-          ))}
+              </section>
+            );
+          })}
         </div>
 
         {/* Quick Stats */}
@@ -309,7 +355,7 @@ export default function AdminPage() {
               <p className="text-sm text-muted-foreground">Modèle Actif</p>
               <p
                 className={`text-2xl font-bold ${
-                  state.v8Enabled ? "text-blue-400" : "text-amber-400"
+                  state.v8Enabled ? "text-primary" : "text-warning"
                 }`}
               >
                 {state.modelVersion}
@@ -317,7 +363,7 @@ export default function AdminPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Statut</p>
-              <p className="text-2xl font-bold text-green-400">✓ Actif</p>
+              <p className="text-2xl font-bold text-success">✓ Actif</p>
             </div>
           </div>
         </Card>

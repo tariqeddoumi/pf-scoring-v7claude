@@ -98,14 +98,14 @@ export default function DiagnosticPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "success":
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+        return <CheckCircle2 className="h-5 w-5 text-success" />;
       case "warning":
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
       case "error":
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       default:
         return (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-ring border-t-transparent" />
         );
     }
   };
@@ -113,18 +113,18 @@ export default function DiagnosticPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "success":
-        return "border-green-500/30 bg-green-500/5";
+        return "border-success/30 bg-success/5";
       case "warning":
-        return "border-yellow-500/30 bg-yellow-500/5";
+        return "border-warning/30 bg-warning/5";
       case "error":
-        return "border-red-500/30 bg-red-500/5";
+        return "border-destructive/30 bg-destructive/5";
       default:
-        return "border-blue-500/30 bg-blue-500/5";
+        return "border-ring/30 bg-primary/5";
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-50">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto p-6">
         {/* Header */}
         <div className="mb-8 flex items-center gap-4">
@@ -135,7 +135,7 @@ export default function DiagnosticPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold">Diagnostic Système</h1>
-            <p className="text-slate-400">
+            <p className="text-muted-foreground">
               Tests de santé et configuration de l&apos;application
             </p>
           </div>
@@ -151,19 +151,19 @@ export default function DiagnosticPage() {
 
         {/* Error Alert */}
         {error && (
-          <Card className="mb-6 border-red-500/30 bg-red-500/5 p-4">
+          <Card className="mb-6 border-destructive/30 bg-destructive/5 p-4">
             <div className="flex items-start gap-3">
-              <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              <XCircle className="h-5 w-5 text-destructive mt-0.5" />
               <div>
-                <p className="font-medium text-red-400">Erreur</p>
-                <p className="text-sm text-slate-300">{error}</p>
+                <p className="font-medium text-destructive">Erreur</p>
+                <p className="text-sm text-secondary-foreground">{error}</p>
               </div>
             </div>
           </Card>
         )}
 
         {/* Environment Variables */}
-        <Card className="mb-6 border-slate-700 bg-slate-800 p-6">
+        <Card className="mb-6 border-border bg-card p-6">
           <h2 className="mb-4 text-xl font-semibold">
             Variables d&apos;Environnement
           </h2>
@@ -174,20 +174,20 @@ export default function DiagnosticPage() {
                   key={env.name}
                   className={`flex items-center justify-between rounded-lg border p-3 ${
                     env.defined
-                      ? "border-green-500/30 bg-green-500/5"
-                      : "border-red-500/30 bg-red-500/5"
+                      ? "border-success/30 bg-success/5"
+                      : "border-destructive/30 bg-destructive/5"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     {env.defined ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      <CheckCircle2 className="h-5 w-5 text-success" />
                     ) : (
-                      <XCircle className="h-5 w-5 text-red-500" />
+                      <XCircle className="h-5 w-5 text-destructive" />
                     )}
                     <div>
                       <p className="font-medium">{env.name}</p>
                       {env.value && env.defined && (
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                           {env.value.length > 50
                             ? `${env.value.substring(0, 50)}...`
                             : env.value}
@@ -196,14 +196,14 @@ export default function DiagnosticPage() {
                     </div>
                   </div>
                   <span
-                    className={`text-sm font-medium ${env.defined ? "text-green-400" : "text-red-400"}`}
+                    className={`text-sm font-medium ${env.defined ? "text-success" : "text-destructive"}`}
                   >
                     {env.defined ? "✓ Défini" : "✗ Manquant"}
                   </span>
                 </div>
               ))
             ) : (
-              <p className="text-slate-400">
+              <p className="text-muted-foreground">
                 Aucune variable d&apos;environnement testée
               </p>
             )}
@@ -211,7 +211,7 @@ export default function DiagnosticPage() {
         </Card>
 
         {/* Diagnostic Tests */}
-        <Card className="border-slate-700 bg-slate-800 p-6">
+        <Card className="border-border bg-card p-6">
           <h2 className="mb-4 text-xl font-semibold">Tests de Diagnostic</h2>
           <div className="space-y-3">
             {tests.length > 0 ? (
@@ -223,13 +223,13 @@ export default function DiagnosticPage() {
                   <div className="mt-1">{getStatusIcon(test.status)}</div>
                   <div className="flex-1">
                     <p className="font-medium">{test.name}</p>
-                    <p className="text-sm text-slate-300">{test.message}</p>
+                    <p className="text-sm text-secondary-foreground">{test.message}</p>
                     {test.details && (
-                      <details className="mt-2 text-xs text-slate-400">
-                        <summary className="cursor-pointer hover:text-slate-300">
+                      <details className="mt-2 text-xs text-muted-foreground">
+                        <summary className="cursor-pointer hover:text-foreground">
                           Détails
                         </summary>
-                        <pre className="mt-2 overflow-auto rounded bg-slate-900 p-2">
+                        <pre className="mt-2 overflow-auto rounded bg-background p-2">
                           {JSON.stringify(test.details, null, 2)}
                         </pre>
                       </details>
@@ -239,10 +239,10 @@ export default function DiagnosticPage() {
               ))
             ) : loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-ring border-t-transparent" />
               </div>
             ) : (
-              <p className="text-slate-400">Aucun test exécuté</p>
+              <p className="text-muted-foreground">Aucun test exécuté</p>
             )}
           </div>
         </Card>

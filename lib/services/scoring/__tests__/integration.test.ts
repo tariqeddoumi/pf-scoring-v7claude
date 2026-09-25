@@ -8,6 +8,7 @@ import { BindingResolver } from "../binding-resolver";
 import { ValueResolver } from "../value-resolver";
 import { ScoreCalculator } from "../score-calculator";
 import { AggregationEngine } from "../score-calculator";
+import { BAREME_REPLI, resolveRatingFromBands } from "../rating-scale";
 
 describe("Scoring Engine V8 Integration", () => {
   describe("Complete Evaluation Flow", () => {
@@ -173,7 +174,7 @@ describe("Scoring Engine V8 Integration", () => {
     test("should handle formula evaluation errors", () => {
       const result = ScoreCalculator.scoreFromFormula("invalid expression!", {}, 50);
       expect(result.rawScore).toBe(50);
-      expect(result.explanation).toContain("failed");
+      expect(result.explanation).toContain("Échec");
     });
 
     test("should handle missing answers gracefully", () => {
@@ -193,16 +194,9 @@ describe("Scoring Engine V8 Integration", () => {
   });
 });
 
-// Helper function
+// Ce test couvre le barème de REPLI (celui qui s'applique si la table de notation est
+// vide), et non le référentiel : il s'appuie donc sur le module plutôt que d'en
+// recopier les seuils, sinon il ne verrait pas une dérive entre les deux.
 function scoreToRating(score: number): string {
-  if (score >= 90) return "AAA";
-  if (score >= 80) return "AA";
-  if (score >= 70) return "A";
-  if (score >= 60) return "BBB";
-  if (score >= 50) return "BB";
-  if (score >= 40) return "B";
-  if (score >= 30) return "CCC";
-  if (score >= 20) return "CC";
-  if (score >= 10) return "C";
-  return "D";
+  return resolveRatingFromBands(score, BAREME_REPLI, "repli").rating;
 }

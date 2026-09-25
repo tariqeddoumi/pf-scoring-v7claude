@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * POST /api/scoring/evaluations/[id]/submit
@@ -7,9 +8,10 @@ import prisma from "@/lib/prisma-client";
  * Requires: finalScore != null (i.e., calculation completed)
  * Transition: brouillon → soumise
  */
-export async function POST(
+async function handlePOST(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
+  user: AuthPayload
 ) {
   try {
     const { id } = await params;
@@ -62,16 +64,17 @@ export async function POST(
       },
     });
 
-    // FIX 4: changedBy must be a UUID (nullable), not the string "system"
+    // Le journal porte l'identité de l'auteur de la transition : une trace
+    // anonyme ne permet aucune reconstitution en revue.
     await prisma.scoringChangeLog.create({
       data: {
         entityType: "ScoringEvaluation",
         entityId: evaluationId,
         evaluationId,
         action: "SUBMIT",
-        newValueJson: JSON.stringify({ status: "soumise" }),
-        changedBy: null,
-        comment: "Evaluation submitted for validation",
+        newValueJson: JSON.stringify({ status: "soumis" }),
+        changedBy: user.userId,
+        comment: "Évaluation soumise pour validation",
       },
     });
 
@@ -94,4 +97,11 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+export async function POST(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return withAuth(req, (r, user) => handlePOST(r, ctx, user));
 }

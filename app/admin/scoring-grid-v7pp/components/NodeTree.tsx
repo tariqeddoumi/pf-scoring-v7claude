@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import type { ScoringNode } from "@/lib/types/scoring-grid";
+import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 
 interface NodeTreeProps {
   nodes: ScoringNode[];
@@ -12,6 +13,7 @@ interface NodeTreeProps {
 
 export function NodeTree({ nodes, selectedNodeId, onNodeSelect }: NodeTreeProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const sommeRacines = sommeFratrie(nodes);
 
   const toggleExpand = (nodeId: string) => {
     const newExpanded = new Set(expandedNodes);
@@ -29,6 +31,7 @@ export function NodeTree({ nodes, selectedNodeId, onNodeSelect }: NodeTreeProps)
         <NodeTreeItem
           key={node.id}
           node={node}
+          sommeNiveau={sommeRacines}
           level={0}
           selectedNodeId={selectedNodeId}
           expandedNodes={expandedNodes}
@@ -42,6 +45,8 @@ export function NodeTree({ nodes, selectedNodeId, onNodeSelect }: NodeTreeProps)
 
 interface NodeTreeItemProps {
   node: ScoringNode;
+  /** Somme des poids de la fratrie : le poids seul ne veut rien dire. */
+  sommeNiveau: number;
   level: number;
   selectedNodeId: string | null;
   expandedNodes: Set<string>;
@@ -51,6 +56,7 @@ interface NodeTreeItemProps {
 
 function NodeTreeItem({
   node,
+  sommeNiveau,
   level,
   selectedNodeId,
   expandedNodes,
@@ -58,24 +64,25 @@ function NodeTreeItem({
   onToggleExpand,
 }: NodeTreeItemProps) {
   const hasChildren = node.childNodes && node.childNodes.length > 0;
+  const sommeEnfants = sommeFratrie(node.childNodes);
   const isExpanded = expandedNodes.has(node.id);
   const isSelected = selectedNodeId === node.id;
 
   const nodeTypeColors: Record<string, string> = {
-    DOMAIN: "text-blue-400",
+    DOMAIN: "text-primary",
     GROUP: "text-purple-400",
     CRITERION: "text-indigo-400",
-    SUB_CRITERION: "text-cyan-400",
+    SUB_CRITERION: "text-primary",
     SUB_SUB_CRITERION: "text-emerald-400",
   };
 
-  const nodeColor = nodeTypeColors[node.nodeType] || "text-slate-400";
+  const nodeColor = nodeTypeColors[node.nodeType] || "text-muted-foreground";
 
   return (
     <div>
       <div
         className={`flex items-center gap-1 px-2 py-1 rounded cursor-pointer text-sm transition-colors ${
-          isSelected ? "bg-slate-700 text-white" : "hover:bg-slate-800 text-slate-300"
+          isSelected ? "bg-muted text-foreground" : "hover:bg-card text-secondary-foreground"
         }`}
         style={{ paddingLeft: `${8 + level * 16}px` }}
         onClick={() => onNodeSelect(node.id)}
@@ -86,22 +93,27 @@ function NodeTreeItem({
               e.stopPropagation();
               onToggleExpand(node.id);
             }}
-            className="p-0 hover:bg-slate-700 rounded"
+            className="p-0 hover:bg-accent rounded"
           >
             {isExpanded ? (
-              <ChevronDown size={16} className="text-slate-400" />
+              <ChevronDown size={16} className="text-muted-foreground" />
             ) : (
-              <ChevronRight size={16} className="text-slate-400" />
+              <ChevronRight size={16} className="text-muted-foreground" />
             )}
           </button>
         )}
         {!hasChildren && <div className="w-4" />}
 
         <span className={`font-medium ${nodeColor}`}>{node.code}</span>
-        <span className="text-slate-400 ml-1">{node.label}</span>
+        <span className="text-muted-foreground ml-1">{node.label}</span>
 
         {node.weight !== null && node.weight !== undefined && (
-          <span className="ml-auto text-xs text-yellow-400">{node.weight}%</span>
+          <span
+            className="ml-auto text-xs text-warning"
+            title={formatPoidsDetail(node.weight, sommeNiveau)}
+          >
+            {formatPart(node.weight, sommeNiveau) ?? `poids ${node.weight}`}
+          </span>
         )}
       </div>
 
@@ -111,6 +123,7 @@ function NodeTreeItem({
             <NodeTreeItem
               key={child.id}
               node={child}
+              sommeNiveau={sommeEnfants}
               level={level + 1}
               selectedNodeId={selectedNodeId}
               expandedNodes={expandedNodes}

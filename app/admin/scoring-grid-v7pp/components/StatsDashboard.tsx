@@ -23,12 +23,12 @@ export function StatsDashboard({ stats }: StatsDashboardProps) {
   ];
 
   return (
-    <div className="bg-slate-900 border-t border-slate-700 px-6 py-4">
+    <div className="bg-background border-t border-border px-6 py-4">
       <div className="grid grid-cols-8 gap-4">
         {statItems.map((item, i) => (
           <div key={i} className="text-center">
-            <p className="text-xs text-slate-400 mb-1">{item.label}</p>
-            <p className={`text-2xl font-bold ${item.isPercentage ? "text-cyan-400" : "text-white"}`}>
+            <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
+            <p className={`text-2xl font-bold ${item.isPercentage ? "text-primary" : "text-foreground"}`}>
               {item.value}
             </p>
           </div>

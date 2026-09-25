@@ -17,6 +17,18 @@ export async function GET(req: NextRequest) {
         return validationError([{ field: "versionId", message: "Requis" }]);
       }
 
+      // Mode allégé : de quoi lister ou choisir un critère, sans embarquer les
+      // options et plages de chaque nœud — inutiles pour un sélecteur, et volumineuses
+      // sur un modèle de plusieurs dizaines de critères.
+      if (searchParams.get("format") === "light") {
+        const nodes = await prisma.scoringNode.findMany({
+          where: { versionId },
+          select: { id: true, code: true, label: true, depth: true, isScored: true },
+          orderBy: [{ depth: "asc" }, { orderIndex: "asc" }],
+        });
+        return successResponse(nodes, { count: nodes.length });
+      }
+
       const nodes = await prisma.scoringNode.findMany({
         where: { versionId },
         include: {

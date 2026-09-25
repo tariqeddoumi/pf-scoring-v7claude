@@ -60,13 +60,44 @@ export class ScoreCalculator {
       if (num >= r.min && num <= r.max) {
         return {
           rawScore: r.score,
-          explanation: `Value ${num} in range [${r.min}, ${r.max}] → score ${r.score}`,
+          explanation: `Valeur ${num} dans la plage [${r.min}, ${r.max}] → ${r.score} points`,
         };
       }
     }
+
+    // Hors de toute plage, un zéro serait un score inventé : une valeur supérieure à
+    // la meilleure plage — un DSCR de 5 là où la grille s'arrête à 2 — vaudrait le
+    // même score qu'une valeur catastrophique. On retient la plage la plus proche,
+    // en le disant.
+    const triees = [...ranges].sort((a, b) => a.min - b.min);
+    const basse = triees[0];
+    const haute = triees[triees.length - 1];
+
+    if (num < basse.min) {
+      return {
+        rawScore: basse.score,
+        explanation:
+          `Valeur ${num} en deçà de la plage la plus basse [${basse.min}, ${basse.max}] ` +
+          `→ ${basse.score} points, par rattachement à celle-ci`,
+      };
+    }
+    if (num > haute.max) {
+      return {
+        rawScore: haute.score,
+        explanation:
+          `Valeur ${num} au-delà de la plage la plus haute [${haute.min}, ${haute.max}] ` +
+          `→ ${haute.score} points, par rattachement à celle-ci`,
+      };
+    }
+
+    // La valeur tombe dans un interstice entre deux plages : on rattache à la plage
+    // inférieure, comme pour le barème de notation.
+    const inferieure = [...triees].reverse().find((r) => num >= r.min) ?? basse;
     return {
-      rawScore: 0,
-      explanation: `Value ${num} outside all ranges`,
+      rawScore: inferieure.score,
+      explanation:
+        `Valeur ${num} dans un intervalle non couvert par la grille ` +
+        `→ ${inferieure.score} points, par rattachement à la plage [${inferieure.min}, ${inferieure.max}]`,
     };
   }
 
@@ -290,10 +321,33 @@ export class AggregationEngine {
       case "COUNT":
         return children.length;
 
+      // Proposée par le référentiel BP_PF_v7pp_aggregation_methods : sans ce cas,
+      // un nœud paramétré sur « Premier uniquement » tombait dans le défaut et valait 0.
+      case "FIRST":
+        return children[0].rawScore;
+
       default:
-        return 0;
+        // Un zéro silencieux est un score inventé : une méthode inconnue en base
+        // (faute de frappe dans le paramétrage) donnerait une note nulle crédible
+        // au lieu d'un signal. On refuse de noter plutôt que de noter faux.
+        throw new Error(
+          `Méthode d'agrégation inconnue : « ${method_} ». ` +
+            `Valeurs acceptées : ${AggregationEngine.METHODES_SUPPORTEES.join(", ")}.`
+        );
     }
   }
+
+  /** Méthodes reconnues par aggregate(), pour le paramétrage et les messages d'erreur. */
+  static readonly METHODES_SUPPORTEES = [
+    "SUM",
+    "WEIGHTED_SUM",
+    "AVERAGE",
+    "WEIGHTED_AVERAGE",
+    "MIN",
+    "MAX",
+    "COUNT",
+    "FIRST",
+  ] as const;
 
   /**
    * Recursively compute weighted scores using hierarchy.

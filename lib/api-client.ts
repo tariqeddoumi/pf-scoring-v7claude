@@ -47,6 +47,14 @@ export async function apiPut(url: string, body?: any, options?: RequestInit) {
   });
 }
 
+export async function apiPatch(url: string, body?: any, options?: RequestInit) {
+  return apiCall(url, {
+    ...options,
+    method: 'PATCH',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
 export async function apiDelete(url: string, options?: RequestInit) {
   return apiCall(url, { ...options, method: 'DELETE' });
 }

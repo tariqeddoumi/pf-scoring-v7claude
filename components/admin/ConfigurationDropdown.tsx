@@ -73,9 +73,9 @@ export function ConfigurationDropdown({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
+      <label className="block text-sm font-medium text-secondary-foreground">{label}</label>
       <Select value={value || ''} onValueChange={onChange} disabled={disabled || loading}>
-        <SelectTrigger className={error ? 'border-red-500' : ''}>
+        <SelectTrigger className={error ? 'border-destructive' : ''}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -83,7 +83,7 @@ export function ConfigurationDropdown({
             <SelectItem key={option.id} value={option.id}>
               {option.label}
               {option.description && (
-                <span className="text-xs text-gray-500 ml-2">
+                <span className="text-xs text-muted-foreground ml-2">
                   ({option.description})
                 </span>
               )}
@@ -91,9 +91,9 @@ export function ConfigurationDropdown({
           ))}
         </SelectContent>
       </Select>
-      {loading && <p className="text-xs text-gray-500">Loading...</p>}
-      {error && <p className="text-xs text-red-500">{error}</p>}
-      {fetchError && <p className="text-xs text-red-500">{fetchError}</p>}
+      {loading && <p className="text-xs text-muted-foreground">Loading...</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {fetchError && <p className="text-xs text-destructive">{fetchError}</p>}
     </div>
   );
 }

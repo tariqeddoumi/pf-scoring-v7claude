@@ -56,12 +56,12 @@ interface Project {
 
 const Field = ({ label, value }: { label: string; value?: string | number | null }) => (
   <div>
-    <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
+    <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
       {label}
     </label>
-    <p className="text-white">
+    <p className="text-foreground">
       {value !== null && value !== undefined && value !== "" ? value : (
-        <span className="text-slate-500 italic">Non renseigné</span>
+        <span className="text-muted-foreground italic">Non renseigné</span>
       )}
     </p>
   </div>
@@ -106,7 +106,7 @@ export default function ProjectDetailPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-blue-400" size={40} />
+        <Loader2 className="animate-spin text-primary" size={40} />
       </div>
     );
   }
@@ -114,11 +114,11 @@ export default function ProjectDetailPage({
   if (error || !project) {
     return (
       <div className="space-y-6">
-        <Link href="/projects" className="inline-flex items-center space-x-2 text-slate-400 hover:text-white">
+        <Link href="/projects" className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground">
           <ArrowLeft size={20} />
           <span>Retour aux projets</span>
         </Link>
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive">
           {error || "Projet non trouvé"}
         </div>
       </div>
@@ -126,11 +126,11 @@ export default function ProjectDetailPage({
   }
 
   const statusColors: Record<string, string> = {
-    brouillon: "bg-slate-500/20 text-slate-400",
-    en_cours: "bg-blue-500/20 text-blue-400",
-    en_revue: "bg-yellow-500/20 text-yellow-400",
-    approuve: "bg-green-500/20 text-green-400",
-    rejete: "bg-red-500/20 text-red-400",
+    brouillon: "bg-secondary/20 text-muted-foreground",
+    en_cours: "bg-primary/20 text-primary",
+    en_revue: "bg-warning/15 text-warning",
+    approuve: "bg-success/15 text-success",
+    rejete: "bg-destructive/15 text-destructive",
   };
 
   const tabs = [
@@ -142,16 +142,16 @@ export default function ProjectDetailPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Field label="Nom du projet" value={project.nom} />
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Statut</label>
-            <span className={`inline-block px-3 py-1 rounded-full text-sm ${statusColors[project.status] || "bg-slate-500/20 text-slate-400"}`}>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Statut</label>
+            <span className={`inline-block px-3 py-1 rounded-full text-sm ${statusColors[project.status] || "bg-secondary/20 text-muted-foreground"}`}>
               {project.status}
             </span>
           </div>
           <Field label="Secteur" value={project.secteur} />
           <Field label="Code pays" value={project.countryCode} />
           <div className="md:col-span-2">
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Description</label>
-            <p className="text-white whitespace-pre-wrap">{project.description || <span className="text-slate-500 italic">Non renseigné</span>}</p>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Description</label>
+            <p className="text-foreground whitespace-pre-wrap">{project.description || <span className="text-muted-foreground italic">Non renseigné</span>}</p>
           </div>
         </div>
       ),
@@ -221,11 +221,11 @@ export default function ProjectDetailPage({
       content: (
         <div className="grid grid-cols-1 gap-6">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
               Structure capitale principale
             </label>
-            <p className="text-white whitespace-pre-wrap">
-              {project.structureCapitalePrincipale || <span className="text-slate-500 italic">Non renseigné</span>}
+            <p className="text-foreground whitespace-pre-wrap">
+              {project.structureCapitalePrincipale || <span className="text-muted-foreground italic">Non renseigné</span>}
             </p>
           </div>
         </div>
@@ -251,18 +251,18 @@ export default function ProjectDetailPage({
         <div className="flex items-center space-x-4">
           <Link
             href="/projects"
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
           >
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-white">{project.nom}</h1>
-            <p className="text-slate-400 mt-1 text-sm">ID: {project.id}</p>
+            <h1 className="text-3xl font-bold text-foreground">{project.nom}</h1>
+            <p className="text-muted-foreground mt-1 text-sm">ID: {project.id}</p>
           </div>
         </div>
         <button
           onClick={() => projectId && router.push(`/projects/${projectId}/edit`)}
-          className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+          className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
         >
           <Edit2 size={20} />
           <span>Modifier</span>
@@ -270,18 +270,18 @@ export default function ProjectDetailPage({
       </div>
 
       {/* Tabs */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+      <div className="bg-card rounded-lg border border-border p-6">
         <Tabs tabs={tabs} defaultTab="identification" />
       </div>
 
       {/* Meta */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Informations système</h3>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Informations système</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Créé le" value={formatDate(project.dateCreation || project.createdAt)} />
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Identifiant</label>
-            <p className="text-white font-mono text-sm">{project.id}</p>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Identifiant</label>
+            <p className="text-foreground font-mono text-sm">{project.id}</p>
           </div>
         </div>
       </div>

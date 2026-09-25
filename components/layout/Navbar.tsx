@@ -13,7 +13,7 @@ export function Navbar() {
   const logoUrl = config.APP_LOGO_URL;
 
   return (
-    <nav className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700">
+    <nav className="bg-gradient-to-r from-background to-background border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -22,12 +22,12 @@ export function Navbar() {
               <img src={logoUrl} alt={appName} className="w-8 h-8 rounded-lg object-contain" />
             ) : (
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">
+                <span className="text-foreground font-bold text-sm">
                   {appName.slice(0, 2).toUpperCase()}
                 </span>
               </div>
             )}
-            <span className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">
+            <span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
               {appName}
             </span>
           </Link>
@@ -51,7 +51,7 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              className="md:hidden p-2 text-secondary-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
             >
               <Menu size={20} />
             </button>
@@ -60,7 +60,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-slate-700">
+          <div className="md:hidden pb-4 border-t border-border">
             <div className="flex flex-col space-y-2 pt-4">
               <MobileNavLink href="/dashboard" label="Tableau de bord" />
               <MobileNavLink href="/clients" label="Clients" />
@@ -80,7 +80,7 @@ function NavLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+      className="px-4 py-2 text-secondary-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
     >
       {label}
     </Link>
@@ -91,7 +91,7 @@ function MobileNavLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors block"
+      className="px-4 py-2 text-secondary-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors block"
     >
       {label}
     </Link>

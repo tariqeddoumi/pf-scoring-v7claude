@@ -120,7 +120,7 @@ export default function NewClientPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Nom du client
               </label>
               <input
@@ -128,16 +128,16 @@ export default function NewClientPage() {
                 name="nom"
                 value={formData.nom}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${
-                  fieldErrors.nom ? "border-red-500" : "border-slate-600"
-                } rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${
+                  fieldErrors.nom ? "border-destructive" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-ring`}
               />
               {fieldErrors.nom && (
-                <p className="text-red-400 text-sm mt-1">{fieldErrors.nom}</p>
+                <p className="text-destructive text-sm mt-1">{fieldErrors.nom}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Raison sociale
               </label>
               <input
@@ -145,11 +145,11 @@ export default function NewClientPage() {
                 name="raisonSociale"
                 value={formData.raisonSociale || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Nom commercial
               </label>
               <input
@@ -157,18 +157,18 @@ export default function NewClientPage() {
                 name="nomCommercial"
                 value={formData.nomCommercial || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Type de client
               </label>
               <select
                 name="typeClient"
                 value={formData.typeClient || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="">Sélectionner</option>
                 <option value="Entreprise">Entreprise</option>
@@ -180,14 +180,14 @@ export default function NewClientPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Forme juridique
               </label>
               <select
                 name="formeJuridique"
                 value={formData.formeJuridique || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="">Sélectionner</option>
                 <option value="SARL">SARL</option>
@@ -198,14 +198,14 @@ export default function NewClientPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Statut
               </label>
               <select
                 name="status"
                 value={formData.status || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="Actif">Actif</option>
                 <option value="Inactif">Inactif</option>
@@ -224,7 +224,7 @@ export default function NewClientPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Secteur
               </label>
               <input
@@ -232,18 +232,18 @@ export default function NewClientPage() {
                 name="secteur"
                 value={formData.secteur || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Segment clientèle
               </label>
               <select
                 name="segmentClientele"
                 value={formData.segmentClientele || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="">Sélectionner</option>
                 <option value="Particulier">Particulier</option>
@@ -255,7 +255,7 @@ export default function NewClientPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Effectifs
               </label>
               <input
@@ -263,11 +263,11 @@ export default function NewClientPage() {
                 name="effectifs"
                 value={formData.effectifs || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Capital social (MAD)
               </label>
               <input
@@ -275,11 +275,11 @@ export default function NewClientPage() {
                 name="capitalSocial"
                 value={formData.capitalSocial || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Chiffre d&apos;affaires (MAD)
               </label>
               <input
@@ -287,12 +287,12 @@ export default function NewClientPage() {
                 name="chiffreAffaires"
                 value={formData.chiffreAffaires || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-secondary-foreground mb-2">
               Description / Activités
             </label>
             <textarea
@@ -300,7 +300,7 @@ export default function NewClientPage() {
               value={formData.description || ""}
               onChange={handleChange}
               rows={3}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
             />
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function NewClientPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Pays
               </label>
               <input
@@ -322,11 +322,11 @@ export default function NewClientPage() {
                 name="pays"
                 value={formData.pays || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Ville
               </label>
               <input
@@ -334,11 +334,11 @@ export default function NewClientPage() {
                 name="ville"
                 value={formData.ville || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Code postal
               </label>
               <input
@@ -346,12 +346,12 @@ export default function NewClientPage() {
                 name="codePostal"
                 value={formData.codePostal || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-secondary-foreground mb-2">
               Adresse
             </label>
             <textarea
@@ -359,7 +359,7 @@ export default function NewClientPage() {
               value={formData.adresse || ""}
               onChange={handleChange}
               rows={2}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
             />
           </div>
         </div>
@@ -373,7 +373,7 @@ export default function NewClientPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Email
               </label>
               <input
@@ -381,16 +381,16 @@ export default function NewClientPage() {
                 name="email"
                 value={formData.email || ""}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${
-                  fieldErrors.email ? "border-red-500" : "border-slate-600"
-                } rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${
+                  fieldErrors.email ? "border-destructive" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-ring`}
               />
               {fieldErrors.email && (
-                <p className="text-red-400 text-sm mt-1">{fieldErrors.email}</p>
+                <p className="text-destructive text-sm mt-1">{fieldErrors.email}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Téléphone
               </label>
               <input
@@ -398,18 +398,18 @@ export default function NewClientPage() {
                 name="telephone"
                 value={formData.telephone || ""}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 bg-slate-700 border ${
-                  fieldErrors.telephone ? "border-red-500" : "border-slate-600"
-                } rounded-lg text-white focus:outline-none focus:border-blue-500`}
+                className={`w-full px-4 py-2 bg-muted border ${
+                  fieldErrors.telephone ? "border-destructive" : "border-input"
+                } rounded-lg text-foreground focus:outline-none focus:border-ring`}
               />
               {fieldErrors.telephone && (
-                <p className="text-red-400 text-sm mt-1">
+                <p className="text-destructive text-sm mt-1">
                   {fieldErrors.telephone}
                 </p>
               )}
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Site web
               </label>
               <input
@@ -417,7 +417,7 @@ export default function NewClientPage() {
                 name="website"
                 value={formData.website || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -432,7 +432,7 @@ export default function NewClientPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Centre d&apos;affaires
               </label>
               <input
@@ -440,11 +440,11 @@ export default function NewClientPage() {
                 name="centreAffaires"
                 value={formData.centreAffaires || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Gestionnaire
               </label>
               <input
@@ -452,18 +452,18 @@ export default function NewClientPage() {
                 name="gestionnaire"
                 value={formData.gestionnaire || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Rating interne
               </label>
               <select
                 name="ratingInterne"
                 value={formData.ratingInterne || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="">Sélectionner</option>
                 <option value="AAA">AAA</option>
@@ -477,14 +477,14 @@ export default function NewClientPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Statut bancaire
               </label>
               <select
                 name="statutBancaire"
                 value={formData.statutBancaire || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="Prospect">Prospect</option>
                 <option value="Client">Client</option>
@@ -494,7 +494,7 @@ export default function NewClientPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Date du début de relation
               </label>
               <input
@@ -502,11 +502,11 @@ export default function NewClientPage() {
                 name="dateRelation"
                 value={formData.dateRelation || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Exposition (MAD)
               </label>
               <input
@@ -514,7 +514,7 @@ export default function NewClientPage() {
                 name="exposition"
                 value={formData.exposition || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               />
             </div>
           </div>
@@ -529,14 +529,14 @@ export default function NewClientPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Statut KYC
               </label>
               <select
                 name="statusKYC"
                 value={formData.statusKYC || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="En attente">En attente</option>
                 <option value="Vérifiée">Vérifiée</option>
@@ -546,14 +546,14 @@ export default function NewClientPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">
                 Statut conformité
               </label>
               <select
                 name="statusConformite"
                 value={formData.statusConformite || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
               >
                 <option value="En attente">En attente</option>
                 <option value="Conforme">Conforme</option>
@@ -573,12 +573,12 @@ export default function NewClientPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Créer un nouveau client</h1>
-          <p className="text-slate-400 mt-1">Ajoutez un nouveau client au système</p>
+          <h1 className="text-3xl font-bold text-foreground">Créer un nouveau client</h1>
+          <p className="text-muted-foreground mt-1">Ajoutez un nouveau client au système</p>
         </div>
         <Link
           href="/clients"
-          className="inline-flex items-center space-x-2 text-slate-400 hover:text-slate-300 transition-colors"
+          className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft size={20} />
           <span>Retour</span>
@@ -587,21 +587,21 @@ export default function NewClientPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive text-sm">
           {error}
         </div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+      <form onSubmit={handleSubmit} className="bg-card rounded-lg border border-border p-6">
         <Tabs tabs={tabs} defaultTab="identity" />
 
         {/* Form Actions */}
-        <div className="flex gap-3 mt-8 pt-6 border-t border-slate-700">
+        <div className="flex gap-3 mt-8 pt-6 border-t border-border">
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 disabled:bg-secondary text-white font-semibold rounded-lg transition-colors"
           >
             {submitting ? (
               <>
@@ -614,7 +614,7 @@ export default function NewClientPage() {
           </button>
           <Link
             href="/clients"
-            className="inline-flex items-center gap-2 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-muted hover:bg-secondary text-foreground font-semibold rounded-lg transition-colors"
           >
             Annuler
           </Link>

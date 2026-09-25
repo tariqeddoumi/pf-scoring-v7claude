@@ -105,8 +105,8 @@ export default function DynamicFormsAdmin() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 size={40} className="animate-spin text-blue-500" />
-          <p className="text-slate-400">Checking configuration status...</p>
+          <Loader2 size={40} className="animate-spin text-primary" />
+          <p className="text-muted-foreground">Checking configuration status...</p>
         </div>
       </div>
     );
@@ -117,10 +117,10 @@ export default function DynamicFormsAdmin() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Dynamic Forms Management</h1>
-          <p className="text-slate-400 mt-1">Configure ultra-parametrizable form rendering</p>
+          <h1 className="text-3xl font-bold text-foreground">Dynamic Forms Management</h1>
+          <p className="text-muted-foreground mt-1">Configure ultra-parametrizable form rendering</p>
         </div>
-        <Link href="/admin" className="inline-flex items-center space-x-2 text-slate-400 hover:text-slate-300">
+        <Link href="/admin" className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground">
           <ArrowLeft size={20} />
           <span>Back to Admin</span>
         </Link>
@@ -131,8 +131,8 @@ export default function DynamicFormsAdmin() {
         <div
           className={`flex items-center gap-3 p-4 rounded-lg border ${
             message.type === 'success'
-              ? 'bg-green-500/10 border-green-500/50 text-green-400'
-              : 'bg-red-500/10 border-red-500/50 text-red-400'
+              ? 'bg-success/10 border-green-500/50 text-success'
+              : 'bg-destructive/10 border-destructive/50 text-destructive'
           }`}
         >
           {message.type === 'success' ? (
@@ -147,18 +147,18 @@ export default function DynamicFormsAdmin() {
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Feature Toggle Card */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+        <div className="bg-card border border-border rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Feature Toggle</h3>
-              <p className="text-sm text-slate-400 mt-1">
+              <h3 className="text-lg font-semibold text-foreground">Feature Toggle</h3>
+              <p className="text-sm text-muted-foreground mt-1">
                 Enable dynamic form rendering for project screens
               </p>
             </div>
             <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
               enabled
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-yellow-500/20 text-yellow-400'
+                ? 'bg-success/15 text-success'
+                : 'bg-warning/15 text-warning'
             }`}>
               {enabled ? 'Enabled' : 'Disabled'}
             </div>
@@ -169,8 +169,8 @@ export default function DynamicFormsAdmin() {
             disabled={loading}
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               enabled
-                ? 'bg-red-600 hover:bg-red-700 disabled:bg-slate-600 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white'
+                ? 'bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-white'
+                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-white'
             }`}
           >
             {loading ? (
@@ -183,7 +183,7 @@ export default function DynamicFormsAdmin() {
             )}
           </button>
 
-          <div className="text-xs text-slate-500 space-y-1 mt-4">
+          <div className="text-xs text-muted-foreground space-y-1 mt-4">
             <p><strong>When enabled:</strong></p>
             <ul className="list-disc list-inside space-y-1">
               <li>Project forms render from database configuration</li>
@@ -194,18 +194,18 @@ export default function DynamicFormsAdmin() {
         </div>
 
         {/* Database Initialization Card */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+        <div className="bg-card border border-border rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Database Initialization</h3>
-              <p className="text-sm text-slate-400 mt-1">
+              <h3 className="text-lg font-semibold text-foreground">Database Initialization</h3>
+              <p className="text-sm text-muted-foreground mt-1">
                 Seed database from lib/field-config.ts
               </p>
             </div>
             <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
               initialized
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-yellow-500/20 text-yellow-400'
+                ? 'bg-success/15 text-success'
+                : 'bg-warning/15 text-warning'
             }`}>
               {initialized ? 'Initialized' : 'Pending'}
             </div>
@@ -216,8 +216,8 @@ export default function DynamicFormsAdmin() {
             disabled={loading || initialized}
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               initialized
-                ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white'
+                ? 'bg-secondary text-muted-foreground cursor-not-allowed'
+                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-white'
             }`}
           >
             {loading ? (
@@ -232,7 +232,7 @@ export default function DynamicFormsAdmin() {
             )}
           </button>
 
-          <div className="text-xs text-slate-500 space-y-1 mt-4">
+          <div className="text-xs text-muted-foreground space-y-1 mt-4">
             <p><strong>This will:</strong></p>
             <ul className="list-disc list-inside space-y-1">
               <li>Create FormSection records from PROJECT_SECTIONS</li>
@@ -245,9 +245,9 @@ export default function DynamicFormsAdmin() {
       </div>
 
       {/* Documentation */}
-      <div className="bg-blue-500/10 border border-blue-500/50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-400 mb-4">How It Works</h3>
-        <div className="text-slate-300 space-y-2 text-sm">
+      <div className="bg-primary/10 border border-ring/50 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-primary mb-4">How It Works</h3>
+        <div className="text-secondary-foreground space-y-2 text-sm">
           <p><strong>Phase 1: Database Initialization</strong></p>
           <ul className="list-disc list-inside ml-2 mb-3">
             <li>Click "Initialize Database" to seed FormSection and FieldConfiguration tables</li>

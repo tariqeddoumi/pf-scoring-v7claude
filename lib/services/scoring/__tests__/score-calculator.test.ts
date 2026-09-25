@@ -31,13 +31,54 @@ describe("ScoreCalculator", () => {
     expect(result.rawScore).toBe(80);
   });
 
-  test("scoreFromRanges returns 0 for value outside ranges", () => {
+  test("une valeur au-delà de la grille reçoit le score de la meilleure plage", () => {
+    // Un zéro serait un score inventé : un DSCR de 5 là où la grille s'arrête à 2
+    // vaudrait autant qu'un DSCR catastrophique.
     const ranges = [
       { min: 0, max: 50, score: 20 },
       { min: 50, max: 100, score: 80 },
     ];
 
     const result = ScoreCalculator.scoreFromRanges(150, ranges);
+    expect(result.rawScore).toBe(80);
+    expect(result.explanation).toMatch(/au-delà de la plage la plus haute/);
+  });
+
+  test("une valeur en deçà de la grille reçoit le score de la plage la plus basse", () => {
+    const ranges = [
+      { min: 1, max: 50, score: 20 },
+      { min: 50, max: 100, score: 80 },
+    ];
+
+    const result = ScoreCalculator.scoreFromRanges(-10, ranges);
+    expect(result.rawScore).toBe(20);
+    expect(result.explanation).toMatch(/en deçà/);
+  });
+
+  test("une valeur tombant entre deux plages est rattachée à la plage inférieure", () => {
+    const ranges = [
+      { min: 0, max: 50, score: 20 },
+      { min: 60, max: 100, score: 80 },
+    ];
+
+    const result = ScoreCalculator.scoreFromRanges(55, ranges);
+    expect(result.rawScore).toBe(20);
+    expect(result.explanation).toMatch(/intervalle non couvert/);
+  });
+
+  test("l'ordre de déclaration des plages est sans effet", () => {
+    const desordre = [
+      { min: 50, max: 100, score: 80 },
+      { min: 0, max: 50, score: 20 },
+    ];
+
+    expect(ScoreCalculator.scoreFromRanges(150, desordre).rawScore).toBe(80);
+    expect(ScoreCalculator.scoreFromRanges(-1, desordre).rawScore).toBe(20);
+  });
+
+  test("une valeur non numérique ne reçoit aucun score", () => {
+    const ranges = [{ min: 0, max: 50, score: 20 }];
+    const result = ScoreCalculator.scoreFromRanges("abc", ranges);
     expect(result.rawScore).toBe(0);
   });
 
@@ -118,6 +159,36 @@ describe("AggregationEngine", () => {
 
     const result = AggregationEngine.aggregate("WEIGHTED_AVERAGE", children as any);
     expect(result).toBeCloseTo((10 * 2 + 20 * 1) / (2 + 1)); // 13.33
+  });
+
+  test("aggregate FIRST retient le premier enfant", () => {
+    const children = [
+      { nodeId: "c1", rawScore: 42, weight: 1 },
+      { nodeId: "c2", rawScore: 99, weight: 5 },
+    ];
+
+    expect(AggregationEngine.aggregate("FIRST", children as any)).toBe(42);
+  });
+
+  test("aggregate refuse une méthode inconnue au lieu de renvoyer 0", () => {
+    const children = [{ nodeId: "c1", rawScore: 80, weight: 1 }];
+
+    // Un zéro silencieux passerait pour un score légitime : la faute de paramétrage
+    // doit remonter, pas se transformer en note nulle.
+    expect(() => AggregationEngine.aggregate("MOYENNE", children as any)).toThrow(
+      /Méthode d'agrégation inconnue/
+    );
+  });
+
+  test("aggregate couvre toutes les méthodes annoncées comme supportées", () => {
+    const children = [
+      { nodeId: "c1", rawScore: 10, weight: 1 },
+      { nodeId: "c2", rawScore: 20, weight: 1 },
+    ];
+
+    for (const methode of AggregationEngine.METHODES_SUPPORTEES) {
+      expect(() => AggregationEngine.aggregate(methode, children as any)).not.toThrow();
+    }
   });
 
   test("normalize scales score to [0,1]", () => {

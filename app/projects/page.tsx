@@ -88,8 +88,8 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Projets</h1>
-          <p className="text-slate-400 mt-2 text-sm md:text-base">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Projets</h1>
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">
             Gérez les projets et leur suivi
           </p>
         </div>
@@ -102,7 +102,7 @@ export default function ProjectsPage() {
             <span>Nouveau projet</span>
           </Link>
         ) : (
-          <div className="inline-flex items-center space-x-2 bg-slate-700/50 text-slate-400 font-semibold px-4 py-2 rounded-lg w-full md:w-auto justify-center md:justify-start" title="Vous n'avez pas la permission de créer des projets">
+          <div className="inline-flex items-center space-x-2 bg-muted/50 text-muted-foreground font-semibold px-4 py-2 rounded-lg w-full md:w-auto justify-center md:justify-start" title="Vous n'avez pas la permission de créer des projets">
             <Lock size={20} />
             <span>Nouveau projet</span>
           </div>
@@ -112,21 +112,21 @@ export default function ProjectsPage() {
       {/* Search Bar + Filter Toggle */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 text-slate-500" size={20} />
+          <Search className="absolute left-3 top-3 text-muted-foreground" size={20} />
           <input
             type="text"
             placeholder="Rechercher par nom..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
+            className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
             showFilters || activeFilterCount > 0
-              ? "bg-blue-600 text-white"
-              : "bg-slate-800 border border-slate-700 text-slate-400 hover:text-white"
+              ? "bg-primary text-white"
+              : "bg-card border border-border text-muted-foreground hover:text-white"
           }`}
         >
           <Filter size={16} />
@@ -139,20 +139,20 @@ export default function ProjectsPage() {
 
       {/* Advanced Filters */}
       {showFilters && (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
+        <div className="bg-card border border-border rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white">Filtres avancés</h3>
+            <h3 className="text-sm font-semibold text-foreground">Filtres avancés</h3>
             {activeFilterCount > 0 && (
-              <button onClick={clearFilters} className="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+              <button onClick={clearFilters} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
                 <X size={12} /> Réinitialiser
               </button>
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Statut</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Statut</label>
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:border-blue-500">
+                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
                 <option value="">Tous</option>
                 <option value="brouillon">Brouillon</option>
                 <option value="en_cours">En cours</option>
@@ -161,9 +161,9 @@ export default function ProjectsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Secteur</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Secteur</label>
               <select value={filterSecteur} onChange={(e) => setFilterSecteur(e.target.value)}
-                className="w-full px-3 py-1.5 bg-slate-700 border border-slate-600 rounded text-sm text-white focus:outline-none focus:border-blue-500">
+                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
                 <option value="">Tous</option>
                 {uniqueSecteurs.map((s) => (<option key={s} value={s}>{s}</option>))}
               </select>
@@ -174,7 +174,7 @@ export default function ProjectsPage() {
 
       {/* Results Count */}
       {!loading && (
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted-foreground">
           {filteredProjects.length} projet{filteredProjects.length !== 1 ? "s" : ""} trouvé{filteredProjects.length !== 1 ? "s" : ""}
           {(searchTerm || activeFilterCount > 0) && ` sur ${projects.length}`}
         </p>
@@ -182,7 +182,7 @@ export default function ProjectsPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive text-sm">
           {error}
         </div>
       )}
@@ -192,46 +192,46 @@ export default function ProjectsPage() {
 
       {/* Table View - Desktop */}
       {!loading && filteredProjects.length > 0 && (
-        <div className="rounded-lg border border-slate-700 overflow-x-auto">
+        <div className="rounded-lg border border-border overflow-x-auto">
           <table className="w-full min-w-max md:min-w-full">
-            <thead className="bg-slate-800">
+            <thead className="bg-card">
               <tr>
-                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
                   Nom
                 </th>
-                <th className="hidden sm:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                <th className="hidden sm:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
                   Secteur
                 </th>
-                <th className="hidden md:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                <th className="hidden md:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
                   Pays
                 </th>
-                <th className="hidden lg:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                <th className="hidden lg:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
                   Montant
                 </th>
-                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-slate-300">
+                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
                   Statut
                 </th>
-                <th className="px-4 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-slate-300">
+                <th className="px-4 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-secondary-foreground">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700">
+            <tbody className="divide-y divide-border">
               {filteredProjects.map((project) => (
                 <tr
                   key={project.id}
-                  className="hover:bg-slate-800 transition-colors"
+                  className="hover:bg-card transition-colors"
                 >
-                  <td className="px-4 md:px-6 py-4 font-semibold text-white text-sm md:text-base">
+                  <td className="px-4 md:px-6 py-4 font-semibold text-foreground text-sm md:text-base">
                     {project.nom}
                   </td>
-                  <td className="hidden sm:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">
+                  <td className="hidden sm:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
                     {project.secteur || "-"}
                   </td>
-                  <td className="hidden md:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">
+                  <td className="hidden md:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
                     {project.pays || "-"}
                   </td>
-                  <td className="hidden lg:table-cell px-4 md:px-6 py-4 text-slate-400 text-xs md:text-sm">
+                  <td className="hidden lg:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
                     {project.montant
                       ? `${project.montant} ${project.devise || "MAD"}`
                       : "-"}
@@ -240,8 +240,8 @@ export default function ProjectsPage() {
                     <span
                       className={`px-2 md:px-3 py-1 rounded-full text-xs font-medium inline-block ${
                         project.status === "Actif"
-                          ? "bg-green-500/20 text-green-400"
-                          : "bg-gray-500/20 text-gray-400"
+                          ? "bg-success/15 text-success"
+                          : "bg-secondary/20 text-muted-foreground"
                       }`}
                     >
                       {project.status}
@@ -251,7 +251,7 @@ export default function ProjectsPage() {
                     <div className="flex justify-end space-x-1 md:space-x-2">
                       <button
                         onClick={() => router.push(`/projects/${project.id}`)}
-                        className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors"
+                        className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
                         title="Consulter"
                       >
                         <Eye size={16} className="md:w-5 md:h-5" />
@@ -261,7 +261,7 @@ export default function ProjectsPage() {
                           onClick={() =>
                             router.push(`/projects/${project.id}/edit`)
                           }
-                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
+                          className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
                           title="Modifier"
                         >
                           <Edit2 size={16} className="md:w-5 md:h-5" />
@@ -270,7 +270,7 @@ export default function ProjectsPage() {
                       {can("project", "delete") && (
                         <button
                           onClick={() => setDeleteConfirm(project.id)}
-                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
+                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-accent rounded-lg transition-colors"
                           title="Supprimer"
                         >
                           <Trash2 size={16} className="md:w-5 md:h-5" />
@@ -287,9 +287,9 @@ export default function ProjectsPage() {
 
       {/* Empty State */}
       {!loading && filteredProjects.length === 0 && (
-        <div className="text-center py-12 rounded-lg border border-slate-700">
-          <p className="text-slate-400 text-lg">Aucun projet trouvé</p>
-          <p className="text-slate-500 mt-1 text-sm md:text-base">
+        <div className="text-center py-12 rounded-lg border border-border">
+          <p className="text-muted-foreground text-lg">Aucun projet trouvé</p>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
             {searchTerm
               ? "Essayez une autre recherche"
               : "Créez votre premier projet"}

@@ -35,13 +35,39 @@ export interface SectorWeighting {
  *
  * Returns null when no sector is configured or no match is found (graceful degrade).
  */
+/**
+ * Départage les secteurs candidats, du rapprochement le plus sûr au plus approximatif.
+ *
+ * L'ordre est : code exact, puis libellé exact, puis libellé contenant le terme. À
+ * qualité de rapprochement égale, la liste est déjà triée par orderIndex puis code,
+ * de sorte que le résultat est reproductible.
+ */
+export function choisirSecteur<T extends { code: string; label: string }>(
+  candidats: T[],
+  terme: string
+): T | null {
+  if (candidats.length === 0) return null;
+  const t = terme.trim().toLowerCase();
+
+  return (
+    candidats.find((s) => s.code.toLowerCase() === t) ??
+    candidats.find((s) => s.label.toLowerCase() === t) ??
+    candidats[0]
+  );
+}
+
 export async function resolveSectorWeighting(
   secteur: string | null | undefined
 ): Promise<SectorWeighting | null> {
   const term = secteur?.trim();
   if (!term) return null;
 
-  const sector = await prisma.v9Sector.findFirst({
+  // Le rapprochement se faisait par findFirst sur un OR incluant « contains », sans
+  // tri : deux secteurs dont le libellé contient le même terme donnaient un résultat
+  // arbitraire, susceptible de changer d'une requête à l'autre et donc de modifier la
+  // pondération d'un dossier sans qu'aucune donnée ait bougé. On récupère tous les
+  // candidats et on les départage explicitement.
+  const candidats = await prisma.v9Sector.findMany({
     where: {
       isActive: true,
       OR: [
@@ -55,8 +81,10 @@ export async function resolveSectorWeighting(
       redFlags: { orderBy: { orderIndex: "asc" } },
       stressTests: { orderBy: { orderIndex: "asc" } },
     },
+    orderBy: [{ orderIndex: "asc" }, { code: "asc" }],
   });
 
+  const sector = choisirSecteur(candidats, term);
   if (!sector) return null;
 
   return {

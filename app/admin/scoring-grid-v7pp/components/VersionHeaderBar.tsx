@@ -52,34 +52,34 @@ export function VersionHeaderBar({
   };
 
   return (
-    <div className="bg-slate-900 border-b border-slate-700 px-6 py-3 flex items-center justify-between gap-4">
+    <div className="bg-background border-b border-border px-6 py-3 flex items-center justify-between gap-4">
       <div className="flex items-center gap-4 flex-1">
         <div>
-          <p className="text-xs text-slate-400">Modèle</p>
-          <p className="text-sm font-semibold text-white">{model.code}</p>
+          <p className="text-xs text-muted-foreground">Modèle</p>
+          <p className="text-sm font-semibold text-foreground">{model.code}</p>
         </div>
 
-        <div className="border-l border-slate-700" />
+        <div className="border-l border-border" />
 
         <div className="flex items-center gap-2">
-          <p className="text-xs text-slate-400">Version</p>
+          <p className="text-xs text-muted-foreground">Version</p>
           <div className="relative group">
             <button
               disabled={isLoading}
-              className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-800 disabled:opacity-50 rounded border border-slate-600 text-sm text-white transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-card hover:bg-accent disabled:bg-card disabled:opacity-50 rounded border border-input text-sm text-foreground transition-colors"
             >
               {activeVersion?.label || "Sélectionner"}
               <ChevronDown size={16} />
             </button>
 
             {/* Version dropdown */}
-            <div className="absolute left-0 mt-1 w-48 bg-slate-800 border border-slate-600 rounded shadow-lg hidden group-hover:block z-50">
+            <div className="absolute left-0 mt-1 w-48 bg-card border border-input rounded shadow-lg hidden group-hover:block z-50">
               {versions.map((v) => (
                 <button
                   key={v.id}
                   onClick={() => handleVersionChange(v.id)}
                   disabled={isLoading}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-700 disabled:opacity-50 text-sm text-white border-b border-slate-700 last:border-b-0 flex items-center justify-between"
+                  className="w-full text-left px-4 py-2 hover:bg-accent disabled:opacity-50 text-sm text-foreground border-b border-border last:border-b-0 flex items-center justify-between"
                 >
                   <span>{v.label}</span>
                   <span className={`text-xs px-2 py-1 rounded ${v.isPublished ? "bg-green-900 text-green-200" : "bg-yellow-900 text-yellow-200"}`}>
@@ -108,7 +108,7 @@ export function VersionHeaderBar({
         <button
           onClick={handleCreateVersion}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600 disabled:opacity-50 rounded text-sm text-white transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary disabled:opacity-50 rounded text-sm text-white transition-colors"
         >
           {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
           Nouvelle Version
@@ -118,7 +118,7 @@ export function VersionHeaderBar({
           <button
             onClick={handlePublish}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600 disabled:opacity-50 rounded text-sm text-white transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-success hover:bg-green-700 disabled:bg-success disabled:opacity-50 rounded text-sm text-white transition-colors"
           >
             {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
             Publier

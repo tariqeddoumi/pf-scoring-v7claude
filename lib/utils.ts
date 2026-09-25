@@ -23,8 +23,8 @@ import { twMerge } from "tailwind-merge";
  * Avec cn()           : "p-4 p-2" → seul "p-2" est gardé (la dernière gagne)
  *
  * Exemple d'utilisation :
- *   cn("bg-red-500", isActive && "bg-green-500")
- *   → "bg-green-500" si isActive est true (résout le conflit)
+ *   cn("bg-destructive", isActive && "bg-success")
+ *   → "bg-success" si isActive est true (résout le conflit)
  *
  * @param inputs - Classes CSS (chaînes, objets conditionnels, tableaux...)
  */

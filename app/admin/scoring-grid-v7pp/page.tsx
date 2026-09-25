@@ -157,26 +157,26 @@ export default function ScoringGridRefactoredPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <Loader2 className="animate-spin text-cyan-400 mx-auto mb-4" size={40} />
-          <p className="text-slate-400">Chargement de la grille de scoring...</p>
+          <Loader2 className="animate-spin text-primary mx-auto mb-4" size={40} />
+          <p className="text-muted-foreground">Chargement de la grille de scoring...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950">
+    <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700 px-6 py-4 flex items-center gap-4">
-        <Link href="/admin" className="hover:text-cyan-400 transition-colors">
-          <ArrowLeft size={20} className="text-slate-400" />
+      <div className="bg-background border-b border-border px-6 py-4 flex items-center gap-4">
+        <Link href="/admin" className="hover:text-primary transition-colors">
+          <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
-        <h1 className="text-2xl font-bold text-white">Paramétrage Grille de Scoring V7++</h1>
+        <h1 className="text-2xl font-bold text-foreground">Paramétrage Grille de Scoring V7++</h1>
       </div>
 
       {/* Error bar */}
       {error && (
-        <div className="bg-red-500/10 border-b border-red-500/30 px-6 py-3 text-red-400 text-sm flex items-center gap-2">
+        <div className="bg-destructive/10 border-b border-destructive/30 px-6 py-3 text-destructive text-sm flex items-center gap-2">
           <AlertCircle size={16} />
           {error}
           <button onClick={() => setError("")} className="ml-auto text-xs underline">

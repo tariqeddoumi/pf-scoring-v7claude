@@ -28,7 +28,7 @@ export function NodeDetailsPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Tab bar */}
-      <div className="border-b border-slate-700 bg-slate-900">
+      <div className="border-b border-border bg-background">
         <div className="flex gap-0 overflow-x-auto">
           {(["properties", "options", "ranges", "rules", "bindings", "validation"] as const).map((tab) => (
             <button
@@ -36,8 +36,8 @@ export function NodeDetailsPanel({
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab
-                  ? "border-cyan-400 text-cyan-400"
-                  : "border-transparent text-slate-400 hover:text-slate-300"
+                  ? "border-cyan-400 text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab === "properties" && "Propriétés"}
@@ -98,53 +98,53 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">Code</label>
+        <label className="block text-sm font-medium text-secondary-foreground mb-2">Code</label>
         <input
           type="text"
           value={formData.code}
           onChange={(e) => handleChange("code", e.target.value)}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+          className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">Label</label>
+        <label className="block text-sm font-medium text-secondary-foreground mb-2">Label</label>
         <input
           type="text"
           value={formData.label}
           onChange={(e) => handleChange("label", e.target.value)}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+          className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">Short Label</label>
+        <label className="block text-sm font-medium text-secondary-foreground mb-2">Short Label</label>
         <input
           type="text"
           value={formData.shortLabel || ""}
           onChange={(e) => handleChange("shortLabel", e.target.value)}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+          className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
+        <label className="block text-sm font-medium text-secondary-foreground mb-2">Description</label>
         <textarea
           value={formData.description || ""}
           onChange={(e) => handleChange("description", e.target.value)}
           rows={4}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+          className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
         />
       </div>
 
       {formData.weight !== null && formData.weight !== undefined && (
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">Weight (%)</label>
+          <label className="block text-sm font-medium text-secondary-foreground mb-2">Weight (%)</label>
           <input
             type="number"
             value={formData.weight}
             onChange={(e) => handleChange("weight", parseFloat(e.target.value))}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
         </div>
       )}
@@ -152,19 +152,19 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
       {/* Always shown so a domain/criterion node (answerType=null by default)
           can be made scoreable — required for DOMAIN-level granularity. */}
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">Answer Type</label>
+        <label className="block text-sm font-medium text-secondary-foreground mb-2">Answer Type</label>
         <select
           value={formData.answerType ?? ""}
           onChange={(e) =>
             handleChange("answerType", e.target.value === "" ? null : e.target.value)
           }
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+          className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
         >
           <option value="">Aucun (agrégation des enfants)</option>
           <option value="OPTION_SINGLE">Option Unique</option>
           <option value="NUMERIC_RANGE">Plage Numérique</option>
         </select>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Choisir « Option Unique » ou « Plage » pour saisir un score directement
           sur ce nœud (utile pour la granularité au niveau domaine/critère).
         </p>
@@ -172,7 +172,7 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
 
       <button
         onClick={handleSave}
-        className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm font-medium"
+        className="w-full px-4 py-2 bg-success hover:bg-green-700 rounded text-white text-sm font-medium"
       >
         Sauvegarder
       </button>
@@ -218,24 +218,24 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
   };
 
   if (node.answerType !== "OPTION_SINGLE") {
-    return <p className="text-slate-400">Ce nœud n'utilise pas les options</p>;
+    return <p className="text-muted-foreground">Ce nœud n'utilise pas les options</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {options.map((option) => (
-          <div key={option.id} className="p-3 bg-slate-800 rounded border border-slate-700">
+          <div key={option.id} className="p-3 bg-card rounded border border-border">
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1">
-                <p className="text-white font-medium">{option.label}</p>
-                <p className="text-slate-400 text-sm">Code: {option.code}</p>
-                <p className="text-slate-400 text-sm">Valeur: {option.value}</p>
-                <p className="text-slate-400 text-sm">Score: {option.score}</p>
+                <p className="text-foreground font-medium">{option.label}</p>
+                <p className="text-muted-foreground text-sm">Code: {option.code}</p>
+                <p className="text-muted-foreground text-sm">Valeur: {option.value}</p>
+                <p className="text-muted-foreground text-sm">Score: {option.score}</p>
               </div>
               <button
                 onClick={() => handleDeleteOption(option.id)}
-                className="p-1 hover:bg-slate-700 rounded text-red-400"
+                className="p-1 hover:bg-accent rounded text-destructive"
               >
                 <Trash2 size={16} />
               </button>
@@ -244,40 +244,40 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
         ))}
       </div>
 
-      <div className="border-t border-slate-700 pt-4">
-        <h4 className="text-sm font-medium text-slate-300 mb-3">Ajouter une option</h4>
+      <div className="border-t border-border pt-4">
+        <h4 className="text-sm font-medium text-secondary-foreground mb-3">Ajouter une option</h4>
         <div className="space-y-2">
           <input
             type="text"
             placeholder="Label"
             value={newOption.label || ""}
             onChange={(e) => setNewOption({ ...newOption, label: e.target.value })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <input
             type="text"
             placeholder="Code"
             value={newOption.code || ""}
             onChange={(e) => setNewOption({ ...newOption, code: e.target.value })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <input
             type="text"
             placeholder="Valeur"
             value={newOption.value || ""}
             onChange={(e) => setNewOption({ ...newOption, value: e.target.value })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <input
             type="number"
             placeholder="Score"
             value={newOption.score || ""}
             onChange={(e) => setNewOption({ ...newOption, score: parseFloat(e.target.value) })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <button
             onClick={handleAddOption}
-            className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 bg-primary hover:bg-primary/90 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
           >
             <Plus size={16} />
             Ajouter
@@ -325,25 +325,25 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
   };
 
   if (node.answerType !== "NUMERIC_RANGE") {
-    return <p className="text-slate-400">Ce nœud n'utilise pas les plages</p>;
+    return <p className="text-muted-foreground">Ce nœud n'utilise pas les plages</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {ranges.map((range) => (
-          <div key={range.id} className="p-3 bg-slate-800 rounded border border-slate-700">
+          <div key={range.id} className="p-3 bg-card rounded border border-border">
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1">
-                <p className="text-white font-medium">{range.label}</p>
-                <p className="text-slate-400 text-sm">
+                <p className="text-foreground font-medium">{range.label}</p>
+                <p className="text-muted-foreground text-sm">
                   Plage: [{range.minValue}, {range.maxValue}]
                 </p>
-                <p className="text-slate-400 text-sm">Score: {range.score}</p>
+                <p className="text-muted-foreground text-sm">Score: {range.score}</p>
               </div>
               <button
                 onClick={() => handleDeleteRange(range.id)}
-                className="p-1 hover:bg-slate-700 rounded text-red-400"
+                className="p-1 hover:bg-accent rounded text-destructive"
               >
                 <Trash2 size={16} />
               </button>
@@ -352,15 +352,15 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
         ))}
       </div>
 
-      <div className="border-t border-slate-700 pt-4">
-        <h4 className="text-sm font-medium text-slate-300 mb-3">Ajouter une plage</h4>
+      <div className="border-t border-border pt-4">
+        <h4 className="text-sm font-medium text-secondary-foreground mb-3">Ajouter une plage</h4>
         <div className="space-y-2">
           <input
             type="text"
             placeholder="Label"
             value={newRange.label || ""}
             onChange={(e) => setNewRange({ ...newRange, label: e.target.value })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <div className="grid grid-cols-2 gap-2">
             <input
@@ -368,14 +368,14 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
               placeholder="Min"
               value={newRange.minValue || ""}
               onChange={(e) => setNewRange({ ...newRange, minValue: parseFloat(e.target.value) })}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+              className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
             />
             <input
               type="number"
               placeholder="Max"
               value={newRange.maxValue || ""}
               onChange={(e) => setNewRange({ ...newRange, maxValue: parseFloat(e.target.value) })}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+              className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
             />
           </div>
           <input
@@ -383,11 +383,11 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
             placeholder="Score"
             value={newRange.score || ""}
             onChange={(e) => setNewRange({ ...newRange, score: parseFloat(e.target.value) })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded text-white text-sm"
+            className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <button
             onClick={handleAddRange}
-            className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 bg-primary hover:bg-primary/90 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
           >
             <Plus size={16} />
             Ajouter
@@ -424,7 +424,7 @@ function ValidationTab({ node }: ValidationTabProps) {
       <button
         onClick={validateNode}
         disabled={loading}
-        className="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 rounded text-white text-sm font-medium"
+        className="w-full px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 rounded text-white text-sm font-medium"
       >
         {loading ? "Validation en cours..." : "Valider le nœud"}
       </button>
@@ -443,7 +443,7 @@ function ValidationTab({ node }: ValidationTabProps) {
                 }`}
               >
                 <p className="font-medium">{error.message}</p>
-                <p className="text-xs text-slate-400">Field: {error.field}</p>
+                <p className="text-xs text-muted-foreground">Field: {error.field}</p>
               </div>
             ))}
         </div>

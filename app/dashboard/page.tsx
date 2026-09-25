@@ -10,7 +10,9 @@ import {
   PieChart,
   Activity,
   ArrowRight,
+  Sliders,
 } from "lucide-react";
+import { ratingBadgeClass, ratingBarClass } from "@/lib/score-colors";
 
 interface Project {
   id: string;
@@ -87,14 +89,14 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">Tableau de Bord</h1>
-          <p className="text-slate-400 mt-2">Chargement...</p>
+          <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
+          <p className="text-muted-foreground mt-2">Chargement...</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="rounded-lg bg-slate-800 p-6 animate-pulse h-28"
+              className="rounded-lg bg-card p-6 animate-pulse h-28"
             />
           ))}
         </div>
@@ -190,26 +192,12 @@ export default function DashboardPage() {
   const getAlertBorder = (type: string) => {
     switch (type) {
       case "error":
-        return "border-red-500";
+        return "border-destructive";
       case "warning":
         return "border-yellow-500";
       default:
-        return "border-blue-500";
+        return "border-ring";
     }
-  };
-
-  const getRatingColor = (rating: string) => {
-    if (rating.startsWith("AA")) return "text-green-400";
-    if (rating.startsWith("A")) return "text-blue-400";
-    if (rating.startsWith("BBB")) return "text-cyan-400";
-    return "text-yellow-400";
-  };
-
-  const getRatingBarColor = (rating: string) => {
-    if (rating.startsWith("AA")) return "bg-green-500";
-    if (rating.startsWith("A")) return "bg-blue-500";
-    if (rating.startsWith("BBB")) return "bg-cyan-500";
-    return "bg-yellow-500";
   };
 
   const formatDate = (dateStr: string) => {
@@ -234,15 +222,26 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">Tableau de Bord</h1>
-        <p className="text-slate-400 mt-2">
-          Vue d&apos;ensemble du portefeuille de projets
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
+          <p className="text-muted-foreground mt-2">
+            Vue d&apos;ensemble du portefeuille de projets
+          </p>
+        </div>
+        {/* La personnalisation occupait une entrée de menu à part entière, au même
+            rang que les dossiers ; sa place est sur l'écran qu'elle configure. */}
+        <Link
+          href="/dashboard-config"
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-secondary-foreground hover:text-foreground border border-input rounded-lg hover:bg-accent transition-colors"
+        >
+          <Sliders size={16} />
+          Personnaliser
+        </Link>
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm">
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4 text-destructive text-sm">
           {error}
         </div>
       )}
@@ -287,27 +286,27 @@ export default function DashboardPage() {
         {/* Left Column: Alerts and Status */}
         <div className="lg:col-span-1 space-y-6">
           {/* Alerts */}
-          <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <AlertCircle size={20} />
               <span>Alertes</span>
             </h2>
             <div className="space-y-3">
               {alerts.length === 0 && (
-                <p className="text-sm text-slate-400">Aucune alerte active</p>
+                <p className="text-sm text-muted-foreground">Aucune alerte active</p>
               )}
               {alerts.slice(0, 5).map((alert) => (
                 <div
                   key={alert.id}
-                  className={`bg-slate-700 rounded-lg p-3 border-l-4 ${getAlertBorder(alert.type)}`}
+                  className={`bg-muted rounded-lg p-3 border-l-4 ${getAlertBorder(alert.type)}`}
                 >
                   <div className="flex items-start space-x-2">
                     <span className="text-lg">{getAlertIcon(alert.type)}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-sm font-semibold text-foreground">
                         {alert.title}
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {alert.message}
                       </p>
                     </div>
@@ -318,55 +317,55 @@ export default function DashboardPage() {
           </div>
 
           {/* Status Breakdown */}
-          <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <BarChart3 size={20} />
               <span>État des Projets</span>
             </h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-sm text-slate-300">Approuvés</span>
+                  <div className="w-3 h-3 rounded-full bg-success"></div>
+                  <span className="text-sm text-secondary-foreground">Approuvés</span>
                 </div>
-                <span className="text-lg font-bold text-white">
+                <span className="text-lg font-bold text-foreground">
                   {statusBreakdown.approuve}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <span className="text-sm text-slate-300">En Révision</span>
+                  <div className="w-3 h-3 rounded-full bg-warning"></div>
+                  <span className="text-sm text-secondary-foreground">En Révision</span>
                 </div>
-                <span className="text-lg font-bold text-white">
+                <span className="text-lg font-bold text-foreground">
                   {statusBreakdown.en_revue}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  <span className="text-sm text-slate-300">En Cours</span>
+                  <div className="w-3 h-3 rounded-full bg-primary"></div>
+                  <span className="text-sm text-secondary-foreground">En Cours</span>
                 </div>
-                <span className="text-lg font-bold text-white">
+                <span className="text-lg font-bold text-foreground">
                   {statusBreakdown.en_cours}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-slate-500"></div>
-                  <span className="text-sm text-slate-300">Brouillon</span>
+                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
+                  <span className="text-sm text-secondary-foreground">Brouillon</span>
                 </div>
-                <span className="text-lg font-bold text-white">
+                <span className="text-lg font-bold text-foreground">
                   {statusBreakdown.brouillon}
                 </span>
               </div>
               {statusBreakdown.rejete > 0 && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span className="text-sm text-slate-300">Rejetés</span>
+                    <div className="w-3 h-3 rounded-full bg-destructive"></div>
+                    <span className="text-sm text-secondary-foreground">Rejetés</span>
                   </div>
-                  <span className="text-lg font-bold text-white">
+                  <span className="text-lg font-bold text-foreground">
                     {statusBreakdown.rejete}
                   </span>
                 </div>
@@ -378,8 +377,8 @@ export default function DashboardPage() {
         {/* Center Column: Ratings and Sectors */}
         <div className="lg:col-span-2 space-y-6">
           {/* Rating Distribution */}
-          <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <TrendingUp size={20} />
               <span>Distribution par Rating</span>
             </h2>
@@ -398,17 +397,17 @@ export default function DashboardPage() {
                     <div key={rating}>
                       <div className="flex items-center justify-between mb-2">
                         <span
-                          className={`font-semibold text-sm ${getRatingColor(rating)}`}
+                          className={`font-semibold text-sm ${ratingBadgeClass(rating)}`}
                         >
                           {rating}
                         </span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-muted-foreground">
                           {count} projet{count !== 1 ? "s" : ""}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div className="w-full bg-muted rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full ${getRatingBarColor(rating)}`}
+                          className={`h-2 rounded-full ${ratingBarClass(rating)}`}
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         ></div>
                       </div>
@@ -419,13 +418,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Sector Exposure */}
-          <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
               <PieChart size={20} />
               <span>Exposition par Secteur</span>
             </h2>
             {sectorExposure.length === 0 ? (
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Aucun projet avec secteur défini
               </p>
             ) : (
@@ -433,20 +432,20 @@ export default function DashboardPage() {
                 {sectorExposure.map((sector) => (
                   <div
                     key={sector.sector}
-                    className="bg-slate-700 rounded-lg p-3"
+                    className="bg-muted rounded-lg p-3"
                   >
-                    <p className="text-sm font-semibold text-white truncate">
+                    <p className="text-sm font-semibold text-foreground truncate">
                       {sector.sector}
                     </p>
                     <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-muted-foreground">
                         {sector.percentage.toFixed(1)}%
                       </p>
-                      <p className="text-sm font-bold text-cyan-400">
+                      <p className="text-sm font-bold text-primary">
                         {(sector.amount / 1000000).toFixed(0)}M
                       </p>
                     </div>
-                    <div className="w-full bg-slate-600 rounded-full h-1 mt-2">
+                    <div className="w-full bg-secondary rounded-full h-1 mt-2">
                       <div
                         className="bg-cyan-500 h-1 rounded-full"
                         style={{
@@ -463,43 +462,43 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Activities */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-        <h2 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
+      <div className="rounded-lg border border-border bg-card p-6">
+        <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
           <Activity size={20} />
           <span>Activités Récentes</span>
         </h2>
         <div className="space-y-3">
           {activities.length === 0 && (
-            <p className="text-sm text-slate-400">Aucune activité récente</p>
+            <p className="text-sm text-muted-foreground">Aucune activité récente</p>
           )}
           {activities.slice(0, 8).map((activity) => (
             <div
               key={activity.id}
-              className="flex items-start space-x-4 pb-3 border-b border-slate-700 last:border-b-0"
+              className="flex items-start space-x-4 pb-3 border-b border-border last:border-b-0"
             >
               <div className="flex-1">
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-xs font-semibold text-cyan-400">
+                  <span className="text-xs font-semibold text-primary">
                     {activity.action}
                   </span>
-                  <span className="text-xs text-slate-500">•</span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-muted-foreground">•</span>
+                  <span className="text-xs text-muted-foreground">
                     {formatDate(activity.dateAction)}{" "}
                     {formatTime(activity.dateAction)}
                   </span>
                 </div>
-                <p className="text-sm text-white">
+                <p className="text-sm text-foreground">
                   {typeof activity.details === "object" && activity.details
                     ? activity.details.description ||
                       activity.details.message ||
                       JSON.stringify(activity.details)
                     : activity.details || activity.action}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Par {activity.utilisateurId}
                 </p>
               </div>
-              <ArrowRight size={16} className="text-slate-500 mt-1" />
+              <ArrowRight size={16} className="text-muted-foreground mt-1" />
             </div>
           ))}
         </div>
@@ -509,48 +508,48 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
           href="/projects"
-          className="rounded-lg border border-slate-700 bg-slate-800 p-6 hover:bg-slate-700 transition-colors group"
+          className="rounded-lg border border-border bg-card p-6 hover:bg-accent transition-colors group"
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-white mb-1">Projets</h3>
-              <p className="text-sm text-slate-400">Gestion des projets</p>
+              <h3 className="font-semibold text-foreground mb-1">Projets</h3>
+              <p className="text-sm text-muted-foreground">Gestion des projets</p>
             </div>
             <ArrowRight
               size={20}
-              className="text-slate-500 group-hover:text-cyan-400 transition-colors"
+              className="text-muted-foreground group-hover:text-primary transition-colors"
             />
           </div>
         </Link>
 
         <Link
           href="/evaluations"
-          className="rounded-lg border border-slate-700 bg-slate-800 p-6 hover:bg-slate-700 transition-colors group"
+          className="rounded-lg border border-border bg-card p-6 hover:bg-accent transition-colors group"
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-white mb-1">Évaluations</h3>
-              <p className="text-sm text-slate-400">Suivi des scores</p>
+              <h3 className="font-semibold text-foreground mb-1">Évaluations</h3>
+              <p className="text-sm text-muted-foreground">Suivi des scores</p>
             </div>
             <ArrowRight
               size={20}
-              className="text-slate-500 group-hover:text-cyan-400 transition-colors"
+              className="text-muted-foreground group-hover:text-primary transition-colors"
             />
           </div>
         </Link>
 
         <Link
           href="/clients"
-          className="rounded-lg border border-slate-700 bg-slate-800 p-6 hover:bg-slate-700 transition-colors group"
+          className="rounded-lg border border-border bg-card p-6 hover:bg-accent transition-colors group"
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-white mb-1">Clients</h3>
-              <p className="text-sm text-slate-400">Base clients</p>
+              <h3 className="font-semibold text-foreground mb-1">Clients</h3>
+              <p className="text-sm text-muted-foreground">Base clients</p>
             </div>
             <ArrowRight
               size={20}
-              className="text-slate-500 group-hover:text-cyan-400 transition-colors"
+              className="text-muted-foreground group-hover:text-primary transition-colors"
             />
           </div>
         </Link>

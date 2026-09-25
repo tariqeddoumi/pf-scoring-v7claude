@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * POST /api/scoring/bindings
  * Create a new node data binding.
  * Links a scoring node to a source (CLIENT/PROJECT/etc) field with transform & mode.
  */
-export async function POST(req: NextRequest) {
+async function handlePOST(
+  req: NextRequest,
+  user: AuthPayload
+) {
   try {
     const body = await req.json();
     const {
@@ -92,7 +96,10 @@ export async function POST(req: NextRequest) {
  * GET /api/scoring/bindings?nodeId=...
  * List bindings for a node, optionally filtered by source.
  */
-export async function GET(req: NextRequest) {
+async function handleGET(
+  req: NextRequest,
+  user: AuthPayload
+) {
   try {
     const { searchParams } = new URL(req.url);
     const nodeId = searchParams.get("nodeId");
@@ -129,4 +136,12 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function POST(req: NextRequest) {
+  return withAuth(req, (r, user) => handlePOST(r, user));
+}
+
+export async function GET(req: NextRequest) {
+  return withAuth(req, (r, user) => handleGET(r, user));
 }

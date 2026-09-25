@@ -22,7 +22,7 @@ export function Tabs({ tabs, defaultTab }: TabsProps) {
   return (
     <div className="w-full">
       {/* Tab Navigation */}
-      <div className="flex gap-1 border-b border-slate-700 overflow-x-auto">
+      <div className="flex gap-1 border-b border-border overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -30,8 +30,8 @@ export function Tabs({ tabs, defaultTab }: TabsProps) {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-3 text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-colors border-b-2 ${
               activeTab === tab.id
-                ? "border-b-blue-500 text-blue-400"
-                : "border-b-transparent text-slate-400 hover:text-slate-300"
+                ? "border-b-blue-500 text-primary"
+                : "border-b-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {tab.icon && <span className="text-base">{tab.icon}</span>}

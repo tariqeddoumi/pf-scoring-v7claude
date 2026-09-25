@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * GET /api/scoring/evaluations/[id]/trace
  * Fetch detailed calculation trace & node results for an evaluation.
  * Shows raw scores, weighted scores, rule impacts, explanations.
  */
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+async function handleGET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+  user: AuthPayload
 ) {
   try {
     const { id } = await params;
@@ -81,4 +83,11 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return withAuth(req, (r, user) => handleGET(r, ctx, user));
 }

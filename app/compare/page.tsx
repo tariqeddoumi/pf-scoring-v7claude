@@ -69,26 +69,26 @@ export default function ComparePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white">
+        <h1 className="text-3xl font-bold text-foreground">
           Comparaison de Projets
         </h1>
-        <p className="text-slate-400 mt-2">
+        <p className="text-muted-foreground mt-2">
           Comparez jusqu&apos;à 4 projets côte à côte
         </p>
       </div>
 
       {/* Project Selection */}
-      <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
-        <h2 className="text-xl font-bold text-white mb-4">
+      <div className="rounded-lg border border-border bg-card p-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">
           Sélectionner des Projets
         </h2>
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto"></div>
-            <p className="text-slate-400 mt-2">Chargement...</p>
+            <p className="text-muted-foreground mt-2">Chargement...</p>
           </div>
         ) : projects.length === 0 ? (
-          <p className="text-slate-400 text-center py-4">
+          <p className="text-muted-foreground text-center py-4">
             Aucun projet disponible
           </p>
         ) : (
@@ -99,22 +99,22 @@ export default function ComparePage() {
                 onClick={() => handleSelectProject(project.id)}
                 className={`rounded-lg border-2 p-4 text-left transition-all ${
                   selectedProjects.includes(project.id)
-                    ? "border-cyan-500 bg-cyan-500/10"
-                    : "border-slate-600 bg-slate-700 hover:border-slate-500"
+                    ? "border-primary bg-cyan-500/10"
+                    : "border-input bg-muted hover:border-ring"
                 }`}
               >
-                <h3 className="font-semibold text-white">{project.nom}</h3>
-                <p className="text-sm text-slate-400 mt-1">
+                <h3 className="font-semibold text-foreground">{project.nom}</h3>
+                <p className="text-sm text-muted-foreground mt-1">
                   {project.secteur || "Secteur non défini"}
                 </p>
                 <div className="flex items-center gap-3 mt-2">
-                  <p className="text-sm text-cyan-400 font-bold">
+                  <p className="text-sm text-primary font-bold">
                     {project.scoreGlobal != null
                       ? `Score: ${project.scoreGlobal.toFixed(2)}/10`
                       : "Non noté"}
                   </p>
                   {project.grade && (
-                    <span className="px-2 py-0.5 rounded text-xs font-semibold bg-slate-600 text-white">
+                    <span className="px-2 py-0.5 rounded text-xs font-semibold bg-secondary text-foreground">
                       {project.grade}
                     </span>
                   )}
@@ -127,25 +127,25 @@ export default function ComparePage() {
 
       {/* Comparison Table */}
       {compareProjects.length > 0 && (
-        <div className="rounded-lg border border-slate-700 bg-slate-800 overflow-hidden">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-700 border-b border-slate-600">
+              <thead className="bg-muted border-b border-input">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-slate-300">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-secondary-foreground">
                     Métrique
                   </th>
                   {compareProjects.map((project) => (
                     <th
                       key={project.id}
-                      className="px-4 py-3 text-left text-sm font-semibold text-white"
+                      className="px-4 py-3 text-left text-sm font-semibold text-foreground"
                     >
                       {project.nom}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-border">
                 <Row
                   label="Score Global"
                   values={compareProjects.map((p) =>
@@ -181,8 +181,8 @@ export default function ComparePage() {
           </div>
 
           {/* Export Button */}
-          <div className="p-4 border-t border-slate-700 flex justify-end">
-            <button className="inline-flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all">
+          <div className="p-4 border-t border-border flex justify-end">
+            <button className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all">
               <Download size={18} />
               <span>Exporter Comparaison</span>
             </button>
@@ -191,8 +191,8 @@ export default function ComparePage() {
       )}
 
       {selectedProjects.length === 0 && !loading && (
-        <div className="rounded-lg border border-slate-700 bg-slate-800 p-8 text-center">
-          <p className="text-slate-400">
+        <div className="rounded-lg border border-border bg-card p-8 text-center">
+          <p className="text-muted-foreground">
             Sélectionnez au moins 2 projets pour comparer
           </p>
         </div>
@@ -211,12 +211,12 @@ function Row({
   highlight?: boolean;
 }) {
   return (
-    <tr className={highlight ? "bg-slate-700" : ""}>
-      <td className="px-4 py-3 font-semibold text-white">{label}</td>
+    <tr className={highlight ? "bg-muted" : ""}>
+      <td className="px-4 py-3 font-semibold text-foreground">{label}</td>
       {values.map((value, i) => (
         <td
           key={i}
-          className={`px-4 py-3 ${highlight ? "text-cyan-400 font-bold" : "text-slate-300"}`}
+          className={`px-4 py-3 ${highlight ? "text-primary font-bold" : "text-secondary-foreground"}`}
         >
           {value}
         </td>

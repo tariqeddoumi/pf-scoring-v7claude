@@ -4,6 +4,16 @@ import { ScoreCalculator, AggregationEngine } from "./score-calculator";
 import { ValueResolver, ResolvedValueSnapshot } from "./value-resolver";
 import { BindingResolver, BindingContext } from "./binding-resolver";
 import { resolveSectorWeighting, SectorWeighting } from "./sectorial";
+import { evaluateCondition, ConditionContext } from "./condition-evaluator";
+import {
+  BAREME_REPLI,
+  RatingResolution,
+  RatingSource,
+  resolveRatingFromBands,
+} from "./rating-scale";
+import { buildConditionContext, buildCriteresContext } from "./condition-context";
+import { actionRegle, bloquePublication, estBloquante } from "./rule-vocabulary";
+import { getRatingScales } from "@/lib/services/scoring-configuration-service";
 import {
   getDomainGranularity,
   GRANULARITY_DEPTH,
@@ -15,8 +25,19 @@ export interface RuleImpact {
   ruleCode: string;
   ruleType: string;
   severity: string;
+  actionType: string;
   penalty: number;
+  blocking: boolean;
   message: string;
+}
+
+/** A rule whose condition could not be evaluated — surfaced, never silently skipped. */
+export interface RuleDiagnostic {
+  ruleId: string;
+  ruleCode: string;
+  nodeCode: string;
+  expression: string;
+  reason: string;
 }
 
 export interface NodeResult {
@@ -63,6 +84,17 @@ export interface EvaluationTrace {
   rootResults: NodeResult[];
   traceJson: string;
   triggeredRuleIds: string[];
+  /** True when a NO_GO or HARD_STOP rule fired: the score cannot authorise approval. */
+  blocked: boolean;
+  blockingRuleCodes: string[];
+  /** True when a BLOCK_PUBLICATION rule fired. */
+  publicationBlocked: boolean;
+  /** Rules skipped because their condition could not be evaluated. */
+  ruleDiagnostics: RuleDiagnostic[];
+  /** D'où vient la note : "referentiel" (table paramétrable) ou "repli" (barème codé). */
+  ratingSource: RatingSource;
+  /** Renseigné lorsque le score tombe dans un interstice du barème. */
+  ratingWarning?: string;
   /** Present when sectorial calibration is enabled and a sector matched. */
   sectorial?: SectorialTrace;
 }
@@ -121,8 +153,14 @@ export class ScoringEngineV8 {
       where: { versionId: evaluation.modelVersionId, isActive: true },
     });
     const rulesByNode = new Map<string, typeof allRules>();
+    const reglesOrphelines: typeof allRules = [];
     for (const rule of allRules) {
-      if (!rule.nodeId) continue;
+      // Une règle sans critère de rattachement était écartée sans un mot : active en
+      // base, visible à l'administration, et jamais évaluée.
+      if (!rule.nodeId) {
+        reglesOrphelines.push(rule);
+        continue;
+      }
       const list = rulesByNode.get(rule.nodeId) || [];
       list.push(rule);
       rulesByNode.set(rule.nodeId, list);
@@ -137,8 +175,11 @@ export class ScoringEngineV8 {
     const effectiveLeafIds = new Set<string>();
 
     const nodeScores = new Map<string, NodeResult>();
-    let triggeredRuleIds: string[] = [];
+    const triggeredRuleIds: string[] = [];
     let malusTotal = 0;
+    const blockingRuleCodes: string[] = [];
+    const ruleDiagnostics: RuleDiagnostic[] = [];
+    let publicationBlocked = false;
 
     ModelLoader.traverseBottomUp(tree, (node) => {
       const answer = answersByNode.get(node.id);
@@ -202,7 +243,16 @@ export class ScoringEngineV8 {
       } else if (treatAsAggregator) {
         const childIds = tree.childrenOf.get(node.id) || [];
         const children = childIds.map((id) => nodeScores.get(id)).filter(Boolean) as NodeResult[];
-        rawScore = AggregationEngine.aggregate(node.aggregationMethod ?? undefined, children as any);
+        try {
+          rawScore = AggregationEngine.aggregate(
+            node.aggregationMethod ?? undefined,
+            children as any
+          );
+        } catch (e) {
+          throw new Error(
+            `Nœud « ${node.code} » : ${e instanceof Error ? e.message : String(e)}`
+          );
+        }
         explanation = `Aggregated ${children.length} children using ${node.aggregationMethod || "AVERAGE"}`;
       }
 
@@ -210,22 +260,10 @@ export class ScoringEngineV8 {
       const weight = node.weight ?? null;
       const weightedScore = weight !== null ? rawScore * weight : rawScore;
 
-      const rules = rulesByNode.get(node.id) || [];
+      // Les règles sont évaluées après la traversée, une fois tous les nœuds notés :
+      // une condition peut ainsi interroger n'importe quel critère du modèle, et pas
+      // seulement ceux que l'ordre de parcours a déjà rencontrés.
       const ruleImpacts: RuleImpact[] = [];
-      for (const rule of rules) {
-        if (rule.actionType === "APPLY_MALUS" && rule.penaltyValue) {
-          ruleImpacts.push({
-            ruleId: rule.id,
-            ruleCode: rule.code,
-            ruleType: rule.ruleType,
-            severity: rule.severity,
-            penalty: rule.penaltyValue,
-            message: rule.messageUser || rule.label,
-          });
-          malusTotal += rule.penaltyValue;
-          triggeredRuleIds.push(rule.id);
-        }
-      }
 
       const normalizedScore = AggregationEngine.normalize(rawScore, node.scoreMax || 100);
 
@@ -243,6 +281,78 @@ export class ScoringEngineV8 {
         explanation,
       });
     });
+
+    // --- Seconde passe : évaluation des règles ---------------------------------
+    for (const rule of reglesOrphelines) {
+      ruleDiagnostics.push({
+        ruleId: rule.id,
+        ruleCode: rule.code,
+        nodeCode: "—",
+        expression: rule.conditionExpression ?? "",
+        reason:
+          "règle rattachée à aucun critère : le moteur ne sait pas quand l'évaluer",
+      });
+    }
+
+    // Le contexte est construit une fois, complet, et partagé par toutes les règles.
+    const criteres = buildCriteresContext({
+      nodes: Array.from(tree.nodesById.values()),
+      nodeScores,
+      answersByNode,
+      optionsByNode,
+    });
+
+    for (const [nodeId, rules] of rulesByNode) {
+      const resultat = nodeScores.get(nodeId);
+      const node = tree.nodesById.get(nodeId);
+      if (!resultat || !node) continue;
+
+      const conditionCtx: ConditionContext = buildConditionContext({
+        score: resultat.rawScore,
+        node: { code: node.code, label: node.label, depth: node.depth },
+        project: evaluation.project as Record<string, unknown> | null,
+        evaluation: evaluation as unknown as Record<string, unknown>,
+        malusTotal,
+        criteres,
+      });
+
+      for (const rule of rules) {
+        const verdict = evaluateCondition(rule.conditionExpression, conditionCtx);
+
+        if (!verdict.evaluated) {
+          ruleDiagnostics.push({
+            ruleId: rule.id,
+            ruleCode: rule.code,
+            nodeCode: node.code,
+            expression: rule.conditionExpression ?? "",
+            reason: verdict.reason ?? "expression non évaluable",
+          });
+          continue;
+        }
+        if (!verdict.triggered) continue;
+
+        const isBlocking = estBloquante(rule);
+        const penalty = actionRegle(rule.actionType)?.exigeMalus
+          ? (rule.penaltyValue ?? 0)
+          : 0;
+
+        resultat.ruleImpacts.push({
+          ruleId: rule.id,
+          ruleCode: rule.code,
+          ruleType: rule.ruleType,
+          severity: rule.severity,
+          actionType: rule.actionType,
+          penalty,
+          blocking: isBlocking,
+          message: rule.messageUser || rule.label,
+        });
+        triggeredRuleIds.push(rule.id);
+
+        if (penalty) malusTotal += penalty;
+        if (isBlocking) blockingRuleCodes.push(rule.code);
+        if (bloquePublication(rule)) publicationBlocked = true;
+      }
+    }
 
     const rootResults: NodeResult[] = [];
     for (const rootId of tree.rootNodeIds) {
@@ -288,7 +398,7 @@ export class ScoringEngineV8 {
 
     const rawFinalScore = sectorWeighting ? adjRawFinal : baseRawFinal;
     const finalScoreAdjusted = Math.max(0, Math.min(100, rawFinalScore - malusTotal));
-    const rating = this.scoreToRating(finalScoreAdjusted);
+    const ratingResolution = await this.resolveRating(finalScoreAdjusted);
 
     let sectorial: SectorialTrace | undefined;
     if (sectorWeighting) {
@@ -306,18 +416,37 @@ export class ScoringEngineV8 {
       };
     }
 
-    const traceJson = JSON.stringify({ rootResults, sectorial }, null, 2);
+    const blocked = blockingRuleCodes.length > 0;
+    const traceJson = JSON.stringify(
+      {
+        rootResults,
+        sectorial,
+        blockingRuleCodes,
+        ruleDiagnostics,
+        rating: ratingResolution,
+      },
+      null,
+      2
+    );
 
     return {
       evaluationId,
       modelVersionId: evaluation.modelVersionId,
       finalScore: finalScoreAdjusted,
-      rating,
-      recommendation: this.scoreToRecommendation(finalScoreAdjusted),
+      rating: ratingResolution.rating,
+      ratingSource: ratingResolution.source,
+      ratingWarning: ratingResolution.warning,
+      recommendation: blocked
+        ? `Blocage — condition rédhibitoire déclenchée (${blockingRuleCodes.join(", ")})`
+        : this.scoreToRecommendation(finalScoreAdjusted),
       malusTotal,
       rootResults,
       traceJson,
       triggeredRuleIds,
+      blocked,
+      blockingRuleCodes,
+      publicationBlocked,
+      ruleDiagnostics,
       sectorial,
     };
   }
@@ -362,17 +491,38 @@ export class ScoringEngineV8 {
     return children;
   }
 
-  private static scoreToRating(score: number): string {
-    if (score >= 90) return "AAA";
-    if (score >= 80) return "AA";
-    if (score >= 70) return "A";
-    if (score >= 60) return "BBB";
-    if (score >= 50) return "BB";
-    if (score >= 40) return "B";
-    if (score >= 30) return "CCC";
-    if (score >= 20) return "CC";
-    if (score >= 10) return "C";
-    return "D";
+  /**
+   * Convertit le score en note via le barème paramétrable.
+   *
+   * Le barème vit en base (BP_PF_v7pp_rating_scales) et se modifie sans redéploiement.
+   * Le barème codé n'intervient que si la table est vide : une base non initialisée
+   * conserve alors l'ancien comportement au lieu de produire « D » pour tout le monde.
+   */
+  private static async resolveRating(score: number): Promise<RatingResolution> {
+    try {
+      const scales = await getRatingScales();
+      if (scales.length > 0) {
+        return resolveRatingFromBands(
+          score,
+          scales.map((s) => ({
+            rating: s.label,
+            minScore: Number(s.minScore),
+            maxScore: Number(s.maxScore),
+          })),
+          "referentiel"
+        );
+      }
+    } catch (e) {
+      // Le référentiel est indisponible : on note quand même, en le disant.
+      return {
+        ...resolveRatingFromBands(score, BAREME_REPLI, "repli"),
+        warning: `référentiel illisible (${e instanceof Error ? e.message : String(e)})`,
+      };
+    }
+    return {
+      ...resolveRatingFromBands(score, BAREME_REPLI, "repli"),
+      warning: "référentiel de notation vide",
+    };
   }
 
   private static scoreToRecommendation(score: number): string {

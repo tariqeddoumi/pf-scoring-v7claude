@@ -15,9 +15,11 @@ import {
   Columns,
 } from "lucide-react";
 import { DomainSidebar } from "./DomainSidebar";
-import { LiveScorePanel, type AnswerValue } from "./LiveScorePanel";
+import { LiveScorePanel, type AnswerValue, type ServerScore } from "./LiveScorePanel";
 import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
+import { apiPost, apiPatch } from "@/lib/api-client";
+import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 
 interface EvaluationWorkspaceProps {
   evaluationId: string;
@@ -73,7 +75,7 @@ function NodeInput({
   onChange: (val: AnswerValue) => void;
 }) {
   const inputClass =
-    "w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors";
+    "w-full px-3 py-2 bg-muted border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-colors";
 
   const selectedOption = node.options?.find((o) => o.value === answer?.valueString);
 
@@ -95,7 +97,7 @@ function NodeInput({
             ))}
           </select>
           {selectedOption && (
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-cyan-400">
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-primary">
               <CheckCircle2 size={11} />
               Score attribué : <span className="font-bold">{selectedOption.score} pts</span>
             </div>
@@ -129,8 +131,8 @@ function NodeInput({
                   key={i}
                   className={`text-xs px-2 py-0.5 rounded-full ${
                     active
-                      ? "bg-cyan-500/20 text-cyan-300 font-semibold"
-                      : "bg-slate-700 text-slate-500"
+                      ? "bg-primary/15 text-primary font-semibold"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {r.label || `${r.minValue}–${r.maxValue}`} → {r.score} pts
@@ -154,8 +156,8 @@ function NodeInput({
                 onClick={() => onChange({ ...answer, valueBoolean: val })}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
                   active
-                    ? "bg-cyan-600 border-cyan-500 text-white"
-                    : "bg-slate-700 border-slate-600 text-slate-400 hover:border-slate-500"
+                    ? "bg-primary border-primary text-white"
+                    : "bg-muted border-input text-muted-foreground hover:border-ring"
                 }`}
               >
                 {label}
@@ -183,7 +185,7 @@ function NodeInput({
           onChange({ ...answer, comment: e.target.value || undefined })
         }
         rows={1}
-        className={`${inputClass} resize-none text-xs text-slate-400`}
+        className={`${inputClass} resize-none text-xs text-muted-foreground`}
         placeholder="Commentaire / justification (optionnel)"
       />
     </div>
@@ -194,12 +196,15 @@ function NodeInput({
 
 function CriteriaTree({
   node,
+  sommeNiveau,
   depth,
   answers,
   onAnswer,
   expandedAll,
 }: {
   node: QuestionnaireNode;
+  /** Somme des poids de la fratrie : un poids ne se lit que rapporté à elle. */
+  sommeNiveau: number;
   depth: number;
   answers: Record<string, AnswerValue>;
   onAnswer: (nodeId: string, val: AnswerValue) => void;
@@ -216,9 +221,9 @@ function CriteriaTree({
 
   // depth-based styles
   const depthStyles = [
-    "bg-slate-800 border border-slate-700 rounded-xl mb-3",
-    "bg-slate-750 border-l-2 border-slate-600 ml-2 mb-2",
-    "bg-slate-800/50 border-l border-slate-700 ml-4 mb-1.5",
+    "bg-card border border-border rounded-xl mb-3",
+    "bg-surface border-l-2 border-input ml-2 mb-2",
+    "bg-card/50 border-l border-border ml-4 mb-1.5",
     "ml-6 mb-1",
   ];
   const style = depthStyles[Math.min(depth, depthStyles.length - 1)];
@@ -234,15 +239,15 @@ function CriteriaTree({
       >
         {/* Toggle */}
         {hasChildren ? (
-          <div className="mt-0.5 text-slate-500 flex-shrink-0">
+          <div className="mt-0.5 text-muted-foreground flex-shrink-0">
             {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </div>
         ) : (
           <div className="mt-0.5 w-4 flex-shrink-0">
             {isAnswered ? (
-              <CheckCircle2 size={14} className="text-green-400" />
+              <CheckCircle2 size={14} className="text-success" />
             ) : (
-              <div className="w-3.5 h-3.5 rounded-full border border-slate-600 mt-px" />
+              <div className="w-3.5 h-3.5 rounded-full border border-input mt-px" />
             )}
           </div>
         )}
@@ -251,29 +256,29 @@ function CriteriaTree({
           <div className="flex items-center gap-2 flex-wrap">
             {/* Depth badge */}
             {depth === 0 && (
-              <span className="text-xs px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">
+              <span className="text-xs px-2 py-0.5 rounded bg-primary/15 text-primary font-mono">
                 {node.code}
               </span>
             )}
             <span
               className={`font-medium ${
                 depth === 0
-                  ? "text-white text-base"
+                  ? "text-foreground text-base"
                   : depth === 1
-                  ? "text-slate-200 text-sm"
-                  : "text-slate-300 text-sm"
+                  ? "text-foreground text-sm"
+                  : "text-secondary-foreground text-sm"
               }`}
             >
               {node.label}
             </span>
             {!hasChildren && (
-              <span className="text-xs text-slate-500 bg-slate-700 px-1.5 py-0.5 rounded">
+              <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                 {node.answerType?.replace("_", " ") || "TEXT"}
               </span>
             )}
           </div>
           {node.description && (
-            <p className="text-xs text-slate-500 mt-0.5 flex items-start gap-1">
+            <p className="text-xs text-muted-foreground mt-0.5 flex items-start gap-1">
               <Info size={10} className="mt-0.5 flex-shrink-0" />
               {node.description}
             </p>
@@ -282,8 +287,11 @@ function CriteriaTree({
 
         {/* Weight badge */}
         {node.weight !== undefined && node.weight !== null && depth > 0 && (
-          <span className="text-xs text-slate-500 flex-shrink-0">
-            ×{node.weight}
+          <span
+            className="text-xs text-muted-foreground flex-shrink-0"
+            title={formatPoidsDetail(node.weight, sommeNiveau)}
+          >
+            {formatPart(node.weight, sommeNiveau) ?? `poids ${node.weight}`}
           </span>
         )}
       </div>
@@ -306,6 +314,7 @@ function CriteriaTree({
             <CriteriaTree
               key={child.id}
               node={child}
+              sommeNiveau={sommeFratrie(node.children)}
               depth={depth + 1}
               answers={answers}
               onAnswer={onAnswer}
@@ -337,22 +346,47 @@ export function EvaluationWorkspace({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [expandAll, setExpandAll] = useState(false);
   const [viewMode, setViewMode] = useState<"tabbed" | "accordion">("tabbed");
+  // Le score affiché vient du moteur, jamais d'un calcul refait dans le navigateur.
+  const [serverScore, setServerScore] = useState<ServerScore | null>(null);
+  const [isScoring, setIsScoring] = useState(false);
+  const [isStale, setIsStale] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentDomain = questionnaire.find((d) => d.id === currentDomainId) ?? questionnaire[0];
   const currentIndex = questionnaire.findIndex((d) => d.id === currentDomainId);
   const stats = buildDomainStats(questionnaire, answers);
 
-  /* auto-save after 3 s idle */
-  const triggerAutoSave = useCallback(() => {
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => saveAnswers(false), 3000);
-  }, []);
+  /* ── Score du moteur (aperçu, non persisté) ────────────── */
+  const refreshScore = useCallback(async () => {
+    setIsScoring(true);
+    try {
+      const res = await apiPost(
+        `/api/scoring/evaluations/${evaluationId}/calculate?apercu=1`
+      );
+      if (!res.ok) return;
+      const { data } = await res.json();
+      setServerScore({
+        finalScore: data.finalScore,
+        rating: data.rating,
+        malusTotal: data.malusTotal ?? 0,
+        blocked: !!data.blocked,
+        blockingRuleCodes: data.blockingRuleCodes ?? [],
+        domains: data.domains ?? [],
+      });
+      setIsStale(false);
+    } catch {
+      // Un aperçu qui échoue ne doit pas interrompre la saisie : le panneau
+      // conserve la dernière valeur connue et reste marqué obsolète.
+    } finally {
+      setIsScoring(false);
+    }
+  }, [evaluationId]);
 
-  const handleAnswer = (nodeId: string, val: AnswerValue) => {
-    setAnswers((prev) => ({ ...prev, [nodeId]: val }));
-    triggerAutoSave();
-  };
+  // Premier calcul au montage : le panneau affiche l'état réel du dossier plutôt
+  // qu'un tiret jusqu'à la première sauvegarde.
+  useEffect(() => {
+    void refreshScore();
+  }, [refreshScore]);
 
   /* ── Save answers ──────────────────────────────────────── */
   const saveAnswers = useCallback(
@@ -362,30 +396,61 @@ export function EvaluationWorkspace({
       try {
         const payload = Object.entries(answers).map(([nodeId, a]) => ({
           nodeId,
-          answerType: "VALUE",
           valueString: a.valueString,
           valueNumber: a.valueNumber,
           valueBoolean: a.valueBoolean,
           comment: a.comment,
         }));
 
-        const res = await fetch(`/api/scoring/evaluations/${evaluationId}/answers`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ answers: payload }),
-        });
+        const res = await apiPatch(
+          `/api/scoring/evaluations/${evaluationId}/answers`,
+          { answers: payload }
+        );
 
         if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
+
+        // Une sauvegarde partielle ne doit pas s'annoncer comme un succès.
+        const body = await res.json();
+        const ignored = body?.data?.ignored ?? [];
+        if (ignored.length > 0) {
+          setError(
+            `${ignored.length} réponse(s) non enregistrée(s) : ${ignored[0].reason}`
+          );
+          return;
+        }
+
         setLastSaved(new Date());
-        if (showFeedback) setSuccessMsg("Réponses sauvegardées ✓");
+        if (showFeedback) {
+          setSuccessMsg(`${body?.data?.updatedCount ?? 0} réponse(s) enregistrée(s) ✓`);
+        }
+        void refreshScore();
       } catch (e: any) {
         setError(e.message);
       } finally {
         setIsSaving(false);
       }
     },
-    [answers, evaluationId]
+    [answers, evaluationId, refreshScore]
   );
+
+  /* auto-save after 3 s idle — la référence est gardée dans un ref pour que le
+     minuteur appelle toujours la dernière version de saveAnswers, et non celle
+     capturée au premier rendu (qui ne voyait aucune réponse). */
+  const saveAnswersRef = useRef(saveAnswers);
+  useEffect(() => {
+    saveAnswersRef.current = saveAnswers;
+  }, [saveAnswers]);
+
+  const triggerAutoSave = useCallback(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => saveAnswersRef.current(false), 3000);
+  }, []);
+
+  const handleAnswer = (nodeId: string, val: AnswerValue) => {
+    setAnswers((prev) => ({ ...prev, [nodeId]: val }));
+    setIsStale(true);
+    triggerAutoSave();
+  };
 
   /* ── Calculate ─────────────────────────────────────────── */
   const handleCalculate = async () => {
@@ -395,9 +460,7 @@ export function EvaluationWorkspace({
     try {
       await saveAnswers(false);
 
-      const res = await fetch(`/api/scoring/evaluations/${evaluationId}/calculate`, {
-        method: "POST",
-      });
+      const res = await apiPost(`/api/scoring/evaluations/${evaluationId}/calculate`);
 
       if (!res.ok) {
         const data = await res.json();
@@ -405,8 +468,19 @@ export function EvaluationWorkspace({
       }
 
       const { data } = await res.json();
+      setServerScore({
+        finalScore: data.finalScore,
+        rating: data.rating,
+        malusTotal: data.malusTotal ?? 0,
+        blocked: !!data.blocked,
+        blockingRuleCodes: data.blockingRuleCodes ?? [],
+        domains: data.domains ?? [],
+      });
+      setIsStale(false);
       setSuccessMsg(
-        `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
+        data.blocked
+          ? `Calcul effectué — BLOCAGE : ${data.blockingRuleCodes.join(", ")}`
+          : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
       );
     } catch (e: any) {
       setError(e.message);
@@ -423,17 +497,16 @@ export function EvaluationWorkspace({
     try {
       await saveAnswers(false);
 
-      const calcRes = await fetch(`/api/scoring/evaluations/${evaluationId}/calculate`, {
-        method: "POST",
-      });
+      const calcRes = await apiPost(
+        `/api/scoring/evaluations/${evaluationId}/calculate`
+      );
       if (!calcRes.ok) throw new Error("Calcul échoué");
       const { data } = await calcRes.json();
 
-      const subRes = await fetch(`/api/scoring/evaluations/${evaluationId}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: "" }),
-      });
+      const subRes = await apiPost(
+        `/api/scoring/evaluations/${evaluationId}/submit`,
+        { notes: "" }
+      );
       if (!subRes.ok) throw new Error("Soumission échouée");
 
       onComplete(evaluationId, data.finalScore, data.rating);
@@ -462,24 +535,24 @@ export function EvaluationWorkspace({
   }, [successMsg]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-950">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
       {/* ── Top Header ─────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-6 py-3 bg-slate-900 border-b border-slate-700 flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-3 bg-background border-b border-border flex-shrink-0">
         <div>
-          <h1 className="text-base font-bold text-white">{projectName}</h1>
-          <p className="text-xs text-slate-400">Évaluation de Scoring — {evaluationId.slice(0, 8)}…</p>
+          <h1 className="text-base font-bold text-foreground">{projectName}</h1>
+          <p className="text-xs text-muted-foreground">Évaluation de Scoring — {evaluationId.slice(0, 8)}…</p>
         </div>
 
         {/* Messages */}
         <div className="flex-1 px-8">
           {error && (
-            <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 px-3 py-1.5 rounded-lg">
               <AlertCircle size={14} />
               {error}
             </div>
           )}
           {successMsg && (
-            <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 border border-green-500/30 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-success bg-success/10 border border-success/30 px-3 py-1.5 rounded-lg">
               <CheckCircle2 size={14} />
               {successMsg}
             </div>
@@ -487,13 +560,13 @@ export function EvaluationWorkspace({
         </div>
 
         {/* View mode toggle */}
-        <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 flex-shrink-0 mr-3">
+        <div className="flex items-center gap-1 bg-card rounded-lg p-1 flex-shrink-0 mr-3">
           <button
             onClick={() => setViewMode("tabbed")}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all ${
               viewMode === "tabbed"
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Columns size={13} />
@@ -503,8 +576,8 @@ export function EvaluationWorkspace({
             onClick={() => setViewMode("accordion")}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all ${
               viewMode === "accordion"
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <LayoutList size={13} />
@@ -517,7 +590,7 @@ export function EvaluationWorkspace({
           <button
             onClick={() => saveAnswers(true)}
             disabled={isSaving}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary disabled:opacity-50 text-foreground text-sm rounded-lg transition-all"
           >
             <Save size={14} />
             {isSaving ? "Sauvegarde…" : "Sauvegarder"}
@@ -533,7 +606,7 @@ export function EvaluationWorkspace({
           <button
             onClick={handleSubmit}
             disabled={isCalculating}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
           >
             <Send size={14} />
             Soumettre
@@ -562,21 +635,21 @@ export function EvaluationWorkspace({
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <div className="flex items-center gap-3 mb-1">
-                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-slate-700">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded bg-card text-primary border border-border">
                         {currentDomain.code}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         {currentIndex + 1} / {questionnaire.length}
                       </span>
                     </div>
-                    <h2 className="text-2xl font-bold text-white">{currentDomain.label}</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{currentDomain.label}</h2>
                     {currentDomain.description && (
-                      <p className="text-sm text-slate-400 mt-1">{currentDomain.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{currentDomain.description}</p>
                     )}
                   </div>
                   <button
                     onClick={() => setExpandAll((v) => !v)}
-                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <RotateCcw size={12} />
                     {expandAll ? "Réduire tout" : "Tout ouvrir"}
@@ -585,15 +658,15 @@ export function EvaluationWorkspace({
 
                 {/* Progress for this domain */}
                 {stats[currentDomain.id] && (
-                  <div className="mb-6 p-3 bg-slate-800/50 rounded-lg border border-slate-700 flex items-center gap-4">
+                  <div className="mb-6 p-3 bg-card/50 rounded-lg border border-border flex items-center gap-4">
                     <div className="flex-1">
-                      <div className="flex justify-between text-xs text-slate-400 mb-1">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
                         <span>Progression du domaine</span>
                         <span>
                           {stats[currentDomain.id].answered} / {stats[currentDomain.id].total} critères
                         </span>
                       </div>
-                      <div className="bg-slate-700 rounded-full h-2">
+                      <div className="bg-muted rounded-full h-2">
                         <div
                           className="h-2 rounded-full bg-cyan-500 transition-all duration-500"
                           style={{
@@ -616,6 +689,7 @@ export function EvaluationWorkspace({
                       <CriteriaTree
                         key={child.id}
                         node={child}
+                        sommeNiveau={sommeFratrie(currentDomain.children)}
                         depth={0}
                         answers={answers}
                         onAnswer={handleAnswer}
@@ -623,31 +697,31 @@ export function EvaluationWorkspace({
                       />
                     ))
                   ) : (
-                    <div className="text-center py-12 text-slate-500">
+                    <div className="text-center py-12 text-muted-foreground">
                       <p>Ce domaine n'a pas encore de critères configurés.</p>
                     </div>
                   )}
                 </div>
 
                 {/* Navigation prev/next */}
-                <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-800">
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
                   <button
                     onClick={goPrev}
                     disabled={currentIndex === 0}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed text-foreground rounded-lg text-sm transition-all"
                   >
                     <ChevronRight size={16} className="rotate-180" />
                     {currentIndex > 0 ? questionnaire[currentIndex - 1].label : "—"}
                   </button>
 
-                  <span className="text-xs text-slate-600">
+                  <span className="text-xs text-muted-foreground">
                     Domaine {currentIndex + 1} sur {questionnaire.length}
                   </span>
 
                   <button
                     onClick={goNext}
                     disabled={currentIndex >= questionnaire.length - 1}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white rounded-lg text-sm transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed text-foreground rounded-lg text-sm transition-all"
                   >
                     {currentIndex < questionnaire.length - 1
                       ? questionnaire[currentIndex + 1].label
@@ -668,8 +742,9 @@ export function EvaluationWorkspace({
 
         {/* Right: Live score panel */}
         <LiveScorePanel
-          questionnaire={questionnaire}
-          answers={answers}
+          score={serverScore}
+          isScoring={isScoring}
+          isStale={isStale}
           isSaving={isSaving}
           lastSaved={lastSaved}
         />

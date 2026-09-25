@@ -72,7 +72,7 @@ export function FormBuilder({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="bg-destructive/10 border border-red-200 rounded-lg p-4 text-destructive">
             {error}
           </div>
         )}
@@ -84,7 +84,7 @@ export function FormBuilder({
             name={field.name as any}
             render={({ field: fieldProps }) => (
               <FormItem>
-                <FormLabel className="text-gray-700 font-medium">
+                <FormLabel className="text-secondary-foreground font-medium">
                   {field.label}
                 </FormLabel>
                 <FormControl>
@@ -131,7 +131,7 @@ export function FormBuilder({
 
         <Button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          className="w-full bg-primary hover:bg-primary/90 text-white"
           disabled={loading}
         >
           {loading ? "Submitting..." : submitLabel}

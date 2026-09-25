@@ -227,6 +227,129 @@ export async function getRatingForScore(score: number): Promise<RatingScale | nu
   ) || null;
 }
 
+export interface RatingScaleInput {
+  id: string;
+  label: string;
+  description?: string | null;
+  minScore: number;
+  maxScore: number;
+  color?: string | null;
+  displayOrder: number;
+}
+
+/**
+ * Écart entre deux paliers adjacents dans la convention d'écriture du barème,
+ * majoré d'une tolérance : en binaire, 25 − 24,99 vaut 0,010000000000001563, et une
+ * comparaison stricte à 0,01 signalerait un trou là où il n'y en a pas.
+ */
+const PAS_BAREME = 0.01 + 1e-9;
+
+export interface RatingScaleValidation {
+  /** Défauts rendant le barème inexploitable : l'enregistrement est refusé. */
+  errors: string[];
+  /** Défauts tolérés mais signalés (trous entre paliers, échelle incomplète). */
+  warnings: string[];
+}
+
+/**
+ * Contrôle la cohérence d'un barème avant enregistrement.
+ *
+ * Les recouvrements sont bloquants : deux paliers se disputant un score rendent la
+ * note dépendante de l'ordre de lecture. Les trous ne le sont pas — le barème livré
+ * en contient déjà (24,99 puis 25) et les refuser empêcherait toute correction — mais
+ * ils sont remontés à l'administrateur.
+ */
+export function validateRatingScales(scales: RatingScaleInput[]): RatingScaleValidation {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  if (scales.length === 0) {
+    errors.push("Le barème doit comporter au moins un palier.");
+    return { errors, warnings };
+  }
+
+  const vus = new Set<string>();
+  for (const s of scales) {
+    if (!s.id?.trim()) errors.push("Un palier est dépourvu d'identifiant.");
+    if (!s.label?.trim()) errors.push(`Palier « ${s.id} » : libellé manquant.`);
+    if (!Number.isFinite(s.minScore) || !Number.isFinite(s.maxScore)) {
+      errors.push(`Palier « ${s.label || s.id} » : bornes non numériques.`);
+      continue;
+    }
+    if (s.minScore > s.maxScore) {
+      errors.push(
+        `Palier « ${s.label || s.id} » : borne basse (${s.minScore}) supérieure à la borne haute (${s.maxScore}).`
+      );
+    }
+    if (vus.has(s.id)) errors.push(`Identifiant en double : « ${s.id} ».`);
+    vus.add(s.id);
+  }
+
+  const tries = [...scales]
+    .filter((s) => Number.isFinite(s.minScore) && Number.isFinite(s.maxScore))
+    .sort((a, b) => a.minScore - b.minScore);
+
+  for (let i = 1; i < tries.length; i++) {
+    const prec = tries[i - 1];
+    const cour = tries[i];
+    if (cour.minScore <= prec.maxScore) {
+      errors.push(
+        `Les paliers « ${prec.label} » et « ${cour.label} » se recouvrent entre ${cour.minScore} et ${prec.maxScore}.`
+      );
+    } else if (cour.minScore - prec.maxScore > PAS_BAREME) {
+      // Les bornes étant inclusives des deux côtés, deux paliers adjacents laissent
+      // toujours un interstice d'un centième (24,99 puis 25) : c'est la convention
+      // d'écriture du barème, pas une erreur, et le moteur rattache ces scores au
+      // palier inférieur. Seul un trou plus large trahit une saisie incomplète.
+      warnings.push(
+        `Aucun palier ne couvre les scores entre ${prec.maxScore} et ${cour.minScore} (« ${prec.label} » → « ${cour.label} »).`
+      );
+    }
+  }
+
+  if (tries.length > 0) {
+    if (tries[0].minScore > 0) {
+      warnings.push(`Le barème ne couvre pas les scores inférieurs à ${tries[0].minScore}.`);
+    }
+    const haut = tries[tries.length - 1].maxScore;
+    if (haut < 100) {
+      warnings.push(`Le barème ne couvre pas les scores supérieurs à ${haut}.`);
+    }
+  }
+
+  return { errors, warnings };
+}
+
+/**
+ * Remplace l'intégralité du barème de notation.
+ *
+ * Le remplacement est total et transactionnel : un barème partiellement écrit
+ * laisserait des scores sans note. Les évaluations déjà calculées conservent la note
+ * enregistrée avec elles — seuls les calculs postérieurs suivent le nouveau barème.
+ */
+export async function updateRatingScales(
+  scales: RatingScaleInput[]
+): Promise<RatingScaleValidation> {
+  const validation = validateRatingScales(scales);
+  if (validation.errors.length > 0) return validation;
+
+  await prisma.$transaction([
+    prisma.$executeRaw`DELETE FROM "BP_PF_v7pp_rating_scales"`,
+    ...scales.map(
+      (s) => prisma.$executeRaw`
+        INSERT INTO "BP_PF_v7pp_rating_scales"
+          (id, label, description, "minScore", "maxScore", color, "displayOrder")
+        VALUES (${s.id}, ${s.label}, ${s.description ?? null},
+                ${s.minScore}, ${s.maxScore}, ${s.color ?? null}, ${s.displayOrder})
+      `
+    ),
+  ]);
+
+  configCache.delete("ratingScales");
+  cacheTimes.delete("ratingScales");
+  return validation;
+}
+
 /**
  * Clear all caches (useful after configuration updates)
  */

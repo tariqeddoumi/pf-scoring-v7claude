@@ -52,7 +52,7 @@ export default function ResultsPage() {
 
   if (error) {
     return (
-      <div className="flex items-start gap-3 p-4 bg-red-900/20 text-red-400 border border-red-700 rounded">
+      <div className="flex items-start gap-3 p-4 bg-red-900/20 text-destructive border border-red-700 rounded">
         <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
         <div>
           <h3 className="font-semibold">Error</h3>
@@ -63,10 +63,10 @@ export default function ResultsPage() {
   }
 
   const ratingColor = (rating: string) => {
-    if (rating.includes("AAA") || rating.includes("AA")) return "text-green-400";
-    if (rating.includes("BBB") || rating.includes("BB")) return "text-yellow-400";
-    if (rating.includes("CCC") || rating.includes("CC")) return "text-orange-400";
-    return "text-red-400";
+    if (rating.includes("AAA") || rating.includes("AA")) return "text-success";
+    if (rating.includes("BBB") || rating.includes("BB")) return "text-warning";
+    if (rating.includes("CCC") || rating.includes("CC")) return "text-warning";
+    return "text-destructive";
   };
 
   return (
@@ -75,7 +75,7 @@ export default function ResultsPage() {
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => router.back()}
-          className="p-2 hover:bg-gray-800 rounded"
+          className="p-2 hover:bg-card rounded"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -99,10 +99,10 @@ export default function ResultsPage() {
       )}
 
       {/* Node results table */}
-      <div className="border border-gray-700 rounded overflow-hidden">
+      <div className="border border-border rounded overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-900 border-b border-gray-700">
+            <tr className="bg-card border-b border-border">
               <th className="px-4 py-3 text-left font-semibold">Node</th>
               <th className="px-4 py-3 text-right font-semibold">Raw Score</th>
               <th className="px-4 py-3 text-right font-semibold">Weighted</th>
@@ -113,30 +113,30 @@ export default function ResultsPage() {
           </thead>
           <tbody>
             {trace?.nodeResults?.map((result: NodeResult) => (
-              <tr key={result.nodeId} className="border-b border-gray-800 hover:bg-gray-900/30">
+              <tr key={result.nodeId} className="border-b border-border hover:bg-card/30">
                 <td className="px-4 py-3">
                   <div>
                     <div className="font-medium">{result.nodeLabel}</div>
-                    <div className="text-xs text-gray-500">{result.nodeCode}</div>
+                    <div className="text-xs text-muted-foreground">{result.nodeCode}</div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-right text-yellow-400">
+                <td className="px-4 py-3 text-right text-warning">
                   {result.rawScore.toFixed(2)}
                 </td>
-                <td className="px-4 py-3 text-right text-blue-400">
+                <td className="px-4 py-3 text-right text-primary">
                   {result.weightedScore.toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-right text-purple-400">
                   {(result.normalizedScore * 100).toFixed(1)}%
                 </td>
-                <td className="px-4 py-3 text-xs text-gray-400">
+                <td className="px-4 py-3 text-xs text-muted-foreground">
                   {result.explanation}
                 </td>
                 <td className="px-4 py-3">
                   {result.ruleImpacts?.length > 0 && (
                     <div className="text-xs space-y-1">
                       {result.ruleImpacts.map((r: any) => (
-                        <div key={r.ruleId} className="text-orange-400">
+                        <div key={r.ruleId} className="text-warning">
                           {r.ruleCode} ({r.severity})
                         </div>
                       ))}
@@ -150,10 +150,10 @@ export default function ResultsPage() {
       </div>
 
       {/* Status info */}
-      <div className="p-4 bg-gray-900 border border-gray-700 rounded text-sm">
+      <div className="p-4 bg-card border border-border rounded text-sm">
         <p>Status: <span className="font-semibold">{trace?.status}</span></p>
         {trace?.submittedAt && (
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Submitted: {new Date(trace.submittedAt).toLocaleString()}
           </p>
         )}
@@ -172,8 +172,8 @@ function SummaryCard({
   color?: string;
 }) {
   return (
-    <div className="p-4 bg-gray-900 border border-gray-700 rounded">
-      <p className="text-xs text-gray-400 mb-1">{label}</p>
+    <div className="p-4 bg-card border border-border rounded">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value || "-"}</p>
     </div>
   );
