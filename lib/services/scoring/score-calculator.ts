@@ -365,4 +365,32 @@ export class AggregationEngine {
     const normalized = score / max;
     return Math.max(0, Math.min(1, normalized));
   }
+
+  /**
+   * Ramène le score d'un critère sur l'échelle 0–100 du moteur.
+   *
+   * Le modèle note ses critères sur l'échelle qu'il déclare — 0 à 10 pour la grille
+   * V7++ — tandis que le barème de notation, les seuils de vigilance et l'affichage
+   * travaillent sur 0–100. Sans cette conversion, la moyenne pondérée des domaines
+   * restait entre 2 et 10 et tout dossier tombait dans le palier « D » (0 à 24,99),
+   * quel que soit son mérite.
+   *
+   * La conversion s'appuie sur les bornes déclarées du critère, jamais sur l'étendue
+   * observée de ses options : un critère dont la plus mauvaise option vaut 2 sur 10
+   * doit valoir 20 sur 100, et non zéro.
+   */
+  static rescaleTo100(
+    score: number,
+    scoreMin: number | null | undefined,
+    scoreMax: number | null | undefined
+  ): number {
+    const min = scoreMin ?? 0;
+    const max = scoreMax ?? 100;
+
+    // Échelle inexploitable ou déjà centésimale : on ne touche à rien.
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return score;
+    if (min === 0 && max === 100) return score;
+
+    return ((score - min) / (max - min)) * 100;
+  }
 }

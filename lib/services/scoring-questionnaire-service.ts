@@ -14,6 +14,9 @@ export interface QuestionnaireNode {
   options?: { value: string; label: string; score: number }[];
   ranges?: { minValue: number; maxValue: number; score: number; label?: string }[];
   weight?: number;
+  /** Bornes de l'échelle du critère : le barème est exprimé dessus, le moteur sur 0–100. */
+  scoreMin?: number | null;
+  scoreMax?: number | null;
   scoreLeafDepth?: number | null;
   isScoringLeaf?: boolean;
   children?: QuestionnaireNode[];
@@ -66,6 +69,8 @@ export class ScoringQuestionnaireService {
         answerType: node.answerType || undefined,
         scoringMethod: node.scoringMethod || undefined,
         weight: node.weight || undefined,
+        scoreMin: node.scoreMin ?? undefined,
+        scoreMax: node.scoreMax ?? undefined,
         scoreLeafDepth: node.scoreLeafDepth || undefined,
         isScoringLeaf: node.isScoringLeaf || false,
         options:

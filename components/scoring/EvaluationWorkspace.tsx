@@ -20,6 +20,7 @@ import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 import { apiPost, apiPatch } from "@/lib/api-client";
 import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
+import { AggregationEngine } from "@/lib/services/scoring/score-calculator";
 
 interface EvaluationWorkspaceProps {
   evaluationId: string;
@@ -79,6 +80,18 @@ function NodeInput({
 
   const selectedOption = node.options?.find((o) => o.value === answer?.valueString);
 
+  /**
+   * Contribution réelle du barème au score, sur l'échelle du moteur.
+   *
+   * Le barème d'un critère est saisi sur l'échelle que le modèle déclare — 0 à 10 pour
+   * la grille V7++ — tandis que le moteur, le barème de notation et les seuils
+   * travaillent sur 0–100. L'écran affichait la valeur du barème telle quelle : une
+   * option à 8 se lisait « 8 pts » alors qu'elle valait 80. La conversion passe par la
+   * même fonction que le moteur, pour que les deux ne puissent pas diverger.
+   */
+  const contribution = (valeur: number) =>
+    AggregationEngine.rescaleTo100(valeur, node.scoreMin, node.scoreMax);
+
   return (
     <div className="space-y-2">
       {/* Options (SELECT) */}
@@ -99,7 +112,14 @@ function NodeInput({
           {selectedOption && (
             <div className="flex items-center gap-1.5 mt-1 text-xs text-primary">
               <CheckCircle2 size={11} />
-              Score attribué : <span className="font-bold">{selectedOption.score} pts</span>
+              Score attribué :{" "}
+              <span className="font-bold">
+                {contribution(selectedOption.score).toFixed(0)} / 100
+              </span>
+              <span className="text-muted-foreground">
+                (barème : {selectedOption.score}
+                {node.scoreMax ? ` / ${node.scoreMax}` : ""})
+              </span>
             </div>
           )}
         </div>
@@ -135,7 +155,8 @@ function NodeInput({
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {r.label || `${r.minValue}–${r.maxValue}`} → {r.score} pts
+                  {r.label || `${r.minValue}–${r.maxValue}`} →{" "}
+                  {contribution(r.score).toFixed(0)} / 100
                 </span>
               );
             })}
