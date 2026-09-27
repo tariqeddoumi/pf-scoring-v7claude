@@ -1,0 +1,513 @@
+-- ============================================================================
+-- Référentiel sectoriel V8 — archive intégrale
+-- ============================================================================
+--
+-- Les six tables BP_PF_v8_* ont été supprimées le 2026-09-27. Leur contenu de
+-- pondération a été reporté dans le référentiel V9, que le moteur lit réellement ;
+-- le reste est conservé ici, et nulle part ailleurs.
+--
+-- Ce fichier ne s'exécute pas au déploiement. Il documente, et permet de restaurer.
+--
+-- Correspondance avec le référentiel vivant :
+--   poids_sectoriel = poids_socle + delta
+--   facteur_V9      = poids_sectoriel / poids_socle
+-- Le moteur multipliant le poids du socle par le facteur, le poids effectif redevient
+-- exactement le poids sectoriel documenté ici, et leur somme vaut 100 par secteur —
+-- comme l'exige la règle « Ajustement poids domaine » ci-dessous.
+--
+-- Socle V7++ (version 5 du modèle) : D3 et D7 à 15, les sept autres domaines à 10.
+--
+-- Deux ajustements dépassent le plafond recommandé de ±3 points, au titre de
+-- l'« exception justifiée » que la doctrine prévoit : TOU/D4 (+5) et ETH/D9 (+4).
+--
+-- Ce qui n'a PAS d'équivalent en V9, et que ce fichier seul conserve :
+--   - la doctrine d'intégration (8 rubriques) ;
+--   - le delta en points justifiant chaque poids (108 lignes) ;
+--   - 58 stress tests sectoriels, là où V9 n'en porte que 24.
+-- Les red flags, eux, sont plus nombreux en V9 (96) qu'en V8 (41) ; ils sont tout de
+-- même archivés ci-dessous, la correspondance ligne à ligne n'ayant pas été établie.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1. Doctrine d'intégration (ex-BP_PF_v8_integration_rules)
+-- ---------------------------------------------------------------------------
+-- [1] Principe
+--   Le modèle V7++ reste le socle commun. Le secteur devient un module transversal qui ajuste les poids, les seuils, les stress tests, les red flags et les bonus/malus.
+-- [2] Ajustement poids domaine
+--   Plafond recommandé : ±3 points sauf exception justifiée. La somme des poids ajustés doit rester égale à 100%.
+-- [3] Ajustement sous-critère
+--   Ajustement recommandé à l'intérieur d'un domaine : renforcer les sous-critères les plus discriminants pour le secteur. Normalisation à 100% à effectuer dans le moteur de scoring.
+-- [4] Ajustement seuil option
+--   Les seuils standard V7++ sont adaptés au secteur : par exemple DSCR plus élevé pour tourisme/immobilier/mines, légèrement assoupli pour ENR avec PPA souverain solide.
+-- [5] Stress tests sectoriels
+--   Chaque secteur impose des stress tests obligatoires : productible, trafic, taux d'occupation, matières premières, coût énergie, taxe carbone, cyber, sécheresse, etc.
+-- [6] Bonus/malus
+--   Score final ajustable dans une plage plafonnée : bonus +0,25/+0,50 max ; malus -0,25 à -1,00 selon criticité.
+-- [7] No-Go
+--   Un secteur peut déclencher des No-Go spécifiques : PPA absent, raccordement non sécurisé, permis minier absent, autorisation santé absente, PCA/PRA absent, EIE refusée.
+-- [8] Réponse COMEX
+--   Le secteur est bien pris en compte, mais de manière transversale et intelligente, sans pénaliser ou favoriser automatiquement un secteur entier.
+
+-- ---------------------------------------------------------------------------
+-- 2. Ajustements par secteur et domaine
+--    (ex-BP_PF_v8_sector_domain_impacts + ex-BP_PF_v8_sector_domain_weights)
+-- ---------------------------------------------------------------------------
+--   secteur  domaine  delta  poids sectoriel
+--   AGR      D1      -1       9
+--   AGR      D2      -1       9
+--   AGR      D3      -1      14
+--   AGR      D4       2      12
+--   AGR      D5       1      11
+--   AGR      D6       1      11
+--   AGR      D7      -2      13
+--   AGR      D8      -2       8
+--   AGR      D9       3      13
+--   EAU      D1      -2       8
+--   EAU      D2      -1       9
+--   EAU      D3      -1      14
+--   EAU      D4      -1       9
+--   EAU      D5       2      12
+--   EAU      D6       2      12
+--   EAU      D7      -1      14
+--   EAU      D8       0      10
+--   EAU      D9       2      12
+--   ENR      D1      -1       9
+--   ENR      D2       0      10
+--   ENR      D3       1      16
+--   ENR      D4      -2       8
+--   ENR      D5      -1       9
+--   ENR      D6       2      12
+--   ENR      D7       0      15
+--   ENR      D8       0      10
+--   ENR      D9       1      11
+--   ETH      D1      -3       7
+--   ETH      D2      -1       9
+--   ETH      D3      -1      14
+--   ETH      D4       0      10
+--   ETH      D5       1      11
+--   ETH      D6       1      11
+--   ETH      D7       1      16
+--   ETH      D8      -2       8
+--   ETH      D9       4      14
+--   IMM      D1      -1       9
+--   IMM      D2      -1       9
+--   IMM      D3      -1      14
+--   IMM      D4       3      13
+--   IMM      D5      -1       9
+--   IMM      D6      -1       9
+--   IMM      D7       2      17
+--   IMM      D8       2      12
+--   IMM      D9      -2       8
+--   IND      D1      -1       9
+--   IND      D2      -1       9
+--   IND      D3      -1      14
+--   IND      D4       2      12
+--   IND      D5       2      12
+--   IND      D6       1      11
+--   IND      D7       1      16
+--   IND      D8      -1       9
+--   IND      D9      -2       8
+--   MIN      D1      -1       9
+--   MIN      D2       1      11
+--   MIN      D3      -1      14
+--   MIN      D4       2      12
+--   MIN      D5      -1       9
+--   MIN      D6      -1       9
+--   MIN      D7      -3      12
+--   MIN      D8       1      11
+--   MIN      D9       3      13
+--   POR      D1      -1       9
+--   POR      D2      -1       9
+--   POR      D3      -1      14
+--   POR      D4       2      12
+--   POR      D5       1      11
+--   POR      D6       2      12
+--   POR      D7      -2      13
+--   POR      D8       1      11
+--   POR      D9      -1       9
+--   SAN      D1      -3       7
+--   SAN      D2      -1       9
+--   SAN      D3      -1      14
+--   SAN      D4       2      12
+--   SAN      D5       2      12
+--   SAN      D6       2      12
+--   SAN      D7      -2      13
+--   SAN      D8       2      12
+--   SAN      D9      -1       9
+--   TEL      D1      -3       7
+--   TEL      D2       1      11
+--   TEL      D3      -1      14
+--   TEL      D4      -1       9
+--   TEL      D5       3      13
+--   TEL      D6       1      11
+--   TEL      D7      -3      12
+--   TEL      D8       2      12
+--   TEL      D9       1      11
+--   TOU      D1      -1       9
+--   TOU      D2      -1       9
+--   TOU      D3      -1      14
+--   TOU      D4       5      15
+--   TOU      D5       2      12
+--   TOU      D6      -1       9
+--   TOU      D7       1      16
+--   TOU      D8      -1       9
+--   TOU      D9      -3       7
+--   TRA      D1      -1       9
+--   TRA      D2      -1       9
+--   TRA      D3       2      17
+--   TRA      D4       2      12
+--   TRA      D5       1      11
+--   TRA      D6      -1       9
+--   TRA      D7      -2      13
+--   TRA      D8       1      11
+--   TRA      D9      -1       9
+
+-- ---------------------------------------------------------------------------
+-- 3. Stress tests sectoriels (ex-BP_PF_v8_sector_stress_tests) — 58 lignes
+-- ---------------------------------------------------------------------------
+--   AGR   1  Sécheresse
+--   AGR   2  Baisse rendement -15%
+--   AGR   3  Baisse rendement -25%
+--   AGR   4  Hausse coût eau / énergie
+--   AGR   5  Rupture chaîne froid
+--   EAU   1  Hausse coût énergie +15%
+--   EAU   2  Hausse coût énergie +25%
+--   EAU   3  Disponibilité usine -5%
+--   EAU   4  Stress hydrique
+--   EAU   5  Retard autorisations environnementales
+--   ENR   1  P90/P50 productible
+--   ENR   2  Baisse productible -10%
+--   ENR   3  Curtailment réseau
+--   ENR   4  Retard raccordement réseau
+--   ETH   1  Hausse combustible +20%
+--   ETH   2  Taxe carbone
+--   ETH   3  Baisse dispatch réseau
+--   ETH   4  Transition énergétique accélérée
+--   ETH   5  Refinancement ESG
+--   IMM   1  Baisse loyer / prix -10%
+--   IMM   2  Baisse loyer / prix -20%
+--   IMM   3  Retard commercialisation
+--   IMM   4  Vacance locative élevée
+--   IMM   5  Baisse valeur garantie
+--   IND   1  Hausse matières premières +15%
+--   IND   2  Hausse matières premières +25%
+--   IND   3  Baisse prix vente -10%
+--   IND   4  FX mismatch
+--   IND   5  Baisse volumes -15%
+--   MIN   1  Baisse prix minerai -20%
+--   MIN   2  Baisse réserves / rendement
+--   MIN   3  Retard permis
+--   MIN   4  Coûts restauration site
+--   POR   1  Baisse volumes -15%
+--   POR   2  Perte client principal
+--   POR   3  Retard équipement
+--   POR   4  Hausse coût énergie / logistique
+--   SAN   1  Taux occupation lits -10%
+--   SAN   2  Taux occupation lits -20%
+--   SAN   3  DSO payeurs +30 jours
+--   SAN   4  Turnover médecins
+--   SAN   5  CAPEX équipement médical
+--   TEL   1  Hausse coût énergie +20%
+--   TEL   2  Panne système refroidissement
+--   TEL   3  Cyber incident majeur
+--   TEL   4  Perte client anchor
+--   TEL   5  Obsolescence CAPEX
+--   TOU   1  Taux occupation -15%
+--   TOU   2  Taux occupation -25%
+--   TOU   3  ADR -10%
+--   TOU   4  RevPAR -20%
+--   TOU   5  Retard ouverture
+--   TOU   6  Impact saisonnalité
+--   TRA   1  Baisse trafic -15%
+--   TRA   2  Baisse trafic -25%
+--   TRA   3  Retard chantier +6 mois
+--   TRA   4  Surcoût CAPEX +10%
+--   TRA   5  Hausse OPEX maintenance
+
+-- ---------------------------------------------------------------------------
+-- 4. Red flags sectoriels (ex-BP_PF_v8_sector_red_flags) — 41 lignes
+--    « NO-GO » signale un point rédhibitoire selon le référentiel V8.
+-- ---------------------------------------------------------------------------
+--   AGR   1  NO-GO Droits eau non sécurisés
+--   AGR   2        Absence assurance récolte
+--   AGR   3        Débouchés non contractualisés
+--   EAU   1  NO-GO Contrat achat d'eau non signé
+--   EAU   2        Coût énergie non sécurisé
+--   EAU   3        Opposition sociale significative
+--   EAU   4  NO-GO EIE absente ou refusée
+--   ENR   1  NO-GO PPA non signé
+--   ENR   2  NO-GO Raccordement réseau non sécurisé
+--   ENR   3        Productible non validé par expert indépendant
+--   ENR   4        Ratio P90/P50 faible
+--   ETH   1  NO-GO Contrat approvisionnement combustible non sécurisé
+--   ETH   2        Forte intensité carbone sans plan de transition documenté
+--   ETH   3  NO-GO PPA non signé
+--   IMM   1  NO-GO Foncier non sécurisé
+--   IMM   2  NO-GO Permis de construire absent
+--   IMM   3        Précommercialisation insuffisante (<30% avant premier tirage)
+--   IMM   4        Valorisation reposant sur hypothèses fragiles
+--   IND   1        Mono-client sans garantie
+--   IND   2        Mono-fournisseur critique sans alternative
+--   IND   3        Absence clause pass-through matières premières
+--   IND   4  NO-GO EIE non conforme aux standards IFC
+--   MIN   1  NO-GO Permis minier absent
+--   MIN   2  NO-GO Réserves non certifiées par expert indépendant
+--   MIN   3        Impact environnemental non mitigé
+--   POR   1  NO-GO Concession non signée
+--   POR   2        Concentration client >70% sans garantie
+--   POR   3        Absence contrat volumes minimum
+--   SAN   1  NO-GO Autorisation sanitaire absente
+--   SAN   2  NO-GO Équipe médicale clé non sécurisée
+--   SAN   3        DSO élevé non financé par lignes dédiées
+--   TEL   1  NO-GO Absence PCA / PRA documenté et testé
+--   TEL   2        Audit cybersécurité absent
+--   TEL   3        Contrats clients tous à court terme (<1 an)
+--   TEL   4        Redondance infrastructure insuffisante
+--   TOU   1        Absence d'opérateur hôtelier reconnu
+--   TOU   2        Hypothèses d'occupation trop optimistes
+--   TOU   3  NO-GO Foncier ou permis non sécurisés
+--   TRA   1        Étude trafic non réalisée par organisme indépendant
+--   TRA   2  NO-GO Emprises foncières non sécurisées
+--   TRA   3  NO-GO Concession non signée
+
+-- ============================================================================
+-- 5. Restauration, si un audit l'exige
+-- ============================================================================
+-- Les tables sont recréées sous un suffixe « _archive » afin de ne jamais être
+-- confondues avec le référentiel vivant, et de ne rien réactiver par inadvertance.
+
+-- CREATE TABLE IF NOT EXISTS "BP_PF_v8_integration_rules_archive" (
+--   rubrique TEXT NOT NULL, regle TEXT NOT NULL, "orderIndex" INT NOT NULL PRIMARY KEY);
+-- INSERT INTO "BP_PF_v8_integration_rules_archive" (rubrique, regle, "orderIndex") VALUES
+--   ('Principe', 'Le modèle V7++ reste le socle commun. Le secteur devient un module transversal qui ajuste les poids, les seuils, les stress tests, les red flags et les bonus/malus.', 1),
+--   ('Ajustement poids domaine', 'Plafond recommandé : ±3 points sauf exception justifiée. La somme des poids ajustés doit rester égale à 100%.', 2),
+--   ('Ajustement sous-critère', 'Ajustement recommandé à l''intérieur d''un domaine : renforcer les sous-critères les plus discriminants pour le secteur. Normalisation à 100% à effectuer dans le moteur de scoring.', 3),
+--   ('Ajustement seuil option', 'Les seuils standard V7++ sont adaptés au secteur : par exemple DSCR plus élevé pour tourisme/immobilier/mines, légèrement assoupli pour ENR avec PPA souverain solide.', 4),
+--   ('Stress tests sectoriels', 'Chaque secteur impose des stress tests obligatoires : productible, trafic, taux d''occupation, matières premières, coût énergie, taxe carbone, cyber, sécheresse, etc.', 5),
+--   ('Bonus/malus', 'Score final ajustable dans une plage plafonnée : bonus +0,25/+0,50 max ; malus -0,25 à -1,00 selon criticité.', 6),
+--   ('No-Go', 'Un secteur peut déclencher des No-Go spécifiques : PPA absent, raccordement non sécurisé, permis minier absent, autorisation santé absente, PCA/PRA absent, EIE refusée.', 7),
+--   ('Réponse COMEX', 'Le secteur est bien pris en compte, mais de manière transversale et intelligente, sans pénaliser ou favoriser automatiquement un secteur entier.', 8);
+
+-- CREATE TABLE IF NOT EXISTS "BP_PF_v8_sector_adjustments_archive" (
+--   "sectorCode" TEXT NOT NULL, "domainCode" TEXT NOT NULL,
+--   impact INT NOT NULL, "weightAdjusted" DOUBLE PRECISION NOT NULL,
+--   PRIMARY KEY ("sectorCode", "domainCode"));
+-- INSERT INTO "BP_PF_v8_sector_adjustments_archive" VALUES
+--   ('AGR', 'D1', -1, 9),
+--   ('AGR', 'D2', -1, 9),
+--   ('AGR', 'D3', -1, 14),
+--   ('AGR', 'D4', 2, 12),
+--   ('AGR', 'D5', 1, 11),
+--   ('AGR', 'D6', 1, 11),
+--   ('AGR', 'D7', -2, 13),
+--   ('AGR', 'D8', -2, 8),
+--   ('AGR', 'D9', 3, 13),
+--   ('EAU', 'D1', -2, 8),
+--   ('EAU', 'D2', -1, 9),
+--   ('EAU', 'D3', -1, 14),
+--   ('EAU', 'D4', -1, 9),
+--   ('EAU', 'D5', 2, 12),
+--   ('EAU', 'D6', 2, 12),
+--   ('EAU', 'D7', -1, 14),
+--   ('EAU', 'D8', 0, 10),
+--   ('EAU', 'D9', 2, 12),
+--   ('ENR', 'D1', -1, 9),
+--   ('ENR', 'D2', 0, 10),
+--   ('ENR', 'D3', 1, 16),
+--   ('ENR', 'D4', -2, 8),
+--   ('ENR', 'D5', -1, 9),
+--   ('ENR', 'D6', 2, 12),
+--   ('ENR', 'D7', 0, 15),
+--   ('ENR', 'D8', 0, 10),
+--   ('ENR', 'D9', 1, 11),
+--   ('ETH', 'D1', -3, 7),
+--   ('ETH', 'D2', -1, 9),
+--   ('ETH', 'D3', -1, 14),
+--   ('ETH', 'D4', 0, 10),
+--   ('ETH', 'D5', 1, 11),
+--   ('ETH', 'D6', 1, 11),
+--   ('ETH', 'D7', 1, 16),
+--   ('ETH', 'D8', -2, 8),
+--   ('ETH', 'D9', 4, 14),
+--   ('IMM', 'D1', -1, 9),
+--   ('IMM', 'D2', -1, 9),
+--   ('IMM', 'D3', -1, 14),
+--   ('IMM', 'D4', 3, 13),
+--   ('IMM', 'D5', -1, 9),
+--   ('IMM', 'D6', -1, 9),
+--   ('IMM', 'D7', 2, 17),
+--   ('IMM', 'D8', 2, 12),
+--   ('IMM', 'D9', -2, 8),
+--   ('IND', 'D1', -1, 9),
+--   ('IND', 'D2', -1, 9),
+--   ('IND', 'D3', -1, 14),
+--   ('IND', 'D4', 2, 12),
+--   ('IND', 'D5', 2, 12),
+--   ('IND', 'D6', 1, 11),
+--   ('IND', 'D7', 1, 16),
+--   ('IND', 'D8', -1, 9),
+--   ('IND', 'D9', -2, 8),
+--   ('MIN', 'D1', -1, 9),
+--   ('MIN', 'D2', 1, 11),
+--   ('MIN', 'D3', -1, 14),
+--   ('MIN', 'D4', 2, 12),
+--   ('MIN', 'D5', -1, 9),
+--   ('MIN', 'D6', -1, 9),
+--   ('MIN', 'D7', -3, 12),
+--   ('MIN', 'D8', 1, 11),
+--   ('MIN', 'D9', 3, 13),
+--   ('POR', 'D1', -1, 9),
+--   ('POR', 'D2', -1, 9),
+--   ('POR', 'D3', -1, 14),
+--   ('POR', 'D4', 2, 12),
+--   ('POR', 'D5', 1, 11),
+--   ('POR', 'D6', 2, 12),
+--   ('POR', 'D7', -2, 13),
+--   ('POR', 'D8', 1, 11),
+--   ('POR', 'D9', -1, 9),
+--   ('SAN', 'D1', -3, 7),
+--   ('SAN', 'D2', -1, 9),
+--   ('SAN', 'D3', -1, 14),
+--   ('SAN', 'D4', 2, 12),
+--   ('SAN', 'D5', 2, 12),
+--   ('SAN', 'D6', 2, 12),
+--   ('SAN', 'D7', -2, 13),
+--   ('SAN', 'D8', 2, 12),
+--   ('SAN', 'D9', -1, 9),
+--   ('TEL', 'D1', -3, 7),
+--   ('TEL', 'D2', 1, 11),
+--   ('TEL', 'D3', -1, 14),
+--   ('TEL', 'D4', -1, 9),
+--   ('TEL', 'D5', 3, 13),
+--   ('TEL', 'D6', 1, 11),
+--   ('TEL', 'D7', -3, 12),
+--   ('TEL', 'D8', 2, 12),
+--   ('TEL', 'D9', 1, 11),
+--   ('TOU', 'D1', -1, 9),
+--   ('TOU', 'D2', -1, 9),
+--   ('TOU', 'D3', -1, 14),
+--   ('TOU', 'D4', 5, 15),
+--   ('TOU', 'D5', 2, 12),
+--   ('TOU', 'D6', -1, 9),
+--   ('TOU', 'D7', 1, 16),
+--   ('TOU', 'D8', -1, 9),
+--   ('TOU', 'D9', -3, 7),
+--   ('TRA', 'D1', -1, 9),
+--   ('TRA', 'D2', -1, 9),
+--   ('TRA', 'D3', 2, 17),
+--   ('TRA', 'D4', 2, 12),
+--   ('TRA', 'D5', 1, 11),
+--   ('TRA', 'D6', -1, 9),
+--   ('TRA', 'D7', -2, 13),
+--   ('TRA', 'D8', 1, 11),
+--   ('TRA', 'D9', -1, 9);
+
+-- CREATE TABLE IF NOT EXISTS "BP_PF_v8_stress_tests_archive" (
+--   "sectorCode" TEXT NOT NULL, "orderIndex" INT NOT NULL, description TEXT NOT NULL,
+--   PRIMARY KEY ("sectorCode", "orderIndex"));
+-- INSERT INTO "BP_PF_v8_stress_tests_archive" VALUES
+--   ('AGR', 1, 'Sécheresse'),
+--   ('AGR', 2, 'Baisse rendement -15%'),
+--   ('AGR', 3, 'Baisse rendement -25%'),
+--   ('AGR', 4, 'Hausse coût eau / énergie'),
+--   ('AGR', 5, 'Rupture chaîne froid'),
+--   ('EAU', 1, 'Hausse coût énergie +15%'),
+--   ('EAU', 2, 'Hausse coût énergie +25%'),
+--   ('EAU', 3, 'Disponibilité usine -5%'),
+--   ('EAU', 4, 'Stress hydrique'),
+--   ('EAU', 5, 'Retard autorisations environnementales'),
+--   ('ENR', 1, 'P90/P50 productible'),
+--   ('ENR', 2, 'Baisse productible -10%'),
+--   ('ENR', 3, 'Curtailment réseau'),
+--   ('ENR', 4, 'Retard raccordement réseau'),
+--   ('ETH', 1, 'Hausse combustible +20%'),
+--   ('ETH', 2, 'Taxe carbone'),
+--   ('ETH', 3, 'Baisse dispatch réseau'),
+--   ('ETH', 4, 'Transition énergétique accélérée'),
+--   ('ETH', 5, 'Refinancement ESG'),
+--   ('IMM', 1, 'Baisse loyer / prix -10%'),
+--   ('IMM', 2, 'Baisse loyer / prix -20%'),
+--   ('IMM', 3, 'Retard commercialisation'),
+--   ('IMM', 4, 'Vacance locative élevée'),
+--   ('IMM', 5, 'Baisse valeur garantie'),
+--   ('IND', 1, 'Hausse matières premières +15%'),
+--   ('IND', 2, 'Hausse matières premières +25%'),
+--   ('IND', 3, 'Baisse prix vente -10%'),
+--   ('IND', 4, 'FX mismatch'),
+--   ('IND', 5, 'Baisse volumes -15%'),
+--   ('MIN', 1, 'Baisse prix minerai -20%'),
+--   ('MIN', 2, 'Baisse réserves / rendement'),
+--   ('MIN', 3, 'Retard permis'),
+--   ('MIN', 4, 'Coûts restauration site'),
+--   ('POR', 1, 'Baisse volumes -15%'),
+--   ('POR', 2, 'Perte client principal'),
+--   ('POR', 3, 'Retard équipement'),
+--   ('POR', 4, 'Hausse coût énergie / logistique'),
+--   ('SAN', 1, 'Taux occupation lits -10%'),
+--   ('SAN', 2, 'Taux occupation lits -20%'),
+--   ('SAN', 3, 'DSO payeurs +30 jours'),
+--   ('SAN', 4, 'Turnover médecins'),
+--   ('SAN', 5, 'CAPEX équipement médical'),
+--   ('TEL', 1, 'Hausse coût énergie +20%'),
+--   ('TEL', 2, 'Panne système refroidissement'),
+--   ('TEL', 3, 'Cyber incident majeur'),
+--   ('TEL', 4, 'Perte client anchor'),
+--   ('TEL', 5, 'Obsolescence CAPEX'),
+--   ('TOU', 1, 'Taux occupation -15%'),
+--   ('TOU', 2, 'Taux occupation -25%'),
+--   ('TOU', 3, 'ADR -10%'),
+--   ('TOU', 4, 'RevPAR -20%'),
+--   ('TOU', 5, 'Retard ouverture'),
+--   ('TOU', 6, 'Impact saisonnalité'),
+--   ('TRA', 1, 'Baisse trafic -15%'),
+--   ('TRA', 2, 'Baisse trafic -25%'),
+--   ('TRA', 3, 'Retard chantier +6 mois'),
+--   ('TRA', 4, 'Surcoût CAPEX +10%'),
+--   ('TRA', 5, 'Hausse OPEX maintenance');
+
+-- CREATE TABLE IF NOT EXISTS "BP_PF_v8_red_flags_archive" (
+--   "sectorCode" TEXT NOT NULL, "orderIndex" INT NOT NULL,
+--   "isNoGo" BOOLEAN NOT NULL, description TEXT NOT NULL,
+--   PRIMARY KEY ("sectorCode", "orderIndex"));
+-- INSERT INTO "BP_PF_v8_red_flags_archive" VALUES
+--   ('AGR', 1, true, 'Droits eau non sécurisés'),
+--   ('AGR', 2, false, 'Absence assurance récolte'),
+--   ('AGR', 3, false, 'Débouchés non contractualisés'),
+--   ('EAU', 1, true, 'Contrat achat d''eau non signé'),
+--   ('EAU', 2, false, 'Coût énergie non sécurisé'),
+--   ('EAU', 3, false, 'Opposition sociale significative'),
+--   ('EAU', 4, true, 'EIE absente ou refusée'),
+--   ('ENR', 1, true, 'PPA non signé'),
+--   ('ENR', 2, true, 'Raccordement réseau non sécurisé'),
+--   ('ENR', 3, false, 'Productible non validé par expert indépendant'),
+--   ('ENR', 4, false, 'Ratio P90/P50 faible'),
+--   ('ETH', 1, true, 'Contrat approvisionnement combustible non sécurisé'),
+--   ('ETH', 2, false, 'Forte intensité carbone sans plan de transition documenté'),
+--   ('ETH', 3, true, 'PPA non signé'),
+--   ('IMM', 1, true, 'Foncier non sécurisé'),
+--   ('IMM', 2, true, 'Permis de construire absent'),
+--   ('IMM', 3, false, 'Précommercialisation insuffisante (<30% avant premier tirage)'),
+--   ('IMM', 4, false, 'Valorisation reposant sur hypothèses fragiles'),
+--   ('IND', 1, false, 'Mono-client sans garantie'),
+--   ('IND', 2, false, 'Mono-fournisseur critique sans alternative'),
+--   ('IND', 3, false, 'Absence clause pass-through matières premières'),
+--   ('IND', 4, true, 'EIE non conforme aux standards IFC'),
+--   ('MIN', 1, true, 'Permis minier absent'),
+--   ('MIN', 2, true, 'Réserves non certifiées par expert indépendant'),
+--   ('MIN', 3, false, 'Impact environnemental non mitigé'),
+--   ('POR', 1, true, 'Concession non signée'),
+--   ('POR', 2, false, 'Concentration client >70% sans garantie'),
+--   ('POR', 3, false, 'Absence contrat volumes minimum'),
+--   ('SAN', 1, true, 'Autorisation sanitaire absente'),
+--   ('SAN', 2, true, 'Équipe médicale clé non sécurisée'),
+--   ('SAN', 3, false, 'DSO élevé non financé par lignes dédiées'),
+--   ('TEL', 1, true, 'Absence PCA / PRA documenté et testé'),
+--   ('TEL', 2, false, 'Audit cybersécurité absent'),
+--   ('TEL', 3, false, 'Contrats clients tous à court terme (<1 an)'),
+--   ('TEL', 4, false, 'Redondance infrastructure insuffisante'),
+--   ('TOU', 1, false, 'Absence d''opérateur hôtelier reconnu'),
+--   ('TOU', 2, false, 'Hypothèses d''occupation trop optimistes'),
+--   ('TOU', 3, true, 'Foncier ou permis non sécurisés'),
+--   ('TRA', 1, false, 'Étude trafic non réalisée par organisme indépendant'),
+--   ('TRA', 2, true, 'Emprises foncières non sécurisées'),
+--   ('TRA', 3, true, 'Concession non signée');

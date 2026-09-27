@@ -44,13 +44,6 @@ export async function GET(request: NextRequest) {
     const scoringRuleCount = await prisma.scoringNodeRule.count();
     const evaluationCount = await prisma.scoringEvaluation.count();
 
-    // ====== V8 SECTORAL ADJUSTMENTS ======
-    const v8SectorCount = await prisma.v8Sector.count();
-    const v8WeightCount = await prisma.v8SectorDomainWeight.count();
-    const v8StressTestCount = await prisma.v8SectorStressTest.count();
-    const v8RedFlagCount = await prisma.v8SectorRedFlag.count();
-    const v8ImpactCount = await prisma.v8SectorDomainImpact.count();
-    const v8RuleCount = await prisma.v8IntegrationRule.count();
 
     // ====== DATA INTEGRITY CHECKS ======
     const projectCount = await prisma.project.count();
@@ -119,16 +112,6 @@ export async function GET(request: NextRequest) {
             ? "⚠ ACTIVÉ SANS SECTEUR"
             : "○ DÉSACTIVÉ",
         sample_sectors: sampleSectors,
-        // Référentiel hérité : il porte des poids absolus là où le moteur attend des
-        // facteurs, et aucun calcul ne le lit. Conservé pour mémoire.
-        referentiel_v8_non_lu: {
-          sectors: v8SectorCount,
-          domain_weights: v8WeightCount,
-          stress_tests: v8StressTestCount,
-          red_flags: v8RedFlagCount,
-          domain_impacts: v8ImpactCount,
-          integration_rules: v8RuleCount,
-        },
       },
       data_completeness: {
         projects: projectCount,

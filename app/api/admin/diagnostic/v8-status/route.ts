@@ -4,8 +4,8 @@ import prisma from "@/lib/prisma-client";
 import { isSectorialEnabled } from "@/lib/services/scoring-config-service";
 
 /**
- * État réel du calibrage sectoriel : interrupteur applicatif, référentiel lu par le
- * moteur (V9), et rappel du référentiel hérité (V8) que plus aucun calcul n'utilise.
+ * État réel du calibrage sectoriel : interrupteur applicatif et référentiel lu par le
+ * moteur. Le référentiel V8 qui coexistait a été supprimé après report de son contenu.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -32,13 +32,10 @@ export async function GET(request: NextRequest) {
     // fermé et que la table observée n'entrait dans aucun calcul.
     const actif = await isSectorialEnabled();
 
-    const [v9SectorCount, v9WeightCount, v8SectorCount, v8RuleCount] =
-      await Promise.all([
-        prisma.v9Sector.count({ where: { isActive: true } }),
-        prisma.v9SectorDomainWeight.count(),
-        prisma.v8Sector.count(),
-        prisma.v8IntegrationRule.count(),
-      ]);
+    const [v9SectorCount, v9WeightCount] = await Promise.all([
+      prisma.v9Sector.count({ where: { isActive: true } }),
+      prisma.v9SectorDomainWeight.count(),
+    ]);
 
     const sectors = await prisma.v9Sector.findMany({
       select: { code: true, label: true, isActive: true },
@@ -56,9 +53,6 @@ export async function GET(request: NextRequest) {
         : "Le calibrage sectoriel est désactivé (SCORING_SECTORIAL_ENABLED). Les facteurs configurés n'entrent dans aucun calcul.",
       v9SectorCount,
       v9WeightCount,
-      // Référentiel hérité, conservé pour mémoire : il porte des poids absolus là où
-      // le moteur attend des facteurs, et aucun calcul ne le lit.
-      legacyV8: { sectorCount: v8SectorCount, ruleCount: v8RuleCount, readByEngine: false },
       sectors,
       timestamp: new Date().toISOString(),
     });
