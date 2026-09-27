@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, getTokenFromCookie } from "@/lib/auth";
 import prisma from "@/lib/prisma-client";
+import { isSectorialEnabled } from "@/lib/services/scoring-config-service";
 
 /**
- * Vérifie si V8 est activé (tables V8 existent et contiennent des données)
+ * État réel du calibrage sectoriel : interrupteur applicatif, référentiel lu par le
+ * moteur (V9), et rappel du référentiel hérité (V8) que plus aucun calcul n'utilise.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -24,31 +26,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Compter les secteurs V8
-    const v8SectorCount = await prisma.v8Sector.count();
+    // Le calibrage sectoriel est gouverné par SCORING_SECTORIAL_ENABLED, et le moteur
+    // lit les tables V9. Ce diagnostic déduisait l'activation du seul fait que la table
+    // V8 contenait des lignes : il annonçait « actif » alors que l'interrupteur était
+    // fermé et que la table observée n'entrait dans aucun calcul.
+    const actif = await isSectorialEnabled();
 
-    // Compter les règles V8
-    const v8RuleCount = await prisma.v8IntegrationRule.count();
+    const [v9SectorCount, v9WeightCount, v8SectorCount, v8RuleCount] =
+      await Promise.all([
+        prisma.v9Sector.count({ where: { isActive: true } }),
+        prisma.v9SectorDomainWeight.count(),
+        prisma.v8Sector.count(),
+        prisma.v8IntegrationRule.count(),
+      ]);
 
-    // V8 est considéré comme activé s'il y a au moins 1 secteur configuré
-    const enabled = v8SectorCount > 0;
-
-    // Récupérer les détails
-    const sectors = enabled
-      ? await prisma.v8Sector.findMany({
-          select: {
-            code: true,
-            label: true,
-            isActive: true,
-          },
-          take: 5,
-        })
-      : [];
+    const sectors = await prisma.v9Sector.findMany({
+      select: { code: true, label: true, isActive: true },
+      orderBy: [{ orderIndex: "asc" }, { code: "asc" }],
+      take: 5,
+    });
 
     return NextResponse.json({
-      enabled,
-      v8SectorCount,
-      v8RuleCount,
+      enabled: actif,
+      appliedByEngine: actif && v9SectorCount > 0,
+      explanation: actif
+        ? v9SectorCount > 0
+          ? "Le calibrage sectoriel est actif et appliqué au calcul."
+          : "Le calibrage est activé mais aucun secteur actif n'est configuré : aucun ajustement n'est appliqué."
+        : "Le calibrage sectoriel est désactivé (SCORING_SECTORIAL_ENABLED). Les facteurs configurés n'entrent dans aucun calcul.",
+      v9SectorCount,
+      v9WeightCount,
+      // Référentiel hérité, conservé pour mémoire : il porte des poids absolus là où
+      // le moteur attend des facteurs, et aucun calcul ne le lit.
+      legacyV8: { sectorCount: v8SectorCount, ruleCount: v8RuleCount, readByEngine: false },
       sectors,
       timestamp: new Date().toISOString(),
     });

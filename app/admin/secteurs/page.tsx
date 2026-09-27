@@ -61,6 +61,7 @@ interface Secteur {
 export default function SecteursPage() {
   const router = useRouter();
   const [secteurs, setSecteurs] = useState<Secteur[]>([]);
+  const [calibrageActif, setCalibrageActif] = useState(true);
   const [initial, setInitial] = useState<Secteur[]>([]);
   const [selection, setSelection] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,7 +74,9 @@ export default function SecteursPage() {
       const res = await apiGet("/api/admin/scoring/sectors");
       if (res.status === 401) return router.push("/login");
       if (res.status === 403) return router.push("/");
-      const data: Secteur[] = (await res.json()).data ?? [];
+      const corps = (await res.json()).data ?? {};
+      const data: Secteur[] = corps.secteurs ?? [];
+      setCalibrageActif(corps.calibrageActif !== false);
       setSecteurs(data);
       setInitial(JSON.parse(JSON.stringify(data)));
       setSelection((prec) => prec ?? data[0]?.id ?? null);
@@ -179,6 +182,24 @@ export default function SecteursPage() {
           de 20 %.
         </p>
       </div>
+
+      {!calibrageActif && (
+        <Card className="border-warning/40 bg-warning/10 p-4">
+          <p className="text-sm text-warning inline-flex items-start gap-2">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            <span>
+              Le calibrage sectoriel est <strong>désactivé</strong> : les facteurs
+              ci-dessous sont enregistrés mais n&apos;entrent dans aucun calcul. Pour
+              les appliquer, activer{" "}
+              <code className="text-xs">SCORING_SECTORIAL_ENABLED</code> depuis{" "}
+              <Link href="/admin/configuration" className="underline">
+                Paramétrage de l&apos;outil
+              </Link>
+              .
+            </span>
+          </p>
+        </Card>
+      )}
 
       {erreurs.length > 0 && (
         <Card className="border-destructive/40 bg-destructive/10 p-4">
