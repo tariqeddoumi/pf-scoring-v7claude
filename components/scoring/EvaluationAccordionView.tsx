@@ -341,7 +341,7 @@ function DomainAccordion({
           </div>
           <div className="w-12 h-6 bg-muted rounded-full relative overflow-hidden">
             <div
-              className="h-full bg-cyan-500 transition-all duration-300"
+              className="h-full bg-primary transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>

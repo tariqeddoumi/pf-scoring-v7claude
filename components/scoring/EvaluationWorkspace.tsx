@@ -64,6 +64,42 @@ function buildDomainStats(
   return stats;
 }
 
+/**
+ * Description d'un critère.
+ *
+ * Le modèle la stocke sous la forme « Indicateurs: … | Seuils: … | Sources: … », et
+ * l'écran l'affichait telle quelle, en gris clair sur trois lignes tassées. Ce sont
+ * pourtant les trois repères dont on se sert pour répondre : ils sont séparés et
+ * étiquetés. Le seuil est mis en avant — c'est lui qu'on cherche en premier.
+ */
+function DescriptionCritere({ texte }: { texte: string }) {
+  const rubriques = texte
+    .split("|")
+    .map((m) => m.trim())
+    .filter(Boolean)
+    .map((m) => {
+      const i = m.indexOf(":");
+      return i > 0
+        ? { titre: m.slice(0, i).trim(), corps: m.slice(i + 1).trim() }
+        : { titre: "", corps: m };
+    });
+
+  if (rubriques.length === 0) return null;
+
+  return (
+    <div className="mt-2 rounded-md bg-surface px-3 py-2 text-[12px] leading-relaxed">
+      {rubriques.map((r, i) => (
+        <p key={i} className={i > 0 ? "mt-1" : undefined}>
+          {r.titre && (
+            <span className="font-semibold text-foreground">{r.titre} — </span>
+          )}
+          <span className="text-muted-foreground">{r.corps}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
 /* ─── NodeInput ─────────────────────────────────────────── */
 
 function NodeInput({
@@ -77,8 +113,6 @@ function NodeInput({
 }) {
   const inputClass =
     "w-full px-3 py-2 bg-muted border border-input rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-colors";
-
-  const selectedOption = node.options?.find((o) => o.value === answer?.valueString);
 
   /**
    * Contribution réelle du barème au score, sur l'échelle du moteur.
@@ -94,35 +128,68 @@ function NodeInput({
 
   return (
     <div className="space-y-2">
-      {/* Options (SELECT) */}
+      {/*
+        Les quatre réponses étaient enfermées dans une liste déroulante native : il
+        fallait l'ouvrir pour les découvrir, sans voir ce que chacune valait ni dans
+        quel cas la retenir. Elles sont désormais présentées ensemble, avec leur
+        contribution au score et la phrase qui les départage.
+      */}
       {node.options && node.options.length > 0 && (
-        <div>
-          <select
-            value={answer?.valueString ?? ""}
-            onChange={(e) => onChange({ ...answer, valueString: e.target.value || undefined })}
-            className={inputClass}
-          >
-            <option value="">— Sélectionner une option —</option>
-            {node.options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          {selectedOption && (
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-primary">
-              <CheckCircle2 size={11} />
-              Score attribué :{" "}
-              <span className="font-bold">
-                {contribution(selectedOption.score).toFixed(0)} / 100
-              </span>
-              <span className="text-muted-foreground">
-                (barème : {selectedOption.score}
-                {node.scoreMax ? ` / ${node.scoreMax}` : ""})
-              </span>
-            </div>
+        <fieldset>
+          <legend className="sr-only">Choisir une réponse</legend>
+          <div className="space-y-1.5">
+            {node.options.map((opt) => {
+              const choisie = opt.value === answer?.valueString;
+              return (
+                <label
+                  key={opt.value}
+                  className={`flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 transition-colors ${
+                    choisie
+                      ? "border-primary bg-accent"
+                      : "border-border bg-card hover:border-ring/50 hover:bg-surface"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name={`reponse-${node.id}`}
+                    value={opt.value}
+                    checked={choisie}
+                    onChange={() => onChange({ ...answer, valueString: opt.value })}
+                    className="mt-[3px] h-4 w-4 shrink-0 accent-[var(--primary)]"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="text-[13.5px] font-semibold text-foreground">
+                        {opt.label}
+                      </span>
+                      <span
+                        className={`shrink-0 text-[12.5px] font-semibold tabulaire ${
+                          choisie ? "text-primary" : "text-muted-foreground"
+                        }`}
+                      >
+                        {contribution(opt.score).toFixed(0)} / 100
+                      </span>
+                    </span>
+                    {opt.quandChoisir && (
+                      <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
+                        {opt.quandChoisir}
+                      </span>
+                    )}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {answer?.valueString && (
+            <button
+              type="button"
+              onClick={() => onChange({ ...answer, valueString: undefined })}
+              className="mt-1.5 text-[11.5px] text-muted-foreground underline transition-colors hover:text-foreground"
+            >
+              Effacer la réponse
+            </button>
           )}
-        </div>
+        </fieldset>
       )}
 
       {/* Ranges (NUMERIC) */}
@@ -292,18 +359,11 @@ function CriteriaTree({
             >
               {node.label}
             </span>
-            {!hasChildren && (
-              <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                {node.answerType?.replace("_", " ") || "TEXT"}
-              </span>
-            )}
+            {/* Le type de réponse (« OPTION SINGLE », « NUMERIC RANGE ») décrit le
+                schéma, pas le dossier : il n'apprend rien au chargé d'affaires et la
+                forme du champ le dit déjà. */}
           </div>
-          {node.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 flex items-start gap-1">
-              <Info size={10} className="mt-0.5 flex-shrink-0" />
-              {node.description}
-            </p>
-          )}
+          {node.description && <DescriptionCritere texte={node.description} />}
         </div>
 
         {/* Weight badge */}
@@ -619,7 +679,7 @@ export function EvaluationWorkspace({
           <button
             onClick={handleCalculate}
             disabled={isCalculating}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm rounded-lg transition-all"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent disabled:opacity-50"
           >
             <Calculator size={14} />
             Calculer
@@ -689,7 +749,7 @@ export function EvaluationWorkspace({
                       </div>
                       <div className="bg-muted rounded-full h-2">
                         <div
-                          className="h-2 rounded-full bg-cyan-500 transition-all duration-500"
+                          className="h-2 rounded-full bg-primary transition-all duration-500"
                           style={{
                             width: `${
                               stats[currentDomain.id].total > 0

@@ -11,7 +11,13 @@ export interface QuestionnaireNode {
   nodeType: string;
   answerType?: string;
   scoringMethod?: string;
-  options?: { value: string; label: string; score: number }[];
+  options?: {
+    value: string;
+    label: string;
+    score: number;
+    /** Phrase qui décrit dans quel cas retenir cette réponse. */
+    quandChoisir?: string;
+  }[];
   ranges?: { minValue: number; maxValue: number; score: number; label?: string }[];
   weight?: number;
   /** Bornes de l'échelle du critère : le barème est exprimé dessus, le moteur sur 0–100. */
