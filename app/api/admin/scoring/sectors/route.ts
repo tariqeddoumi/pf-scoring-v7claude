@@ -15,6 +15,7 @@ import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 import { FACTEUR_MAX, FACTEUR_MIN, facteurValide } from "@/lib/sector-calibration";
+import { isSectorialEnabled } from "@/lib/services/scoring-config-service";
 
 /** Facteur tel qu'il arrive du client : les types ne sont pas garantis. */
 interface PoidsEntrant {
@@ -34,7 +35,14 @@ export async function GET(req: NextRequest) {
         orderBy: [{ orderIndex: "asc" }, { code: "asc" }],
       });
 
-      return successResponse(secteurs, { count: secteurs.length });
+      // Un calibrage réglable mais éteint est un piège : l'écran doit pouvoir le dire
+      // avant qu'on passe du temps à ajuster des facteurs sans effet.
+      const actif = await isSectorialEnabled();
+
+      return successResponse(
+        { secteurs, calibrageActif: actif },
+        { count: secteurs.length }
+      );
     } catch (error) {
       console.error("[ADMIN/SCORING/SECTORS] GET error:", error);
       return serverError("Erreur lors de la récupération des secteurs");

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, getTokenFromCookie } from "@/lib/auth";
 import prisma from "@/lib/prisma-client";
+import { isSectorialEnabled } from "@/lib/services/scoring-config-service";
 
 /**
  * Diagnostic complet d'intégrité du système
@@ -43,30 +44,27 @@ export async function GET(request: NextRequest) {
     const scoringRuleCount = await prisma.scoringNodeRule.count();
     const evaluationCount = await prisma.scoringEvaluation.count();
 
-    // ====== V8 SECTORAL ADJUSTMENTS ======
-    const v8SectorCount = await prisma.v8Sector.count();
-    const v8WeightCount = await prisma.v8SectorDomainWeight.count();
-    const v8StressTestCount = await prisma.v8SectorStressTest.count();
-    const v8RedFlagCount = await prisma.v8SectorRedFlag.count();
-    const v8ImpactCount = await prisma.v8SectorDomainImpact.count();
-    const v8RuleCount = await prisma.v8IntegrationRule.count();
 
     // ====== DATA INTEGRITY CHECKS ======
     const projectCount = await prisma.project.count();
     const clientCount = await prisma.client.count();
     const scoringDomainCount = await prisma.scoreDomain.count();
 
-    // ====== V8 ACTIVATION STATUS ======
-    const v8Enabled = v8SectorCount > 0;
+    // ====== ÉTAT RÉEL DU CALIBRAGE SECTORIEL ======
+    // L'activation se déduisait du seul fait que la table V8 contenait des lignes.
+    // Le calibrage est en réalité gouverné par SCORING_SECTORIAL_ENABLED, et le moteur
+    // lit les tables V9 : le diagnostic annonçait « ENABLED » alors que l'interrupteur
+    // était fermé et que la table observée n'entrait dans aucun calcul.
+    const sectorialEnabled = await isSectorialEnabled();
+    const v9SectorCount = await prisma.v9Sector.count({ where: { isActive: true } });
+    const v9WeightCount = await prisma.v9SectorDomainWeight.count();
+    const sectorialApplied = sectorialEnabled && v9SectorCount > 0;
 
-    // Get sample V8 sectors if enabled
-    let sampleSectors: any[] = [];
-    if (v8Enabled) {
-      sampleSectors = await prisma.v8Sector.findMany({
-        select: { code: true, label: true, isActive: true },
-        take: 3,
-      });
-    }
+    const sampleSectors = await prisma.v9Sector.findMany({
+      select: { code: true, label: true, isActive: true },
+      orderBy: [{ orderIndex: "asc" }, { code: "asc" }],
+      take: 3,
+    });
 
     // Get most recent evaluation
     const latestEval = await prisma.scoringEvaluation.findFirst({
@@ -103,14 +101,16 @@ export async function GET(request: NextRequest) {
         status: scoringNodeCount > 0 ? "✓ ACTIVE" : "⚠ NO DATA",
         latest_evaluation: latestEval || "none",
       },
-      v8_sectoral_adjustments: {
-        sectors: v8SectorCount,
-        domain_weights: v8WeightCount,
-        stress_tests: v8StressTestCount,
-        red_flags: v8RedFlagCount,
-        domain_impacts: v8ImpactCount,
-        integration_rules: v8RuleCount,
-        status: v8Enabled ? "✓ ENABLED" : "⚠ NOT CONFIGURED",
+      calibrage_sectoriel: {
+        active: sectorialEnabled,
+        applique_au_calcul: sectorialApplied,
+        secteurs_actifs: v9SectorCount,
+        facteurs_de_ponderation: v9WeightCount,
+        status: sectorialApplied
+          ? "✓ APPLIQUÉ"
+          : sectorialEnabled
+            ? "⚠ ACTIVÉ SANS SECTEUR"
+            : "○ DÉSACTIVÉ",
         sample_sectors: sampleSectors,
       },
       data_completeness: {
@@ -119,13 +119,18 @@ export async function GET(request: NextRequest) {
         scoring_domains_legacy: scoringDomainCount,
         status: projectCount > 0 && clientCount > 0 ? "✓ POPULATED" : "⚠ SETUP NEEDED",
       },
-      model_selection: {
-        active_model: v8Enabled ? "V8 (Sectoral)" : "V7++ (Standard)",
-        v8_enabled: v8Enabled,
-        v7pp_enabled: true,
-        recommendation: v8Enabled
-          ? "Using V8 with sector-specific adjustments"
-          : "Using V7++ standard model. To enable V8, populate V8 tables",
+      modele_applique: {
+        // Le conseil précédent — « remplir les tables V8 » — n'aurait rien changé :
+        // le moteur ne les lit pas, et l'activation passe par la configuration.
+        modele: sectorialApplied
+          ? "V7++ avec ajustement sectoriel"
+          : "V7++ standard, sans ajustement sectoriel",
+        calibrage_sectoriel_actif: sectorialEnabled,
+        recommandation: sectorialApplied
+          ? "Les facteurs sectoriels sont appliqués au calcul."
+          : sectorialEnabled
+            ? "Activer au moins un secteur dans Paramétrage → Calibrage sectoriel."
+            : "Pour appliquer les facteurs sectoriels, activer SCORING_SECTORIAL_ENABLED dans Paramétrage → Paramétrage de l'outil.",
       },
       critical_alerts: [] as string[],
     };

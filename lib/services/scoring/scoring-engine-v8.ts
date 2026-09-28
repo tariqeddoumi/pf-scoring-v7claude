@@ -238,7 +238,15 @@ export class ScoringEngineV8 {
           },
           0
         );
-        rawScore = scoreOut.rawScore;
+        // Le barème du critère est exprimé sur l'échelle qu'il déclare (0–10 pour la
+        // grille V7++) ; le moteur, le barème de notation et l'affichage travaillent
+        // sur 0–100. La conversion a lieu ici, une fois, au seul endroit où une
+        // valeur entre dans le calcul depuis le paramétrage.
+        rawScore = AggregationEngine.rescaleTo100(
+          scoreOut.rawScore,
+          node.scoreMin,
+          node.scoreMax
+        );
         explanation = scoreOut.explanation;
       } else if (treatAsAggregator) {
         const childIds = tree.childrenOf.get(node.id) || [];
@@ -265,7 +273,10 @@ export class ScoringEngineV8 {
       // seulement ceux que l'ordre de parcours a déjà rencontrés.
       const ruleImpacts: RuleImpact[] = [];
 
-      const normalizedScore = AggregationEngine.normalize(rawScore, node.scoreMax || 100);
+      // Tous les scores du moteur sont désormais sur 0–100, les feuilles ayant été
+      // converties depuis leur échelle déclarée : la normalisation divise donc par 100
+      // et non par le scoreMax du nœud, qui vaut 10 pour un critère de la grille.
+      const normalizedScore = AggregationEngine.normalize(rawScore, 100);
 
       nodeScores.set(node.id, {
         nodeId: node.id,
