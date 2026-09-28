@@ -55,6 +55,26 @@ export function formatMAD(montant: number): string {
   }).format(montant);
 }
 
+/**
+ * Montant abrégé, pour les tableaux et les indicateurs.
+ *
+ * « 2 350 000 000 MAD » occupe une colonne entière et ne se compare pas d'un coup
+ * d'œil. Les ordres de grandeur suffisent dès qu'on dépasse le million ; le montant
+ * exact reste disponible en infobulle ou sur la fiche du dossier.
+ *
+ * L'abréviation du milliard est « Md » en français — et non « B ».
+ */
+export function formatMADCompact(montant: number | null | undefined): string {
+  if (montant === null || montant === undefined || !Number.isFinite(montant)) return "—";
+  const abs = Math.abs(montant);
+  const fr = (n: number, d: number) =>
+    n.toFixed(d).replace(".", ",").replace(/,0+$/, "");
+  if (abs >= 1_000_000_000) return `${fr(montant / 1_000_000_000, 2)} Md MAD`;
+  if (abs >= 1_000_000) return `${fr(montant / 1_000_000, 0)} M MAD`;
+  if (abs >= 1_000) return `${fr(montant / 1_000, 0)} k MAD`;
+  return `${montant} MAD`;
+}
+
 // ============================================================================
 // FORMATAGE DES DATES
 // ============================================================================

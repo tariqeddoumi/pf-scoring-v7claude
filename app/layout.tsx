@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { Navbar } from "@/components/layout/Navbar";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Footer } from "@/components/layout/Footer";
+import { AppShell } from "@/components/layout/AppShell";
 import { DashboardConfigProvider } from "@/lib/dashboard-config-context";
 import { ReactQueryProvider } from "@/lib/react-query-provider";
 import { AppConfigProvider } from "@/components/providers/app-config-provider";
@@ -21,7 +19,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const config = await getPublicConfig();
-  const themeMode = config.THEME_MODE === "light" ? "" : "dark";
+  // Le mode clair est le défaut de la direction visuelle ; le sombre reste un choix
+  // explicite de la banque. La classe est posée au rendu serveur pour éviter le
+  // clignotement au chargement.
+  const themeMode = config.THEME_MODE === "dark" ? "dark" : "";
 
   return (
     <html lang="fr" className={themeMode}>
@@ -30,24 +31,7 @@ export default async function RootLayout({
           <ThemeWrapper>
             <ReactQueryProvider>
               <DashboardConfigProvider>
-                {/* Navbar */}
-                <Navbar />
-
-                {/* Main Layout with Sidebar */}
-                <div className="flex min-h-[calc(100vh-64px)]">
-                  {/* Sidebar */}
-                  <Sidebar />
-
-                  {/* Main Content */}
-                  <main className="flex-1 flex flex-col w-full md:w-auto">
-                    <div className="flex-1 p-3 md:p-6 max-w-7xl w-full mx-auto">
-                      {children}
-                    </div>
-
-                    {/* Footer */}
-                    <Footer />
-                  </main>
-                </div>
+                <AppShell>{children}</AppShell>
               </DashboardConfigProvider>
             </ReactQueryProvider>
           </ThemeWrapper>

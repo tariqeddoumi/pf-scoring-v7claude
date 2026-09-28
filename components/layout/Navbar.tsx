@@ -1,99 +1,108 @@
 "use client";
 
 import Link from "next/link";
-import { Menu } from "lucide-react";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { Menu, Search } from "lucide-react";
 import { UserProfile } from "./UserProfile";
-import { useAppConfig } from "@/components/providers/app-config-provider";
 
-export function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { config } = useAppConfig();
-  const appName = config.APP_NAME || "PF Scoring";
-  const logoUrl = config.APP_LOGO_URL;
+/**
+ * Barre supérieure.
+ *
+ * Elle portait six liens horizontaux qui répétaient le menu latéral, sans état actif :
+ * deux navigations concurrentes, et rien n'indiquait laquelle faisait foi. Le menu
+ * latéral est désormais la seule navigation ; la barre ne garde que ce qui est utile
+ * partout — où l'on se trouve, la recherche, et qui l'on est.
+ */
+
+/** Libellés des segments d'URL pour le fil d'Ariane. */
+const SEGMENTS: Record<string, string> = {
+  dashboard: "Tableau de bord",
+  "dashboard-config": "Personnalisation",
+  clients: "Clients",
+  projects: "Projets",
+  evaluations: "Évaluations",
+  scoring: "Scoring",
+  saisie: "Saisie",
+  results: "Résultats",
+  new: "Nouveau",
+  edit: "Modification",
+  search: "Recherche",
+  compare: "Comparaison",
+  analytics: "Analytique",
+  monitoring: "Monitoring",
+  alerts: "Alertes",
+  audit: "Journal d'audit",
+  methodology: "Méthodologie",
+  workflows: "Circuits de validation",
+  admin: "Paramétrage",
+  bareme: "Barème de notation",
+  regles: "Règles et seuils",
+  secteurs: "Calibrage sectoriel",
+  users: "Utilisateurs",
+  configuration: "Paramétrage de l'outil",
+  diagnostic: "Diagnostic",
+  granularity: "Granularité",
+  builder: "Constructeur",
+  "scoring-grid-v7pp": "Grille de scoring",
+  "country-risk": "Risque pays",
+  "dynamic-forms": "Formulaires dynamiques",
+  "field-management": "Champs de formulaire",
+};
+
+/** Un segment qui ressemble à un identifiant n'a pas sa place dans le fil. */
+function estIdentifiant(s: string): boolean {
+  return /^[0-9a-f-]{8,}$/i.test(s) || /^[a-z]-\d+$/i.test(s);
+}
+
+export function Navbar({ onOuvrirMenu }: { onOuvrirMenu?: () => void }) {
+  const pathname = usePathname() || "/";
+  const segments = pathname.split("/").filter(Boolean);
+
+  const fil = segments
+    .filter((s) => !estIdentifiant(s))
+    .map((s, i, liste) => ({
+      texte: SEGMENTS[s] ?? s,
+      dernier: i === liste.length - 1,
+    }));
 
   return (
-    <nav className="bg-gradient-to-r from-background to-background border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
-            {logoUrl ? (
-              <img src={logoUrl} alt={appName} className="w-8 h-8 rounded-lg object-contain" />
-            ) : (
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-foreground font-bold text-sm">
-                  {appName.slice(0, 2).toUpperCase()}
-                </span>
-              </div>
-            )}
-            <span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-              {appName}
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-card px-4 md:px-6">
+      <button
+        onClick={onOuvrirMenu}
+        aria-label="Ouvrir le menu"
+        className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:hidden"
+      >
+        <Menu size={20} />
+      </button>
+
+      <nav aria-label="Fil d'Ariane" className="min-w-0 flex-1 truncate text-sm">
+        {fil.length === 0 ? (
+          <span className="font-medium text-foreground">Accueil</span>
+        ) : (
+          fil.map((f, i) => (
+            <span key={i}>
+              {i > 0 && <span className="mx-1.5 text-muted-foreground">›</span>}
+              <span
+                className={
+                  f.dernier ? "font-medium text-foreground" : "text-muted-foreground"
+                }
+              >
+                {f.texte}
+              </span>
             </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            <NavLink href="/dashboard" label="Tableau de bord" />
-            <NavLink href="/clients" label="Clients" />
-            <NavLink href="/projects" label="Projets" />
-            <NavLink href="/evaluations" label="Évaluations" />
-            <NavLink href="/methodology" label="Méthodologie" />
-            <NavLink href="/audit" label="Journal d'audit" />
-          </div>
-
-          {/* User Menu & Mobile Menu Button */}
-          <div className="flex items-center space-x-2">
-            <div className="hidden md:block">
-              <UserProfile />
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-secondary-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-            >
-              <Menu size={20} />
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-border">
-            <div className="flex flex-col space-y-2 pt-4">
-              <MobileNavLink href="/dashboard" label="Tableau de bord" />
-              <MobileNavLink href="/clients" label="Clients" />
-              <MobileNavLink href="/projects" label="Projets" />
-              <MobileNavLink href="/evaluations" label="Évaluations" />
-              <MobileNavLink href="/methodology" label="Méthodologie" />
-              <MobileNavLink href="/audit" label="Journal d'audit" />
-            </div>
-          </div>
+          ))
         )}
-      </div>
-    </nav>
-  );
-}
+      </nav>
 
-function NavLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="px-4 py-2 text-secondary-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-    >
-      {label}
-    </Link>
-  );
-}
+      <Link
+        href="/search"
+        className="hidden h-9 w-64 items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm text-muted-foreground transition-colors hover:border-ring lg:flex"
+      >
+        <Search size={15} />
+        Rechercher un client, un projet…
+      </Link>
 
-function MobileNavLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="px-4 py-2 text-secondary-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors block"
-    >
-      {label}
-    </Link>
+      <UserProfile />
+    </header>
   );
 }

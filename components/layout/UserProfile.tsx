@@ -1,152 +1,176 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { LogOut, Settings, Users, BarChart3, ChevronDown } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronDown, LogOut, Settings, Users, BarChart3 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { hasMinimumRole } from "@/lib/permissions";
+import { ROLE_LABELS } from "@/lib/ui-constants";
 
-interface User {
+interface Utilisateur {
   id: string;
   email: string;
   nom: string;
   prenom: string;
-  role: "admin" | "manager" | "analyst" | "viewer";
-  avatar?: string;
-  createdAt: string;
+  role: string;
 }
 
+/**
+ * Identité de l'utilisateur connecté, dans la barre supérieure.
+ *
+ * Deux défauts corrigés ici, tous deux invisibles à la lecture du code seul :
+ *
+ * — La réponse de /api/auth/me est un objet À PLAT ({ id, email, nom, … }), alors
+ *   que ce composant lisait `data.data`. L'utilisateur valait donc toujours
+ *   undefined : « Se connecter » s'affichait sur tous les écrans malgré une session
+ *   ouverte, et le menu d'administration était inaccessible à tout le monde.
+ *
+ * — La déconnexion effaçait le cookie mais pas le jeton de localStorage. Or c'est ce
+ *   jeton que les routes d'API lisent en en-tête Bearer : on restait authentifié
+ *   après s'être déconnecté.
+ */
 export function UserProfile() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const router = useRouter();
+  const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
+  const [chargement, setChargement] = useState(true);
+  const [ouvert, setOuvert] = useState(false);
+  const conteneur = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    let annule = false;
+    (async () => {
       try {
-        const response = await fetch("/api/auth/me");
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.data);
-        } else {
-          console.log("Not authenticated");
-        }
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) return;
+        const corps = await res.json();
+        // La route répond à plat ; `data` reste toléré au cas où l'enveloppe
+        // standard lui serait appliquée un jour.
+        const u = corps?.data ?? corps;
+        if (!annule && u?.id) setUtilisateur(u as Utilisateur);
+      } catch {
+        /* session absente : l'invite de connexion s'affiche */
       } finally {
-        setLoading(false);
+        if (!annule) setChargement(false);
       }
+    })();
+    return () => {
+      annule = true;
     };
-
-    fetchUser();
   }, []);
 
-  const handleLogout = async () => {
+  // Fermeture au clic extérieur et à la touche Échap.
+  useEffect(() => {
+    if (!ouvert) return;
+    const clic = (e: MouseEvent) => {
+      if (conteneur.current && !conteneur.current.contains(e.target as Node)) {
+        setOuvert(false);
+      }
+    };
+    const touche = (e: KeyboardEvent) => e.key === "Escape" && setOuvert(false);
+    document.addEventListener("mousedown", clic);
+    document.addEventListener("keydown", touche);
+    return () => {
+      document.removeEventListener("mousedown", clic);
+      document.removeEventListener("keydown", touche);
+    };
+  }, [ouvert]);
+
+  const deconnexion = useCallback(async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
+    } finally {
+      // Le jeton local ouvre l'accès aux API indépendamment du cookie : sans cette
+      // ligne, la déconnexion ne déconnecte rien.
+      try {
+        localStorage.removeItem("auth_token");
+      } catch {
+        /* stockage indisponible */
+      }
+      window.location.href = "/login";
     }
-  };
+  }, []);
 
-  if (loading) {
-    return <div className="h-10 w-32 bg-muted rounded animate-pulse"></div>;
+  if (chargement) {
+    return <div className="h-9 w-40 rounded-md bg-muted animate-pulse" />;
   }
 
-  if (!user) {
+  if (!utilisateur) {
     return (
       <Link
         href="/login"
-        className="px-4 py-2 text-sm text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+        className="px-3 py-2 text-sm font-medium text-primary hover:underline"
       >
         Se connecter
       </Link>
     );
   }
 
-  const roleColors: Record<string, string> = {
-    admin: "bg-destructive/15 text-destructive border-destructive/30",
-    manager: "bg-primary/20 text-primary border-ring/30",
-    analyst: "bg-success/15 text-success border-success/30",
-    viewer: "bg-secondary/20 text-muted-foreground border-input/30",
-  };
-
-  const roleLabelsFR: Record<string, string> = {
-    admin: "Administrateur",
-    manager: "Gestionnaire",
-    analyst: "Analyste",
-    viewer: "Lecteur",
-  };
+  const initiales =
+    `${utilisateur.prenom?.[0] ?? ""}${utilisateur.nom?.[0] ?? ""}`.toUpperCase() || "?";
+  const estAdmin = hasMinimumRole(utilisateur.role, "scoring_admin");
 
   return (
-    <div className="relative">
+    <div className="relative" ref={conteneur}>
       <button
-        onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="flex items-center gap-3 px-3 py-2 text-sm text-secondary-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors border border-input"
+        onClick={() => setOuvert((o) => !o)}
+        aria-expanded={ouvert}
+        aria-haspopup="menu"
+        className="flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent"
       >
-        <div className="text-right">
-          <div className="font-medium text-foreground">
-            {user.prenom} {user.nom}
-          </div>
-          <div
-            className={`text-xs px-2 py-0.5 rounded border ${roleColors[user.role]}`}
-          >
-            {roleLabelsFR[user.role]}
-          </div>
-        </div>
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
+          {initiales}
+        </span>
+        <span className="hidden text-left sm:block">
+          <span className="block text-sm font-medium leading-tight text-foreground">
+            {utilisateur.prenom} {utilisateur.nom}
+          </span>
+          <span className="block text-xs leading-tight text-muted-foreground">
+            {ROLE_LABELS[utilisateur.role] ?? utilisateur.role}
+          </span>
+        </span>
         <ChevronDown
-          size={16}
-          className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+          size={15}
+          className={`text-muted-foreground transition-transform ${ouvert ? "rotate-180" : ""}`}
         />
       </button>
 
-      {/* Dropdown Menu */}
-      {dropdownOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50">
-          {/* User Info */}
-          <div className="px-4 py-3 border-b border-border">
+      {ouvert && (
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-1.5 w-60 overflow-hidden rounded-lg border border-border bg-popover shadow-lg"
+        >
+          <div className="border-b border-border px-4 py-3">
             <p className="text-xs text-muted-foreground">Connecté en tant que</p>
-            <p className="text-sm font-medium text-foreground">{user.email}</p>
+            <p className="truncate text-sm font-medium text-foreground">
+              {utilisateur.email}
+            </p>
           </div>
 
-          {/* Admin Menu — même seuil de rôle que withAdminAuth côté API */}
-          {hasMinimumRole(user.role, "scoring_admin") && (
-            <>
-              <Link
-                href="/admin"
-                className="flex items-center gap-2 px-4 py-3 text-sm text-secondary-foreground hover:text-foreground hover:bg-accent transition-colors border-b border-border"
-                onClick={() => setDropdownOpen(false)}
-              >
-                <Settings size={16} />
-                Paramétrage
-              </Link>
-              <Link
-                href="/admin/users"
-                className="flex items-center gap-2 px-4 py-3 text-sm text-secondary-foreground hover:text-foreground hover:bg-accent transition-colors border-b border-border"
-                onClick={() => setDropdownOpen(false)}
-              >
-                <Users size={16} />
-                Gestion des utilisateurs
-              </Link>
-              <Link
-                href="/admin/scoring-grid-v7pp"
-                className="flex items-center gap-2 px-4 py-3 text-sm text-secondary-foreground hover:text-foreground hover:bg-accent transition-colors border-b border-border"
-                onClick={() => setDropdownOpen(false)}
-              >
-                <BarChart3 size={16} />
-                Paramétrage des grilles
-              </Link>
-            </>
+          {estAdmin && (
+            <div className="border-b border-border py-1">
+              {[
+                { href: "/admin", icone: Settings, texte: "Paramétrage" },
+                { href: "/admin/users", icone: Users, texte: "Utilisateurs" },
+                { href: "/admin/scoring-grid-v7pp", icone: BarChart3, texte: "Grille de scoring" },
+              ].map(({ href, icone: Icone, texte }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  role="menuitem"
+                  onClick={() => setOuvert(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+                >
+                  <Icone size={15} className="text-muted-foreground" />
+                  {texte}
+                </Link>
+              ))}
+            </div>
           )}
 
-          {/* Logout */}
           <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-3 text-sm text-destructive hover:text-destructive/80 hover:bg-accent transition-colors"
+            role="menuitem"
+            onClick={deconnexion}
+            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-destructive transition-colors hover:bg-accent"
           >
-            <LogOut size={16} />
+            <LogOut size={15} />
             Déconnexion
           </button>
         </div>
