@@ -64,7 +64,9 @@ export function NodeDetailsPanel({
         )}
         {activeTab === "rules" && <RulesTab nodeId={node.id} versionId={versionId} />}
         {activeTab === "bindings" && <BindingsTab nodeId={node.id} versionId={versionId} />}
-        {activeTab === "validation" && <ValidationTab node={node} />}
+        {activeTab === "validation" && (
+          <ValidationTab node={node} versionId={versionId} />
+        )}
       </div>
     </div>
   );
@@ -400,16 +402,19 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
 
 interface ValidationTabProps {
   node: ScoringNode;
+  versionId: string;
 }
 
-function ValidationTab({ node }: ValidationTabProps) {
+function ValidationTab({ node, versionId }: ValidationTabProps) {
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const validateNode = async () => {
     setLoading(true);
     try {
-      const res = await apiPost("/api/admin/scoring/validate-grid", { versionId: "dummy" });
+      // L'onglet envoyait { versionId: "dummy" } : le serveur ne trouvait aucun nœud
+      // et répondait toujours « valide ». La validation ne contrôlait rien.
+      const res = await apiPost("/api/admin/scoring/validate-grid", { versionId });
       const data = await res.json();
       setValidationErrors(data.data?.errors || []);
     } catch (e) {
