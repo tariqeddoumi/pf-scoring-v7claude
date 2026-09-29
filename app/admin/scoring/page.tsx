@@ -42,17 +42,41 @@ interface ModelVersion {
   criteriaCount: number;
 }
 
+/**
+ * Pastilles de domaine.
+ *
+ * Les icônes et les couleurs dataient d'un modèle antérieur : 💰 pour « Sponsor &
+ * actionnaires », 🌿 pour « Risque de marché », 🗺️ pour « Structure financière »,
+ * 🏗️ pour « Juridique » et 📊 pour « ESG ». Elles suivent maintenant les domaines
+ * D1 à D9 du modèle publié, et les couleurs viennent des jetons du thème.
+ */
 const DOMAIN_META: Record<string, { icon: string; color: string }> = {
-  D1: { icon: "💰", color: "text-primary bg-blue-400/10 border-blue-400/30" },
-  D2: { icon: "⚙️", color: "text-purple-400 bg-purple-400/10 border-purple-400/30" },
-  D3: { icon: "📈", color: "text-success bg-success/10 border-green-400/30" },
-  D4: { icon: "🌿", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" },
-  D5: { icon: "🏛️", color: "text-warning bg-amber-400/10 border-amber-400/30" },
-  D6: { icon: "⚖️", color: "text-warning bg-orange-400/10 border-orange-400/30" },
-  D7: { icon: "🗺️", color: "text-primary bg-cyan-400/10 border-cyan-400/30" },
-  D8: { icon: "🏗️", color: "text-pink-400 bg-pink-400/10 border-pink-400/30" },
-  D9: { icon: "📊", color: "text-destructive bg-red-400/10 border-red-400/30" },
+  D1: { icon: "🤝", color: "text-foreground bg-muted border-border" },
+  D2: { icon: "🏗️", color: "text-foreground bg-muted border-border" },
+  D3: { icon: "🧱", color: "text-foreground bg-muted border-border" },
+  D4: { icon: "📈", color: "text-foreground bg-muted border-border" },
+  D5: { icon: "⚙️", color: "text-foreground bg-muted border-border" },
+  D6: { icon: "🏦", color: "text-foreground bg-muted border-border" },
+  D7: { icon: "💰", color: "text-foreground bg-muted border-border" },
+  D8: { icon: "⚖️", color: "text-foreground bg-muted border-border" },
+  D9: { icon: "🌿", color: "text-foreground bg-muted border-border" },
 };
+
+/**
+ * Couleur d'un score d'option ou de plage.
+ *
+ * Les seuils étaient fixés à 75 et 50, c'est-à-dire pour une échelle sur 100 ; or les
+ * options de ce modèle sont notées sur l'échelle propre du nœud — 10, 8, 5, 2 — si
+ * bien que la totalité des options s'affichait en rouge. La couleur se rapporte
+ * désormais au meilleur score proposé par le nœud.
+ */
+function classeScoreRelatif(score: number, maximum: number): string {
+  if (!Number.isFinite(maximum) || maximum <= 0) return "text-foreground";
+  const part = (score / maximum) * 100;
+  if (part >= 75) return "text-success";
+  if (part >= 50) return "text-warning";
+  return "text-destructive";
+}
 
 export default function ScoringAdminPage() {
   const [questionnaire, setQuestionnaire] = useState<ScoringNode[]>([]);
@@ -73,24 +97,53 @@ export default function ScoringAdminPage() {
           throw new Error(d.error || "Erreur chargement");
         }
         const data = await res.json();
-        setQuestionnaire(data.data || []);
+
+        /*
+         * Le questionnaire est tronqué au niveau critère : il ne montre que deux
+         * étages, alors que ce sont les sous-critères qui portent les options et les
+         * plages, et donc la notation. L'écran annonçait « Critères OPTION : 0 » tout
+         * en affichant un badge « Options » sur chacun des vingt-huit critères, qui
+         * sont pourtant des nœuds d'agrégation sans type de réponse.
+         * L'arbre complet est reconstruit depuis la route d'administration.
+         */
+        let arbre: ScoringNode[] = data.data || [];
+        const resNoeuds = await apiGet(
+          `/api/admin/scoring/nodes?versionId=${data.modelVersionId}`
+        );
+        if (resNoeuds.ok) {
+          const plats = ((await resNoeuds.json()).data ?? []) as (ScoringNode & {
+            parentNodeId?: string | null;
+            isActive?: boolean;
+          })[];
+          const actifs = plats.filter((n) => n.isActive !== false);
+          const parId = new Map(actifs.map((n) => [n.id, { ...n, children: [] as ScoringNode[] }]));
+          const racines: ScoringNode[] = [];
+          for (const n of parId.values()) {
+            const parent = n.parentNodeId ? parId.get(n.parentNodeId) : null;
+            if (parent) parent.children!.push(n);
+            else racines.push(n);
+          }
+          if (racines.length > 0) arbre = racines;
+        }
+
+        setQuestionnaire(arbre);
         setModelVersion({
           id: data.modelVersionId,
           versionNumber: data.modelVersion?.versionNumber ?? 1,
           label: data.modelVersion?.label ?? "V1",
           modelCode: "PF_V7PP",
           modelLabel: "PF V7++ - Project Finance Standard Model",
-          domainCount: (data.data || []).length,
-          criteriaCount: (data.data || []).reduce(
+          domainCount: arbre.length,
+          criteriaCount: arbre.reduce(
             (s: number, d: ScoringNode) => s + (d.children?.length ?? 0),
             0
           ),
         });
         // Expand all domains by default
-        const ids = new Set<string>((data.data || []).map((d: ScoringNode) => d.id));
+        const ids = new Set<string>(arbre.map((d) => d.id));
         setExpandedDomains(ids);
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Chargement impossible.");
       } finally {
         setLoading(false);
       }
@@ -250,9 +303,14 @@ export default function ScoringAdminPage() {
                   <div className="border-t border-border divide-y divide-border/50">
                     {domain.children.map((criterion) => {
                       const isExpCrit = expandedCriteria.has(criterion.id);
+                      // Un critère se déplie s'il porte des options, des plages ou
+                      // des sous-critères — ce dernier cas, le plus fréquent dans ce
+                      // modèle, n'était pas prévu : aucun critère n'était dépliable.
+                      const sousCriteres = criterion.children ?? [];
                       const hasDetails =
                         (criterion.options?.length ?? 0) > 0 ||
-                        (criterion.ranges?.length ?? 0) > 0;
+                        (criterion.ranges?.length ?? 0) > 0 ||
+                        sousCriteres.length > 0;
 
                       return (
                         <div key={criterion.id}>
@@ -266,18 +324,27 @@ export default function ScoringAdminPage() {
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs text-muted-foreground font-mono">{criterion.code}</span>
                                 <span className="text-foreground text-sm font-medium">{criterion.label}</span>
-                                {/* Answer type badge */}
-                                <span className={`text-xs px-1.5 py-0.5 rounded flex items-center gap-1 ${
-                                  criterion.answerType === "NUMERIC_RANGE"
-                                    ? "bg-purple-500/10 text-purple-400"
-                                    : "bg-primary/10 text-primary"
-                                }`}>
-                                  {criterion.answerType === "NUMERIC_RANGE" ? (
-                                    <><Hash size={10} /> Numérique</>
-                                  ) : (
-                                    <><ListOrdered size={10} /> Options</>
-                                  )}
-                                </span>
+                                {/* Le badge de type ne vaut que pour un nœud qui se
+                                    saisit : il s'affichait « Options » sur les nœuds
+                                    d'agrégation, qui n'ont pas de type de réponse. */}
+                                {criterion.answerType ? (
+                                  <span className={`text-xs px-1.5 py-0.5 rounded flex items-center gap-1 ${
+                                    criterion.answerType === "NUMERIC_RANGE"
+                                      ? "bg-warning-subtle text-warning"
+                                      : "bg-accent text-accent-foreground"
+                                  }`}>
+                                    {criterion.answerType === "NUMERIC_RANGE" ? (
+                                      <><Hash size={10} /> Numérique</>
+                                    ) : (
+                                      <><ListOrdered size={10} /> Options</>
+                                    )}
+                                  </span>
+                                ) : sousCriteres.length > 0 ? (
+                                  <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                    {sousCriteres.length} sous-critère
+                                    {sousCriteres.length > 1 ? "s" : ""}
+                                  </span>
+                                ) : null}
                               </div>
                               {criterion.description && (
                                 <p className="text-xs text-muted-foreground mt-0.5 truncate">{criterion.description}</p>
@@ -296,8 +363,75 @@ export default function ScoringAdminPage() {
                             </div>
                           </button>
 
-                          {/* Options or Ranges detail */}
-                          {isExpCrit && (
+                          {/* Sous-critères : ce sont eux qui portent la notation. */}
+                          {isExpCrit && sousCriteres.length > 0 && (
+                            <div className="ml-24 mr-5 mb-3 space-y-2">
+                              {sousCriteres.map((sc) => (
+                                <div
+                                  key={sc.id}
+                                  className="rounded-lg border border-border overflow-hidden"
+                                >
+                                  <div className="flex flex-wrap items-baseline justify-between gap-2 bg-muted/40 px-3 py-2">
+                                    <span className="text-xs">
+                                      <span className="font-mono text-muted-foreground">
+                                        {sc.code}
+                                      </span>{" "}
+                                      <span className="text-foreground">{sc.label}</span>
+                                    </span>
+                                    <span
+                                      className="text-[11px] text-muted-foreground"
+                                      title={formatPoidsDetail(sc.weight, sommeFratrie(sousCriteres))}
+                                    >
+                                      Poids {formatPart(sc.weight, sommeFratrie(sousCriteres)) ?? "—"}
+                                    </span>
+                                  </div>
+                                  {(sc.options?.length ?? 0) > 0 && (
+                                    <table className="w-full text-xs">
+                                      <tbody className="divide-y divide-border/50">
+                                        {sc.options!.map((opt, i) => (
+                                          <tr key={`${sc.id}-${i}`} className="text-secondary-foreground">
+                                            <td className="px-3 py-1.5">{opt.label}</td>
+                                            <td className={`px-3 py-1.5 text-right font-bold ${classeScoreRelatif(
+                                              opt.score,
+                                              Math.max(...sc.options!.map((o) => o.score))
+                                            )}`}>{opt.score} pts</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  )}
+                                  {(sc.ranges?.length ?? 0) > 0 && (
+                                    <table className="w-full text-xs">
+                                      <tbody className="divide-y divide-border/50">
+                                        {sc.ranges!.map((r, i) => (
+                                          <tr key={`${sc.id}-r-${i}`} className="text-secondary-foreground">
+                                            <td className="px-3 py-1.5">{r.label ?? "—"}</td>
+                                            <td className="px-3 py-1.5 text-center font-mono">
+                                              {r.minValue} → {r.maxValue === 999 ? "∞" : r.maxValue}
+                                            </td>
+                                            <td className={`px-3 py-1.5 text-right font-bold ${classeScoreRelatif(
+                                              r.score,
+                                              Math.max(...sc.ranges!.map((x) => x.score))
+                                            )}`}>{r.score} pts</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  )}
+                                  {(sc.options?.length ?? 0) === 0 &&
+                                    (sc.ranges?.length ?? 0) === 0 && (
+                                      <p className="px-3 py-2 text-xs text-muted-foreground">
+                                        Aucune option ni plage : ce sous-critère n&apos;est pas
+                                        notable en l&apos;état.
+                                      </p>
+                                    )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Options ou plages portées par le critère lui-même */}
+                          {isExpCrit && sousCriteres.length === 0 && (
                             <div className="ml-24 mr-5 mb-3 rounded-lg border border-border overflow-hidden">
                               {criterion.options && criterion.options.length > 0 && (
                                 <table className="w-full text-xs">
@@ -311,10 +445,10 @@ export default function ScoringAdminPage() {
                                     {criterion.options.map((opt) => (
                                       <tr key={opt.value} className="text-secondary-foreground">
                                         <td className="px-3 py-2">{opt.label}</td>
-                                        <td className={`px-3 py-2 text-right font-bold ${
-                                          opt.score >= 75 ? "text-success" :
-                                          opt.score >= 50 ? "text-warning" : "text-destructive"
-                                        }`}>{opt.score} pts</td>
+                                        <td className={`px-3 py-2 text-right font-bold ${classeScoreRelatif(
+                                          opt.score,
+                                          Math.max(...criterion.options!.map((o) => o.score))
+                                        )}`}>{opt.score} pts</td>
                                       </tr>
                                     ))}
                                   </tbody>
@@ -336,10 +470,10 @@ export default function ScoringAdminPage() {
                                         <td className="px-3 py-2">{r.label ?? "—"}</td>
                                         <td className="px-3 py-2 text-center font-mono">{r.minValue}</td>
                                         <td className="px-3 py-2 text-center font-mono">{r.maxValue === 999 ? "∞" : r.maxValue}</td>
-                                        <td className={`px-3 py-2 text-right font-bold ${
-                                          r.score >= 75 ? "text-success" :
-                                          r.score >= 50 ? "text-warning" : "text-destructive"
-                                        }`}>{r.score} pts</td>
+                                        <td className={`px-3 py-2 text-right font-bold ${classeScoreRelatif(
+                                          r.score,
+                                          Math.max(...criterion.ranges!.map((x) => x.score))
+                                        )}`}>{r.score} pts</td>
                                       </tr>
                                     ))}
                                   </tbody>
