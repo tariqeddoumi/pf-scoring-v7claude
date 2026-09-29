@@ -32,6 +32,12 @@ export interface Alerte {
   /** Date du dernier calcul de l'évaluation : c'est lui qui fait foi. */
   date: string;
   lienAction: string;
+  /**
+   * Vrai lorsque le dossier est clos — validé ou rejeté. L'alerte reste dérivée,
+   * car elle documente la décision, mais elle n'appelle plus d'action : un dossier
+   * rejeté en mai encombrait la liste au même titre qu'un dossier en instance.
+   */
+  clos: boolean;
 }
 
 /** Évaluation telle qu'elle est lue en base, trace comprise. */
@@ -81,6 +87,7 @@ export function deriverAlertes(evaluations: EvaluationPourAlertes[]): Alerte[] {
     const trace = lireTrace(ev.summaryJson);
     const date = new Date(ev.updatedAt).toISOString();
     const fiche = `/evaluations/${ev.id}`;
+    const clos = ev.status === "valide" || ev.status === "rejete";
 
     const bloquantes = codes(trace.blockingRuleCodes);
     if (bloquantes.length > 0) {
@@ -99,6 +106,7 @@ export function deriverAlertes(evaluations: EvaluationPourAlertes[]): Alerte[] {
         projectName: ev.projectName,
         date,
         lienAction: fiche,
+        clos,
       });
     }
 
@@ -114,6 +122,7 @@ export function deriverAlertes(evaluations: EvaluationPourAlertes[]): Alerte[] {
         projectName: ev.projectName,
         date,
         lienAction: fiche,
+        clos,
       });
     }
 
@@ -138,6 +147,7 @@ export function deriverAlertes(evaluations: EvaluationPourAlertes[]): Alerte[] {
         projectName: ev.projectName,
         date,
         lienAction: fiche,
+        clos,
       });
     }
 
@@ -159,6 +169,7 @@ export function deriverAlertes(evaluations: EvaluationPourAlertes[]): Alerte[] {
         projectName: ev.projectName,
         date,
         lienAction: fiche,
+        clos,
       });
     }
   }

@@ -1,4 +1,11 @@
 import { useState } from "react";
+import { apiPost } from "@/lib/api-client";
+
+/**
+ * Ces appels partaient en `fetch` nu, sans en-tête d'autorisation : ils
+ * fonctionnaient tant que les routes n'étaient pas protégées. Ils passent par
+ * apiPost, qui porte le jeton de session.
+ */
 
 interface IntegrationOptions {
   evaluationId: string;
@@ -16,15 +23,11 @@ export function useEvaluationIntegrations() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/evaluations/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(options),
-      });
-      if (!response.ok) throw new Error("Failed to submit");
+      const response = await apiPost("/api/evaluations/submit", options);
+      if (!response.ok) throw new Error("Soumission impossible.");
       return await response.json();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
+      const msg = err instanceof Error ? err.message : "Erreur inconnue.";
       setError(msg);
       throw err;
     } finally {
@@ -36,15 +39,11 @@ export function useEvaluationIntegrations() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/evaluations/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(options),
-      });
-      if (!response.ok) throw new Error("Failed to validate");
+      const response = await apiPost("/api/evaluations/validate", options);
+      if (!response.ok) throw new Error("Validation impossible.");
       return await response.json();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
+      const msg = err instanceof Error ? err.message : "Erreur inconnue.";
       setError(msg);
       throw err;
     } finally {
@@ -56,15 +55,11 @@ export function useEvaluationIntegrations() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/evaluations/reject", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(options),
-      });
-      if (!response.ok) throw new Error("Failed to reject");
+      const response = await apiPost("/api/evaluations/reject", options);
+      if (!response.ok) throw new Error("Rejet impossible.");
       return await response.json();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
+      const msg = err instanceof Error ? err.message : "Erreur inconnue.";
       setError(msg);
       throw err;
     } finally {
@@ -91,15 +86,11 @@ export function useAlertIntegrations() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/alerts/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(options),
-      });
-      if (!response.ok) throw new Error("Failed to create alert");
+      const response = await apiPost("/api/alerts/create", options);
+      if (!response.ok) throw new Error("Émission de l'alerte impossible.");
       return await response.json();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
+      const msg = err instanceof Error ? err.message : "Erreur inconnue.";
       setError(msg);
       throw err;
     } finally {
