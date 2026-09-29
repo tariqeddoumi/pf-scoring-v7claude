@@ -46,7 +46,7 @@ export function DataTable<T extends { id: string }>({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-white overflow-hidden">
+    <div className="rounded-lg border border-border bg-card overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted">
@@ -69,7 +69,7 @@ export function DataTable<T extends { id: string }>({
           {data.map((row, idx) => (
             <TableRow
               key={row.id}
-              className={idx % 2 === 0 ? "bg-white" : "bg-muted"}
+              className={idx % 2 === 0 ? "bg-card" : "bg-surface"}
             >
               {columns.map((column) => (
                 <TableCell key={String(column.key)} className="py-3 px-4">
