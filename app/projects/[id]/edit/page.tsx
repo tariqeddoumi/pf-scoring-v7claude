@@ -14,6 +14,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { apiGet, apiPut } from "@/lib/api-client";
+import { formatDateInput } from "@/lib/utils";
 import { Project } from "@/lib/types/models";
 import { Tabs } from "@/components/ui/Tabs";
 import { DynamicEntityForm } from "@/components/form/DynamicEntityForm";
@@ -105,7 +106,14 @@ export default function EditProjectPage({
         if (!response.ok) throw new Error("Failed to fetch project");
         const data = await response.json();
         const project = data.data || data;
-        setFormData(project);
+        // Les dates arrivent en ISO complet (« 2026-01-15T00:00:00.000Z »), que
+        // <input type="date"> refuse : les champs s'affichaient vides et un
+        // enregistrement effaçait les dates existantes.
+        setFormData({
+          ...project,
+          debutConstruction: formatDateInput(project.debutConstruction),
+          finConstruction: formatDateInput(project.finConstruction),
+        });
         setError(null);
       } catch (err: any) {
         setError(err.message || "Failed to load project");
@@ -146,7 +154,13 @@ export default function EditProjectPage({
     try {
       if (!projectId) throw new Error("Project ID not found");
 
-      const response = await apiPut(`/api/projects/${projectId}`, formData);
+      // Le formulaire envoyait l'objet projet entier, scoreGlobal, grade et status
+      // compris : un score recalculé entre-temps par une évaluation était écrasé par
+      // la valeur chargée à l'ouverture de l'écran. Le statut, lui, relève du
+      // workflow d'évaluation et de comité, pas de la fiche.
+      const { scoreGlobal, grade, status, client, user, evaluations, scorings,
+              dateCreation, dateMiseAJour, creePar, id: _id, ...champsModifiables } = formData;
+      const response = await apiPut(`/api/projects/${projectId}`, champsModifiables);
 
       const data = await response.json();
 

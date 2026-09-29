@@ -85,14 +85,39 @@ export function formatMADCompact(montant: number | null | undefined): string {
  * Exemples :
  *   formatDate(new Date("2025-04-15")) → "15/04/2025"
  *
- * @param date - Objet Date JavaScript
+ * Accepte aussi une chaîne ISO : c'est sous cette forme que les dates arrivent des
+ * routes d'API, et les écrans devaient les convertir un par un — ou les affichaient
+ * telles quelles. Une valeur illisible rend une chaîne vide plutôt qu'« Invalid Date ».
+ *
+ * @param date - Objet Date, chaîne ISO, ou valeur absente
  */
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+export function formatDate(date: Date | string | null | undefined): string {
+  const d = versDate(date);
+  return d
+    ? new Intl.DateTimeFormat("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(d)
+    : "";
+}
+
+/** Normalise une date : objet, chaîne ISO, ou rien. */
+function versDate(v: Date | string | null | undefined): Date | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * Date au format attendu par un champ <input type="date"> : AAAA-MM-JJ.
+ *
+ * Les formulaires affichaient des champs de date vides parce qu'ils y injectaient la
+ * chaîne ISO complète (« 2026-01-15T00:00:00.000Z »), que le navigateur refuse.
+ */
+export function formatDateInput(date: Date | string | null | undefined): string {
+  const d = versDate(date);
+  return d ? d.toISOString().slice(0, 10) : "";
 }
 
 /**
@@ -102,14 +127,16 @@ export function formatDate(date: Date): string {
  * Exemples :
  *   formatDateTime(new Date("2025-04-15T14:30:00")) → "15/04/2025 14:30"
  *
- * @param date - Objet Date JavaScript
+ * @param date - Objet Date, chaîne ISO, ou valeur absente
  */
-export function formatDateTime(date: Date): string {
+export function formatDateTime(date: Date | string | null | undefined): string {
+  const d = versDate(date);
+  if (!d) return "";
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(date);
+  }).format(d);
 }
