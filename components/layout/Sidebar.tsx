@@ -2,301 +2,227 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
-  Users,
+  Bell,
+  BookOpen,
   Briefcase,
   CheckCircle,
-  BookOpen,
-  Settings,
-  LogOut,
-  Search,
-  Bell,
+  GitBranch,
   GitCompare,
-  TrendingUp,
   LineChart,
   ScrollText,
-  ChevronDown,
-  Menu,
+  Search,
+  Settings,
+  TrendingUp,
+  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
+import { useAppConfig } from "@/components/providers/app-config-provider";
 
 interface Entree {
-  icon: LucideIcon;
-  label: string;
+  icone: LucideIcon;
+  libelle: string;
   href: string;
-  description: string;
+  /** Clé du compteur affiché à droite de l'entrée, s'il y en a un. */
+  compteur?: "alertes" | "aTraiter";
+  /** Un compteur d'alerte est rouge ; les autres sont neutres. */
+  alerte?: boolean;
 }
 
-interface Groupe {
-  id: string;
-  titre: string;
-  entrees: Entree[];
-}
-
-/**
- * Navigation principale, regroupée par tâche.
- *
- * Les douze destinations étaient présentées à plat, sur un pied d'égalité : la
- * personnalisation du tableau de bord voisinait avec les projets, et rien
- * n'indiquait par où commencer. Elles sont désormais rangées selon le moment du
- * travail où l'on s'en sert — suivre, instruire un dossier, analyser le portefeuille,
- * se référer. « Configurer le tableau » a rejoint l'écran qu'il configure.
- */
-const GROUPES: Groupe[] = [
+const GROUPES: { titre: string; entrees: Entree[] }[] = [
   {
-    id: "suivi",
     titre: "Suivi",
     entrees: [
-      {
-        icon: BarChart3,
-        label: "Tableau de bord",
-        href: "/dashboard",
-        description: "Vue d'ensemble du portefeuille",
-      },
-      {
-        icon: Bell,
-        label: "Alertes",
-        href: "/alerts",
-        description: "Points requérant une décision",
-      },
+      { icone: BarChart3, libelle: "Tableau de bord", href: "/dashboard" },
+      { icone: Bell, libelle: "Alertes", href: "/alerts", compteur: "alertes", alerte: true },
     ],
   },
   {
-    id: "dossiers",
     titre: "Dossiers",
     entrees: [
-      {
-        icon: Users,
-        label: "Clients",
-        href: "/clients",
-        description: "Contreparties",
-      },
-      {
-        icon: Briefcase,
-        label: "Projets",
-        href: "/projects",
-        description: "Opérations à financer",
-      },
-      {
-        icon: CheckCircle,
-        label: "Évaluations",
-        href: "/evaluations",
-        description: "Scorings en cours et clos",
-      },
+      { icone: Users, libelle: "Clients", href: "/clients" },
+      { icone: Briefcase, libelle: "Projets", href: "/projects" },
+      { icone: CheckCircle, libelle: "Évaluations", href: "/evaluations", compteur: "aTraiter" },
+      // L'écran des circuits de validation n'était relié à rien : aucune entrée de
+      // menu, aucun lien depuis une autre page.
+      { icone: GitBranch, libelle: "Validations", href: "/workflows" },
     ],
   },
   {
-    id: "analyse",
     titre: "Analyse",
     entrees: [
-      {
-        icon: Search,
-        label: "Recherche",
-        href: "/search",
-        description: "Multi-critères",
-      },
-      {
-        icon: GitCompare,
-        label: "Comparaison",
-        href: "/compare",
-        description: "Projets côte à côte",
-      },
-      {
-        icon: LineChart,
-        label: "Analytique",
-        href: "/analytics",
-        description: "Tendances du portefeuille",
-      },
-      {
-        icon: TrendingUp,
-        label: "Monitoring",
-        href: "/monitoring",
-        description: "Performance post-clôture",
-      },
+      { icone: Search, libelle: "Recherche", href: "/search" },
+      { icone: GitCompare, libelle: "Comparaison", href: "/compare" },
+      { icone: LineChart, libelle: "Analytique", href: "/analytics" },
+      { icone: TrendingUp, libelle: "Monitoring", href: "/monitoring" },
     ],
   },
   {
-    id: "reference",
     titre: "Référence",
     entrees: [
-      {
-        icon: BookOpen,
-        label: "Méthodologie",
-        href: "/methodology",
-        description: "Modèle et barèmes",
-      },
-      {
-        icon: ScrollText,
-        label: "Journal d'audit",
-        href: "/audit",
-        description: "Historique des opérations",
-      },
+      { icone: BookOpen, libelle: "Méthodologie", href: "/methodology" },
+      { icone: ScrollText, libelle: "Journal d'audit", href: "/audit" },
     ],
   },
 ];
 
-const CLE_REPLIS = "pf_sidebar_groupes_replies";
+/**
+ * Navigation principale.
+ *
+ * Trois changements par rapport à la version précédente :
+ *
+ * — Elle est collante et tient dans la hauteur de l'écran. Elle était en
+ *   min-h-screen non collante : sur un tableau de bord de 2 300 px, atteindre
+ *   « Paramétrage » ou « Déconnexion » demandait de dérouler toute la page.
+ * — Chaque entrée tient sur une ligne. La description en seconde ligne était tronquée
+ *   (« Points requérant une décisi… ») et portait la barre à 800 px de haut.
+ * — Les entrées qui appellent une action portent un compteur : ce qui demande une
+ *   décision se voit sans ouvrir l'écran.
+ *
+ * « Paramétrage » n'est plus ici : il vit dans le menu utilisateur, qui applique le
+ * contrôle de rôle. La barre l'affichait à tout le monde.
+ */
+export function Sidebar({
+  ouvertMobile = false,
+  onFermer,
+}: {
+  ouvertMobile?: boolean;
+  onFermer?: () => void;
+}) {
+  const pathname = usePathname() || "/";
+  const { config } = useAppConfig();
+  const nomAppli = config.APP_NAME || "Scoring PF";
+  const [compteurs, setCompteurs] = useState<{ alertes: number; aTraiter: number }>({
+    alertes: 0,
+    aTraiter: 0,
+  });
 
-export function Sidebar() {
-  const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
-  const [replies, setReplies] = useState<Set<string>>(new Set());
+  // Les compteurs sont un confort : leur échec ne doit rien casser ni rien afficher.
+  useEffect(() => {
+    let annule = false;
+    (async () => {
+      try {
+        const [rAlertes, rEvals] = await Promise.all([
+          apiGet("/api/alerts"),
+          apiGet("/api/evaluations?limit=200"),
+        ]);
+        const alertes = rAlertes.ok ? ((await rAlertes.json()).data ?? []) : [];
+        const evals = rEvals.ok ? ((await rEvals.json()).data ?? []) : [];
+        if (annule) return;
+        setCompteurs({
+          alertes: Array.isArray(alertes)
+            ? alertes.filter((a: { severite?: string }) => a.severite === "critique").length
+            : 0,
+          aTraiter: Array.isArray(evals)
+            ? evals.filter((e: { status?: string }) =>
+                e.status === "brouillon" || e.status === "soumis" || e.status === "soumise"
+              ).length
+            : 0,
+        });
+      } catch {
+        /* compteurs indisponibles : les entrées s'affichent sans pastille */
+      }
+    })();
+    return () => {
+      annule = true;
+    };
+  }, [pathname]);
 
   const estActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
-  /** Groupe contenant l'écran courant : il reste toujours déplié. */
-  const groupeCourant = useMemo(
-    () => GROUPES.find((g) => g.entrees.some((e) => estActive(e.href)))?.id ?? null,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pathname]
+  const contenu = (
+    <>
+      <div className="flex h-14 items-center gap-2.5 px-4">
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
+            {nomAppli.slice(0, 2).toUpperCase()}
+          </span>
+          <span className="text-[15px] font-semibold text-sidebar-accent-foreground">
+            {nomAppli}
+          </span>
+        </Link>
+        <button
+          onClick={onFermer}
+          aria-label="Fermer le menu"
+          className="ml-auto rounded-md p-1.5 text-sidebar-foreground hover:bg-sidebar-accent md:hidden"
+        >
+          <X size={18} />
+        </button>
+      </div>
+
+      <nav aria-label="Navigation principale" className="flex-1 overflow-y-auto px-2.5 pb-3">
+        {GROUPES.map((groupe) => (
+          <div key={groupe.titre}>
+            <p className="px-2.5 pb-1.5 pt-4 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
+              {groupe.titre}
+            </p>
+            {groupe.entrees.map((e) => {
+              const Icone = e.icone;
+              const active = estActive(e.href);
+              const n = e.compteur ? compteurs[e.compteur] : 0;
+              return (
+                <Link
+                  key={e.href}
+                  href={e.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`mb-0.5 flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13.5px] transition-colors ${
+                    active
+                      ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                  }`}
+                >
+                  <Icone size={16} className="shrink-0 opacity-90" />
+                  <span className="truncate">{e.libelle}</span>
+                  {n > 0 && (
+                    <span
+                      className={`ml-auto min-w-[18px] rounded-full px-1.5 text-center text-[10.5px] font-bold leading-[17px] ${
+                        e.alerte
+                          ? "bg-destructive text-destructive-foreground"
+                          : "bg-sidebar-accent-foreground/15 text-sidebar-accent-foreground"
+                      }`}
+                    >
+                      {n}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      <div className="border-t border-sidebar-border px-4 py-3">
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 text-[12px] text-sidebar-foreground/70 transition-colors hover:text-sidebar-accent-foreground"
+        >
+          <Settings size={13} />
+          Paramétrage
+        </Link>
+      </div>
+    </>
   );
-
-  // L'état de repli est un confort propre à chaque poste : il ne conditionne rien et
-  // son absence, en navigation privée ou au premier usage, laisse tout déplié.
-  useEffect(() => {
-    try {
-      const brut = localStorage.getItem(CLE_REPLIS);
-      if (brut) setReplies(new Set(JSON.parse(brut) as string[]));
-    } catch {
-      /* stockage indisponible : tous les groupes restent dépliés */
-    }
-  }, []);
-
-  const basculer = (id: string) => {
-    setReplies((prec) => {
-      const suivant = new Set(prec);
-      if (suivant.has(id)) suivant.delete(id);
-      else suivant.add(id);
-      try {
-        localStorage.setItem(CLE_REPLIS, JSON.stringify(Array.from(suivant)));
-      } catch {
-        /* sans persistance, le repli vaut pour la session en cours */
-      }
-      return suivant;
-    });
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } finally {
-      localStorage.removeItem("auth_token");
-      window.location.href = "/login";
-    }
-  };
 
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-card hover:bg-accent text-foreground border border-border rounded-lg transition-colors"
-        aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
-      {/* Overlay for mobile */}
-      {isOpen && (
+      {ouvertMobile && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={onFermer}
+          aria-hidden
         />
       )}
-
-      {/* Sidebar */}
       <aside
-        className={`fixed md:static w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border min-h-screen flex flex-col transition-all z-40 ${
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed inset-y-0 left-0 z-50 flex w-[232px] shrink-0 flex-col bg-sidebar transition-transform md:sticky md:top-0 md:h-screen md:translate-x-0 ${
+          ouvertMobile ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <nav
-          className="flex-1 overflow-y-auto p-3 mt-12 md:mt-0 space-y-4"
-          aria-label="Navigation principale"
-        >
-          {GROUPES.map((groupe) => {
-            // Le groupe de l'écran courant ne se replie pas : masquer sa propre
-            // position dans l'outil n'aide personne.
-            const replie = replies.has(groupe.id) && groupe.id !== groupeCourant;
-
-            return (
-              <div key={groupe.id}>
-                <button
-                  onClick={() => basculer(groupe.id)}
-                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/50 hover:text-sidebar-foreground/80 transition-colors"
-                  aria-expanded={!replie}
-                >
-                  {groupe.titre}
-                  <ChevronDown
-                    size={14}
-                    className={`transition-transform ${replie ? "-rotate-90" : ""}`}
-                  />
-                </button>
-
-                {!replie && (
-                  <div className="space-y-1 mt-1">
-                    {groupe.entrees.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = estActive(item.href);
-
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsOpen(false)}
-                          aria-current={isActive ? "page" : undefined}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                            isActive
-                              ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                              : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                          }`}
-                        >
-                          <Icon size={18} className="shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium truncate">
-                              {item.label}
-                            </div>
-                            <div className="text-xs opacity-75 truncate">
-                              {item.description}
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </nav>
-
-        {/* Bottom Actions */}
-        <div className="border-t border-sidebar-border p-3 space-y-1">
-          <Link
-            href="/admin"
-            onClick={() => setIsOpen(false)}
-            aria-current={estActive("/admin") ? "page" : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-              estActive("/admin")
-                ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            }`}
-          >
-            <Settings size={18} />
-            <span className="text-sm">Paramétrage</span>
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-destructive rounded-lg transition-colors"
-          >
-            <LogOut size={18} />
-            <span className="text-sm">Déconnexion</span>
-          </button>
-        </div>
+        {contenu}
       </aside>
     </>
   );

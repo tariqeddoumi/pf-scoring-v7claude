@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
+import { updateClientSchema } from "@/lib/validation-schemas";
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +13,19 @@ export async function GET(
       const client = await prisma.client.findUnique({
         where: { id },
         include: {
-          projects: { select: { id: true, nom: true, status: true } },
+          // La fiche affiche l'encours demandé et la note de chaque dossier :
+          // sans montant ni note, la liste des projets n'apprend rien.
+          projects: {
+            select: {
+              id: true,
+              nom: true,
+              status: true,
+              montant: true,
+              grade: true,
+              scoreGlobal: true,
+            },
+            orderBy: { dateCreation: "desc" },
+          },
         },
       });
 
@@ -42,23 +55,37 @@ export async function PUT(
     const { id } = await params;
     try {
       const body = await req.json();
+
+      // Quatorze champs étaient ignorés en silence — raison sociale, forme juridique,
+      // capital, effectifs, adresse, ville, code postal, site, centre d'affaires,
+      // gestionnaire, date de relation, exposition, nom commercial, chiffre
+      // d'affaires. L'utilisateur voyait « enregistré » et retrouvait l'ancienne
+      // valeur. Le schéma partiel décrit l'ensemble des champs modifiables.
+      const validation = updateClientSchema.safeParse(body);
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Données invalides",
+            errors: validation.error.issues.map((i) => ({
+              field: i.path.join("."),
+              message: i.message,
+            })),
+          },
+          { status: 400 }
+        );
+      }
+
+      const { dateRelation, status, ...champs } = validation.data;
+
       const client = await prisma.client.update({
         where: { id },
         data: {
-          nom: body.nom,
-          email: body.email,
-          telephone: body.telephone,
-          type: body.type,
-          typeClient: body.typeClient,
-          segmentClientele: body.segmentClientele,
-          statusKYC: body.statusKYC,
-          statusConformite: body.statusConformite,
-          ratingInterne: body.ratingInterne,
-          statutBancaire: body.statutBancaire,
-          secteur: body.secteur,
-          pays: body.pays,
-          description: body.description,
-          status: body.status,
+          ...champs,
+          ...(dateRelation !== undefined && {
+            dateRelation: dateRelation ? new Date(dateRelation) : null,
+          }),
+          ...(status !== undefined && status !== null && { status }),
         },
       });
 

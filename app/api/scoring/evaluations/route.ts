@@ -12,7 +12,7 @@ async function handlePOST(
   user: AuthPayload
 ) {
   try {
-    const { projectId, modelVersionId } = await req.json();
+    const { projectId, modelVersionId, notes } = await req.json();
 
     if (!projectId || !modelVersionId) {
       return NextResponse.json(
@@ -53,6 +53,9 @@ async function handlePOST(
         modelVersionId,
         analystId: user.userId,
         status: "brouillon",
+        // Les notes préliminaires étaient saisies à la création puis jetées : le
+        // formulaire ne les envoyait pas, et la route ne les lisait pas.
+        notes: typeof notes === "string" && notes.trim() ? notes.trim() : null,
       },
     });
 

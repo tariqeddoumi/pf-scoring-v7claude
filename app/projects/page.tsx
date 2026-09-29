@@ -1,311 +1,342 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Eye, Edit2, Trash2, Filter, X, Lock } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Briefcase, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { apiGet, apiDelete } from "@/lib/api-client";
-import { Project } from "@/lib/types/models";
+import { formatMAD, formatMADCompact } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Note, StatutProjet } from "@/components/ui/status-badge";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
-import LoadingSkeleton from "@/components/common/LoadingSkeleton";
 import { usePermission } from "@/lib/hooks/usePermission";
-import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
+
+interface Projet {
+  id: string;
+  nom: string;
+  secteur: string;
+  montant: number;
+  status: string;
+  scoreGlobal: number | null;
+  grade: string | null;
+  pays?: string | null;
+  dateCreation: string;
+  dateMiseAJour?: string;
+  client?: { id: string; nom: string } | null;
+  user?: { nom: string; prenom: string } | null;
+}
+
+/**
+ * Statuts de projet, tels que les définit l'énumération ProjectStatus.
+ *
+ * Le filtre proposait « Terminé » et « Archivé », qui n'existent pas, et omettait
+ * « En revue », « Approuvé » et « Rejeté » : on ne pouvait donc pas isoler les
+ * dossiers en cours d'arbitrage, qui sont précisément ceux qu'on cherche.
+ */
+const STATUTS = [
+  { valeur: "brouillon", libelle: "Brouillon" },
+  { valeur: "en_cours", libelle: "En cours" },
+  { valeur: "en_revue", libelle: "En revue" },
+  { valeur: "approuve", libelle: "Approuvé" },
+  { valeur: "rejete", libelle: "Rejeté" },
+];
 
 export default function ProjectsPage() {
   const router = useRouter();
   const { can } = usePermission();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterStatus, setFilterStatus] = useState("");
-  const [filterSecteur, setFilterSecteur] = useState("");
+  const [projets, setProjets] = useState<Projet[]>([]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [recherche, setRecherche] = useState("");
+  const [statut, setStatut] = useState("");
+  const [secteur, setSecteur] = useState("");
+  const [libelleSecteur, setLibelleSecteur] = useState<Record<string, string>>({});
+  const [aSupprimer, setASupprimer] = useState<string | null>(null);
+  const [suppression, setSuppression] = useState(false);
 
-  useEffect(() => {
-    fetchProjects();
+  const charger = useCallback(async () => {
+    try {
+      setChargement(true);
+      // Le référentiel sert à afficher « Énergies renouvelables » là où le projet
+      // stocke « ENR » : le code est ce que le moteur rapproche, pas ce qui se lit.
+      const [res, resSecteurs] = await Promise.all([
+        apiGet("/api/projects?limit=200"),
+        apiGet("/api/reference/sectors"),
+      ]);
+      if (!res.ok) throw new Error("Chargement des projets impossible.");
+      setProjets((await res.json()).data ?? []);
+      if (resSecteurs.ok) {
+        const liste: { code: string; label: string }[] =
+          (await resSecteurs.json()).data ?? [];
+        setLibelleSecteur(Object.fromEntries(liste.map((s) => [s.code, s.label])));
+      }
+      setErreur(null);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Chargement impossible.");
+      setProjets([]);
+    } finally {
+      setChargement(false);
+    }
   }, []);
 
-  // Keyboard shortcuts
-  useKeyboardShortcuts([
-    {
-      key: "Escape",
-      callback: () => setDeleteConfirm(null),
-      enabled: deleteConfirm !== null,
-    },
-    {
-      key: "Enter",
-      callback: () => deleteConfirm && handleDelete(deleteConfirm),
-      enabled: deleteConfirm !== null && !deleting,
-    },
-  ]);
+  useEffect(() => {
+    charger();
+  }, [charger]);
 
-  const fetchProjects = async () => {
+  const supprimer = async (id: string) => {
     try {
-      setLoading(true);
-      const response = await apiGet("/api/projects");
-      if (!response.ok) throw new Error("Failed to fetch projects");
-      const data = await response.json();
-      setProjects(data.data || []);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch projects");
-      setProjects([]);
+      setSuppression(true);
+      const res = await apiDelete(`/api/projects/${id}`);
+      if (!res.ok) throw new Error("Suppression impossible.");
+      setProjets((p) => p.filter((x) => x.id !== id));
+      setASupprimer(null);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Suppression impossible.");
     } finally {
-      setLoading(false);
+      setSuppression(false);
     }
   };
 
-  const handleDelete = async (projectId: string) => {
-    try {
-      setDeleting(true);
-      const response = await apiDelete(`/api/projects/${projectId}`);
-      if (!response.ok) throw new Error("Failed to delete project");
-      setProjects(projects.filter((p) => p.id !== projectId));
-      setDeleteConfirm(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete project");
-    } finally {
-      setDeleting(false);
-    }
-  };
+  const nomSecteur = useCallback(
+    (code: string | null | undefined) =>
+      (code && (libelleSecteur[code] ?? code)) || "—",
+    [libelleSecteur]
+  );
 
-  const uniqueSecteurs = useMemo(() => [...new Set(projects.map((p) => p.secteur).filter(Boolean))].sort(), [projects]);
-  const activeFilterCount = [filterStatus, filterSecteur].filter(Boolean).length;
-  const clearFilters = () => { setFilterStatus(""); setFilterSecteur(""); };
+  const secteurs = useMemo(
+    () =>
+      [...new Set(projets.map((p) => p.secteur).filter(Boolean))].sort((a, b) =>
+        nomSecteur(a).localeCompare(nomSecteur(b), "fr")
+      ),
+    [projets, nomSecteur]
+  );
 
-  const filteredProjects = useMemo(() => projects.filter((project) => {
-    const matchesSearch = !searchTerm || project.nom.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !filterStatus || project.status === filterStatus;
-    const matchesSecteur = !filterSecteur || project.secteur === filterSecteur;
-    return matchesSearch && matchesStatus && matchesSecteur;
-  }), [projects, searchTerm, filterStatus, filterSecteur]);
+  const filtres = useMemo(() => {
+    const q = recherche.trim().toLowerCase();
+    return projets.filter((p) => {
+      // La recherche porte aussi sur le client : un chargé d'affaires cherche
+      // souvent « les dossiers d'Atlas » plutôt qu'un nom de projet précis.
+      const texte =
+        `${p.nom} ${p.client?.nom ?? ""} ${p.secteur ?? ""} ${nomSecteur(p.secteur)}`.toLowerCase();
+      return (
+        (!q || texte.includes(q)) &&
+        (!statut || p.status === statut) &&
+        (!secteur || p.secteur === secteur)
+      );
+    });
+  }, [projets, recherche, statut, secteur, nomSecteur]);
+
+  const nbFiltres = [statut, secteur].filter(Boolean).length;
+
+  if (chargement) {
+    return (
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Projets</h1>
-          <p className="text-muted-foreground mt-2 text-sm md:text-base">
-            Gérez les projets et leur suivi
-          </p>
+    <div>
+      <PageHeader
+        titre="Projets"
+        description={`${projets.length} projet${projets.length > 1 ? "s" : ""} au portefeuille`}
+        actions={
+          can("project", "create") && (
+            <Link
+              href="/projects/new"
+              className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <Plus size={16} />
+              Nouveau projet
+            </Link>
+          )
+        }
+      />
+
+      {erreur && (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          {erreur}
         </div>
-        {can("project", "create") ? (
-          <Link
-            href="/projects/new"
-            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all w-full md:w-auto justify-center md:justify-start"
+      )}
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[260px] flex-1">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            type="text"
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Rechercher un projet, un client, un secteur…"
+            aria-label="Rechercher"
+            className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+          />
+        </div>
+
+        <select
+          value={statut}
+          onChange={(e) => setStatut(e.target.value)}
+          aria-label="Filtrer par statut"
+          className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-ring focus:outline-none"
+        >
+          <option value="">Tous les statuts</option>
+          {STATUTS.map((s) => (
+            <option key={s.valeur} value={s.valeur}>
+              {s.libelle}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={secteur}
+          onChange={(e) => setSecteur(e.target.value)}
+          aria-label="Filtrer par secteur"
+          className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-ring focus:outline-none"
+        >
+          <option value="">Tous les secteurs</option>
+          {secteurs.map((s) => (
+            <option key={s} value={s}>
+              {nomSecteur(s)}
+            </option>
+          ))}
+        </select>
+
+        {nbFiltres > 0 && (
+          <button
+            onClick={() => {
+              setStatut("");
+              setSecteur("");
+            }}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            <Plus size={20} />
-            <span>Nouveau projet</span>
-          </Link>
-        ) : (
-          <div className="inline-flex items-center space-x-2 bg-muted/50 text-muted-foreground font-semibold px-4 py-2 rounded-lg w-full md:w-auto justify-center md:justify-start" title="Vous n'avez pas la permission de créer des projets">
-            <Lock size={20} />
-            <span>Nouveau projet</span>
-          </div>
+            <X size={14} />
+            Effacer les filtres
+          </button>
         )}
       </div>
 
-      {/* Search Bar + Filter Toggle */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 text-muted-foreground" size={20} />
-          <input
-            type="text"
-            placeholder="Rechercher par nom..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
+      <SectionCard sansPadding>
+        {filtres.length === 0 ? (
+          <EmptyState
+            icone={<Briefcase size={28} />}
+            titre={projets.length === 0 ? "Aucun projet" : "Aucun projet ne correspond"}
+            description={
+              projets.length === 0
+                ? "Créez un premier projet pour lancer une évaluation."
+                : "Modifiez la recherche ou effacez les filtres."
+            }
+            action={
+              projets.length === 0 && can("project", "create")
+                ? { href: "/projects/new", libelle: "Nouveau projet" }
+                : undefined
+            }
           />
-        </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-            showFilters || activeFilterCount > 0
-              ? "bg-primary text-white"
-              : "bg-card border border-border text-muted-foreground hover:text-white"
-          }`}
-        >
-          <Filter size={16} />
-          <span className="hidden sm:inline">Filtres</span>
-          {activeFilterCount > 0 && (
-            <span className="px-1.5 py-0.5 bg-white/20 text-xs rounded-full">{activeFilterCount}</span>
-          )}
-        </button>
-      </div>
-
-      {/* Advanced Filters */}
-      {showFilters && (
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-foreground">Filtres avancés</h3>
-            {activeFilterCount > 0 && (
-              <button onClick={clearFilters} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                <X size={12} /> Réinitialiser
-              </button>
-            )}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  {[
+                    { t: "Projet", a: "left" },
+                    { t: "Client", a: "left" },
+                    { t: "Secteur", a: "left" },
+                    { t: "Montant", a: "right" },
+                    { t: "Note", a: "left" },
+                    { t: "Statut", a: "left" },
+                    { t: "Chargé", a: "left" },
+                    { t: "", a: "right" },
+                  ].map((c, i) => (
+                    <th
+                      key={i}
+                      className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${
+                        c.a === "right" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {c.t}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtres.map((p) => (
+                  <tr
+                    key={p.id}
+                    onClick={() => router.push(`/projects/${p.id}`)}
+                    className="cursor-pointer border-b border-border transition-colors last:border-b-0 hover:bg-surface"
+                  >
+                    <td className="px-4 py-3">
+                      <span className="block font-medium text-foreground">{p.nom}</span>
+                      {p.pays && (
+                        <span className="block text-[11.5px] text-muted-foreground">
+                          {p.pays}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-[12.5px] text-muted-foreground">
+                      {p.client?.nom ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-[12.5px] text-muted-foreground">
+                      {nomSecteur(p.secteur)}
+                    </td>
+                    <td
+                      className="whitespace-nowrap px-4 py-3 text-right"
+                      title={formatMAD(p.montant)}
+                    >
+                      {formatMADCompact(p.montant)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Note note={p.grade} score={p.scoreGlobal} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatutProjet statut={p.status} />
+                    </td>
+                    <td className="px-4 py-3 text-[12.5px] text-muted-foreground">
+                      {p.user ? `${p.user.prenom} ${p.user.nom}` : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {can("project", "delete") && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setASupprimer(p.id);
+                          }}
+                          aria-label={`Supprimer ${p.nom}`}
+                          className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive-subtle hover:text-destructive"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Statut</label>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
-                <option value="">Tous</option>
-                <option value="brouillon">Brouillon</option>
-                <option value="en_cours">En cours</option>
-                <option value="termine">Terminé</option>
-                <option value="archive">Archivé</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Secteur</label>
-              <select value={filterSecteur} onChange={(e) => setFilterSecteur(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
-                <option value="">Tous</option>
-                {uniqueSecteurs.map((s) => (<option key={s} value={s}>{s}</option>))}
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </SectionCard>
 
-      {/* Results Count */}
-      {!loading && (
-        <p className="text-sm text-muted-foreground">
-          {filteredProjects.length} projet{filteredProjects.length !== 1 ? "s" : ""} trouvé{filteredProjects.length !== 1 ? "s" : ""}
-          {(searchTerm || activeFilterCount > 0) && ` sur ${projects.length}`}
+      {filtres.length > 0 && filtres.length !== projets.length && (
+        <p className="mt-3 text-[12.5px] text-muted-foreground">
+          {filtres.length} projet{filtres.length > 1 ? "s" : ""} affiché
+          {filtres.length > 1 ? "s" : ""} sur {projets.length}
         </p>
       )}
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive text-sm">
-          {error}
-        </div>
+      {aSupprimer && (
+        <DeleteConfirmation
+          isOpen
+          onCancel={() => setASupprimer(null)}
+          onConfirm={() => supprimer(aSupprimer)}
+          title="Supprimer ce projet ?"
+          message={`« ${projets.find((p) => p.id === aSupprimer)?.nom ?? "Ce projet"} » sera définitivement supprimé, avec ses évaluations. Cette action est irréversible.`}
+          isDeleting={suppression}
+        />
       )}
-
-      {/* Loading State */}
-      {loading && <LoadingSkeleton rows={6} columns={6} />}
-
-      {/* Table View - Desktop */}
-      {!loading && filteredProjects.length > 0 && (
-        <div className="rounded-lg border border-border overflow-x-auto">
-          <table className="w-full min-w-max md:min-w-full">
-            <thead className="bg-card">
-              <tr>
-                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Nom
-                </th>
-                <th className="hidden sm:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Secteur
-                </th>
-                <th className="hidden md:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Pays
-                </th>
-                <th className="hidden lg:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Montant
-                </th>
-                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Statut
-                </th>
-                <th className="px-4 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredProjects.map((project) => (
-                <tr
-                  key={project.id}
-                  className="hover:bg-card transition-colors"
-                >
-                  <td className="px-4 md:px-6 py-4 font-semibold text-foreground text-sm md:text-base">
-                    {project.nom}
-                  </td>
-                  <td className="hidden sm:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
-                    {project.secteur || "-"}
-                  </td>
-                  <td className="hidden md:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
-                    {project.pays || "-"}
-                  </td>
-                  <td className="hidden lg:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
-                    {project.montant
-                      ? `${project.montant} ${project.devise || "MAD"}`
-                      : "-"}
-                  </td>
-                  <td className="px-4 md:px-6 py-4">
-                    <span
-                      className={`px-2 md:px-3 py-1 rounded-full text-xs font-medium inline-block ${
-                        project.status === "Actif"
-                          ? "bg-success/15 text-success"
-                          : "bg-secondary/20 text-muted-foreground"
-                      }`}
-                    >
-                      {project.status}
-                    </span>
-                  </td>
-                  <td className="px-4 md:px-6 py-4 text-right">
-                    <div className="flex justify-end space-x-1 md:space-x-2">
-                      <button
-                        onClick={() => router.push(`/projects/${project.id}`)}
-                        className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
-                        title="Consulter"
-                      >
-                        <Eye size={16} className="md:w-5 md:h-5" />
-                      </button>
-                      {can("project", "update") && (
-                        <button
-                          onClick={() =>
-                            router.push(`/projects/${project.id}/edit`)
-                          }
-                          className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
-                          title="Modifier"
-                        >
-                          <Edit2 size={16} className="md:w-5 md:h-5" />
-                        </button>
-                      )}
-                      {can("project", "delete") && (
-                        <button
-                          onClick={() => setDeleteConfirm(project.id)}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-accent rounded-lg transition-colors"
-                          title="Supprimer"
-                        >
-                          <Trash2 size={16} className="md:w-5 md:h-5" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && filteredProjects.length === 0 && (
-        <div className="text-center py-12 rounded-lg border border-border">
-          <p className="text-muted-foreground text-lg">Aucun projet trouvé</p>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            {searchTerm
-              ? "Essayez une autre recherche"
-              : "Créez votre premier projet"}
-          </p>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmation
-        isOpen={deleteConfirm !== null}
-        title="Supprimer le projet"
-        message="Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible."
-        isDeleting={deleting}
-        onCancel={() => setDeleteConfirm(null)}
-        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
-      />
     </div>
   );
 }

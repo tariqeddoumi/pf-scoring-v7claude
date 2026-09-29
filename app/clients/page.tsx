@@ -1,348 +1,334 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Eye, Edit2, Trash2, Filter, X, Lock } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Client } from "@/lib/types/models";
-import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
-import LoadingSkeleton from "@/components/common/LoadingSkeleton";
-import { usePermission } from "@/lib/hooks/usePermission";
-import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
+import { AlertTriangle, Loader2, Plus, Search, Trash2, Users, X } from "lucide-react";
 import { apiGet, apiDelete } from "@/lib/api-client";
+import { formatMADCompact } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
+import { usePermission } from "@/lib/hooks/usePermission";
+import { ratingBadgeClass } from "@/lib/score-colors";
+// Les valeurs qui appellent une action viennent du référentiel, comme les listes de
+// saisie : la liste et le formulaire ne peuvent plus diverger.
+import { KYC_A_TRAITER, CONFORMITE_A_TRAITER } from "@/lib/referentiels";
 
+interface Client {
+  id: string;
+  nom: string;
+  raisonSociale?: string | null;
+  secteur?: string | null;
+  ville?: string | null;
+  segmentClientele?: string | null;
+  ratingInterne?: string | null;
+  statutBancaire?: string | null;
+  statusKYC?: string | null;
+  statusConformite?: string | null;
+  exposition?: number | null;
+  gestionnaire?: string | null;
+  status?: string | null;
+  projects?: { id: string }[];
+}
+
+
+/**
+ * Liste des clients.
+ *
+ * Elle affichait Email, Pays, Type et Statut — quatre colonnes identiques d'une ligne
+ * à l'autre dans un portefeuille marocain — et taisait ce qui décide : la notation
+ * interne, l'exposition, l'état du KYC et de la conformité, pourtant tous renvoyés
+ * par l'API. Elle était en outre tronquée aux dix premiers clients, la route
+ * appliquant take=10 par défaut et l'écran n'envoyant aucun paramètre : au-delà, les
+ * clients étaient simplement invisibles, sans pagination ni message.
+ */
 export default function ClientsPage() {
   const router = useRouter();
   const { can } = usePermission();
   const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filterStatus, setFilterStatus] = useState("");
-  const [filterSecteur, setFilterSecteur] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterPays, setFilterPays] = useState("");
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [recherche, setRecherche] = useState("");
+  const [filtre, setFiltre] = useState<"tous" | "aTraiter">("tous");
+  const [aSupprimer, setASupprimer] = useState<string | null>(null);
+  const [suppression, setSuppression] = useState(false);
 
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
-  // Keyboard shortcuts
-  useKeyboardShortcuts([
-    {
-      key: "Escape",
-      callback: () => setDeleteConfirm(null),
-      enabled: deleteConfirm !== null,
-    },
-    {
-      key: "Enter",
-      callback: () => deleteConfirm && handleDelete(deleteConfirm),
-      enabled: deleteConfirm !== null && !deleting,
-    },
-  ]);
-
-  const fetchClients = async () => {
+  const charger = useCallback(async () => {
     try {
-      setLoading(true);
-      const response = await apiGet("/api/clients");
-      if (!response.ok) throw new Error("Failed to fetch clients");
-      const data = await response.json();
-      setClients(data.data || []);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch clients");
+      setChargement(true);
+      const res = await apiGet("/api/clients?take=500");
+      if (!res.ok) throw new Error("Chargement des clients impossible.");
+      setClients((await res.json()).data ?? []);
+      setErreur(null);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Chargement impossible.");
       setClients([]);
     } finally {
-      setLoading(false);
+      setChargement(false);
     }
-  };
+  }, []);
 
-  const handleDelete = async (clientId: string) => {
+  useEffect(() => {
+    charger();
+  }, [charger]);
+
+  const supprimer = async (id: string) => {
     try {
-      setDeleting(true);
-      const response = await apiDelete(`/api/clients/${clientId}`);
-      if (!response.ok) throw new Error("Failed to delete client");
-      setClients(clients.filter((c) => c.id !== clientId));
-      setDeleteConfirm(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to delete client");
+      setSuppression(true);
+      const res = await apiDelete(`/api/clients/${id}`);
+      if (!res.ok) throw new Error("Suppression impossible.");
+      setClients((c) => c.filter((x) => x.id !== id));
+      setASupprimer(null);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Suppression impossible.");
     } finally {
-      setDeleting(false);
+      setSuppression(false);
     }
   };
 
-  // Extract unique values for filter dropdowns
-  const uniqueSecteurs = useMemo(() => [...new Set(clients.map((c) => c.secteur).filter(Boolean))].sort(), [clients]);
-  const uniqueTypes = useMemo(() => [...new Set(clients.map((c) => c.type).filter(Boolean))].sort(), [clients]);
-  const uniquePays = useMemo(() => [...new Set(clients.map((c) => c.pays).filter(Boolean))].sort(), [clients]);
+  const aTraiter = useCallback(
+    (c: Client) =>
+      KYC_A_TRAITER.includes(c.statusKYC ?? "") ||
+      CONFORMITE_A_TRAITER.includes(c.statusConformite ?? ""),
+    []
+  );
 
-  const activeFilterCount = [filterStatus, filterSecteur, filterType, filterPays].filter(Boolean).length;
+  const nbATraiter = useMemo(
+    () => clients.filter(aTraiter).length,
+    [clients, aTraiter]
+  );
 
-  const clearFilters = () => {
-    setFilterStatus("");
-    setFilterSecteur("");
-    setFilterType("");
-    setFilterPays("");
-  };
+  const filtres = useMemo(() => {
+    const q = recherche.trim().toLowerCase();
+    return clients.filter((c) => {
+      const texte =
+        `${c.nom} ${c.raisonSociale ?? ""} ${c.secteur ?? ""} ${c.gestionnaire ?? ""}`.toLowerCase();
+      return (!q || texte.includes(q)) && (filtre === "tous" || aTraiter(c));
+    });
+  }, [clients, recherche, filtre, aTraiter]);
 
-  const filteredClients = useMemo(() => clients.filter((client) => {
-    const matchesSearch =
-      !searchTerm ||
-      client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !filterStatus || client.status === filterStatus;
-    const matchesSecteur = !filterSecteur || client.secteur === filterSecteur;
-    const matchesType = !filterType || client.type === filterType;
-    const matchesPays = !filterPays || client.pays === filterPays;
-    return matchesSearch && matchesStatus && matchesSecteur && matchesType && matchesPays;
-  }), [clients, searchTerm, filterStatus, filterSecteur, filterType, filterPays]);
+  if (chargement) {
+    return (
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Clients</h1>
-          <p className="text-muted-foreground mt-2 text-sm md:text-base">
-            Gérez les clients et leur signalétique
-          </p>
-        </div>
-        {can("client", "create") ? (
-          <Link
-            href="/clients/new"
-            className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold px-4 py-2 rounded-lg transition-all w-full md:w-auto justify-center md:justify-start"
-          >
-            <Plus size={20} />
-            <span>Nouveau client</span>
-          </Link>
-        ) : (
-          <div className="inline-flex items-center space-x-2 bg-muted/50 text-muted-foreground font-semibold px-4 py-2 rounded-lg w-full md:w-auto justify-center md:justify-start" title="Vous n'avez pas la permission de créer des clients">
-            <Lock size={20} />
-            <span>Nouveau client</span>
-          </div>
-        )}
-      </div>
+    <div>
+      <PageHeader
+        titre="Clients"
+        description={`${clients.length} contrepartie${clients.length > 1 ? "s" : ""} suivie${clients.length > 1 ? "s" : ""}`}
+        actions={
+          can("client", "create") && (
+            <Link
+              href="/clients/new"
+              className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <Plus size={16} />
+              Nouveau client
+            </Link>
+          )
+        }
+      />
 
-      {/* Search Bar + Filter Toggle */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 text-muted-foreground" size={20} />
+      {erreur && (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          {erreur}
+        </div>
+      )}
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[260px] flex-1">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
           <input
             type="text"
-            placeholder="Rechercher par nom ou email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-cyan-500 text-sm md:text-base"
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Rechercher un client, un secteur, un gestionnaire…"
+            aria-label="Rechercher"
+            className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
           />
         </div>
+
         <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-            showFilters || activeFilterCount > 0
-              ? "bg-primary text-white"
-              : "bg-card border border-border text-muted-foreground hover:text-white"
+          onClick={() => setFiltre(filtre === "aTraiter" ? "tous" : "aTraiter")}
+          aria-pressed={filtre === "aTraiter"}
+          className={`inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors ${
+            filtre === "aTraiter"
+              ? "border-warning bg-warning-subtle text-warning"
+              : "border-border bg-card text-foreground hover:bg-accent"
           }`}
         >
-          <Filter size={16} />
-          <span className="hidden sm:inline">Filtres</span>
-          {activeFilterCount > 0 && (
-            <span className="px-1.5 py-0.5 bg-white/20 text-xs rounded-full">
-              {activeFilterCount}
+          <AlertTriangle size={15} />
+          KYC ou conformité à traiter
+          {nbATraiter > 0 && (
+            <span className="rounded-full bg-warning px-1.5 text-[11px] font-bold text-warning-foreground">
+              {nbATraiter}
             </span>
           )}
         </button>
+
+        {filtre === "aTraiter" && (
+          <button
+            onClick={() => setFiltre("tous")}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X size={14} />
+            Tout afficher
+          </button>
+        )}
       </div>
 
-      {/* Advanced Filters Panel */}
-      {showFilters && (
-        <div className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-foreground">Filtres avancés</h3>
-            {activeFilterCount > 0 && (
-              <button onClick={clearFilters} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                <X size={12} /> Réinitialiser
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Statut</label>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
-                <option value="">Tous</option>
-                <option value="Actif">Actif</option>
-                <option value="Inactif">Inactif</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Secteur</label>
-              <select value={filterSecteur} onChange={(e) => setFilterSecteur(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
-                <option value="">Tous</option>
-                {uniqueSecteurs.map((s) => (<option key={s} value={s}>{s}</option>))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Type</label>
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
-                <option value="">Tous</option>
-                {uniqueTypes.map((t) => (<option key={t} value={t}>{t}</option>))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Pays</label>
-              <select value={filterPays} onChange={(e) => setFilterPays(e.target.value)}
-                className="w-full px-3 py-1.5 bg-muted border border-input rounded text-sm text-foreground focus:outline-none focus:border-ring">
-                <option value="">Tous</option>
-                {uniquePays.map((p) => (<option key={p} value={p}>{p}</option>))}
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Results Count */}
-      {!loading && (
-        <p className="text-sm text-muted-foreground">
-          {filteredClients.length} client{filteredClients.length !== 1 ? "s" : ""} trouvé{filteredClients.length !== 1 ? "s" : ""}
-          {(searchTerm || activeFilterCount > 0) && ` sur ${clients.length}`}
-        </p>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Loading State */}
-      {loading && <LoadingSkeleton rows={6} columns={7} />}
-
-      {/* Table View - Desktop */}
-      {!loading && filteredClients.length > 0 && (
-        <div className="rounded-lg border border-border overflow-x-auto">
-          <table className="w-full min-w-max md:min-w-full">
-            <thead className="bg-card">
-              <tr>
-                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Nom
-                </th>
-                <th className="hidden sm:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Email
-                </th>
-                <th className="hidden md:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Secteur
-                </th>
-                <th className="hidden lg:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Pays
-                </th>
-                <th className="hidden md:table-cell px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Type
-                </th>
-                <th className="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Statut
-                </th>
-                <th className="px-4 md:px-6 py-3 text-right text-xs md:text-sm font-semibold text-secondary-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredClients.map((client) => (
-                <tr
-                  key={client.id}
-                  className="hover:bg-card transition-colors"
-                >
-                  <td className="px-4 md:px-6 py-4 font-semibold text-foreground text-sm md:text-base">
-                    {client.nom}
-                  </td>
-                  <td className="hidden sm:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
-                    {client.email || "-"}
-                  </td>
-                  <td className="hidden md:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
-                    {client.secteur || "-"}
-                  </td>
-                  <td className="hidden lg:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
-                    {client.pays || "-"}
-                  </td>
-                  <td className="hidden md:table-cell px-4 md:px-6 py-4 text-muted-foreground text-xs md:text-sm">
-                    {client.type || "Entreprise"}
-                  </td>
-                  <td className="px-4 md:px-6 py-4">
-                    <span
-                      className={`px-2 md:px-3 py-1 rounded-full text-xs font-medium inline-block ${
-                        client.status === "Actif"
-                          ? "bg-success/15 text-success"
-                          : "bg-secondary/20 text-muted-foreground"
+      <SectionCard sansPadding>
+        {filtres.length === 0 ? (
+          <EmptyState
+            icone={<Users size={28} />}
+            titre={clients.length === 0 ? "Aucun client" : "Aucun client ne correspond"}
+            description={
+              clients.length === 0
+                ? "Créez une contrepartie avant de lancer un projet."
+                : "Modifiez la recherche ou retirez le filtre."
+            }
+            action={
+              clients.length === 0 && can("client", "create")
+                ? { href: "/clients/new", libelle: "Nouveau client" }
+                : undefined
+            }
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  {[
+                    { t: "Client", a: "left" },
+                    { t: "Secteur", a: "left" },
+                    { t: "Segment", a: "left" },
+                    { t: "Note interne", a: "left" },
+                    { t: "Exposition", a: "right" },
+                    { t: "KYC", a: "left" },
+                    { t: "Conformité", a: "left" },
+                    { t: "Projets", a: "right" },
+                    { t: "", a: "right" },
+                  ].map((c, i) => (
+                    <th
+                      key={i}
+                      className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${
+                        c.a === "right" ? "text-right" : "text-left"
                       }`}
                     >
-                      {client.status}
-                    </span>
-                  </td>
-                  <td className="px-4 md:px-6 py-4 text-right">
-                    <div className="flex justify-end space-x-1 md:space-x-2">
-                      <button
-                        onClick={() => router.push(`/clients/${client.id}`)}
-                        className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
-                        title="Consulter"
-                      >
-                        <Eye size={16} className="md:w-5 md:h-5" />
-                      </button>
-                      {can("client", "update") && (
-                        <button
-                          onClick={() =>
-                            router.push(`/clients/${client.id}/edit`)
-                          }
-                          className="p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
-                          title="Modifier"
-                        >
-                          <Edit2 size={16} className="md:w-5 md:h-5" />
-                        </button>
+                      {c.t}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtres.map((c) => (
+                  <tr
+                    key={c.id}
+                    onClick={() => router.push(`/clients/${c.id}`)}
+                    className="cursor-pointer border-b border-border transition-colors last:border-b-0 hover:bg-surface"
+                  >
+                    <td className="px-4 py-3">
+                      <span className="block font-medium text-foreground">{c.nom}</span>
+                      {c.gestionnaire && (
+                        <span className="block text-[11.5px] text-muted-foreground">
+                          {c.gestionnaire}
+                        </span>
                       )}
+                    </td>
+                    <td className="px-4 py-3 text-[12.5px] text-muted-foreground">
+                      {c.secteur || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-[12.5px] text-muted-foreground">
+                      {c.segmentClientele || "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {c.ratingInterne ? (
+                        <span
+                          className={`rounded-md border px-2 py-0.5 text-[12.5px] font-bold ${ratingBadgeClass(c.ratingInterne)}`}
+                        >
+                          {c.ratingInterne}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      {c.exposition ? formatMADCompact(c.exposition) : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Conformite valeur={c.statusKYC} aTraiter={KYC_A_TRAITER} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Conformite
+                        valeur={c.statusConformite}
+                        aTraiter={CONFORMITE_A_TRAITER}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-right text-[12.5px] text-muted-foreground">
+                      {c.projects?.length ?? 0}
+                    </td>
+                    <td className="px-4 py-3 text-right">
                       {can("client", "delete") && (
                         <button
-                          onClick={() => setDeleteConfirm(client.id)}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-accent rounded-lg transition-colors"
-                          title="Supprimer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setASupprimer(c.id);
+                          }}
+                          aria-label={`Supprimer ${c.nom}`}
+                          className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive-subtle hover:text-destructive"
                         >
-                          <Trash2 size={16} className="md:w-5 md:h-5" />
+                          <Trash2 size={15} />
                         </button>
                       )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </SectionCard>
 
-      {/* Empty State */}
-      {!loading && filteredClients.length === 0 && (
-        <div className="text-center py-12 rounded-lg border border-border">
-          <p className="text-muted-foreground text-lg">Aucun client trouvé</p>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            {searchTerm
-              ? "Essayez une autre recherche"
-              : "Créez votre premier client"}
-          </p>
-        </div>
+      {aSupprimer && (
+        <DeleteConfirmation
+          isOpen
+          onCancel={() => setASupprimer(null)}
+          onConfirm={() => supprimer(aSupprimer)}
+          title="Supprimer ce client ?"
+          message={`« ${clients.find((c) => c.id === aSupprimer)?.nom ?? "Ce client"} » sera définitivement supprimé. Cette action est irréversible.`}
+          isDeleting={suppression}
+        />
       )}
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmation
-        isOpen={deleteConfirm !== null}
-        title="Supprimer le client"
-        message="Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible."
-        isDeleting={deleting}
-        onCancel={() => setDeleteConfirm(null)}
-        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
-      />
     </div>
+  );
+}
+
+/** Puce d'état KYC ou conformité : neutre si rien n'est à faire, ambre sinon. */
+function Conformite({
+  valeur,
+  aTraiter,
+}: {
+  valeur?: string | null;
+  aTraiter: string[];
+}) {
+  if (!valeur) return <span className="text-muted-foreground">—</span>;
+  const alerte = aTraiter.includes(valeur);
+  return (
+    <span
+      className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${
+        alerte ? "bg-warning-subtle text-warning" : "bg-success-subtle text-success"
+      }`}
+    >
+      {valeur}
+    </span>
   );
 }

@@ -22,8 +22,8 @@ const DOMAIN_META: Record<string, { icon: string; color: string }> = {
   TECHNIQUE: { icon: "⚙️", color: "text-purple-400" },
   MARCHE: { icon: "📈", color: "text-success" },
   MARCHÉ: { icon: "📈", color: "text-success" },
-  ENVIRONNEMENTAL: { icon: "🌿", color: "text-emerald-400" },
-  ENVIRONMENTAL: { icon: "🌿", color: "text-emerald-400" },
+  ENVIRONNEMENTAL: { icon: "🌿", color: "text-success" },
+  ENVIRONMENTAL: { icon: "🌿", color: "text-success" },
   SOCIAL: { icon: "👥", color: "text-pink-400" },
   GOUVERNANCE: { icon: "🏛️", color: "text-warning" },
   JURIDIQUE: { icon: "⚖️", color: "text-warning" },
@@ -61,7 +61,7 @@ export function DomainSidebar({
         </div>
         <div className="bg-muted rounded-full h-1.5">
           <div
-            className="h-1.5 rounded-full bg-cyan-500 transition-all duration-500"
+            className="h-1.5 rounded-full bg-primary transition-all duration-500"
             style={{ width: `${globalProgress}%` }}
           />
         </div>
@@ -82,7 +82,7 @@ export function DomainSidebar({
               onClick={() => onSelect(domain.id)}
               className={`w-full text-left px-4 py-3 transition-all border-l-2 ${
                 isCurrent
-                  ? "bg-cyan-500/10 border-primary"
+                  ? "bg-accent border-primary"
                   : "border-transparent hover:bg-card/60"
               }`}
             >

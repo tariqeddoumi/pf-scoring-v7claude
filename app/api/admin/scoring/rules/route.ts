@@ -1,9 +1,26 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError } from "@/lib/api-response";
+import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 import { validateConditionExpression } from "@/lib/services/scoring/condition-evaluator";
 import { validerRegle } from "@/lib/services/scoring/rule-vocabulary";
+import { verifierVersionModifiable } from "@/lib/services/scoring/version-guard";
+
+/**
+ * Les règles font partie du modèle : les changer sur une version publiée modifierait
+ * le sens des notes déjà calculées avec elle.
+ */
+function refusVersionFigee(message?: string) {
+  return errorResponse(message ?? "Version non modifiable", {
+    status: 409,
+    errorCode: "ERR_VERSION_PUBLIEE",
+  });
+}
+
+async function refuserSiVersionFigee(versionId: string | null | undefined) {
+  const verdict = await verifierVersionModifiable(versionId);
+  return verdict.modifiable ? null : refusVersionFigee(verdict.message);
+}
 
 /**
  * Contrôle commun à la création et à la modification d'une règle.
@@ -94,6 +111,9 @@ export async function POST(req: NextRequest) {
         where: { id: nodeId },
       });
 
+      const refusCreation = await refuserSiVersionFigee(versionId);
+      if (refusCreation) return refusCreation;
+
       if (!node || node.versionId !== versionId) {
         return validationError([{ field: "nodeId", message: "Nœud non trouvé dans cette version" }]);
       }
@@ -166,11 +186,14 @@ export async function PUT(req: NextRequest) {
 
       const existante = await prisma.scoringNodeRule.findUnique({
         where: { id: ruleId },
-        select: { ruleType: true },
+        select: { ruleType: true, versionId: true },
       });
       if (!existante) {
         return validationError([{ field: "id", message: "Règle introuvable" }]);
       }
+
+      const refusModification = await refuserSiVersionFigee(existante.versionId);
+      if (refusModification) return refusModification;
 
       const controle = controlerRegle({
         ruleType: ruleType ?? existante.ruleType,
@@ -217,6 +240,16 @@ export async function DELETE(req: NextRequest) {
       if (!ruleId) {
         return validationError([{ field: "id", message: "Required query param" }]);
       }
+
+      const aSupprimer = await prisma.scoringNodeRule.findUnique({
+        where: { id: ruleId },
+        select: { versionId: true },
+      });
+      if (!aSupprimer) {
+        return validationError([{ field: "id", message: "Règle introuvable" }]);
+      }
+      const refusSuppression = await refuserSiVersionFigee(aSupprimer.versionId);
+      if (refusSuppression) return refusSuppression;
 
       await prisma.scoringNodeRule.delete({
         where: { id: ruleId },

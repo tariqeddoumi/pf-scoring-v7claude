@@ -115,7 +115,7 @@ function LoginPageContent() {
             <button
               onClick={() => handleOAuthLogin("google")}
               disabled={loading}
-              className="w-full px-4 py-3 bg-white text-foreground rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-card border border-border text-foreground rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-accent transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>🔵</span>
               Continuer avec Google

@@ -58,6 +58,25 @@ interface Secteur {
  * calibrage était figé au contenu du script d'initialisation. Cet écran l'ouvre, et
  * dit pour chaque élément ce que le moteur en fait réellement.
  */
+/** Nombre en écriture française : la virgule décimale, pas le point. */
+function formatNombre(v: number): string {
+  return String(v).replace(".", ",");
+}
+
+/**
+ * Choc d'un test de résistance.
+ *
+ * Les chocs sont stockés en fraction (-0,15 pour −15 %, 0,015 pour +1,5 %) et
+ * s'affichaient tels quels suivis d'un signe pourcent : on lisait « productible
+ * -0.15 % » là où le test applique une baisse de 15 %. Une valeur supérieure à 1 en
+ * valeur absolue est déjà un pourcentage : elle est laissée telle quelle.
+ */
+function formatChoc(v: number): string {
+  const pourcent = Math.abs(v) <= 1 ? v * 100 : v;
+  const arrondi = Math.round(pourcent * 100) / 100;
+  return `${arrondi > 0 ? "+" : ""}${formatNombre(arrondi)} %`;
+}
+
 export default function SecteursPage() {
   const router = useRouter();
   const [secteurs, setSecteurs] = useState<Secteur[]>([]);
@@ -280,7 +299,7 @@ export default function SecteursPage() {
                 )}
 
                 {horsBornes.length > 0 && (
-                  <p className="text-xs text-destructive mt-3 inline-flex items-start gap-1">
+                  <p className="text-xs text-destructive mt-3 flex items-start gap-1">
                     <AlertTriangle size={12} className="mt-0.5 shrink-0" />
                     Les facteurs doivent rester entre {FACTEUR_MIN} et {FACTEUR_MAX} :
                     au-delà, le calibrage ne corrige plus le modèle, il le remplace.
@@ -318,8 +337,9 @@ export default function SecteursPage() {
                 <h2 className="text-sm font-medium text-foreground mb-1">
                   Points d&apos;alerte ({secteur.redFlags.length})
                 </h2>
-                <p className="text-xs text-muted-foreground mb-3 inline-flex items-start gap-1">
+                <p className="text-xs text-muted-foreground mb-3 flex items-start gap-1">
                   <Info size={12} className="mt-0.5 shrink-0" />
+                  <span>
                   Ces points sont reportés dans la trace de calcul à titre indicatif. Le
                   moteur ne les évalue pas : ils n&apos;ont ni condition de déclenchement
                   ni rattachement à un critère. Un point marqué rédhibitoire ne bloque
@@ -331,6 +351,7 @@ export default function SecteursPage() {
                     Règles et seuils
                   </Link>
                   .
+                  </span>
                 </p>
                 <ul className="space-y-2">
                   {secteur.redFlags.map((f) => (
@@ -342,9 +363,11 @@ export default function SecteursPage() {
                             Rédhibitoire (non appliqué)
                           </span>
                         )}
-                        {f.penalty != null && f.penalty > 0 && (
+                        {/* Les malus sont stockés en négatif (-3, -2, -1,5…) : le test
+                            « > 0 » n'en laissait passer aucun des quatre-vingt-seize. */}
+                        {f.penalty != null && f.penalty !== 0 && (
                           <span className="text-xs bg-warning/15 text-warning px-2 py-0.5 rounded">
-                            −{f.penalty} pts (non appliqué)
+                            −{formatNombre(Math.abs(f.penalty))} pts (non appliqué)
                           </span>
                         )}
                       </div>
@@ -371,12 +394,12 @@ export default function SecteursPage() {
                         {t.variable && (
                           <span className="text-xs text-muted-foreground">
                             {t.variable}
-                            {t.shockPct != null && ` ${t.shockPct > 0 ? "+" : ""}${t.shockPct} %`}
+                            {t.shockPct != null && ` ${formatChoc(t.shockPct)}`}
                           </span>
                         )}
                         {t.passDscrMin != null && (
                           <span className="text-xs text-muted-foreground">
-                            seuil de réussite DSCR ≥ {t.passDscrMin}
+                            seuil de réussite DSCR ≥ {formatNombre(t.passDscrMin)}x
                           </span>
                         )}
                       </div>

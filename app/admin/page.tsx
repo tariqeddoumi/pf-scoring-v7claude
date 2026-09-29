@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiGet, apiPost } from "@/lib/api-client";
+import { apiGet } from "@/lib/api-client";
+import { hasMinimumRole, type UserRole } from "@/lib/permissions";
+import { Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -67,7 +68,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Configurez le niveau de saisie des scores (domaine, critère ou sous-critère) par domaine",
     href: "/admin/scoring/granularity",
     icon: "📐",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
   {
     id: "bareme",
@@ -77,7 +78,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
       "Correspondance score → note (AAA…D) appliquée par le moteur à chaque calcul",
     href: "/admin/bareme",
     icon: "🏷️",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
   {
     id: "regles",
@@ -87,7 +88,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
       "Vue d'ensemble des règles du modèle, dont les seuils NO-GO, et des règles sans effet",
     href: "/admin/regles",
     icon: "🚫",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
   {
     id: "secteurs",
@@ -97,7 +98,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
       "Facteurs de pondération par secteur, points d'alerte et tests de résistance",
     href: "/admin/secteurs",
     icon: "🏭",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
   {
     id: "scoring",
@@ -106,7 +107,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Visualisez les domaines, critères et barèmes du modèle actif",
     href: "/admin/scoring",
     icon: "📊",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
   {
     id: "scoring-grid-v7pp",
@@ -115,7 +116,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Éditeur hiérarchique complet — domaines, critères, sous-critères, options et plages numériques",
     href: "/admin/scoring-grid-v7pp",
     icon: "🎛️",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
   {
     id: "country-risk",
@@ -124,7 +125,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Configurez les scores de risque par pays",
     href: "/admin/country-risk",
     icon: "🌍",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
   {
     id: "diagnostic",
@@ -151,7 +152,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Activez les formulaires rendus depuis la base de données, sans code",
     href: "/admin/dynamic-forms",
     icon: "📝",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
   {
     id: "field-management",
@@ -160,7 +161,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Personnalisez les champs, sections et options des formulaires",
     href: "/admin/field-management",
     icon: "🏷️",
-    requiredRole: "system_admin",
+    requiredRole: "scoring_admin",
   },
 ];
 
@@ -177,8 +178,11 @@ interface UserData {
 interface AdminPageState {
   loading: boolean;
   user: UserData | null;
-  v8Enabled: boolean;
+  /** Version publiée du modèle, lue du modèle lui-même. */
   modelVersion: string;
+  /** Domaines actifs de cette version. */
+  domaines: number | null;
+  criteres: number | null;
 }
 
 export default function AdminPage() {
@@ -186,8 +190,9 @@ export default function AdminPage() {
   const [state, setState] = useState<AdminPageState>({
     loading: true,
     user: null,
-    v8Enabled: false,
-    modelVersion: "V7++",
+    modelVersion: "—",
+    domaines: null,
+    criteres: null,
   });
 
   useEffect(() => {
@@ -201,30 +206,38 @@ export default function AdminPage() {
         const userData: UserData = await res.json();
 
         // Vérifier que c'est admin ou manager
-        if (userData.role !== "system_admin" && userData.role !== "risk_manager") {
+        // L'administrateur du modèle — celui à qui ces écrans s'adressent — était
+        // renvoyé au tableau de bord, tandis que le gestionnaire de risque entrait
+        // sur une page dont toutes les sections lui étaient masquées.
+        if (!hasMinimumRole(userData.role as UserRole, "scoring_admin")) {
           router.push("/dashboard");
           return;
         }
 
-        // Check V8 status
-        let v8Enabled = false;
-        let modelVersion = "V7++";
+        // Le résumé annonçait « V8 » ou « V7++ » d'après une route de diagnostic qui
+        // ne dit que l'état du calibrage sectoriel, et « Domaines actifs : 8 » en dur
+        // alors que le modèle publié en compte neuf. Tout vient maintenant du modèle.
+        let modelVersion = "—";
+        let domaines: number | null = null;
+        let criteres: number | null = null;
         try {
-          const v8Res = await apiGet("/api/admin/diagnostic/v8-status");
-          if (v8Res.ok) {
-            const v8Data = await v8Res.json();
-            v8Enabled = v8Data.enabled || false;
-            modelVersion = v8Enabled ? "V8" : "V7++";
+          const resModele = await apiGet("/api/methodology");
+          if (resModele.ok) {
+            const m = (await resModele.json()).data;
+            modelVersion = m?.version?.label ?? `Version ${m?.version?.numero ?? "?"}`;
+            domaines = m?.volumetrie?.domaines ?? null;
+            criteres = m?.volumetrie?.criteres ?? null;
           }
         } catch (e) {
-          console.warn("Could not check V8 status:", e);
+          console.warn("Modèle publié illisible :", e);
         }
 
         setState({
           loading: false,
           user: userData,
-          v8Enabled,
           modelVersion,
+          domaines,
+          criteres,
         });
       } catch (error) {
         console.error("Erreur:", error);
@@ -237,19 +250,10 @@ export default function AdminPage() {
     checkAuth();
   }, [router]);
 
-  const handleLogout = async () => {
-    try {
-      await apiPost("/api/auth/logout");
-      router.push("/login");
-    } catch (error) {
-      console.error("Erreur:", error);
-    }
-  };
-
   if (state.loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
@@ -261,43 +265,25 @@ export default function AdminPage() {
   const visibleSections = ADMIN_SECTIONS.filter(
     (s) =>
       !s.requiredRole ||
-      s.requiredRole === state.user!.role ||
-      state.user!.role === "system_admin"
+      hasMinimumRole(state.user!.role as UserRole, s.requiredRole as UserRole)
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-8">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold">
-                Panneau d&apos;Administration
-              </h1>
-              <p className="mt-2 text-muted-foreground">
-                Paramétrez tous les aspects de l&apos;application
-              </p>
-            </div>
-          </div>
-          <Button onClick={handleLogout} variant="outline">
-            Déconnexion
-          </Button>
-        </div>
+    <div>
+      <div>
+        {/* L'écran composait son propre cadre — pleine hauteur, largeur maximale,
+            bouton de déconnexion — alors qu'il vit déjà dans la coque de
+            l'application, qui porte la navigation et le profil. */}
+        <PageHeader
+          titre="Paramétrage"
+          description="Modèle de scoring, référentiels et exploitation de l'outil"
+          retour={{ href: "/dashboard", libelle: "Tableau de bord" }}
+        />
 
-        {/* Security Warning */}
-        <Card className="mb-8 p-6 bg-amber-950/30 border-amber-700">
-          <p className="text-amber-200 text-sm font-medium">
-            ⚠️ Seuls les administrateurs peuvent accéder à cette section. Toutes
-            les modifications sont enregistrées dans le journal d&apos;audit.
-          </p>
-        </Card>
+        <p className="mb-6 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+          Ces écrans modifient la façon dont les dossiers sont notés. Toute
+          modification est consignée au journal d&apos;audit.
+        </p>
 
         {/* Écrans de paramétrage, rangés par famille */}
         <div className="space-y-10">
@@ -348,22 +334,16 @@ export default function AdminPage() {
               <p className="text-2xl font-bold capitalize">{state.user.role}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Domaines Actifs</p>
-              <p className="text-2xl font-bold">8</p>
+              <p className="text-sm text-muted-foreground">Domaines actifs</p>
+              <p className="text-2xl font-bold">{state.domaines ?? "—"}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Modèle Actif</p>
-              <p
-                className={`text-2xl font-bold ${
-                  state.v8Enabled ? "text-primary" : "text-warning"
-                }`}
-              >
-                {state.modelVersion}
-              </p>
+              <p className="text-sm text-muted-foreground">Critères</p>
+              <p className="text-2xl font-bold">{state.criteres ?? "—"}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Statut</p>
-              <p className="text-2xl font-bold text-success">✓ Actif</p>
+              <p className="text-sm text-muted-foreground">Version publiée</p>
+              <p className="text-2xl font-bold text-foreground">{state.modelVersion}</p>
             </div>
           </div>
         </Card>

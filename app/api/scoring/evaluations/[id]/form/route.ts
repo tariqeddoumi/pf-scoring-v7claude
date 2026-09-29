@@ -47,7 +47,13 @@ async function handleGET(
       prisma.scoringNodeOption.findMany({
         where: { nodeId: { in: nodeIds }, isActive: true },
         orderBy: { orderIndex: "asc" },
-        select: { nodeId: true, value: true, code: true, label: true, score: true },
+        select: {
+          nodeId: true, value: true, code: true, label: true, score: true,
+          // « quand choisir » : la phrase qui départage deux réponses voisines.
+          // Elle vit en base depuis toujours et n'était pas transmise, si bien que
+          // l'écran de saisie n'affichait que le libellé de l'option.
+          metadataJson: true,
+        },
       }),
       prisma.scoringNodeRange.findMany({
         where: { nodeId: { in: nodeIds }, isActive: true },
@@ -56,13 +62,25 @@ async function handleGET(
       }),
     ]);
 
-    const optionsByNode = new Map<string, Array<{ value: string; label: string; score: number }>>();
+    const optionsByNode = new Map<
+      string,
+      Array<{ value: string; label: string; score: number; quandChoisir?: string }>
+    >();
     for (const o of allOptions) {
       const list = optionsByNode.get(o.nodeId) ?? [];
+      let quandChoisir: string | undefined;
+      if (o.metadataJson) {
+        try {
+          quandChoisir = JSON.parse(o.metadataJson)?.when_choose || undefined;
+        } catch {
+          /* métadonnée illisible : l'option s'affiche sans son mode d'emploi */
+        }
+      }
       list.push({
         value: o.value ?? o.code ?? o.label,
         label: o.label,
         score: o.score ?? 0,
+        quandChoisir,
       });
       optionsByNode.set(o.nodeId, list);
     }
@@ -190,6 +208,10 @@ function buildNodeForForm(
     isMandatory: node.isMandatory,
     answerType: node.answerType,
     weight: node.weight,
+    // Bornes de l'échelle du critère : le barème est saisi dessus (0 à 10 pour la
+    // grille V7++) alors que le moteur et l'affichage travaillent sur 0–100.
+    scoreMin: node.scoreMin,
+    scoreMax: node.scoreMax,
     options: optionsByNode.get(node.id),
     ranges: rangesByNode.get(node.id),
     answer: answer

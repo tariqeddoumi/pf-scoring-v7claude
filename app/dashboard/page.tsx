@@ -1,29 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { apiGet } from "@/lib/api-client";
 import {
-  TrendingUp,
-  AlertCircle,
-  BarChart3,
-  PieChart,
-  Activity,
+  AlertTriangle,
   ArrowRight,
+  Ban,
+  CheckCircle2,
+  FileText,
+  Loader2,
   Sliders,
 } from "lucide-react";
-import { ratingBadgeClass, ratingBarClass } from "@/lib/score-colors";
+import { apiGet } from "@/lib/api-client";
+import { formatMAD, formatMADCompact } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
+import { KpiCard } from "@/components/ui/kpi-card";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Note, StatutProjet } from "@/components/ui/status-badge";
+import { ratingBadgeClass, scoreTone } from "@/lib/score-colors";
 
-interface Project {
+interface Projet {
   id: string;
   nom: string;
   secteur: string;
   montant: number;
-  devise: string;
   status: string;
   scoreGlobal: number | null;
   grade: string | null;
   dateCreation: string;
+  client?: { nom: string } | null;
 }
 
 interface Evaluation {
@@ -32,528 +38,417 @@ interface Evaluation {
   finalScore: number | null;
   rating: string | null;
   status: string;
-  createdAt: string;
-  project?: { nom: string };
-  analyst?: { nom: string; prenom: string };
+  updatedAt?: string;
+  submittedAt?: string | null;
+  project?: { nom: string } | null;
 }
 
-interface AuditLog {
+interface Alerte {
   id: string;
-  action: string;
-  details: any;
-  utilisateurId: string;
-  projectId: string | null;
-  dateAction: string;
+  type: string;
+  severite: "critique" | "vigilance" | "information";
+  titre: string;
+  message: string;
+  projectName: string;
+  lienAction: string;
 }
 
+/** Échelle complète du barème : on montre aussi les paliers vides. */
+const ECHELLE = ["AAA", "AA", "A", "BBB", "BB", "B", "CCC", "CC", "C", "D"];
+
+/**
+ * Tableau de bord du portefeuille.
+ *
+ * L'écran précédent répondait « combien ? » — quatre aplats en dégradé donnant des
+ * totaux — là où un chargé d'affaires ouvre son outil pour savoir « qu'ai-je à
+ * faire ? ». Il additionnait par ailleurs tous les montants, dossiers rejetés
+ * compris, sous le libellé « Exposition totale », affichait le score moyen « sur 10 »
+ * alors que l'échelle est passée sur 100, et déversait le JSON brut du journal
+ * d'audit dans « Activités récentes ».
+ *
+ * L'écran part maintenant des dossiers qui demandent une décision, puis donne la
+ * lecture du portefeuille. Chaque chiffre dit ce qu'il recouvre.
+ */
 export default function DashboardPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projets, setProjets] = useState<Projet[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [activities, setActivities] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [alertes, setAlertes] = useState<Alerte[]>([]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState("");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [projRes, evalRes, auditRes] = await Promise.all([
-          apiGet("/api/projects?limit=100"),
-          apiGet("/api/evaluations?limit=100"),
-          apiGet("/api/audit?limit=10"),
-        ]);
-
-        if (projRes.ok) {
-          const projData = await projRes.json();
-          setProjects(projData.data || []);
-        }
-
-        if (evalRes.ok) {
-          const evalData = await evalRes.json();
-          setEvaluations(evalData.data || []);
-        }
-
-        if (auditRes.ok) {
-          const auditData = await auditRes.json();
-          setActivities(Array.isArray(auditData) ? auditData : []);
-        }
-      } catch (err: any) {
-        setError(err.message || "Erreur de chargement");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+  const charger = useCallback(async () => {
+    try {
+      const [rProjets, rEvals, rAlertes] = await Promise.all([
+        apiGet("/api/projects?limit=200"),
+        apiGet("/api/evaluations?limit=200"),
+        apiGet("/api/alerts"),
+      ]);
+      if (rProjets.ok) setProjets((await rProjets.json()).data ?? []);
+      if (rEvals.ok) setEvaluations((await rEvals.json()).data ?? []);
+      if (rAlertes.ok) setAlertes((await rAlertes.json()).data ?? []);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Chargement impossible.");
+    } finally {
+      setChargement(false);
+    }
   }, []);
 
-  if (loading) {
+  useEffect(() => {
+    charger();
+  }, [charger]);
+
+  const chiffres = useMemo(() => {
+    // Un dossier rejeté n'est pas un engagement : l'inclure gonflait le total.
+    const enInstruction = projets.filter((p) => p.status !== "rejete");
+    const engagements = enInstruction.reduce((s, p) => s + (p.montant || 0), 0);
+
+    const calculees = evaluations.filter(
+      (e) => e.finalScore !== null && Number.isFinite(e.finalScore)
+    );
+    const scoreMoyen = calculees.length
+      ? calculees.reduce((s, e) => s + (e.finalScore as number), 0) / calculees.length
+      : null;
+
+    const bloquees = alertes.filter((a) => a.type === "blocage");
+    // L'énumération en base utilise « soumis » ; la forme féminine circule dans
+    // quelques écrans et dans les jeux d'essai.
+    const aValider = evaluations.filter(
+      (e) => e.status === "soumis" || e.status === "soumise"
+    );
+    const brouillons = evaluations.filter((e) => e.status === "brouillon");
+
+    const parNote = new Map<string, number>();
+    for (const e of calculees) {
+      if (e.rating) parNote.set(e.rating, (parNote.get(e.rating) ?? 0) + 1);
+    }
+
+    const parSecteur = new Map<string, number>();
+    for (const p of enInstruction) {
+      parSecteur.set(p.secteur || "Non renseigné",
+        (parSecteur.get(p.secteur || "Non renseigné") ?? 0) + (p.montant || 0));
+    }
+
+    return {
+      enInstruction, engagements, calculees, scoreMoyen,
+      bloquees, aValider, brouillons, parNote,
+      parSecteur: [...parSecteur.entries()].sort((a, b) => b[1] - a[1]),
+    };
+  }, [projets, evaluations, alertes]);
+
+  if (chargement) {
     return (
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
-          <p className="text-muted-foreground mt-2">Chargement...</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="rounded-lg bg-card p-6 animate-pulse h-28"
-            />
-          ))}
-        </div>
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
-  const totalProjects = projects.length;
-  const approvedProjects = projects.filter(
-    (p) => p.status === "approuve"
-  ).length;
-  const scoredProjects = projects.filter((p) => p.scoreGlobal != null);
-  const avgScore =
-    scoredProjects.length > 0
-      ? (
-          scoredProjects.reduce((sum, p) => sum + (p.scoreGlobal || 0), 0) /
-          scoredProjects.length
-        ).toFixed(2)
-      : "—";
-  const totalExposure = projects.reduce((sum, p) => sum + (p.montant || 0), 0);
-
-  // Rating distribution from real project grades
-  const ratingCounts: Record<string, number> = {};
-  projects.forEach((p) => {
-    if (p.grade) {
-      const base = p.grade.replace(/[+-]/, "");
-      ratingCounts[base] = (ratingCounts[base] || 0) + 1;
-    }
-  });
-  const ratingLabels = ["AAA", "AA", "A", "BBB", "BB", "B", "CCC", "D"];
-
-  // Sector exposure computed from real data
-  const sectorMap: Record<string, number> = {};
-  projects.forEach((p) => {
-    const sector = p.secteur || "Autre";
-    sectorMap[sector] = (sectorMap[sector] || 0) + (p.montant || 0);
-  });
-  const sectorExposure = Object.entries(sectorMap)
-    .map(([sector, amount]) => ({
-      sector,
-      amount,
-      percentage: totalExposure > 0 ? (amount / totalExposure) * 100 : 0,
-    }))
-    .sort((a, b) => b.amount - a.amount);
-
-  // Status breakdown using DB enum values
-  const statusBreakdown = {
-    approuve: projects.filter((p) => p.status === "approuve").length,
-    en_revue: projects.filter((p) => p.status === "en_revue").length,
-    en_cours: projects.filter((p) => p.status === "en_cours").length,
-    brouillon: projects.filter((p) => p.status === "brouillon").length,
-    rejete: projects.filter((p) => p.status === "rejete").length,
-  };
-
-  // Alerts generated from real data
-  const alerts: { id: string; type: string; title: string; message: string }[] =
-    [];
-  projects.forEach((p) => {
-    if (p.status === "brouillon" || p.status === "en_cours") {
-      const hasEval = evaluations.some(
-        (e) => e.projectId === p.id && e.status === "valide"
-      );
-      if (!hasEval) {
-        alerts.push({
-          id: `alert-${p.id}`,
-          type: "warning",
-          title: "Évaluation manquante",
-          message: `${p.nom} n'a pas d'évaluation validée`,
-        });
-      }
-    }
-    if (p.scoreGlobal != null && p.scoreGlobal < 5) {
-      alerts.push({
-        id: `alert-score-${p.id}`,
-        type: "error",
-        title: "Score faible détecté",
-        message: `${p.nom}: Score ${p.scoreGlobal.toFixed(2)} - À surveiller`,
-      });
-    }
-  });
-
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case "error":
-        return "🔴";
-      case "warning":
-        return "⚠️";
-      default:
-        return "ℹ️";
-    }
-  };
-
-  const getAlertBorder = (type: string) => {
-    switch (type) {
-      case "error":
-        return "border-destructive";
-      case "warning":
-        return "border-yellow-500";
-      default:
-        return "border-ring";
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString("fr-FR");
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const formatTime = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleTimeString("fr-FR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return "";
-    }
-  };
+  const aFaire =
+    chiffres.bloquees.length + chiffres.aValider.length + chiffres.brouillons.length;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Tableau de Bord</h1>
-          <p className="text-muted-foreground mt-2">
-            Vue d&apos;ensemble du portefeuille de projets
-          </p>
-        </div>
-        {/* La personnalisation occupait une entrée de menu à part entière, au même
-            rang que les dossiers ; sa place est sur l'écran qu'elle configure. */}
-        <Link
-          href="/dashboard-config"
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-secondary-foreground hover:text-foreground border border-input rounded-lg hover:bg-accent transition-colors"
-        >
-          <Sliders size={16} />
-          Personnaliser
-        </Link>
-      </div>
+    <div>
+      <PageHeader
+        titre="Tableau de bord"
+        description="Portefeuille Project Finance"
+        actions={
+          <>
+            <Link
+              href="/dashboard-config"
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              <Sliders size={15} />
+              Personnaliser
+            </Link>
+            <Link
+              href="/projects/new"
+              className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Nouveau projet
+            </Link>
+          </>
+        }
+      />
 
-      {error && (
-        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4 text-destructive text-sm">
-          {error}
+      {erreur && (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          {erreur}
         </div>
       )}
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
-          <p className="text-sm opacity-90 mb-2">Projets Total</p>
-          <p className="text-3xl font-bold">{totalProjects}</p>
-          <p className="text-xs opacity-75 mt-2">
-            {approvedProjects} approuvés
-          </p>
-        </div>
-
-        <div className="rounded-lg bg-gradient-to-br from-cyan-600 to-cyan-700 p-6 text-white">
-          <p className="text-sm opacity-90 mb-2">Évaluations</p>
-          <p className="text-3xl font-bold">{evaluations.length}</p>
-          <p className="text-xs opacity-75 mt-2">
-            {evaluations.filter((e) => e.status === "valide").length} validées
-          </p>
-        </div>
-
-        <div className="rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 p-6 text-white">
-          <p className="text-sm opacity-90 mb-2">Score Moyen</p>
-          <p className="text-3xl font-bold">{avgScore}</p>
-          <p className="text-xs opacity-75 mt-2">/10</p>
-        </div>
-
-        <div className="rounded-lg bg-gradient-to-br from-orange-600 to-orange-700 p-6 text-white">
-          <p className="text-sm opacity-90 mb-2">Exposition Totale</p>
-          <p className="text-3xl font-bold">
-            {totalExposure >= 1000000000
-              ? `${(totalExposure / 1000000000).toFixed(1)}B`
-              : `${(totalExposure / 1000000).toFixed(0)}M`}
-          </p>
-          <p className="text-xs opacity-75 mt-2">MAD</p>
-        </div>
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          libelle="Engagements en instruction"
+          valeur={formatMADCompact(chiffres.engagements).replace(" MAD", "")}
+          unite="MAD"
+          precision={`${chiffres.enInstruction.length} projets · hors dossiers rejetés`}
+        />
+        <KpiCard
+          libelle="À traiter"
+          valeur={aFaire}
+          ton={chiffres.bloquees.length ? "alerte" : aFaire ? "vigilance" : "favorable"}
+          precision={
+            aFaire
+              ? `${chiffres.bloquees.length} blocage · ${chiffres.aValider.length} à valider · ${chiffres.brouillons.length} en saisie`
+              : "Aucun dossier en attente"
+          }
+        />
+        <KpiCard
+          libelle="Score moyen"
+          valeur={
+            chiffres.scoreMoyen !== null
+              ? chiffres.scoreMoyen.toFixed(1).replace(".", ",")
+              : "—"
+          }
+          unite={chiffres.scoreMoyen !== null ? "/ 100" : undefined}
+          ton={chiffres.scoreMoyen !== null ? scoreTone(chiffres.scoreMoyen) === "success" ? "favorable" : scoreTone(chiffres.scoreMoyen) === "warning" ? "vigilance" : scoreTone(chiffres.scoreMoyen) === "destructive" ? "alerte" : "neutre" : "neutre"}
+          precision={`sur ${chiffres.calculees.length} évaluation${chiffres.calculees.length > 1 ? "s" : ""} calculée${chiffres.calculees.length > 1 ? "s" : ""}`}
+        />
+        <KpiCard
+          libelle="Projets suivis"
+          valeur={projets.length}
+          precision={`${projets.filter((p) => p.status === "approuve").length} approuvés · ${projets.filter((p) => p.status === "rejete").length} rejetés`}
+        />
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Alerts and Status */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Alerts */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
-              <AlertCircle size={20} />
-              <span>Alertes</span>
-            </h2>
-            <div className="space-y-3">
-              {alerts.length === 0 && (
-                <p className="text-sm text-muted-foreground">Aucune alerte active</p>
-              )}
-              {alerts.slice(0, 5).map((alert) => (
-                <div
-                  key={alert.id}
-                  className={`bg-muted rounded-lg p-3 border-l-4 ${getAlertBorder(alert.type)}`}
-                >
-                  <div className="flex items-start space-x-2">
-                    <span className="text-lg">{getAlertIcon(alert.type)}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">
-                        {alert.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {alert.message}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Status Breakdown */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
-              <BarChart3 size={20} />
-              <span>État des Projets</span>
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-success"></div>
-                  <span className="text-sm text-secondary-foreground">Approuvés</span>
-                </div>
-                <span className="text-lg font-bold text-foreground">
-                  {statusBreakdown.approuve}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-warning"></div>
-                  <span className="text-sm text-secondary-foreground">En Révision</span>
-                </div>
-                <span className="text-lg font-bold text-foreground">
-                  {statusBreakdown.en_revue}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-primary"></div>
-                  <span className="text-sm text-secondary-foreground">En Cours</span>
-                </div>
-                <span className="text-lg font-bold text-foreground">
-                  {statusBreakdown.en_cours}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
-                  <span className="text-sm text-secondary-foreground">Brouillon</span>
-                </div>
-                <span className="text-lg font-bold text-foreground">
-                  {statusBreakdown.brouillon}
-                </span>
-              </div>
-              {statusBreakdown.rejete > 0 && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                    <span className="text-sm text-secondary-foreground">Rejetés</span>
-                  </div>
-                  <span className="text-lg font-bold text-foreground">
-                    {statusBreakdown.rejete}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Center Column: Ratings and Sectors */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Rating Distribution */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
-              <TrendingUp size={20} />
-              <span>Distribution par Rating</span>
-            </h2>
-            <div className="space-y-3">
-              {ratingLabels
-                .filter(
-                  (r) =>
-                    (ratingCounts[r] || 0) > 0 ||
-                    ["AAA", "AA", "A", "BBB", "B"].includes(r)
-                )
-                .map((rating) => {
-                  const count = ratingCounts[rating] || 0;
-                  const percentage =
-                    totalProjects > 0 ? (count / totalProjects) * 100 : 0;
-                  return (
-                    <div key={rating}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span
-                          className={`font-semibold text-sm ${ratingBadgeClass(rating)}`}
-                        >
-                          {rating}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {count} projet{count !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full ${ratingBarClass(rating)}`}
-                          style={{ width: `${Math.min(percentage, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* Sector Exposure */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
-              <PieChart size={20} />
-              <span>Exposition par Secteur</span>
-            </h2>
-            {sectorExposure.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Aucun projet avec secteur défini
-              </p>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.45fr_1fr]">
+        <div className="space-y-4">
+          <SectionCard
+            titre="Dossiers demandant une action"
+            actions={<span className="text-[12px] text-muted-foreground">{aFaire} dossiers</span>}
+            sansPadding
+          >
+            {aFaire === 0 ? (
+              <EmptyState
+                icone={<CheckCircle2 size={28} className="text-success" />}
+                titre="Rien en attente"
+                description="Aucun seuil rédhibitoire, aucune évaluation à valider ni en cours de saisie."
+              />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {sectorExposure.map((sector) => (
-                  <div
-                    key={sector.sector}
-                    className="bg-muted rounded-lg p-3"
-                  >
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {sector.sector}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-muted-foreground">
-                        {sector.percentage.toFixed(1)}%
-                      </p>
-                      <p className="text-sm font-bold text-primary">
-                        {(sector.amount / 1000000).toFixed(0)}M
-                      </p>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-1 mt-2">
-                      <div
-                        className="bg-cyan-500 h-1 rounded-full"
-                        style={{
-                          width: `${Math.min(sector.percentage, 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
+              <div>
+                {chiffres.bloquees.map((a) => (
+                  <Tache
+                    key={a.id}
+                    href={a.lienAction}
+                    marque="alerte"
+                    titre={a.projectName}
+                    detail={a.message}
+                    badge={<span className="inline-flex items-center gap-1 rounded-full bg-destructive-subtle px-2.5 py-0.5 text-[11.5px] font-semibold text-destructive"><Ban size={11} />Bloqué</span>}
+                  />
+                ))}
+                {chiffres.aValider.map((e) => (
+                  <Tache
+                    key={e.id}
+                    href={`/evaluations/${e.id}`}
+                    marque="vigilance"
+                    titre={e.project?.nom ?? "Projet"}
+                    detail="Évaluation soumise, en attente de validation"
+                    badge={<Note note={e.rating} score={e.finalScore} />}
+                  />
+                ))}
+                {chiffres.brouillons.map((e) => (
+                  <Tache
+                    key={e.id}
+                    href={`/evaluations/${e.id}/saisie`}
+                    titre={e.project?.nom ?? "Projet"}
+                    detail="Saisie en cours"
+                    badge={<span className="rounded-full bg-muted px-2.5 py-0.5 text-[11.5px] font-semibold text-muted-foreground">Brouillon</span>}
+                  />
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      </div>
+          </SectionCard>
 
-      {/* Recent Activities */}
-      <div className="rounded-lg border border-border bg-card p-6">
-        <h2 className="text-xl font-bold text-foreground mb-4 flex items-center space-x-2">
-          <Activity size={20} />
-          <span>Activités Récentes</span>
-        </h2>
-        <div className="space-y-3">
-          {activities.length === 0 && (
-            <p className="text-sm text-muted-foreground">Aucune activité récente</p>
-          )}
-          {activities.slice(0, 8).map((activity) => (
-            <div
-              key={activity.id}
-              className="flex items-start space-x-4 pb-3 border-b border-border last:border-b-0"
-            >
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-xs font-semibold text-primary">
-                    {activity.action}
-                  </span>
-                  <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(activity.dateAction)}{" "}
-                    {formatTime(activity.dateAction)}
-                  </span>
-                </div>
-                <p className="text-sm text-foreground">
-                  {typeof activity.details === "object" && activity.details
-                    ? activity.details.description ||
-                      activity.details.message ||
-                      JSON.stringify(activity.details)
-                    : activity.details || activity.action}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Par {activity.utilisateurId}
-                </p>
+          <SectionCard
+            titre="Portefeuille"
+            actions={
+              <Link href="/projects" className="text-[12.5px] font-semibold text-primary hover:underline">
+                Tout voir →
+              </Link>
+            }
+            sansPadding
+          >
+            {projets.length === 0 ? (
+              <EmptyState
+                icone={<FileText size={28} />}
+                titre="Aucun projet"
+                description="Créez un premier projet pour lancer une évaluation."
+                action={{ href: "/projects/new", libelle: "Nouveau projet" }}
+              />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr>
+                      {["Projet", "Client", "Montant", "Note", "Statut"].map((h, i) => (
+                        <th
+                          key={h}
+                          className={`px-4 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${i === 2 ? "text-right" : "text-left"}`}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projets.slice(0, 8).map((p) => (
+                      <tr key={p.id} className="border-t border-border transition-colors hover:bg-surface">
+                        <td className="px-4 py-2.5">
+                          <Link href={`/projects/${p.id}`} className="font-medium text-foreground hover:text-primary">
+                            {p.nom}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-2.5 text-[12.5px] text-muted-foreground">
+                          {p.client?.nom ?? "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2.5 text-right" title={formatMAD(p.montant)}>
+                          {formatMADCompact(p.montant)}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <Note note={p.grade} score={p.scoreGlobal} />
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <StatutProjet statut={p.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <ArrowRight size={16} className="text-muted-foreground mt-1" />
-            </div>
-          ))}
+            )}
+          </SectionCard>
         </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link
-          href="/projects"
-          className="rounded-lg border border-border bg-card p-6 hover:bg-accent transition-colors group"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-foreground mb-1">Projets</h3>
-              <p className="text-sm text-muted-foreground">Gestion des projets</p>
-            </div>
-            <ArrowRight
-              size={20}
-              className="text-muted-foreground group-hover:text-primary transition-colors"
-            />
-          </div>
-        </Link>
+        <div className="space-y-4">
+          <SectionCard
+            titre="Notes attribuées"
+            actions={
+              <span className="text-[12px] text-muted-foreground">
+                {chiffres.calculees.length} évaluations
+              </span>
+            }
+          >
+            {chiffres.calculees.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Aucune évaluation calculée.
+              </p>
+            ) : (
+              <>
+                {ECHELLE.map((n) => {
+                  const c = chiffres.parNote.get(n) ?? 0;
+                  const pc = (c / chiffres.calculees.length) * 100;
+                  return (
+                    <div key={n} className="mb-1.5 flex items-center gap-2.5">
+                      <span className={`w-10 rounded border px-1 text-center text-[11.5px] font-bold ${ratingBadgeClass(n)}`}>
+                        {n}
+                      </span>
+                      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                        <span className="block h-full rounded-full bg-primary" style={{ width: `${pc}%` }} />
+                      </span>
+                      <span className="w-4 text-right text-[11.5px] text-muted-foreground tabulaire">
+                        {c || "—"}
+                      </span>
+                    </div>
+                  );
+                })}
+                <p className="mt-3 border-t border-border pt-2.5 text-[11.5px] text-muted-foreground">
+                  Barème de la banque · AAA ≥ 95 · D &lt; 25
+                </p>
+              </>
+            )}
+          </SectionCard>
 
-        <Link
-          href="/evaluations"
-          className="rounded-lg border border-border bg-card p-6 hover:bg-accent transition-colors group"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-foreground mb-1">Évaluations</h3>
-              <p className="text-sm text-muted-foreground">Suivi des scores</p>
-            </div>
-            <ArrowRight
-              size={20}
-              className="text-muted-foreground group-hover:text-primary transition-colors"
-            />
-          </div>
-        </Link>
+          <SectionCard titre="Engagements par secteur">
+            {chiffres.parSecteur.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Aucun projet en instruction.
+              </p>
+            ) : (
+              chiffres.parSecteur.map(([s, v]) => {
+                const max = chiffres.parSecteur[0][1];
+                return (
+                  <div key={s} className="mb-3 last:mb-0">
+                    <div className="mb-1 flex items-baseline justify-between gap-3">
+                      <span className="truncate text-[13px] text-foreground">{s}</span>
+                      <span className="shrink-0 text-[12px] text-muted-foreground tabulaire">
+                        {formatMADCompact(v)}
+                      </span>
+                    </div>
+                    <span className="block h-1.5 overflow-hidden rounded-full bg-muted">
+                      <span className="block h-full rounded-full bg-chart-2" style={{ width: `${(v / max) * 100}%` }} />
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </SectionCard>
 
-        <Link
-          href="/clients"
-          className="rounded-lg border border-border bg-card p-6 hover:bg-accent transition-colors group"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-foreground mb-1">Clients</h3>
-              <p className="text-sm text-muted-foreground">Base clients</p>
-            </div>
-            <ArrowRight
-              size={20}
-              className="text-muted-foreground group-hover:text-primary transition-colors"
-            />
-          </div>
-        </Link>
+          {alertes.filter((a) => a.type !== "blocage").length > 0 && (
+            <SectionCard
+              titre="Autres alertes"
+              actions={
+                <Link href="/alerts" className="text-[12.5px] font-semibold text-primary hover:underline">
+                  Toutes →
+                </Link>
+              }
+              sansPadding
+            >
+              {alertes
+                .filter((a) => a.type !== "blocage")
+                .slice(0, 4)
+                .map((a) => (
+                  <Link
+                    key={a.id}
+                    href={a.lienAction}
+                    className="flex gap-2.5 border-b border-border px-4 py-2.5 last:border-b-0 hover:bg-surface"
+                  >
+                    <AlertTriangle
+                      size={15}
+                      className={a.severite === "vigilance" ? "mt-0.5 shrink-0 text-warning" : "mt-0.5 shrink-0 text-muted-foreground"}
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-medium text-foreground">{a.titre}</span>
+                      <span className="block truncate text-[12px] text-muted-foreground">
+                        {a.projectName}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+            </SectionCard>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
+
+function Tache({
+  href,
+  titre,
+  detail,
+  badge,
+  marque,
+}: {
+  href: string;
+  titre: string;
+  detail: string;
+  badge: React.ReactNode;
+  marque?: "alerte" | "vigilance";
+}) {
+  const barre =
+    marque === "alerte" ? "bg-destructive" : marque === "vigilance" ? "bg-warning" : "bg-border";
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-surface"
+    >
+      <span className={`h-9 w-[3px] shrink-0 rounded-full ${barre}`} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13.5px] font-semibold text-foreground">{titre}</span>
+        <span className="block truncate text-[12px] text-muted-foreground">{detail}</span>
+      </span>
+      {badge}
+      <ArrowRight size={15} className="shrink-0 text-muted-foreground" />
+    </Link>
   );
 }

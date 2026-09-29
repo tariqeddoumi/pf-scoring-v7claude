@@ -101,6 +101,11 @@ export class ProjectService {
           scoreGlobal: true,
           grade: true,
           dateCreation: true,
+          // La liste affichait une colonne « Pays » toujours vide : le champ n'était
+          // pas sélectionné. dateMiseAJour sert à trier par activité récente.
+          pays: true,
+          countryCode: true,
+          dateMiseAJour: true,
           user: {
             select: { nom: true, prenom: true, email: true },
           },

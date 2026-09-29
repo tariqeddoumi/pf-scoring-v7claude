@@ -2,240 +2,316 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Save, Loader2, Check } from "lucide-react";
+import { AlertTriangle, Check, Loader2, Save } from "lucide-react";
 import { apiGet, apiPut } from "@/lib/api-client";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
 
-interface DomainGranularityConfig {
-  [domainCode: string]: "DOMAIN" | "CRITERION" | "SUB_CRITERION";
+type Niveau = "DOMAIN" | "CRITERION" | "SUB_CRITERION";
+
+interface ConfigGranularite {
+  [codeDomaine: string]: Niveau;
 }
 
-interface DomainInfo {
+interface Domaine {
   id: string;
   code: string;
   label: string;
   depth: number;
+  scoreLeafDepth?: number | null;
+  /** Nombre de critères et de sous-critères du domaine. */
+  criteres: number;
+  sousCriteres: number;
 }
 
-const GRANULARITY_LEVELS = [
+const NIVEAUX: { valeur: Niveau; libelle: string; description: string }[] = [
   {
-    value: "DOMAIN" as const,
-    label: "Au niveau du domaine (9 entrées totales)",
-    description: "Saisir le score directement pour le domaine entier",
+    valeur: "DOMAIN",
+    libelle: "Domaine",
+    description: "Une seule note pour tout le domaine.",
   },
   {
-    value: "CRITERION" as const,
-    label: "Au niveau du critère (28 entrées)",
-    description: "Saisir le score au niveau critère (par défaut)",
+    valeur: "CRITERION",
+    libelle: "Critère",
+    description: "Une note par critère du domaine.",
   },
   {
-    value: "SUB_CRITERION" as const,
-    label: "Au niveau du sous-critère (84+ entrées)",
-    description: "Saisir le score aux niveaux les plus détaillés",
+    valeur: "SUB_CRITERION",
+    libelle: "Sous-critère",
+    description: "Une note par sous-critère : le niveau le plus fin.",
   },
 ];
 
-export default function ScoringGranularityPage() {
+/** Niveau appliqué par le moteur lorsque le domaine n'est pas dans la configuration. */
+function niveauParDefaut(d: Domaine): Niveau {
+  // Le moteur se replie sur la profondeur propre du nœud, et non sur « critère » :
+  // l'écran annonçait « Au niveau du critère (par défaut) » pour des domaines que le
+  // moteur saisit au sous-critère.
+  const profondeur = d.scoreLeafDepth ?? 1;
+  if (profondeur <= 0) return "DOMAIN";
+  if (profondeur === 1) return "CRITERION";
+  return "SUB_CRITERION";
+}
+
+function nbEntrees(d: Domaine, niveau: Niveau): number {
+  if (niveau === "DOMAIN") return 1;
+  if (niveau === "CRITERION") return d.criteres;
+  return d.sousCriteres || d.criteres;
+}
+
+/**
+ * Granularité de saisie, domaine par domaine.
+ *
+ * Les options du menu annonçaient les totaux du modèle entier — « Au niveau du
+ * critère (28 entrées) », « (9 entrées totales) », « (84+ entrées) » — et non ceux du
+ * domaine réglé : pour D1 on attend 1, 3 ou 9. Un domaine absent de la configuration
+ * s'affichait « Au niveau du critère (par défaut) » alors que le moteur se replie sur
+ * la profondeur propre du nœud. Rien n'avertissait enfin qu'un changement touche les
+ * saisies en cours.
+ */
+export default function GranularitePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [domains, setDomains] = useState<DomainInfo[]>([]);
-  const [config, setConfig] = useState<DomainGranularityConfig>({});
-  const [drafts, setDrafts] = useState<DomainGranularityConfig>({});
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [chargement, setChargement] = useState(true);
+  const [domaines, setDomaines] = useState<Domaine[]>([]);
+  const [config, setConfig] = useState<ConfigGranularite>({});
+  const [brouillons, setBrouillons] = useState<{ nom: string; avancement?: string }[]>([]);
+  const [modifications, setModifications] = useState<ConfigGranularite>({});
+  const [enregistrement, setEnregistrement] = useState(false);
+  const [enregistre, setEnregistre] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
-    const load = async () => {
+    (async () => {
       try {
-        // Fetch domains
-        const domainsRes = await apiGet("/api/scoring/domains");
-        if (domainsRes.status === 401) {
-          router.push("/login");
-          return;
-        }
-        if (domainsRes.status === 403) {
-          router.push("/admin");
-          return;
-        }
-        const domainsData = await domainsRes.json();
-        const domainsList = domainsData.data || [];
-        setDomains(domainsList);
+        const resQuestionnaire = await apiGet("/api/scoring/questionnaire");
+        if (resQuestionnaire.status === 401) return router.push("/login");
+        if (resQuestionnaire.status === 403) return router.push("/admin");
+        const questionnaire = await resQuestionnaire.json();
+        const versionId = questionnaire.modelVersionId;
 
-        // Fetch current granularity config
-        const configRes = await apiGet(
+        // Les compteurs viennent de l'arbre réel du modèle, domaine par domaine.
+        const resNoeuds = await apiGet(
+          `/api/admin/scoring/nodes?versionId=${versionId}&format=light`
+        );
+        const plats: { id: string; code: string; label: string; depth: number }[] =
+          resNoeuds.ok ? ((await resNoeuds.json()).data ?? []) : [];
+
+        const liste: Domaine[] = plats
+          .filter((n) => n.depth === 0)
+          .map((n) => ({
+            id: n.id,
+            code: n.code,
+            label: n.label,
+            depth: 0,
+            criteres: plats.filter(
+              (x) => x.depth === 1 && x.code.startsWith(`${n.code}_`)
+            ).length,
+            sousCriteres: plats.filter(
+              (x) => x.depth === 2 && x.code.startsWith(`${n.code}_`)
+            ).length,
+          }));
+        setDomaines(liste);
+
+        const resConfig = await apiGet(
           "/api/admin/configuration/SCORING_DOMAIN_GRANULARITY"
         );
-        if (configRes.ok) {
-          const configData = await configRes.json();
-          const parsed = configData.data?.value
-            ? JSON.parse(configData.data.value)
-            : {};
-          setConfig(parsed);
+        if (resConfig.ok) {
+          const data = await resConfig.json();
+          setConfig(data.data?.value ? JSON.parse(data.data.value) : {});
         }
-      } catch (err) {
-        setError("Erreur lors du chargement des données.");
+
+        // Les saisies en cours sont les premières touchées par un changement.
+        const resEvals = await apiGet("/api/evaluations?limit=200");
+        if (resEvals.ok) {
+          const evaluations = (await resEvals.json()).data ?? [];
+          setBrouillons(
+            evaluations
+              .filter(
+                (e: { status: string; isArchived?: boolean }) =>
+                  e.status === "brouillon" && !e.isArchived
+              )
+              .map(
+                (e: {
+                  project?: { nom?: string };
+                  avancement?: { repondues: number; total: number };
+                }) => ({
+                  nom: e.project?.nom ?? "Dossier",
+                  avancement: e.avancement
+                    ? `${e.avancement.repondues}/${e.avancement.total}`
+                    : undefined,
+                })
+              )
+          );
+        }
+      } catch {
+        setErreur("Erreur lors du chargement des données.");
       } finally {
-        setLoading(false);
+        setChargement(false);
       }
-    };
-    load();
+    })();
   }, [router]);
 
-  const handleLevelChange = (
-    domainCode: string,
-    level: "DOMAIN" | "CRITERION" | "SUB_CRITERION"
-  ) => {
-    setDrafts((prev) => ({
-      ...prev,
-      [domainCode]: level,
-    }));
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    setError(null);
+  const enregistrer = async () => {
+    setEnregistrement(true);
+    setErreur(null);
     try {
-      // Merge current config with drafts
-      const updated = { ...config, ...drafts };
-
-      // Send as JSON string
+      const majs = { ...config, ...modifications };
       const res = await apiPut("/api/admin/configuration/SCORING_DOMAIN_GRANULARITY", {
-        value: JSON.stringify(updated),
+        value: JSON.stringify(majs),
       });
-
       if (!res.ok) {
-        setError("Échec de l'enregistrement.");
+        setErreur("Échec de l'enregistrement.");
         return;
       }
-
       const json = await res.json();
-      const newValue = JSON.parse(json.data.value);
-      setConfig(newValue);
-      setDrafts({});
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (err) {
-      setError("Échec de l'enregistrement.");
+      setConfig(JSON.parse(json.data.value));
+      setModifications({});
+      setEnregistre(true);
+      setTimeout(() => setEnregistre(false), 2500);
+    } catch {
+      setErreur("Échec de l'enregistrement.");
     } finally {
-      setSaving(false);
+      setEnregistrement(false);
     }
   };
 
-  if (loading) {
+  if (chargement) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
-  const hasDrafts = Object.keys(drafts).length > 0;
+  const nbModifications = Object.keys(modifications).length;
+  const totalEntrees = domaines.reduce(
+    (s, d) =>
+      s + nbEntrees(d, modifications[d.code] ?? config[d.code] ?? niveauParDefaut(d)),
+    0
+  );
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-4">
-        <Link href="/admin" className="text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">Granularité du scoring</h1>
-          <p className="mt-1 text-muted-foreground">
-            Configurez le niveau de saisie du score pour chaque domaine
-          </p>
-        </div>
-      </div>
+    <div className="pb-20">
+      <PageHeader
+        titre="Granularité de la saisie"
+        description="Le niveau auquel l'analyste note chaque domaine : le domaine entier, ses critères, ou ses sous-critères."
+        retour={{ href: "/admin", libelle: "Paramétrage" }}
+      />
 
-      {error && (
-        <Card className="mb-6 p-4 bg-destructive/10 border-destructive/40">
-          <p className="text-sm text-destructive">{error}</p>
-        </Card>
+      {erreur && (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          {erreur}
+        </div>
       )}
 
-      {/* Info card */}
-      <Card className="mb-8 p-4 bg-primary/5 border-primary/20">
-        <p className="text-sm text-foreground">
-          Pour chaque domaine, sélectionnez le niveau auquel les utilisateurs saisiront les scores.
-          Par défaut (Critère) : 28 entrées. Domaine : 9 entrées. Sous-critère : 84+ entrées.
-        </p>
-      </Card>
+      {nbModifications > 0 && brouillons.length > 0 && (
+        <div className="mb-4 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+          <p className="inline-flex items-center gap-2 font-semibold">
+            <AlertTriangle size={15} />
+            {brouillons.length} saisie{brouillons.length > 1 ? "s" : ""} en cours
+          </p>
+          <p className="mt-1">
+            Changer la granularité modifie les questions posées :{" "}
+            {brouillons
+              .map((b) => `${b.nom}${b.avancement ? ` (${b.avancement})` : ""}`)
+              .join(", ")}
+            . Les réponses déjà saisies à un niveau qui disparaît ne sont plus prises
+            en compte au calcul ; elles restent enregistrées.
+          </p>
+        </div>
+      )}
 
-      {/* Domains list */}
-      <div className="space-y-4">
-        {domains.map((domain) => {
-          const currentLevel =
-            drafts[domain.code] ?? config[domain.code] ?? "CRITERION";
+      <SectionCard sansPadding className="mb-4">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              {["Domaine", "Niveau de saisie", "Questions posées"].map((t, i) => (
+                <th
+                  key={i}
+                  className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                >
+                  {t}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {domaines.map((d) => {
+              const defaut = niveauParDefaut(d);
+              const courant = modifications[d.code] ?? config[d.code] ?? defaut;
+              const absent = config[d.code] === undefined;
+              return (
+                <tr key={d.id} className="border-b border-border last:border-b-0">
+                  <td className="px-4 py-3">
+                    <span className="block font-medium text-foreground">{d.label}</span>
+                    <span className="block text-[11.5px] text-muted-foreground">
+                      {d.code} · {d.criteres} critères · {d.sousCriteres} sous-critères
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      id={`niveau-${d.code}`}
+                      value={courant}
+                      onChange={(e) =>
+                        setModifications((prec) => ({
+                          ...prec,
+                          [d.code]: e.target.value as Niveau,
+                        }))
+                      }
+                      aria-label={`Niveau de saisie de ${d.label}`}
+                      className="h-9 w-64 rounded-md border border-border bg-background px-3 text-sm text-foreground focus:border-ring focus:outline-none"
+                    >
+                      {NIVEAUX.map((n) => (
+                        <option key={n.valeur} value={n.valeur}>
+                          {n.libelle} — {nbEntrees(d, n.valeur)} question
+                          {nbEntrees(d, n.valeur) > 1 ? "s" : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="mt-1 block text-[11.5px] text-muted-foreground">
+                      {NIVEAUX.find((n) => n.valeur === courant)?.description}
+                      {absent && ` Non configuré : le moteur applique ce niveau.`}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-[13px] text-foreground tabulaire">
+                    {nbEntrees(d, courant)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </SectionCard>
 
-          return (
-            <Card key={domain.id} className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold">{domain.label}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 font-mono">
-                    {domain.code}
-                  </p>
-                </div>
+      <p className="text-[12.5px] text-muted-foreground">
+        Au total, une évaluation comportera {totalEntrees} question
+        {totalEntrees > 1 ? "s" : ""} notées.
+      </p>
 
-                <div className="w-80">
-                  <Label htmlFor={`level-${domain.code}`} className="block mb-2">
-                    Niveau de saisie
-                  </Label>
-                  <select
-                    id={`level-${domain.code}`}
-                    value={currentLevel}
-                    onChange={(e) =>
-                      handleLevelChange(
-                        domain.code,
-                        e.target.value as "DOMAIN" | "CRITERION" | "SUB_CRITERION"
-                      )
-                    }
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  >
-                    {GRANULARITY_LEVELS.map((level) => (
-                      <option key={level.value} value={level.value} className="bg-background">
-                        {level.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Show description of selected level */}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {
-                      GRANULARITY_LEVELS.find((l) => l.value === currentLevel)
-                        ?.description
-                    }
-                  </p>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Save button */}
-      <div className="mt-8 flex justify-end gap-2">
-        <Button
-          onClick={handleSave}
-          disabled={!hasDrafts || saving}
-          variant={hasDrafts ? "default" : "outline"}
-          className="gap-2"
+      <div className="sticky bottom-0 z-10 -mx-1 mt-4 flex flex-wrap items-center justify-end gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur">
+        <span className="mr-auto text-[12.5px] text-muted-foreground">
+          {nbModifications > 0
+            ? `${nbModifications} domaine${nbModifications > 1 ? "s" : ""} modifié${nbModifications > 1 ? "s" : ""}`
+            : "Aucune modification"}
+        </span>
+        {enregistre && (
+          <span className="inline-flex items-center gap-1.5 text-[12.5px] text-success">
+            <Check size={14} />
+            Enregistré
+          </span>
+        )}
+        <button
+          onClick={enregistrer}
+          disabled={nbModifications === 0 || enregistrement}
+          className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : saved ? (
-            <>
-              <Check className="h-4 w-4" /> Enregistré
-            </>
+          {enregistrement ? (
+            <Loader2 size={15} className="animate-spin" />
           ) : (
-            <>
-              <Save className="h-4 w-4" /> Enregistrer
-            </>
+            <Save size={15} />
           )}
-        </Button>
+          Enregistrer
+        </button>
       </div>
     </div>
   );

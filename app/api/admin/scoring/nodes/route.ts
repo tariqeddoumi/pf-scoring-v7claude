@@ -1,12 +1,27 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError } from "@/lib/api-response";
+import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import {
+  verifierVersionModifiable,
+  verifierNoeudModifiable,
+} from "@/lib/services/scoring/version-guard";
 
 /**
  * GET /api/admin/scoring/nodes
  * List all nodes for a model version
  */
+/**
+ * Une version publiée ne se modifie plus : ses évaluations doivent rester
+ * reproductibles. Le contrôle est côté serveur, aucun écran ne peut le contourner.
+ */
+function refusVersionFigee(message?: string) {
+  return errorResponse(message ?? "Version non modifiable", {
+    status: 409,
+    errorCode: "ERR_VERSION_PUBLIEE",
+  });
+}
+
 export async function GET(req: NextRequest) {
   return withAdminAuth(req, async () => {
     try {
@@ -80,6 +95,9 @@ export async function POST(req: NextRequest) {
         ]);
       }
 
+      const verdict = await verifierVersionModifiable(versionId);
+      if (!verdict.modifiable) return refusVersionFigee(verdict.message);
+
       // Check code uniqueness per version
       const existing = await prisma.scoringNode.findFirst({
         where: { versionId, code },
@@ -138,6 +156,9 @@ export async function PUT(req: NextRequest) {
         return validationError([{ field: "nodeId", message: "Requis" }]);
       }
 
+      const verdict = await verifierNoeudModifiable(nodeId);
+      if (!verdict.modifiable) return refusVersionFigee(verdict.message);
+
       const node = await prisma.scoringNode.update({
         where: { id: nodeId },
         data: {
@@ -170,6 +191,9 @@ export async function DELETE(req: NextRequest) {
       if (!nodeId) {
         return validationError([{ field: "nodeId", message: "Requis" }]);
       }
+
+      const verdict = await verifierNoeudModifiable(nodeId);
+      if (!verdict.modifiable) return refusVersionFigee(verdict.message);
 
       // Delete node (cascades to children via Prisma relations)
       await prisma.scoringNode.delete({

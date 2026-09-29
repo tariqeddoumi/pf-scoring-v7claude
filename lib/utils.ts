@@ -55,6 +55,26 @@ export function formatMAD(montant: number): string {
   }).format(montant);
 }
 
+/**
+ * Montant abrégé, pour les tableaux et les indicateurs.
+ *
+ * « 2 350 000 000 MAD » occupe une colonne entière et ne se compare pas d'un coup
+ * d'œil. Les ordres de grandeur suffisent dès qu'on dépasse le million ; le montant
+ * exact reste disponible en infobulle ou sur la fiche du dossier.
+ *
+ * L'abréviation du milliard est « Md » en français — et non « B ».
+ */
+export function formatMADCompact(montant: number | null | undefined): string {
+  if (montant === null || montant === undefined || !Number.isFinite(montant)) return "—";
+  const abs = Math.abs(montant);
+  const fr = (n: number, d: number) =>
+    n.toFixed(d).replace(".", ",").replace(/,0+$/, "");
+  if (abs >= 1_000_000_000) return `${fr(montant / 1_000_000_000, 2)} Md MAD`;
+  if (abs >= 1_000_000) return `${fr(montant / 1_000_000, 0)} M MAD`;
+  if (abs >= 1_000) return `${fr(montant / 1_000, 0)} k MAD`;
+  return `${montant} MAD`;
+}
+
 // ============================================================================
 // FORMATAGE DES DATES
 // ============================================================================
@@ -65,14 +85,39 @@ export function formatMAD(montant: number): string {
  * Exemples :
  *   formatDate(new Date("2025-04-15")) → "15/04/2025"
  *
- * @param date - Objet Date JavaScript
+ * Accepte aussi une chaîne ISO : c'est sous cette forme que les dates arrivent des
+ * routes d'API, et les écrans devaient les convertir un par un — ou les affichaient
+ * telles quelles. Une valeur illisible rend une chaîne vide plutôt qu'« Invalid Date ».
+ *
+ * @param date - Objet Date, chaîne ISO, ou valeur absente
  */
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+export function formatDate(date: Date | string | null | undefined): string {
+  const d = versDate(date);
+  return d
+    ? new Intl.DateTimeFormat("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(d)
+    : "";
+}
+
+/** Normalise une date : objet, chaîne ISO, ou rien. */
+function versDate(v: Date | string | null | undefined): Date | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * Date au format attendu par un champ <input type="date"> : AAAA-MM-JJ.
+ *
+ * Les formulaires affichaient des champs de date vides parce qu'ils y injectaient la
+ * chaîne ISO complète (« 2026-01-15T00:00:00.000Z »), que le navigateur refuse.
+ */
+export function formatDateInput(date: Date | string | null | undefined): string {
+  const d = versDate(date);
+  return d ? d.toISOString().slice(0, 10) : "";
 }
 
 /**
@@ -82,14 +127,16 @@ export function formatDate(date: Date): string {
  * Exemples :
  *   formatDateTime(new Date("2025-04-15T14:30:00")) → "15/04/2025 14:30"
  *
- * @param date - Objet Date JavaScript
+ * @param date - Objet Date, chaîne ISO, ou valeur absente
  */
-export function formatDateTime(date: Date): string {
+export function formatDateTime(date: Date | string | null | undefined): string {
+  const d = versDate(date);
+  if (!d) return "";
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(date);
+  }).format(d);
 }

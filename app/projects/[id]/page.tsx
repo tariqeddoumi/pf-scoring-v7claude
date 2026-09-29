@@ -1,35 +1,29 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import {
-  ArrowLeft,
-  Edit2,
-  Loader2,
-  FileText,
-  MapPin,
-  DollarSign,
-  Zap,
-  Users,
-  BarChart3,
-  Calendar,
-} from "lucide-react";
+import { ArrowRight, Ban, Loader2, Pencil } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
-import { Tabs } from "@/components/ui/Tabs";
+import { formatMAD, formatDate } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { KpiCard } from "@/components/ui/kpi-card";
+import { Note, StatutEvaluation, StatutProjet } from "@/components/ui/status-badge";
+import { usePermission } from "@/lib/hooks/usePermission";
 
-interface Project {
+interface Projet {
   id: string;
   nom: string;
   description?: string;
   secteur?: string;
   pays?: string;
+  countryCode?: string;
   montant?: number;
   devise?: string;
   status: string;
   dateCreation?: string;
-  createdAt?: string;
-  countryCode?: string;
+  dateMiseAJour?: string;
   coutTotal?: number;
   financement?: number;
   apportPropre?: number;
@@ -37,7 +31,6 @@ interface Project {
   dureeCredit?: number;
   typeCredit?: string;
   tauxCouverture?: number;
-  ratio?: number;
   sponsorPrincipal?: string;
   nomSPV?: string;
   constructeurEPC?: string;
@@ -50,241 +43,375 @@ interface Project {
   debutConstruction?: string;
   finConstruction?: string;
   structureCapitalePrincipale?: string;
-  scoreGlobal?: number;
-  grade?: string;
+  scoreGlobal?: number | null;
+  grade?: string | null;
+  client?: { id: string; nom: string; email?: string; telephone?: string } | null;
+  user?: { nom: string; prenom: string } | null;
 }
 
-const Field = ({ label, value }: { label: string; value?: string | number | null }) => (
-  <div>
-    <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-      {label}
-    </label>
-    <p className="text-foreground">
-      {value !== null && value !== undefined && value !== "" ? value : (
-        <span className="text-muted-foreground italic">Non renseigné</span>
-      )}
-    </p>
-  </div>
-);
+interface Evaluation {
+  id: string;
+  status: string;
+  finalScore: number | null;
+  rating: string | null;
+  recommendation?: string | null;
+  updatedAt?: string;
+}
 
-const formatDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString("fr-FR") : null;
-const formatNum = (n?: number | null) =>
-  n !== null && n !== undefined ? n.toLocaleString("fr-FR") : null;
-
-export default function ProjectDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+/**
+ * Fiche projet.
+ *
+ * Elle était découpée en sept onglets dont seul « Identification » s'affichait par
+ * défaut : voir le montant, le calendrier ou la note demandait trois à six clics, et
+ * la note se trouvait dans le dernier onglet. Le client n'apparaissait nulle part,
+ * alors que l'API le renvoie.
+ *
+ * Tout est désormais sur une seule page, dans l'ordre où un chargé d'affaires en a
+ * besoin : identité et note d'abord, structure de financement ensuite, calendrier et
+ * intervenants pour finir.
+ */
+export default function ProjectDetailPage() {
+  const params = useParams();
   const router = useRouter();
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [projectId, setProjectId] = useState<string | null>(null);
+  const { can } = usePermission();
+  const id = String(params?.id ?? "");
+
+  const [projet, setProjet] = useState<Projet | null>(null);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  const [libelleSecteur, setLibelleSecteur] = useState<Record<string, string>>({});
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState("");
+
+  const charger = useCallback(async () => {
+    try {
+      const [rProjet, rEvals, rSecteurs] = await Promise.all([
+        apiGet(`/api/projects/${id}`),
+        apiGet(`/api/evaluations?projectId=${id}`),
+        apiGet("/api/reference/sectors"),
+      ]);
+      if (!rProjet.ok) throw new Error("Projet introuvable.");
+      // GET /api/projects/[id] répond à plat, quand GET /api/projects enveloppe sa
+      // liste dans { data }. Les deux formes sont acceptées ici : l'écran ne doit pas
+      // dépendre d'une convention que les routes n'appliquent pas uniformément.
+      const corpsProjet = await rProjet.json();
+      setProjet(corpsProjet?.data ?? corpsProjet ?? null);
+      if (rEvals.ok) {
+        const liste = (await rEvals.json()).data ?? [];
+        setEvaluations(
+          Array.isArray(liste)
+            ? liste.filter((e: { projectId?: string }) => !e.projectId || e.projectId === id)
+            : []
+        );
+      }
+      if (rSecteurs.ok) {
+        const s: { code: string; label: string }[] = (await rSecteurs.json()).data ?? [];
+        setLibelleSecteur(Object.fromEntries(s.map((x) => [x.code, x.label])));
+      }
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Chargement impossible.");
+    } finally {
+      setChargement(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    const resolveAndFetch = async () => {
-      try {
-        const { id } = await params;
-        setProjectId(id);
-        const response = await apiGet(`/api/projects/${id}`);
-        if (!response.ok) throw new Error("Failed to fetch project");
-        const data = await response.json();
-        setProject(data.data || data);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || "Failed to load project");
-        setProject(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    resolveAndFetch();
-  }, [params]);
+    if (id) charger();
+  }, [id, charger]);
 
-  if (loading) {
+  if (chargement) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-primary" size={40} />
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
-  if (error || !project) {
+  if (erreur || !projet) {
     return (
-      <div className="space-y-6">
-        <Link href="/projects" className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground">
-          <ArrowLeft size={20} />
-          <span>Retour aux projets</span>
-        </Link>
-        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive">
-          {error || "Projet non trouvé"}
-        </div>
+      <div className="mx-auto mt-16 max-w-lg">
+        <SectionCard>
+          <p className="font-medium text-foreground">Projet introuvable</p>
+          <p className="mt-1 text-sm text-muted-foreground">{erreur}</p>
+          <Link href="/projects" className="mt-4 inline-block text-sm text-primary hover:underline">
+            ← Retour aux projets
+          </Link>
+        </SectionCard>
       </div>
     );
   }
 
-  const statusColors: Record<string, string> = {
-    brouillon: "bg-secondary/20 text-muted-foreground",
-    en_cours: "bg-primary/20 text-primary",
-    en_revue: "bg-warning/15 text-warning",
-    approuve: "bg-success/15 text-success",
-    rejete: "bg-destructive/15 text-destructive",
-  };
+  const derniere = evaluations[0];
+  const secteur = projet.secteur
+    ? (libelleSecteur[projet.secteur] ?? projet.secteur)
+    : null;
 
-  const tabs = [
-    {
-      id: "identification",
-      label: "Identification",
-      icon: <FileText size={18} />,
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Field label="Nom du projet" value={project.nom} />
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Statut</label>
-            <span className={`inline-block px-3 py-1 rounded-full text-sm ${statusColors[project.status] || "bg-secondary/20 text-muted-foreground"}`}>
-              {project.status}
-            </span>
-          </div>
-          <Field label="Secteur" value={project.secteur} />
-          <Field label="Code pays" value={project.countryCode} />
-          <div className="md:col-span-2">
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Description</label>
-            <p className="text-foreground whitespace-pre-wrap">{project.description || <span className="text-muted-foreground italic">Non renseigné</span>}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "localisation",
-      label: "Localisation",
-      icon: <MapPin size={18} />,
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Field label="Pays" value={project.pays} />
-        </div>
-      ),
-    },
-    {
-      id: "finances",
-      label: "Finances",
-      icon: <DollarSign size={18} />,
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Field label="Montant (MAD)" value={formatNum(project.montant)} />
-          <Field label="Devise" value={project.devise} />
-          <Field label="Coût total (MAD)" value={formatNum(project.coutTotal)} />
-          <Field label="Financement (MAD)" value={formatNum(project.financement)} />
-          <Field label="Apport propre (MAD)" value={formatNum(project.apportPropre)} />
-          <Field label="Taux (%)" value={project.taux !== null && project.taux !== undefined ? `${project.taux}%` : null} />
-          <Field label="Durée crédit (ans)" value={project.dureeCredit} />
-          <Field label="Type de crédit" value={project.typeCredit} />
-          <Field label="Taux de couverture" value={project.tauxCouverture} />
-          <Field label="Ratio" value={project.ratio} />
-        </div>
-      ),
-    },
-    {
-      id: "technique",
-      label: "Technique",
-      icon: <Zap size={18} />,
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Field label="Sponsor principal" value={project.sponsorPrincipal} />
-          <Field label="Nom SPV" value={project.nomSPV} />
-          <Field label="Constructeur EPC" value={project.constructeurEPC} />
-          <Field label="Opérateur O&M" value={project.operateurOM} />
-          <Field label="Technologie" value={project.technologie} />
-          <Field label="Capacité installée (MW)" value={project.capaciteInstallee} />
-          <Field label="Durée du projet (ans)" value={project.dureeProjet} />
-          <Field label="Période amorce (mois)" value={project.periodeAmorce} />
-          <Field label="Période remboursement (mois)" value={project.periodeRemboursement} />
-        </div>
-      ),
-    },
-    {
-      id: "calendrier",
-      label: "Calendrier",
-      icon: <Calendar size={18} />,
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Field label="Début construction" value={formatDate(project.debutConstruction)} />
-          <Field label="Fin construction" value={formatDate(project.finConstruction)} />
-        </div>
-      ),
-    },
-    {
-      id: "structure",
-      label: "Structure Capital",
-      icon: <Users size={18} />,
-      content: (
-        <div className="grid grid-cols-1 gap-6">
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-              Structure capitale principale
-            </label>
-            <p className="text-foreground whitespace-pre-wrap">
-              {project.structureCapitalePrincipale || <span className="text-muted-foreground italic">Non renseigné</span>}
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "evaluation",
-      label: "Évaluation",
-      icon: <BarChart3 size={18} />,
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Field label="Score global" value={project.scoreGlobal} />
-          <Field label="Grade" value={project.grade} />
-        </div>
-      ),
-    },
-  ];
+  // Part de fonds propres : ce que le comité regarde en premier sur la structure.
+  const partFondsPropres =
+    projet.coutTotal && projet.apportPropre
+      ? (projet.apportPropre / projet.coutTotal) * 100
+      : null;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center space-x-4">
-          <Link
-            href="/projects"
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+    <div>
+      <PageHeader
+        retour={{ href: "/projects", libelle: "Projets" }}
+        titre={projet.nom}
+        description={projet.description}
+        meta={
+          <>
+            <StatutProjet statut={projet.status} />
+            {secteur && (
+              <span className="text-[12.5px] text-muted-foreground">{secteur}</span>
+            )}
+            {projet.client && (
+              <Link
+                href={`/clients/${projet.client.id}`}
+                className="text-[12.5px] font-medium text-primary hover:underline"
+              >
+                {projet.client.nom}
+              </Link>
+            )}
+            {projet.user && (
+              <span className="text-[12.5px] text-muted-foreground">
+                Chargé : {projet.user.prenom} {projet.user.nom}
+              </span>
+            )}
+            {projet.dateMiseAJour && (
+              <span className="text-[12.5px] text-muted-foreground">
+                Modifié le {formatDate(projet.dateMiseAJour)}
+              </span>
+            )}
+          </>
+        }
+        actions={
+          can("project", "update") && (
+            <button
+              onClick={() => router.push(`/projects/${projet.id}/edit`)}
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              <Pencil size={15} />
+              Modifier
+            </button>
+          )
+        }
+      />
+
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          libelle="Montant sollicité"
+          valeur={projet.montant ? formatMAD(projet.montant).replace(/\s?MAD$/, "") : "—"}
+          unite={projet.devise || "MAD"}
+        />
+        <KpiCard
+          libelle="Coût total du projet"
+          valeur={projet.coutTotal ? formatMAD(projet.coutTotal).replace(/\s?MAD$/, "") : "—"}
+          unite={projet.coutTotal ? "MAD" : undefined}
+          precision={
+            partFondsPropres !== null
+              ? `${partFondsPropres.toFixed(0)} % de fonds propres`
+              : "Coût total non renseigné"
+          }
+          ton={
+            partFondsPropres !== null && partFondsPropres < 20 ? "alerte" : "neutre"
+          }
+        />
+        <KpiCard
+          libelle="Note"
+          valeur={projet.grade ?? "—"}
+          precision={
+            projet.scoreGlobal !== null && projet.scoreGlobal !== undefined
+              ? `Score ${projet.scoreGlobal.toFixed(1).replace(".", ",")} / 100`
+              : "Aucune évaluation calculée"
+          }
+        />
+        <KpiCard
+          libelle="Durée du crédit"
+          valeur={projet.dureeCredit ?? "—"}
+          unite={projet.dureeCredit ? "ans" : undefined}
+          precision={
+            projet.taux
+              ? `Taux ${String(projet.taux).replace(".", ",")} %`
+              : undefined
+          }
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div className="space-y-4">
+          <SectionCard titre="Structure de financement">
+            <Grille>
+              <Champ libelle="Coût total" valeur={projet.coutTotal} monnaie />
+              <Champ libelle="Financement par dette" valeur={projet.financement} monnaie />
+              <Champ libelle="Apport propre" valeur={projet.apportPropre} monnaie />
+              <Champ libelle="Montant sollicité" valeur={projet.montant} monnaie />
+              <Champ libelle="Type de crédit" valeur={projet.typeCredit} />
+              <Champ
+                libelle="Taux"
+                valeur={projet.taux !== undefined ? `${String(projet.taux).replace(".", ",")} %` : undefined}
+              />
+              {/* Le DSCR est un multiple de l'échéance, pas un pourcentage. */}
+              <Champ
+                libelle="DSCR"
+                valeur={
+                  projet.tauxCouverture !== undefined && projet.tauxCouverture !== null
+                    ? `${projet.tauxCouverture.toFixed(2).replace(".", ",")}x`
+                    : undefined
+                }
+              />
+              <Champ libelle="Structure du capital" valeur={projet.structureCapitalePrincipale} large />
+            </Grille>
+          </SectionCard>
+
+          <SectionCard titre="Calendrier">
+            <Grille>
+              <Champ libelle="Durée du projet" valeur={annees(projet.dureeProjet)} />
+              <Champ libelle="Durée du crédit" valeur={annees(projet.dureeCredit)} />
+              {/* L'écran libellait ces deux champs « en mois » alors que le formulaire
+                  les saisit en années : un différé de 3 ans se lisait 3 mois. */}
+              <Champ libelle="Période d'amorce" valeur={annees(projet.periodeAmorce)} />
+              <Champ libelle="Période de remboursement" valeur={annees(projet.periodeRemboursement)} />
+              <Champ libelle="Début de construction" valeur={date(projet.debutConstruction)} />
+              <Champ libelle="Fin de construction" valeur={date(projet.finConstruction)} />
+            </Grille>
+          </SectionCard>
+
+          <SectionCard titre="Projet et intervenants">
+            <Grille>
+              <Champ libelle="Secteur" valeur={secteur} />
+              <Champ libelle="Pays" valeur={projet.pays} />
+              <Champ libelle="Technologie" valeur={projet.technologie} />
+              <Champ libelle="Capacité installée" valeur={projet.capaciteInstallee} />
+              <Champ libelle="Sponsor principal" valeur={projet.sponsorPrincipal} />
+              <Champ libelle="Société de projet (SPV)" valeur={projet.nomSPV} />
+              <Champ libelle="Constructeur EPC" valeur={projet.constructeurEPC} />
+              <Champ libelle="Opérateur O&M" valeur={projet.operateurOM} />
+            </Grille>
+          </SectionCard>
+        </div>
+
+        <div className="space-y-4">
+          <SectionCard
+            titre="Évaluations"
+            actions={
+              <Link
+                href={`/evaluations/new?projectId=${projet.id}`}
+                className="text-[12.5px] font-semibold text-primary hover:underline"
+              >
+                Nouvelle →
+              </Link>
+            }
+            sansPadding
           >
-            <ArrowLeft size={20} />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{project.nom}</h1>
-            <p className="text-muted-foreground mt-1 text-sm">ID: {project.id}</p>
-          </div>
-        </div>
-        <button
-          onClick={() => projectId && router.push(`/projects/${projectId}/edit`)}
-          className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
-        >
-          <Edit2 size={20} />
-          <span>Modifier</span>
-        </button>
-      </div>
+            {evaluations.length === 0 ? (
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                Aucune évaluation pour ce projet.
+              </p>
+            ) : (
+              evaluations.map((e) => (
+                <Link
+                  key={e.id}
+                  href={
+                    e.status === "brouillon"
+                      ? `/evaluations/${e.id}/saisie`
+                      : `/evaluations/${e.id}`
+                  }
+                  className="flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-surface"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="mb-1 block">
+                      <StatutEvaluation statut={e.status} />
+                    </span>
+                    {e.recommendation && (
+                      <span className="block truncate text-[12px] text-muted-foreground">
+                        {e.recommendation}
+                      </span>
+                    )}
+                    {e.updatedAt && (
+                      <span className="block text-[11.5px] text-muted-foreground">
+                        {formatDate(e.updatedAt)}
+                      </span>
+                    )}
+                  </span>
+                  <Note note={e.rating} score={e.finalScore} />
+                  <ArrowRight size={15} className="shrink-0 text-muted-foreground" />
+                </Link>
+              ))
+            )}
+          </SectionCard>
 
-      {/* Tabs */}
-      <div className="bg-card rounded-lg border border-border p-6">
-        <Tabs tabs={tabs} defaultTab="identification" />
-      </div>
+          {derniere?.status === "rejete" && (
+            <SectionCard className="border-destructive/40">
+              <p className="flex items-start gap-2 text-sm text-destructive">
+                <Ban size={16} className="mt-0.5 shrink-0" />
+                <span>
+                  La dernière évaluation a été rejetée. Ouvrez-la pour consulter le
+                  motif et les règles déclenchées.
+                </span>
+              </p>
+            </SectionCard>
+          )}
 
-      {/* Meta */}
-      <div className="bg-card rounded-lg border border-border p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Informations système</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Créé le" value={formatDate(project.dateCreation || project.createdAt)} />
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Identifiant</label>
-            <p className="text-foreground font-mono text-sm">{project.id}</p>
-          </div>
+          {projet.client && (
+            <SectionCard titre="Client">
+              <Link
+                href={`/clients/${projet.client.id}`}
+                className="text-[14px] font-medium text-primary hover:underline"
+              >
+                {projet.client.nom}
+              </Link>
+              {projet.client.email && (
+                <p className="mt-1 text-[12.5px] text-muted-foreground">
+                  {projet.client.email}
+                </p>
+              )}
+              {projet.client.telephone && (
+                <p className="text-[12.5px] text-muted-foreground">
+                  {projet.client.telephone}
+                </p>
+              )}
+            </SectionCard>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const annees = (n?: number) => (n === undefined || n === null ? undefined : `${n} ans`);
+const date = (d?: string) => (d ? formatDate(d) : undefined);
+
+function Grille({ children }: { children: React.ReactNode }) {
+  return <dl className="grid grid-cols-1 gap-x-6 gap-y-3.5 sm:grid-cols-2">{children}</dl>;
+}
+
+function Champ({
+  libelle,
+  valeur,
+  monnaie,
+  large,
+}: {
+  libelle: string;
+  valeur?: string | number | null;
+  monnaie?: boolean;
+  large?: boolean;
+}) {
+  const vide = valeur === undefined || valeur === null || valeur === "";
+  return (
+    <div className={large ? "sm:col-span-2" : undefined}>
+      <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {libelle}
+      </dt>
+      <dd
+        className={`mt-0.5 text-[13.5px] ${
+          vide ? "italic text-muted-foreground" : "text-foreground"
+        } ${monnaie ? "tabulaire" : ""}`}
+      >
+        {vide
+          ? "Non renseigné"
+          : monnaie && typeof valeur === "number"
+            ? formatMAD(valeur)
+            : valeur}
+      </dd>
     </div>
   );
 }

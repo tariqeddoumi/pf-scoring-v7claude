@@ -1,348 +1,315 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle, Clock, BarChart3 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Activity, Loader2 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
+import { formatMAD, formatMADCompact, formatDate } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Note } from "@/components/ui/status-badge";
 
-interface ProjectMonitoring {
+/** Plancher de couverture du service de la dette, condition rédhibitoire du modèle. */
+const DSCR_PLANCHER = 1.1;
+
+interface Projet {
   id: string;
   nom: string;
-  secteur: string;
-  montant: number;
   status: string;
+  secteur?: string | null;
+  montant: number;
   scoreGlobal: number | null;
   grade: string | null;
-  dateCreation: string;
+  client?: { id: string; nom: string } | null;
+  coutTotal?: number | null;
+  tauxCouverture?: number | null;
+  ratio?: number | null;
+  dureeCredit?: number | null;
+  debutConstruction?: string | null;
+  finConstruction?: string | null;
+  dateMiseAJour?: string | null;
 }
 
+/** Avancement de la construction entre ses deux bornes, en pourcentage. */
+function avancement(p: Projet): number | null {
+  if (!p.debutConstruction || !p.finConstruction) return null;
+  const debut = new Date(p.debutConstruction).getTime();
+  const fin = new Date(p.finConstruction).getTime();
+  if (Number.isNaN(debut) || Number.isNaN(fin) || fin <= debut) return null;
+  const maintenant = Date.now();
+  if (maintenant <= debut) return 0;
+  if (maintenant >= fin) return 100;
+  return ((maintenant - debut) / (fin - debut)) * 100;
+}
+
+/**
+ * Suivi des projets financés.
+ *
+ * L'écran s'intitulait « Suivi post-clôture » mais listait les six projets, brouillons
+ * et dossiers rejetés compris, et ouvrait par défaut sur un brouillon. Ses seuils
+ * étaient calibrés pour une échelle sur 10 — « ≥ 7 » pour un score qui va jusqu'à 100 —
+ * si bien qu'un dossier noté 41,3 et rejeté s'affichait en vert. Les « indicateurs de
+ * suivi » n'étaient que le score, la note et le statut répétés trois fois, alors que
+ * le dossier porte un DSCR, un levier, une durée de crédit et un calendrier de
+ * construction.
+ */
 export default function MonitoringPage() {
-  const [projects, setProjects] = useState<ProjectMonitoring[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [projets, setProjets] = useState<Projet[]>([]);
+  const [details, setDetails] = useState<Record<string, Projet>>({});
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    (async () => {
       try {
-        // Fetch only approved/active projects for monitoring
-        const res = await apiGet("/api/projects?limit=100");
-        if (res.ok) {
-          const data = await res.json();
-          const allProjects: ProjectMonitoring[] = data.data || [];
-          // Show all projects but highlight approved ones
-          setProjects(allProjects);
-          if (allProjects.length > 0) {
-            setSelectedProject(allProjects[0].id);
-          }
-        }
-      } catch {
-        // Silent fail
+        const res = await apiGet("/api/projects?limit=200");
+        if (!res.ok) throw new Error("Chargement des projets impossible.");
+        const liste: Projet[] = (await res.json()).data ?? [];
+        setProjets(liste);
+
+        // La liste ne porte ni DSCR ni calendrier : le détail n'est chargé que pour
+        // les dossiers effectivement suivis.
+        const suivis = liste.filter((p) => p.status === "approuve");
+        const charges = await Promise.all(
+          suivis.map(async (p) => {
+            try {
+              const r = await apiGet(`/api/projects/${p.id}`);
+              if (!r.ok) return null;
+              const corps = await r.json();
+              return (corps.data ?? corps) as Projet;
+            } catch {
+              return null;
+            }
+          })
+        );
+        setDetails(
+          Object.fromEntries(
+            charges.filter((p): p is Projet => Boolean(p?.id)).map((p) => [p.id, p])
+          )
+        );
+      } catch (e) {
+        setErreur(e instanceof Error ? e.message : "Chargement impossible.");
       } finally {
-        setLoading(false);
+        setChargement(false);
       }
-    };
-    fetchProjects();
+    })();
   }, []);
 
-  const project = projects.find((p) => p.id === selectedProject);
+  const suivis = useMemo(
+    () =>
+      projets
+        .filter((p) => p.status === "approuve")
+        .map((p) => details[p.id] ?? p)
+        .sort((a, b) => (a.scoreGlobal ?? 0) - (b.scoreGlobal ?? 0)),
+    [projets, details]
+  );
 
-  if (loading) {
+  const encours = suivis.reduce((s, p) => s + (p.montant ?? 0), 0);
+  const sousPlancher = suivis.filter(
+    (p) => p.tauxCouverture != null && p.tauxCouverture < DSCR_PLANCHER
+  ).length;
+  const enConstruction = suivis.filter((p) => {
+    const a = avancement(p);
+    return a !== null && a < 100;
+  }).length;
+
+  if (chargement) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Suivi Post-Clôture</h1>
-          <p className="text-muted-foreground mt-2">Chargement...</p>
-        </div>
-        <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto"></div>
-        </div>
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
-
-  if (projects.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Suivi Post-Clôture</h1>
-          <p className="text-muted-foreground mt-2">Monitoring des projets financés</p>
-        </div>
-        <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <p className="text-muted-foreground">
-            Aucun projet disponible pour le monitoring
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approuve":
-        return "text-success";
-      case "en_revue":
-        return "text-warning";
-      case "rejete":
-        return "text-destructive";
-      default:
-        return "text-muted-foreground";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      brouillon: "Brouillon",
-      en_cours: "En cours",
-      en_revue: "En révision",
-      approuve: "Approuvé",
-      rejete: "Rejeté",
-    };
-    return labels[status] || status;
-  };
-
-  const getScoreStatus = (
-    score: number | null
-  ): "ok" | "warning" | "critical" => {
-    if (score == null) return "warning";
-    if (score >= 7) return "ok";
-    if (score >= 5) return "warning";
-    return "critical";
-  };
-
-  const getGradeStatus = (
-    grade: string | null
-  ): "ok" | "warning" | "critical" => {
-    if (!grade) return "warning";
-    if (grade.startsWith("A")) return "ok";
-    if (grade.startsWith("BBB")) return "ok";
-    if (grade.startsWith("BB")) return "warning";
-    return "critical";
-  };
-
-  const formatAmount = (amount: number) => {
-    if (amount >= 1000000000) return `${(amount / 1000000000).toFixed(1)}B MAD`;
-    if (amount >= 1000000) return `${(amount / 1000000).toFixed(0)}M MAD`;
-    return `${amount.toLocaleString("fr-FR")} MAD`;
-  };
-
-  // Build monitoring-like covenants from available data
-  const covenants = project
-    ? [
-        {
-          name: "Score Global",
-          status: getScoreStatus(project.scoreGlobal),
-          value:
-            project.scoreGlobal != null
-              ? `${project.scoreGlobal.toFixed(2)}/10`
-              : "Non évalué",
-        },
-        {
-          name: "Grade",
-          status: getGradeStatus(project.grade),
-          value: project.grade || "Non noté",
-        },
-        {
-          name: "Statut Projet",
-          status:
-            project.status === "approuve"
-              ? ("ok" as const)
-              : project.status === "rejete"
-                ? ("critical" as const)
-                : ("warning" as const),
-          value: getStatusLabel(project.status),
-        },
-      ]
-    : [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Suivi Post-Clôture</h1>
-        <p className="text-muted-foreground mt-2">Monitoring des projets financés</p>
-      </div>
+    <div>
+      <PageHeader
+        titre="Suivi des projets financés"
+        description="Dossiers approuvés : couverture de la dette, avancement de la construction, dérive de la note."
+      />
 
-      {/* Project Selector */}
-      <div className="rounded-lg border border-border bg-card p-4">
-        <label className="text-sm font-semibold text-foreground block mb-3">
-          Sélectionner un Projet
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {projects.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setSelectedProject(p.id)}
-              className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                selectedProject === p.id
-                  ? "bg-primary text-white"
-                  : "bg-muted text-secondary-foreground hover:bg-secondary"
-              }`}
-            >
-              {p.nom}
-            </button>
-          ))}
+      {erreur && (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          {erreur}
         </div>
-      </div>
+      )}
 
-      {project && (
+      {suivis.length === 0 ? (
+        <SectionCard sansPadding>
+          <EmptyState
+            icone={<Activity size={28} />}
+            titre="Aucun dossier financé"
+            description="Le suivi porte sur les projets approuvés ; aucun ne l'est pour l'instant."
+            action={{ href: "/projects", libelle: "Voir les projets" }}
+          />
+        </SectionCard>
+      ) : (
         <>
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <MetricCard
-              label="Score Global"
-              value={
-                project.scoreGlobal != null
-                  ? `${project.scoreGlobal.toFixed(2)}`
-                  : "—"
-              }
-              target="/10"
-              status={getScoreStatus(project.scoreGlobal)}
+          <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Tuile libelle="Dossiers suivis" valeur={String(suivis.length)} />
+            <Tuile libelle="Encours" valeur={formatMADCompact(encours)} />
+            <Tuile
+              libelle="En construction"
+              valeur={String(enConstruction)}
+              precision="chantier non achevé"
             />
-            <MetricCard
-              label="Grade"
-              value={project.grade || "—"}
-              target="Rating Basel"
-              status={getGradeStatus(project.grade)}
-            />
-            <MetricCard
-              label="Montant"
-              value={formatAmount(project.montant)}
-              target={project.secteur || ""}
-              status="ok"
+            <Tuile
+              libelle="DSCR sous plancher"
+              valeur={String(sousPlancher)}
+              precision={`seuil ${DSCR_PLANCHER.toFixed(2).replace(".", ",")}x`}
+              classe={sousPlancher > 0 ? "text-destructive" : "text-foreground"}
             />
           </div>
 
-          {/* Covenants / Indicators */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
-              <CheckCircle size={24} />
-              <span>Indicateurs de Suivi</span>
-            </h2>
-
-            <div className="space-y-3">
-              {covenants.map((covenant, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                >
-                  <div className="flex items-center space-x-3 flex-1">
-                    {covenant.status === "ok" ? (
-                      <CheckCircle className="text-success" size={20} />
-                    ) : covenant.status === "warning" ? (
-                      <AlertTriangle className="text-warning" size={20} />
-                    ) : (
-                      <AlertTriangle className="text-destructive" size={20} />
-                    )}
-                    <div>
-                      <p className="font-semibold text-foreground">
-                        {covenant.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{covenant.value}</p>
-                    </div>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      covenant.status === "ok"
-                        ? "bg-success/15 text-success"
-                        : covenant.status === "warning"
-                          ? "bg-warning/15 text-warning"
-                          : "bg-destructive/15 text-destructive"
-                    }`}
-                  >
-                    {covenant.status === "ok"
-                      ? "OK"
-                      : covenant.status === "warning"
-                        ? "Attention"
-                        : "Critique"}
-                  </span>
-                </div>
-              ))}
+          <SectionCard sansPadding>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    {[
+                      { t: "Dossier", a: "left" },
+                      { t: "Encours", a: "right" },
+                      { t: "Note à l'octroi", a: "left" },
+                      { t: "DSCR", a: "right" },
+                      { t: "Levier", a: "right" },
+                      { t: "Construction", a: "left" },
+                      { t: "Dernière mise à jour", a: "left" },
+                    ].map((c, i) => (
+                      <th
+                        key={i}
+                        className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${
+                          c.a === "right" ? "text-right" : "text-left"
+                        }`}
+                      >
+                        {c.t}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {suivis.map((p) => {
+                    const a = avancement(p);
+                    const dscrFaible =
+                      p.tauxCouverture != null && p.tauxCouverture < DSCR_PLANCHER;
+                    return (
+                      <tr
+                        key={p.id}
+                        className="border-b border-border last:border-b-0 hover:bg-surface"
+                      >
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/projects/${p.id}`}
+                            className="font-medium text-foreground hover:underline"
+                          >
+                            {p.nom}
+                          </Link>
+                          {p.client?.nom && (
+                            <span className="block text-[11.5px] text-muted-foreground">
+                              {p.client.nom}
+                            </span>
+                          )}
+                        </td>
+                        <td
+                          className="whitespace-nowrap px-4 py-3 text-right tabulaire"
+                          title={formatMAD(p.montant)}
+                        >
+                          {formatMADCompact(p.montant)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Note note={p.grade} score={p.scoreGlobal} />
+                        </td>
+                        {/* Le seuil est celui du modèle, sur la bonne échelle : les
+                            couleurs se calaient auparavant sur un score sur 10. */}
+                        <td
+                          className={`px-4 py-3 text-right tabulaire ${
+                            dscrFaible ? "font-semibold text-destructive" : "text-foreground"
+                          }`}
+                          title={
+                            dscrFaible
+                              ? `Sous le plancher de ${DSCR_PLANCHER}x`
+                              : undefined
+                          }
+                        >
+                          {p.tauxCouverture != null
+                            ? `${p.tauxCouverture.toFixed(2).replace(".", ",")}x`
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right tabulaire text-foreground">
+                          {p.ratio != null
+                            ? `${p.ratio.toFixed(2).replace(".", ",")}x`
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          {a === null ? (
+                            <span className="text-muted-foreground">—</span>
+                          ) : (
+                            <span className="block min-w-[140px]">
+                              <span className="mb-1 flex items-baseline justify-between gap-2 text-[11.5px] text-muted-foreground">
+                                <span>
+                                  {a >= 100 ? "Achevée" : `${a.toFixed(0)} %`}
+                                </span>
+                                <span>
+                                  {p.finConstruction ? formatDate(p.finConstruction) : ""}
+                                </span>
+                              </span>
+                              <span className="block h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                <span
+                                  className="block h-full rounded-full bg-primary"
+                                  style={{ width: `${a}%` }}
+                                />
+                              </span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-[12.5px] text-muted-foreground">
+                          {p.dateMiseAJour ? formatDate(p.dateMiseAJour) : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </div>
+          </SectionCard>
 
-          {/* Project Summary */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center space-x-2">
-              <BarChart3 size={24} />
-              <span>Résumé du Projet</span>
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">Nom</p>
-                <p className="text-foreground font-semibold mt-1">{project.nom}</p>
-              </div>
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">Secteur</p>
-                <p className="text-foreground font-semibold mt-1">
-                  {project.secteur || "Non défini"}
-                </p>
-              </div>
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">Montant</p>
-                <p className="text-foreground font-semibold mt-1">
-                  {formatAmount(project.montant)}
-                </p>
-              </div>
-              <div className="bg-muted rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">Statut</p>
-                <p
-                  className={`font-semibold mt-1 ${getStatusColor(project.status)}`}
-                >
-                  {getStatusLabel(project.status)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Last Review / Actions */}
-          <div className="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Clock className="text-primary" size={20} />
-              <div>
-                <p className="text-sm text-muted-foreground">Date de Création</p>
-                <p className="text-foreground font-semibold">
-                  {new Date(project.dateCreation).toLocaleDateString("fr-FR")}
-                </p>
-              </div>
-            </div>
-            <Link
-              href={`/projects/${project.id}`}
-              className="bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
-            >
-              Voir Détails
-            </Link>
-          </div>
+          <p className="mt-3 text-[12px] text-muted-foreground">
+            Les dossiers en instruction, en revue ou rejetés ne figurent pas ici : ils
+            se suivent depuis la liste des projets. Le score affiché est celui de
+            l&apos;octroi ;{" "}
+            <Link href="/evaluations" className="text-primary hover:underline">
+              une réévaluation
+            </Link>{" "}
+            le met à jour.
+          </p>
         </>
       )}
     </div>
   );
 }
 
-function MetricCard({
-  label,
-  value,
-  target,
-  status,
+function Tuile({
+  libelle,
+  valeur,
+  precision,
+  classe,
 }: {
-  label: string;
-  value: string;
-  target: string;
-  status: "ok" | "warning" | "critical";
+  libelle: string;
+  valeur: string;
+  precision?: string;
+  classe?: string;
 }) {
-  const statusColor =
-    status === "ok"
-      ? "from-green-600 to-green-700"
-      : status === "warning"
-        ? "from-yellow-600 to-yellow-700"
-        : "from-red-600 to-red-700";
-
   return (
-    <div
-      className={`rounded-lg bg-gradient-to-br ${statusColor} p-6 text-white`}
-    >
-      <p className="text-sm opacity-90 mb-2">{label}</p>
-      <p className="text-3xl font-bold">{value}</p>
-      <p className="text-xs opacity-75 mt-1">{target}</p>
+    <div className="rounded-lg border border-border bg-card px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {libelle}
+      </p>
+      <p className={`mt-1 text-[19px] font-semibold tabulaire ${classe ?? "text-foreground"}`}>
+        {valeur}
+      </p>
+      {precision && (
+        <p className="mt-0.5 text-[11.5px] text-muted-foreground">{precision}</p>
+      )}
     </div>
   );
 }

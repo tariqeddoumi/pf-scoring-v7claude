@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, CheckCircle, Info, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertCircle, BellOff, Info, Loader2 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
-import { Card } from "@/components/ui/card";
+import { formatDate } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   LIBELLES_SEVERITE,
   LIBELLES_TYPE,
@@ -12,47 +15,57 @@ import {
   type SeveriteAlerte,
 } from "@/lib/services/alert-derivation";
 
-const STYLE_SEVERITE: Record<SeveriteAlerte, string> = {
-  critique: "border-destructive/50 bg-destructive/10",
-  vigilance: "border-warning/50 bg-warning/10",
-  information: "border-ring/50 bg-primary/10",
+const TEINTE: Record<SeveriteAlerte, string> = {
+  critique: "text-destructive",
+  vigilance: "text-warning",
+  information: "text-muted-foreground",
 };
 
 function IconeSeverite({ severite }: { severite: SeveriteAlerte }) {
-  if (severite === "critique")
-    return <AlertCircle className="text-destructive shrink-0" size={20} />;
-  if (severite === "vigilance")
-    return <AlertCircle className="text-warning shrink-0" size={20} />;
-  return <Info className="text-primary shrink-0" size={20} />;
+  const commun = `shrink-0 ${TEINTE[severite]}`;
+  if (severite === "information") return <Info size={16} className={commun} />;
+  return <AlertCircle size={16} className={commun} />;
 }
+
+const ORDRE: Record<SeveriteAlerte, number> = {
+  critique: 0,
+  vigilance: 1,
+  information: 2,
+};
 
 /**
  * Alertes du portefeuille.
  *
- * L'écran affichait quatre alertes fabriquées, nommant des projets inexistants avec
- * des ratios inventés. Les alertes sont désormais dérivées des évaluations réellement
- * calculées. Elles ne se suppriment ni ne se marquent comme lues : une alerte n'est
- * pas un message, c'est l'état d'un dossier — elle disparaît quand la condition qui
- * l'a produite cesse, et écarter d'un clic un seuil rédhibitoire n'aurait aucun sens.
+ * Les alertes sont dérivées des évaluations réellement calculées — elles ne se
+ * suppriment ni ne se marquent comme lues : une alerte n'est pas un message, c'est
+ * l'état d'un dossier. Elle disparaît quand la condition qui l'a produite cesse.
+ *
+ * L'écran les affichait en revanche à plat, une carte par condition : un même dossier
+ * revenait deux ou trois fois, et les dossiers clos — rejetés ou validés, sur lesquels
+ * il n'y a plus rien à faire — occupaient toute la liste. Quatre tuiles de la taille
+ * de cartes d'indicateurs servaient de filtres, dont une « Information 0 » cliquable
+ * menant à une liste vide.
  */
-export default function AlertsPage() {
+export default function AlertesPage() {
   const [alertes, setAlertes] = useState<Alerte[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [erreur, setErreur] = useState("");
-  const [filtre, setFiltre] = useState<SeveriteAlerte | "toutes">("toutes");
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [severite, setSeverite] = useState<SeveriteAlerte | "toutes">("toutes");
+  const [inclureClos, setInclureClos] = useState(false);
 
   const charger = useCallback(async () => {
     try {
       const res = await apiGet("/api/alerts");
       if (!res.ok) {
         const corps = await res.json().catch(() => ({}));
-        throw new Error(corps.error ?? "Chargement impossible.");
+        throw new Error(corps.error ?? "Chargement des alertes impossible.");
       }
       setAlertes((await res.json()).data ?? []);
+      setErreur(null);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : "Chargement impossible.");
     } finally {
-      setLoading(false);
+      setChargement(false);
     }
   }, []);
 
@@ -60,149 +73,167 @@ export default function AlertsPage() {
     charger();
   }, [charger]);
 
-  const parSeverite = useMemo(
-    () => ({
-      critique: alertes.filter((a) => a.severite === "critique").length,
-      vigilance: alertes.filter((a) => a.severite === "vigilance").length,
-      information: alertes.filter((a) => a.severite === "information").length,
-    }),
-    [alertes]
+  const ouvertes = useMemo(() => alertes.filter((a) => !a.clos), [alertes]);
+  const retenues = useMemo(
+    () => (inclureClos ? alertes : ouvertes),
+    [alertes, ouvertes, inclureClos]
   );
 
-  const visibles = useMemo(
-    () => (filtre === "toutes" ? alertes : alertes.filter((a) => a.severite === filtre)),
-    [alertes, filtre]
-  );
+  const compteurs = useMemo(() => {
+    const c = { toutes: retenues.length, critique: 0, vigilance: 0, information: 0 };
+    for (const a of retenues) c[a.severite] += 1;
+    return c;
+  }, [retenues]);
 
-  if (loading) {
+  /** Une ligne par dossier : c'est le dossier qu'on ouvre, pas la condition. */
+  const parDossier = useMemo(() => {
+    const groupes = new Map<string, Alerte[]>();
+    for (const a of retenues) {
+      if (severite !== "toutes" && a.severite !== severite) continue;
+      const cle = a.evaluationId;
+      if (!groupes.has(cle)) groupes.set(cle, []);
+      groupes.get(cle)!.push(a);
+    }
+    return [...groupes.values()]
+      .map((liste) => ({
+        liste,
+        pire: liste.reduce(
+          (p, a) => (ORDRE[a.severite] < ORDRE[p] ? a.severite : p),
+          "information" as SeveriteAlerte
+        ),
+      }))
+      .sort(
+        (a, b) =>
+          ORDRE[a.pire] - ORDRE[b.pire] ||
+          new Date(b.liste[0].date).getTime() - new Date(a.liste[0].date).getTime()
+      );
+  }, [retenues, severite]);
+
+  if (chargement) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-primary" size={36} />
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
+  const nbClos = alertes.length - ouvertes.length;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Alertes</h1>
-        <p className="text-muted-foreground mt-2">
-          Conditions relevées sur les évaluations calculées. Une alerte disparaît
-          d&apos;elle-même lorsque la situation qui l&apos;a produite est corrigée.
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        titre="Alertes"
+        description={
+          ouvertes.length === 0
+            ? "Aucun dossier en instance ne déclenche d'alerte."
+            : `${ouvertes.length} alerte${ouvertes.length > 1 ? "s" : ""} sur des dossiers en instance`
+        }
+      />
 
       {erreur && (
-        <Card className="border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
           {erreur}
-        </Card>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-        <BoutonFiltre
-          actif={filtre === "toutes"}
-          onClick={() => setFiltre("toutes")}
-          label="Toutes"
-          valeur={alertes.length}
-        />
-        {(["critique", "vigilance", "information"] as SeveriteAlerte[]).map((s) => (
-          <BoutonFiltre
-            key={s}
-            actif={filtre === s}
-            onClick={() => setFiltre(s)}
-            label={LIBELLES_SEVERITE[s]}
-            valeur={parSeverite[s]}
-          />
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        {visibles.length === 0 ? (
-          <Card className="p-8 text-center">
-            <CheckCircle className="mx-auto text-success mb-3" size={32} />
-            <p className="text-foreground font-semibold">
-              {alertes.length === 0
-                ? "Aucune alerte"
-                : "Aucune alerte de ce niveau"}
-            </p>
-            <p className="text-muted-foreground text-sm mt-1">
-              {alertes.length === 0
-                ? "Aucune évaluation calculée ne présente de condition à signaler."
-                : "Changez de filtre pour voir les autres."}
-            </p>
-          </Card>
-        ) : (
-          visibles.map((alerte) => (
-            <div
-              key={alerte.id}
-              className={`rounded-lg border p-4 ${STYLE_SEVERITE[alerte.severite]}`}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="inline-flex overflow-hidden rounded-md border border-border bg-card">
+          {(["toutes", "critique", "vigilance", "information"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSeverite(s)}
+              aria-pressed={severite === s}
+              className={`inline-flex h-9 items-center gap-1.5 border-r border-border px-3 text-sm font-medium transition-colors last:border-r-0 ${
+                severite === s
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <IconeSeverite severite={alerte.severite} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-baseline gap-2">
-                      <span className="font-semibold text-foreground">
-                        {alerte.titre}
-                      </span>
-                      <span className="text-sm text-muted-foreground truncate">
-                        {alerte.projectName}
-                      </span>
-                    </div>
-                    <p className="text-sm text-secondary-foreground mt-1">
-                      {alerte.message}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
-                      <span className="bg-muted px-2 py-0.5 rounded">
-                        {LIBELLES_TYPE[alerte.type]}
-                      </span>
-                      <span>
-                        Dernier calcul :{" "}
-                        {new Date(alerte.date).toLocaleString("fr-FR")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {s === "toutes" ? "Toutes" : LIBELLES_SEVERITE[s]}
+              <span className="tabulaire text-[11.5px]">{compteurs[s]}</span>
+            </button>
+          ))}
+        </div>
 
-                <Link
-                  href={alerte.lienAction}
-                  className="p-2 text-primary hover:bg-accent rounded-lg transition-colors shrink-0"
-                  aria-label={`Ouvrir l'évaluation — ${alerte.titre}`}
-                >
-                  <ArrowRight size={18} />
-                </Link>
-              </div>
-            </div>
-          ))
+        {/* Les alertes d'un dossier clos documentent la décision ; elles n'appellent
+            plus d'action et sont donc masquées par défaut. */}
+        {nbClos > 0 && (
+          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={inclureClos}
+              onChange={(e) => setInclureClos(e.target.checked)}
+              className="accent-primary"
+            />
+            Inclure les dossiers clos ({nbClos})
+          </label>
         )}
       </div>
-    </div>
-  );
-}
 
-function BoutonFiltre({
-  actif,
-  onClick,
-  label,
-  valeur,
-}: {
-  actif: boolean;
-  onClick: () => void;
-  label: string;
-  valeur: number;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={actif}
-      className={`rounded-lg border p-4 text-left transition-colors ${
-        actif
-          ? "border-primary bg-primary/10"
-          : "border-border bg-card hover:bg-accent"
-      }`}
-    >
-      <p className="text-sm text-muted-foreground mb-1">{label}</p>
-      <p className="text-2xl font-bold text-foreground">{valeur}</p>
-    </button>
+      {parDossier.length === 0 ? (
+        <SectionCard sansPadding>
+          <EmptyState
+            icone={<BellOff size={28} />}
+            titre={
+              alertes.length === 0
+                ? "Aucune alerte"
+                : severite !== "toutes"
+                  ? "Aucune alerte de cette gravité"
+                  : "Rien à traiter"
+            }
+            description={
+              alertes.length === 0
+                ? "Aucune évaluation calculée ne déclenche de condition d'alerte."
+                : nbClos > 0 && !inclureClos
+                  ? "Les seules alertes portent sur des dossiers clos."
+                  : "Changez de gravité pour voir les autres alertes."
+            }
+          />
+        </SectionCard>
+      ) : (
+        <div className="space-y-3">
+          {parDossier.map(({ liste, pire }) => {
+            const premiere = liste[0];
+            return (
+              <Link
+                key={premiere.evaluationId}
+                href={premiere.lienAction}
+                className="block rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-surface"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    <IconeSeverite severite={pire} />
+                    <span className="font-medium text-foreground">
+                      {premiere.projectName}
+                    </span>
+                    {premiere.clos && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                        Dossier clos
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[12px] text-muted-foreground">
+                    {formatDate(premiere.date)}
+                  </span>
+                </div>
+                <ul className="mt-1.5 space-y-1 pl-6">
+                  {liste.map((a) => (
+                    <li key={a.id} className="text-[12.5px]">
+                      <span className={`font-medium ${TEINTE[a.severite]}`}>
+                        {LIBELLES_TYPE[a.type]}
+                      </span>
+                      <span className="text-muted-foreground"> — {a.message}</span>
+                    </li>
+                  ))}
+                </ul>
+                <span className="mt-2 inline-block pl-6 text-[12.5px] font-semibold text-primary">
+                  Ouvrir l&apos;évaluation →
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

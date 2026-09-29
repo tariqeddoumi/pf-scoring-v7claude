@@ -26,8 +26,14 @@ export function useCurrentUser() {
           setError(null);
           return;
         }
-        const data = await response.json();
-        setUser(data.data);
+        const corps = await response.json();
+        // /api/auth/me répond à plat ({ id, email, nom, … }) et non sous une
+        // enveloppe { data }. Le crochet lisait « data.data » : l'utilisateur valait
+        // donc toujours null, et tous les contrôles de permission fondés dessus
+        // refusaient l'action — « Nouveau projet » restait verrouillé jusque pour un
+        // administrateur. L'enveloppe reste tolérée si elle est appliquée un jour.
+        const u = corps?.data ?? corps;
+        setUser(u?.id ? (u as CurrentUser) : null);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch user");

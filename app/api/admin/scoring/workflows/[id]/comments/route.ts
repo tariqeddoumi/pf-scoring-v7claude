@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
+import { withMinimumRole } from '@/lib/auth-middleware';
 import { successResponse, serverError, notFoundError, validationError } from '@/lib/api-response';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+/**
+ * Le fil d'échanges était réservé aux administrateurs du modèle : l'analyste ne
+ * pouvait ni lire la question du comité ni y répondre, alors que c'est à lui qu'elle
+ * s'adresse. La décision, elle, reste dans la route d'approbation.
+ */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  return withAdminAuth(request, async () => {
+  return withMinimumRole('risk_analyst', request, async () => {
     try {
       const { id } = await params;
 
@@ -47,7 +52,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  return withAdminAuth(request, async (req, user) => {
+  return withMinimumRole('risk_analyst', request, async (req, user) => {
     try {
       const { id } = await params;
       const body = await request.json();

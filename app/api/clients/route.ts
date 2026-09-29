@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
+import { createClientSchema } from "@/lib/validation-schemas";
 
 async function handler(request: NextRequest) {
   // GET - List clients
@@ -42,6 +43,14 @@ async function handler(request: NextRequest) {
             pays: true,
             status: true,
             createdAt: true,
+            // La liste montre l'exposition, le gestionnaire et le nombre de projets :
+            // ce sont les repères d'un chargé d'affaires, et ils n'étaient pas
+            // sélectionnés.
+            exposition: true,
+            gestionnaire: true,
+            raisonSociale: true,
+            ville: true,
+            projects: { select: { id: true } },
           },
         }),
         prisma.client.count({ where }),
@@ -67,29 +76,40 @@ async function handler(request: NextRequest) {
   if (request.method === "POST") {
     try {
       const body = await request.json();
-      const { nom, email, telephone, type, typeClient, segmentClientele,
-              statusKYC, statusConformite, secteur, pays, description } = body;
 
-      if (!nom) {
+      // La route ne retenait que onze champs sur les vingt-neuf que le formulaire
+      // envoie : raison sociale, forme juridique, rating interne, exposition, ville,
+      // adresse, gestionnaire et le reste étaient perdus sans le moindre message.
+      // Le schéma Zod les décrit tous ; c'est lui qui fait foi désormais.
+      const validation = createClientSchema.safeParse(body);
+      if (!validation.success) {
         return NextResponse.json(
-          { success: false, error: "Le nom est requis" },
+          {
+            success: false,
+            error: "Données invalides",
+            errors: validation.error.issues.map((i) => ({
+              field: i.path.join("."),
+              message: i.message,
+            })),
+          },
           { status: 400 }
         );
       }
 
+      const { dateRelation, status, ...champs } = validation.data;
+
       const client = await prisma.client.create({
         data: {
-          nom,
-          email: email || null,
-          telephone: telephone || null,
-          type: type || "Entreprise",
-          typeClient: typeClient || "Entreprise",
-          segmentClientele: segmentClientele || null,
-          statusKYC: statusKYC || "En attente",
-          statusConformite: statusConformite || "En attente",
-          secteur: secteur || null,
-          pays: pays || null,
-          description: description || null,
+          ...champs,
+          type: champs.type || "Entreprise",
+          typeClient: champs.typeClient || "Entreprise",
+          statusKYC: champs.statusKYC || "En attente",
+          statusConformite: champs.statusConformite || "En attente",
+          // status n'est pas nullable en base et vaut « Actif » par défaut.
+          status: status || "Actif",
+          // Le formulaire envoie une date au format AAAA-MM-JJ ; Prisma attend un
+          // objet Date. Une valeur illisible vaut mieux absente qu'incorrecte.
+          dateRelation: dateRelation ? new Date(dateRelation) : null,
         },
       });
 

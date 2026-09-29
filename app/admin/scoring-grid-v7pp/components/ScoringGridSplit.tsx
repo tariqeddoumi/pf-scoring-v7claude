@@ -58,7 +58,11 @@ export function ScoringGridSplit({
       {/* Right pane: Node Details */}
       <div className="flex-1 bg-background overflow-y-auto">
         {selectedNode ? (
+          /* Sans clé, React réutilisait l'instance d'un nœud à l'autre : les onglets
+             initialisant leur état par useState(node) gardaient les valeurs du nœud
+             précédent, et un enregistrement écrivait le mauvais libellé. */
           <NodeDetailsPanel
+            key={selectedNode.id}
             node={selectedNode}
             versionId={versionId}
             onNodeUpdate={handleNodeUpdate}

@@ -29,11 +29,13 @@ export function ThemeWrapper({ children }: { children: React.ReactNode }) {
       style.setProperty('--font-sans', `"${config.FONT_FAMILY}", system-ui, sans-serif`);
     }
 
-    // Apply theme mode
-    if (config.THEME_MODE === 'light') {
-      root.classList.remove('dark');
-    } else {
+    // Le clair est le défaut : seul « dark » explicite bascule le thème. La règle
+    // doit rester identique à celle du rendu serveur (app/layout.tsx), sinon le
+    // thème change au premier rendu client.
+    if (config.THEME_MODE === 'dark') {
       root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
     }
 
     // Store in localStorage for persistence across reloads

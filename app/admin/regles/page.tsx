@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Ban, Loader2 } from "lucide-react";
+import { AlertTriangle, Ban, Loader2 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
-import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   SEVERITE_LABELS,
   TYPES_REGLE,
@@ -14,9 +16,12 @@ import {
   typeRegle,
   type Severite,
 } from "@/lib/services/scoring/rule-vocabulary";
-import { validateConditionExpression } from "@/lib/services/scoring/condition-evaluator";
+import {
+  validateConditionExpression,
+  extractConditionFields,
+} from "@/lib/services/scoring/condition-evaluator";
 import { champReconnu } from "@/lib/services/scoring/condition-context";
-import { extractConditionFields } from "@/lib/services/scoring/condition-evaluator";
+import { conditionEnFrancais } from "@/lib/services/scoring/condition-phrasing";
 
 interface Regle {
   id: string;
@@ -40,24 +45,35 @@ interface Version {
   isPublished?: boolean;
 }
 
+const TONS_SEVERITE: Record<string, string> = {
+  CRITICAL: "bg-destructive-subtle text-destructive",
+  HIGH: "bg-warning-subtle text-warning",
+  MEDIUM: "bg-muted text-muted-foreground",
+  LOW: "bg-muted text-muted-foreground",
+};
+
 /**
- * Vue d'ensemble des règles du modèle, seuils NO-GO compris.
+ * Vue d'ensemble des règles du modèle, seuils rédhibitoires compris.
  *
- * Les seuils rédhibitoires étaient saisis dans un écran qui les rangeait dans le
- * navigateur de l'administrateur et qu'aucun calcul ne relisait : ils n'ont jamais
- * bloqué un dossier. Ils sont désormais des règles comme les autres, évaluées par le
- * moteur — mais elles ne se voyaient qu'une par une, au fond de l'éditeur de grille.
- * Cet écran les rassemble et signale celles qui ne se déclencheront jamais.
+ * L'écran mettait en avant l'expression brute — « criteres.D7_SC3_SSC1.valeur < 1.10 »,
+ * « !criteres.D9_SC1_SSC1.repondu » — soit la seule forme que le moteur comprenne,
+ * mais pas celle qu'un responsable des risques peut relire : il ne pouvait donc pas
+ * vérifier qu'une règle dit ce que la doctrine demande. Les règles sans effet étaient
+ * annoncées en tête mais rien ne les distinguait dans la liste, et aucune ne menait
+ * au critère qu'elle vise.
  */
 export default function ReglesPage() {
   const router = useRouter();
   const [regles, setRegles] = useState<Regle[]>([]);
+  const [noeuds, setNoeuds] = useState<Record<string, string>>({});
   const [versions, setVersions] = useState<Version[]>([]);
   const [versionId, setVersionId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState("");
 
   const charger = useCallback(async () => {
+    setChargement(true);
+    setErreur("");
     try {
       const resModeles = await apiGet("/api/admin/scoring/models");
       if (resModeles.status === 401) return router.push("/login");
@@ -68,9 +84,14 @@ export default function ReglesPage() {
         setErreur("Aucun modèle de scoring n'est défini.");
         return;
       }
+      // L'écran retenait le dernier modèle créé ; l'éditeur de grille, lui, cherche
+      // le modèle Project Finance. Dès qu'un second modèle existait, les deux écrans
+      // montraient les règles de modèles différents.
+      const modele =
+        modeles.find((m: { code?: string }) => m.code === "PF_V7PP") ?? modeles[0];
 
       const resVersions = await apiGet(
-        `/api/admin/scoring/models/${modeles[0].id}/versions`
+        `/api/admin/scoring/models/${modele.id}/versions`
       );
       const liste: Version[] = (await resVersions.json()).data ?? [];
       if (liste.length === 0) {
@@ -79,20 +100,22 @@ export default function ReglesPage() {
       }
       setVersions(liste);
 
-      // La version publiée fait foi par défaut, mais un brouillon doit pouvoir être
-      // inspecté avant publication : c'est là que se préparent les nouveaux seuils.
-      const choisie =
-        versionId ?? (liste.find((v) => v.isPublished) ?? liste[0]).id;
+      const choisie = versionId ?? (liste.find((v) => v.isPublished) ?? liste[0]).id;
       setVersionId(choisie);
 
-      const resRegles = await apiGet(
-        `/api/admin/scoring/rules?versionId=${choisie}`
-      );
+      const [resRegles, resNoeuds] = await Promise.all([
+        apiGet(`/api/admin/scoring/rules?versionId=${choisie}`),
+        apiGet(`/api/admin/scoring/nodes?versionId=${choisie}&format=light`),
+      ]);
       setRegles((await resRegles.json()).data ?? []);
+      if (resNoeuds.ok) {
+        const n: { code: string; label: string }[] = (await resNoeuds.json()).data ?? [];
+        setNoeuds(Object.fromEntries(n.map((x) => [x.code, x.label])));
+      }
     } catch {
       setErreur("Impossible de charger les règles.");
     } finally {
-      setLoading(false);
+      setChargement(false);
     }
   }, [router, versionId]);
 
@@ -100,43 +123,47 @@ export default function ReglesPage() {
     charger();
   }, [charger]);
 
+  const libelleCritere = useCallback((code: string) => noeuds[code], [noeuds]);
+
   /** Règles qui ne produiront jamais d'effet, et pourquoi. */
   const inertes = useMemo(() => {
-    const out: { regle: Regle; raison: string }[] = [];
+    const out = new Map<string, string>();
     for (const r of regles) {
       const condition = validateConditionExpression(r.conditionExpression);
       if (!condition.valid) {
-        out.push({ regle: r, raison: `condition illisible — ${condition.error}` });
+        out.set(r.id, `condition illisible — ${condition.error}`);
         continue;
       }
       const inconnus = extractConditionFields(r.conditionExpression).filter(
         (c) => !champReconnu(c)
       );
       if (inconnus.length > 0) {
-        out.push({
-          regle: r,
-          raison: `champ inexistant : ${inconnus.map((c) => `« ${c} »`).join(", ")}`,
-        });
+        out.set(r.id, `champ inexistant : ${inconnus.map((c) => `« ${c} »`).join(", ")}`);
+        continue;
+      }
+      // Un code de critère cité mais absent de la version ne se résoudra jamais :
+      // la vérification des racines ne suffit pas à le détecter.
+      const critereInconnu = extractConditionFields(r.conditionExpression)
+        .filter((c) => c.startsWith("criteres."))
+        .map((c) => c.split(".")[1])
+        .find((code) => code && Object.keys(noeuds).length > 0 && !noeuds[code]);
+      if (critereInconnu) {
+        out.set(r.id, `critère « ${critereInconnu} » absent de cette version`);
         continue;
       }
       if (r.conditionExpression?.trim().toLowerCase() === "true") {
-        out.push({
-          regle: r,
-          raison: "condition toujours vraie — la règle s'applique à tous les dossiers",
-        });
+        out.set(r.id, "condition toujours vraie — la règle s'applique à tous les dossiers");
         continue;
       }
       const action = actionRegle(r.actionType);
-      if (!typeRegle(r.ruleType)) {
-        out.push({ regle: r, raison: `type « ${r.ruleType} » inconnu du moteur` });
-      } else if (!action) {
-        out.push({ regle: r, raison: `action « ${r.actionType} » inconnue du moteur` });
-      } else if (action.exigeMalus && !r.penaltyValue) {
-        out.push({ regle: r, raison: "malus à zéro : aucun effet sur la note" });
+      if (!typeRegle(r.ruleType)) out.set(r.id, `type « ${r.ruleType} » inconnu du moteur`);
+      else if (!action) out.set(r.id, `action « ${r.actionType} » inconnue du moteur`);
+      else if (action.exigeMalus && !r.penaltyValue) {
+        out.set(r.id, "malus à zéro : aucun effet sur la note");
       }
     }
     return out;
-  }, [regles]);
+  }, [regles, noeuds]);
 
   const versionActive = useMemo(
     () => versions.find((v) => v.id === versionId) ?? null,
@@ -153,176 +180,234 @@ export default function ReglesPage() {
     return groupes;
   }, [regles]);
 
-  if (loading) {
+  const compteurs = useMemo(() => {
+    const bloquantes = regles.filter((r) => estBloquante(r)).length;
+    const publication = regles.filter((r) => r.ruleType === "BLOCK_PUBLICATION").length;
+    return { total: regles.length, bloquantes, publication, inertes: inertes.size };
+  }, [regles, inertes]);
+
+  if (chargement) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-primary" size={36} />
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 py-6">
-      <div>
-        <Link
-          href="/admin"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
-        >
-          <ArrowLeft size={16} />
-          Paramétrage
-        </Link>
-        <h1 className="text-2xl font-semibold text-foreground">
-          Règles et seuils rédhibitoires
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Toutes les règles du modèle, quel que soit le critère auquel elles sont
-          rattachées. Elles s&apos;éditent depuis{" "}
-          <Link
-            href="/admin/scoring-grid-v7pp"
-            className="text-primary hover:underline"
-          >
-            l&apos;éditeur de grille
-          </Link>
-          , sur le critère concerné.
-        </p>
-
-        {versions.length > 0 && (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <label
-              htmlFor="version-regles"
-              className="text-sm text-muted-foreground"
-            >
-              Version :
-            </label>
-            <select
-              id="version-regles"
-              value={versionId ?? ""}
-              onChange={(e) => setVersionId(e.target.value)}
-              className="px-3 py-1.5 bg-card border border-input rounded text-sm text-foreground"
-            >
-              {versions.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.label ?? `v${v.versionNumber}`}
-                  {v.isPublished ? " — publiée" : ` — ${v.status ?? "brouillon"}`}
-                </option>
-              ))}
-            </select>
-            {versionActive && !versionActive.isPublished && (
-              <span className="text-xs text-warning">
-                Cette version n&apos;est pas publiée : ses règles ne s&apos;appliquent
-                à aucun dossier tant qu&apos;elle ne l&apos;est pas.
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+    <div>
+      <PageHeader
+        titre="Règles et seuils rédhibitoires"
+        description="Toutes les règles du modèle, quel que soit le critère auquel elles sont rattachées."
+        retour={{ href: "/admin", libelle: "Paramétrage" }}
+        actions={
+          versions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <label htmlFor="version-regles" className="text-sm text-muted-foreground">
+                Version
+              </label>
+              <select
+                id="version-regles"
+                value={versionId ?? ""}
+                onChange={(e) => setVersionId(e.target.value)}
+                className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-ring focus:outline-none"
+              >
+                {versions.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.label ?? `v${v.versionNumber}`}
+                    {v.isPublished ? " — publiée" : ` — ${v.status ?? "brouillon"}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )
+        }
+      />
 
       {erreur && (
-        <Card className="border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
           {erreur}
-        </Card>
-      )}
-
-      {inertes.length > 0 && (
-        <Card className="border-warning/40 bg-warning/10 p-4">
-          <div className="flex items-center gap-2 text-warning font-medium mb-2">
-            <AlertTriangle size={16} />
-            {inertes.length} règle{inertes.length > 1 ? "s" : ""} sans effet
-          </div>
-          <ul className="text-sm text-warning/90 space-y-1">
-            {inertes.map(({ regle, raison }) => (
-              <li key={regle.id}>
-                <code className="text-xs">{regle.code}</code> — {raison}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {regles.length === 0 && !erreur && (
-        <Card className="p-6 text-center">
-          <p className="text-foreground font-medium">Aucune règle n&apos;est définie.</p>
-          <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
-            Aucun seuil rédhibitoire n&apos;est donc opposable aujourd&apos;hui : un
-            dossier ne peut être bloqué que par la décision d&apos;un analyste. Les
-            seuils se créent sur le critère concerné depuis{" "}
-            <Link
-              href="/admin/scoring-grid-v7pp"
-              className="text-primary hover:underline"
-            >
-              l&apos;éditeur de grille
-            </Link>
-            , onglet « Règles ».
-          </p>
-        </Card>
-      )}
-
-      {TYPES_REGLE.filter((t) => parType.has(t.code)).map((type) => (
-        <div key={type.code} className="space-y-2">
-          <div>
-            <h2 className="text-sm font-medium text-foreground flex items-center gap-2">
-              {type.bloquant && <Ban size={14} className="text-destructive" />}
-              {type.label}
-              <span className="text-muted-foreground font-normal">
-                ({parType.get(type.code)!.length})
-              </span>
-            </h2>
-            <p className="text-xs text-muted-foreground">{type.effet}</p>
-          </div>
-
-          {parType.get(type.code)!.map((r) => {
-            const action = actionRegle(r.actionType);
-            const malus = action?.exigeMalus ? (r.penaltyValue ?? 0) : 0;
-            return (
-              <Card key={r.id} className="p-3">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <span className="text-foreground font-medium">
-                    {r.label || r.code}
-                  </span>
-                  <code className="text-xs text-muted-foreground">{r.code}</code>
-                  {r.node && (
-                    <span className="text-xs text-muted-foreground">
-                      · {r.node.code} {r.node.label}
-                    </span>
-                  )}
-                  {estBloquante(r) && (
-                    <span className="text-xs bg-destructive/15 text-destructive px-2 py-0.5 rounded">
-                      Bloquante
-                    </span>
-                  )}
-                  {malus > 0 && (
-                    <span className="text-xs bg-warning/15 text-warning px-2 py-0.5 rounded">
-                      −{malus} pts
-                    </span>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {SEVERITE_LABELS[r.severity as Severite] ?? r.severity}
-                  </span>
-                </div>
-                <code className="block mt-2 text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 break-all">
-                  {r.conditionExpression || "— aucune condition —"}
-                </code>
-                {r.messageUser && (
-                  <p className="text-xs text-muted-foreground mt-1">{r.messageUser}</p>
-                )}
-              </Card>
-            );
-          })}
         </div>
-      ))}
+      )}
 
-      {/* Les types que le moteur ne connaît pas ne figurent dans aucun groupe ci-dessus. */}
-      {Array.from(parType.keys())
-        .filter((code) => !typeRegle(code))
-        .map((code) => (
-          <Card key={code} className="border-destructive/40 bg-destructive/10 p-3">
-            <p className="text-sm text-destructive">
-              {parType.get(code)!.length} règle
-              {parType.get(code)!.length > 1 ? "s" : ""} de type « {code} », que le
-              moteur ne reconnaît pas : elles sont enregistrées mais sans effet.
-            </p>
-          </Card>
-        ))}
+      {versionActive && !versionActive.isPublished && (
+        <div className="mb-4 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+          Cette version n&apos;est pas publiée : ses règles ne s&apos;appliquent à aucun
+          dossier tant qu&apos;elle ne l&apos;est pas.
+        </div>
+      )}
+
+      <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Tuile libelle="Règles" valeur={compteurs.total} />
+        <Tuile libelle="Bloquantes" valeur={compteurs.bloquantes} />
+        <Tuile libelle="Bloquent la publication" valeur={compteurs.publication} />
+        <Tuile
+          libelle="Sans effet"
+          valeur={compteurs.inertes}
+          alerte={compteurs.inertes > 0}
+        />
+      </div>
+
+      {regles.length === 0 && !erreur ? (
+        <SectionCard sansPadding>
+          <EmptyState
+            icone={<Ban size={28} />}
+            titre="Aucune règle n'est définie"
+            description="Aucun seuil rédhibitoire n'est donc opposable : un dossier ne peut être bloqué que par la décision d'un analyste. Les seuils se créent sur le critère concerné, depuis l'éditeur de grille."
+            action={{ href: "/admin/scoring-grid-v7pp", libelle: "Ouvrir l'éditeur de grille" }}
+          />
+        </SectionCard>
+      ) : (
+        <div className="space-y-4">
+          {TYPES_REGLE.filter((t) => parType.has(t.code)).map((type) => (
+            <SectionCard
+              key={type.code}
+              titre={`${type.label} (${parType.get(type.code)!.length})`}
+              description={type.effet}
+              sansPadding
+            >
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    {["Règle", "Critère visé", "Condition", "Effet", "Gravité"].map(
+                      (t, i) => (
+                        <th
+                          key={i}
+                          className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                        >
+                          {t}
+                        </th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {parType.get(type.code)!.map((r) => {
+                    const action = actionRegle(r.actionType);
+                    const malus = action?.exigeMalus ? (r.penaltyValue ?? 0) : 0;
+                    const raisonInerte = inertes.get(r.id);
+                    const phrase = conditionEnFrancais(
+                      r.conditionExpression,
+                      libelleCritere
+                    );
+                    return (
+                      <tr key={r.id} className="border-b border-border last:border-b-0 align-top">
+                        <td className="px-4 py-2.5">
+                          <span className="block font-medium text-foreground">
+                            {r.label || r.code}
+                          </span>
+                          <span className="block text-[11.5px] text-muted-foreground">
+                            {r.code}
+                          </span>
+                          {/* Les règles sans effet étaient annoncées en tête mais
+                              rien ne les signalait dans la liste. */}
+                          {raisonInerte && (
+                            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-warning-subtle px-2 py-0.5 text-[11px] font-semibold text-warning">
+                              <AlertTriangle size={11} />
+                              Sans effet — {raisonInerte}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-[12.5px]">
+                          {r.node ? (
+                            <Link
+                              href={`/admin/scoring-grid-v7pp?nodeId=${r.node.id}&tab=rules`}
+                              className="text-primary hover:underline"
+                            >
+                              {r.node.code} — {r.node.label}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              Aucun (règle orpheline)
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {/* La phrase d'abord, l'expression ensuite : c'est elle que
+                              le moteur évalue, mais ce n'est pas elle qui se relit. */}
+                          <span className="block text-[12.5px] text-foreground">
+                            {phrase ?? "—"}
+                          </span>
+                          <code className="mt-0.5 block break-all text-[11px] text-muted-foreground">
+                            {r.conditionExpression || "— aucune condition —"}
+                          </code>
+                          {r.messageUser && (
+                            <span className="mt-1 block text-[11.5px] text-muted-foreground">
+                              Message : {r.messageUser}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-[12.5px]">
+                          <span className="text-foreground">
+                            {action?.label ?? r.actionType}
+                          </span>
+                          {estBloquante(r) && (
+                            <span className="mt-1 block rounded-full bg-destructive-subtle px-2 py-0.5 text-center text-[11px] font-semibold text-destructive">
+                              Bloquante
+                            </span>
+                          )}
+                          {malus > 0 && (
+                            <span className="mt-1 block text-[11.5px] text-warning">
+                              −{String(malus).replace(".", ",")} pts
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span
+                            className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              TONS_SEVERITE[r.severity] ?? "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {SEVERITE_LABELS[r.severity as Severite] ?? r.severity}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </SectionCard>
+          ))}
+
+          {Array.from(parType.keys())
+            .filter((code) => !typeRegle(code))
+            .map((code) => (
+              <div
+                key={code}
+                className="rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive"
+              >
+                {parType.get(code)!.length} règle
+                {parType.get(code)!.length > 1 ? "s" : ""} de type « {code} », que le
+                moteur ne reconnaît pas : enregistrées, mais sans effet.
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Tuile({
+  libelle,
+  valeur,
+  alerte,
+}: {
+  libelle: string;
+  valeur: number;
+  alerte?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {libelle}
+      </p>
+      <p
+        className={`mt-1 text-[19px] font-semibold tabulaire ${
+          alerte ? "text-warning" : "text-foreground"
+        }`}
+      >
+        {valeur}
+      </p>
     </div>
   );
 }

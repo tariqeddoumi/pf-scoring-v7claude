@@ -1,29 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Check,
-  Loader2,
-  Plus,
-  RotateCcw,
-  Trash2,
-} from "lucide-react";
+import { AlertTriangle, Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { apiGet, apiPut } from "@/lib/api-client";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ratingBadgeClass } from "@/lib/score-colors";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 
 /**
- * Écart entre deux paliers adjacents dans la convention d'écriture du barème,
- * majoré d'une tolérance flottante (25 − 24,99 ne vaut pas exactement 0,01).
- * Doit rester aligné sur la constante homonyme du service de configuration.
+ * Écart conventionnel entre deux paliers adjacents : la borne haute d'un palier est
+ * le seuil du palier au-dessus moins un centième.
  */
-const PAS_BAREME = 0.01 + 1e-9;
+const PAS = 0.01;
 
 interface Palier {
   id: string;
@@ -35,36 +25,54 @@ interface Palier {
   displayOrder: number;
 }
 
-/** Les bornes arrivent en JSON sous forme de nombres ou de chaînes selon le pilote SQL. */
 type PalierBrut = Omit<Palier, "minScore" | "maxScore"> & {
   minScore: number | string;
   maxScore: number | string;
 };
 
+const nombre = (v: number) => String(Math.round(v * 100) / 100).replace(".", ",");
+
 function normaliser(bruts: PalierBrut[]): Palier[] {
-  return bruts.map((p) => ({
+  return bruts
+    .map((p) => ({ ...p, minScore: Number(p.minScore), maxScore: Number(p.maxScore) }))
+    .sort((a, b) => b.minScore - a.minScore);
+}
+
+/**
+ * Recalcule les bornes hautes à partir des seuils : la borne haute d'un palier est
+ * le seuil du palier au-dessus moins un centième, et le palier le plus haut monte
+ * à 100. Recouvrements et trous deviennent impossibles par construction.
+ */
+function recomposer(paliers: Palier[]): Palier[] {
+  const tries = [...paliers].sort((a, b) => b.minScore - a.minScore);
+  return tries.map((p, i) => ({
     ...p,
-    minScore: Number(p.minScore),
-    maxScore: Number(p.maxScore),
+    maxScore: i === 0 ? 100 : Math.round((tries[i - 1].minScore - PAS) * 100) / 100,
+    displayOrder: i + 1,
   }));
 }
 
 /**
  * Édition du barème score → note.
  *
- * Le barème décidait de la note depuis le code, en trois exemplaires divergents.
- * Il vit désormais dans BP_PF_v7pp_rating_scales, que le moteur lit à chaque calcul :
- * cet écran est le seul endroit où on le change, sans redéploiement.
+ * Le barème s'éditait comme un mur de quarante champs — libellé, borne basse, borne
+ * haute et description pour chacun des dix paliers — alors qu'un barème contigu ne se
+ * règle qu'avec neuf seuils : chaque borne haute se déduit du seuil au-dessus.
+ * Déplacer BBB obligeait à modifier aussi la borne haute de BB, faute de quoi l'écran
+ * affichait « se recouvrent ». Une corbeille par ligne supprimait sans confirmation,
+ * et vider le barème faisait retomber le moteur, sans le dire, sur son barème de repli.
  */
 export default function BaremePage() {
   const router = useRouter();
   const [paliers, setPaliers] = useState<Palier[]>([]);
   const [initial, setInitial] = useState<Palier[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [warnings, setWarnings] = useState<string[]>([]);
+  const [dossiers, setDossiers] = useState<{ nom: string; score: number }[]>([]);
+  const [chargement, setChargement] = useState(true);
+  const [enregistrement, setEnregistrement] = useState(false);
+  const [enregistre, setEnregistre] = useState(false);
+  const [erreurs, setErreurs] = useState<string[]>([]);
+  const [avertissements, setAvertissements] = useState<string[]>([]);
+  const [aSupprimer, setASupprimer] = useState<number | null>(null);
 
   const charger = useCallback(async () => {
     try {
@@ -72,13 +80,28 @@ export default function BaremePage() {
       if (res.status === 401) return router.push("/login");
       if (res.status === 403) return router.push("/");
       const json = await res.json();
-      const data = normaliser(json.data ?? []);
+      const data = recomposer(normaliser(json.data ?? []));
       setPaliers(data);
       setInitial(data);
+
+      // Les dossiers notés se placent sur l'échelle : on voit ce qu'un déplacement
+      // de seuil ferait, au lieu de le deviner.
+      const resEvals = await apiGet("/api/evaluations?limit=200");
+      if (resEvals.ok) {
+        const liste = (await resEvals.json()).data ?? [];
+        setDossiers(
+          liste
+            .filter((e: { finalScore: number | null }) => e.finalScore != null)
+            .map((e: { finalScore: number; project?: { nom?: string } }) => ({
+              nom: e.project?.nom ?? "Dossier",
+              score: e.finalScore,
+            }))
+        );
+      }
     } catch {
-      setErrors(["Impossible de charger le barème."]);
+      setErreurs(["Impossible de charger le barème."]);
     } finally {
-      setLoading(false);
+      setChargement(false);
     }
   }, [router]);
 
@@ -86,304 +109,359 @@ export default function BaremePage() {
     charger();
   }, [charger]);
 
-  const modifie = useMemo(
-    () => JSON.stringify(paliers) !== JSON.stringify(initial),
-    [paliers, initial]
-  );
+  const modifies = useMemo(() => {
+    let n = 0;
+    for (const p of paliers) {
+      const avant = initial.find((x) => x.id === p.id);
+      if (!avant || avant.minScore !== p.minScore || avant.label !== p.label) n += 1;
+    }
+    return n + Math.max(0, initial.length - paliers.length);
+  }, [paliers, initial]);
 
-  /**
-   * Contrôles locaux, identiques à ceux du serveur : l'administrateur voit un
-   * recouvrement avant d'enregistrer, mais c'est le serveur qui refuse réellement.
-   */
   const controles = useMemo(() => {
     const err: string[] = [];
     const avert: string[] = [];
-    const tries = [...paliers].sort((a, b) => a.minScore - b.minScore);
-
     for (const p of paliers) {
-      if (!p.label.trim()) err.push(`Un palier n'a pas de libellé.`);
-      if (p.minScore > p.maxScore) {
-        err.push(`« ${p.label || p.id} » : borne basse supérieure à la borne haute.`);
+      if (!p.label.trim()) err.push("Un palier n'a pas de libellé.");
+      if (p.minScore < 0 || p.minScore > 100) {
+        err.push(`« ${p.label || "sans libellé"} » : seuil hors de l'échelle 0–100.`);
       }
     }
-    for (let i = 1; i < tries.length; i++) {
-      const a = tries[i - 1];
-      const b = tries[i];
-      if (b.minScore <= a.maxScore) {
-        err.push(
-          `« ${a.label} » et « ${b.label} » se recouvrent entre ${b.minScore} et ${a.maxScore}.`
-        );
-      } else if (b.minScore - a.maxScore > PAS_BAREME) {
-        // Même tolérance que le serveur : l'interstice d'un centième entre deux
-        // paliers adjacents est la convention d'écriture du barème, pas un défaut.
-        avert.push(
-          `Aucun palier entre ${a.maxScore} et ${b.minScore} (« ${a.label} » → « ${b.label} »).`
-        );
-      }
+    const seuils = paliers.map((p) => p.minScore);
+    if (new Set(seuils).size !== seuils.length) {
+      err.push("Deux paliers partagent le même seuil.");
     }
-    if (tries.length > 0) {
-      if (tries[0].minScore > 0) {
-        avert.push(`Scores sous ${tries[0].minScore} non couverts.`);
-      }
-      const haut = tries[tries.length - 1].maxScore;
-      if (haut < 100) avert.push(`Scores au-dessus de ${haut} non couverts.`);
+    const bas = paliers[paliers.length - 1];
+    if (bas && bas.minScore > 0) {
+      avert.push(`Les scores sous ${nombre(bas.minScore)} ne sont couverts par aucun palier.`);
+    }
+    if (paliers.length === 0) {
+      avert.push(
+        "Barème vide : le moteur retomberait sur son barème de repli (AAA ≥ 90, A ≥ 70…), " +
+          "sans rapport avec celui de la banque."
+      );
     }
     return { err, avert };
   }, [paliers]);
 
-  const majPalier = (index: number, champ: keyof Palier, valeur: string) => {
-    setSaved(false);
+  const majSeuil = (id: string, valeur: string) => {
+    setEnregistre(false);
     setPaliers((prec) =>
-      prec.map((p, i) =>
-        i === index
-          ? {
-              ...p,
-              [champ]:
-                champ === "minScore" || champ === "maxScore"
-                  ? Number(valeur)
-                  : valeur,
-            }
-          : p
+      recomposer(
+        prec.map((p) =>
+          p.id === id
+            ? { ...p, minScore: valeur.trim() === "" ? 0 : Number(valeur.replace(",", ".")) }
+            : p
+        )
       )
     );
   };
 
+  const majChamp = (id: string, champ: "label" | "description", valeur: string) => {
+    setEnregistre(false);
+    setPaliers((prec) => prec.map((p) => (p.id === id ? { ...p, [champ]: valeur } : p)));
+  };
+
   const ajouter = () => {
-    setSaved(false);
-    setPaliers((prec) => [
-      ...prec,
-      {
-        id: `PALIER_${Date.now()}`,
-        label: "",
-        minScore: 0,
-        maxScore: 0,
-        color: null,
-        displayOrder: prec.length + 1,
-      },
-    ]);
+    setEnregistre(false);
+    setPaliers((prec) => {
+      // Le nouveau palier se glisse sous le plus bas, à mi-chemin de zéro : il ne
+      // recouvre rien et n'affiche donc aucune erreur avant la saisie du libellé.
+      const plusBas = prec[prec.length - 1];
+      const seuil = plusBas ? Math.max(0, Math.round((plusBas.minScore / 2) * 100) / 100) : 0;
+      return recomposer([
+        ...prec,
+        {
+          id: `PALIER_${Date.now()}`,
+          label: "",
+          minScore: seuil,
+          maxScore: 0,
+          color: null,
+          displayOrder: prec.length + 1,
+        },
+      ]);
+    });
   };
 
   const supprimer = (index: number) => {
-    setSaved(false);
-    setPaliers((prec) => prec.filter((_, i) => i !== index));
+    setEnregistre(false);
+    setPaliers((prec) => recomposer(prec.filter((_, i) => i !== index)));
+    setASupprimer(null);
   };
 
   const enregistrer = async () => {
-    setSaving(true);
-    setErrors([]);
-    setWarnings([]);
+    setEnregistrement(true);
+    setErreurs([]);
+    setAvertissements([]);
     try {
       const res = await apiPut("/api/admin/scoring/configuration?type=ratingScales", {
-        scales: paliers.map((p, i) => ({ ...p, displayOrder: i + 1 })),
+        scales: recomposer(paliers).map((p, i) => ({ ...p, displayOrder: i + 1 })),
       });
       const json = await res.json();
       if (!res.ok) {
         const messages: string[] = (json.errors ?? []).map(
           (e: { message: string }) => e.message
         );
-        setErrors(
-          messages.length > 0 ? messages : [json.error ?? "Enregistrement refusé."]
-        );
+        setErreurs(messages.length > 0 ? messages : [json.error ?? "Enregistrement refusé."]);
         return;
       }
-      const data = normaliser(json.data?.scales ?? []);
+      const data = recomposer(normaliser(json.data?.scales ?? []));
       setPaliers(data);
       setInitial(data);
-      setWarnings(json.data?.warnings ?? []);
-      setSaved(true);
+      setAvertissements(json.data?.warnings ?? []);
+      setEnregistre(true);
     } catch {
-      setErrors(["Erreur réseau lors de l'enregistrement."]);
+      setErreurs(["Erreur réseau lors de l'enregistrement."]);
     } finally {
-      setSaving(false);
+      setEnregistrement(false);
     }
   };
 
-  if (loading) {
+  if (chargement) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-primary" size={36} />
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
-  const tries = [...paliers].sort((a, b) => b.minScore - a.minScore);
+  /** Dossiers qui changeraient de note si le barème était enregistré tel quel. */
+  const noteDe = (score: number, liste: Palier[]) =>
+    liste.find((p) => score >= p.minScore && score <= p.maxScore)?.label ?? "—";
+  const bascules = dossiers
+    .map((d) => ({
+      ...d,
+      avant: noteDe(d.score, initial),
+      apres: noteDe(d.score, paliers),
+    }))
+    .filter((d) => d.avant !== d.apres);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 py-6">
-      <div>
-        <Link
-          href="/admin"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
-        >
-          <ArrowLeft size={16} />
-          Paramétrage
-        </Link>
-        <h1 className="text-2xl font-semibold text-foreground">Barème de notation</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Correspondance entre le score final (0–100) et la note attribuée. Le moteur lit
-          ce barème à chaque calcul : une modification s&apos;applique aux évaluations
-          calculées ensuite, sans toucher aux notes déjà enregistrées.
-        </p>
-      </div>
+    <div className="pb-20">
+      <PageHeader
+        titre="Barème de notation"
+        description="Correspondance entre le score final (0–100) et la note. Le moteur lit ce barème à chaque calcul : une modification vaut pour les évaluations calculées ensuite, sans toucher aux notes déjà enregistrées."
+        retour={{ href: "/admin", libelle: "Paramétrage" }}
+      />
 
-      {errors.length > 0 && (
-        <Card className="border-destructive/40 bg-destructive/10 p-4">
-          <div className="flex items-center gap-2 text-destructive font-medium mb-2">
-            <AlertTriangle size={16} />
+      {erreurs.length > 0 && (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          <p className="mb-1 inline-flex items-center gap-2 font-semibold">
+            <AlertTriangle size={15} />
             Barème refusé
-          </div>
-          <ul className="text-sm text-destructive/90 space-y-1 list-disc pl-5">
-            {errors.map((e, i) => (
-              <li key={i}>{e}</li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {controles.err.length > 0 && (
-        <Card className="border-destructive/40 bg-destructive/10 p-4">
-          <div className="flex items-center gap-2 text-destructive font-medium mb-2">
-            <AlertTriangle size={16} />
-            À corriger avant d&apos;enregistrer
-          </div>
-          <ul className="text-sm text-destructive/90 space-y-1 list-disc pl-5">
-            {Array.from(new Set(controles.err)).map((e, i) => (
-              <li key={i}>{e}</li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {(controles.avert.length > 0 || warnings.length > 0) && (
-        <Card className="border-warning/40 bg-warning/10 p-4">
-          <div className="flex items-center gap-2 text-warning font-medium mb-2">
-            <AlertTriangle size={16} />
-            Points de vigilance
-          </div>
-          <ul className="text-sm text-warning/90 space-y-1 list-disc pl-5">
-            {Array.from(new Set([...controles.avert, ...warnings])).map((w, i) => (
-              <li key={i}>{w}</li>
-            ))}
-          </ul>
-          <p className="text-xs text-muted-foreground mt-2">
-            Un score tombant dans un intervalle non couvert reçoit malgré tout la note du
-            palier immédiatement inférieur, avec une alerte dans la trace de calcul.
           </p>
-        </Card>
+          <ul className="list-disc space-y-0.5 pl-5">
+            {erreurs.map((e, i) => (
+              <li key={i}>{e}</li>
+            ))}
+          </ul>
+        </div>
       )}
 
-      <Card className="p-0 overflow-hidden">
+      {enregistre && (
+        <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-success/40 bg-success-subtle px-4 py-2 text-sm text-success">
+          <Check size={15} />
+          Barème enregistré.
+        </div>
+      )}
+
+      {avertissements.length > 0 && (
+        <div className="mb-4 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+          <ul className="list-disc space-y-0.5 pl-5">
+            {avertissements.map((a, i) => (
+              <li key={i}>{a}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* L'échelle en clair : l'aperçu arrivait sous les boutons, en pastilles qui
+          passaient à la ligne, et ne montrait pas l'échelle se déformer. */}
+      <SectionCard titre="Échelle" description="0 à 100, telle que le moteur la lira." className="mb-4">
+        <div className="relative h-9 w-full overflow-hidden rounded-md border border-border">
+          {[...paliers].map((p) => {
+            const largeur = Math.max(0, p.maxScore - p.minScore + PAS);
+            return (
+              <span
+                key={p.id}
+                title={`${p.label} : ${nombre(p.minScore)} à ${nombre(p.maxScore)}`}
+                className={`absolute top-0 flex h-full items-center justify-center border-r border-border text-[11px] font-bold ${ratingBadgeClass(p.label)}`}
+                style={{ left: `${p.minScore}%`, width: `${largeur}%` }}
+              >
+                {largeur > 4 ? p.label : ""}
+              </span>
+            );
+          })}
+        </div>
+        <div className="relative mt-1 h-10">
+          {dossiers.map((d, i) => (
+            <span
+              key={`${d.nom}-${i}`}
+              title={`${d.nom} — ${nombre(d.score)}/100`}
+              className="absolute top-0 -translate-x-1/2 text-[10px] text-muted-foreground"
+              style={{ left: `${Math.min(100, Math.max(0, d.score))}%` }}
+            >
+              <span className="block text-center text-foreground">▲</span>
+              <span className="block whitespace-nowrap">{nombre(d.score)}</span>
+            </span>
+          ))}
+        </div>
+        <div className="mt-1 flex justify-between text-[11px] text-muted-foreground tabulaire">
+          <span>0</span>
+          <span>50</span>
+          <span>100</span>
+        </div>
+      </SectionCard>
+
+      {bascules.length > 0 && (
+        <div className="mb-4 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+          <p className="mb-1 font-semibold">
+            Avec ce barème, {bascules.length} dossier{bascules.length > 1 ? "s" : ""} changerait
+            {bascules.length > 1 ? "aient" : ""} de note au prochain calcul :
+          </p>
+          <ul className="list-disc space-y-0.5 pl-5">
+            {bascules.map((d, i) => (
+              <li key={i}>
+                {d.nom} ({nombre(d.score)}) : {d.avant} → {d.apres}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1 text-[12px]">
+            Les notes déjà enregistrées ne sont pas modifiées.
+          </p>
+        </div>
+      )}
+
+      <SectionCard
+        titre="Paliers"
+        description="Seul le seuil bas se saisit : la borne haute est celle du palier au-dessus, moins un centième."
+        sansPadding
+      >
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-muted-foreground">
-            <tr>
-              <th className="text-left font-medium px-4 py-3">Note</th>
-              <th className="text-left font-medium px-4 py-3 w-28">Score min.</th>
-              <th className="text-left font-medium px-4 py-3 w-28">Score max.</th>
-              <th className="text-left font-medium px-4 py-3">Description</th>
-              <th className="px-4 py-3 w-12"></th>
+          <thead>
+            <tr className="border-b border-border">
+              {["Note", "Seuil bas", "Couvre", "Description", ""].map((t, i) => (
+                <th
+                  key={i}
+                  className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                >
+                  {t}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {paliers.map((p, i) => (
-              <tr key={p.id} className="border-t border-border">
+            {paliers.map((p, index) => (
+              <tr key={p.id} className="border-b border-border last:border-b-0">
                 <td className="px-4 py-2">
-                  <Input
+                  <input
                     value={p.label}
-                    onChange={(e) => majPalier(i, "label", e.target.value)}
-                    className="h-9"
-                    aria-label={`Libellé du palier ${i + 1}`}
+                    onChange={(e) => majChamp(p.id, "label", e.target.value)}
+                    aria-label={`Note du palier ${index + 1}`}
+                    className={`w-20 rounded-md border px-2 py-1.5 text-center text-sm font-bold ${ratingBadgeClass(p.label)} ${
+                      p.label.trim() ? "border-border" : "border-destructive"
+                    }`}
                   />
                 </td>
                 <td className="px-4 py-2">
-                  <Input
+                  <input
                     type="number"
-                    step="0.01"
+                    step="0.5"
+                    min={0}
+                    max={100}
                     value={p.minScore}
-                    onChange={(e) => majPalier(i, "minScore", e.target.value)}
-                    className="h-9"
-                    aria-label={`Score minimum du palier ${p.label || i + 1}`}
+                    onChange={(e) => majSeuil(p.id, e.target.value)}
+                    aria-label={`Seuil bas de ${p.label || `palier ${index + 1}`}`}
+                    className="w-24 rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground tabulaire focus:border-ring focus:outline-none"
                   />
                 </td>
-                <td className="px-4 py-2">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={p.maxScore}
-                    onChange={(e) => majPalier(i, "maxScore", e.target.value)}
-                    className="h-9"
-                    aria-label={`Score maximum du palier ${p.label || i + 1}`}
-                  />
+                <td className="px-4 py-2 text-[12.5px] text-muted-foreground tabulaire">
+                  {nombre(p.minScore)} à {nombre(p.maxScore)}
                 </td>
                 <td className="px-4 py-2">
-                  <Input
+                  <input
                     value={p.description ?? ""}
-                    onChange={(e) => majPalier(i, "description", e.target.value)}
-                    className="h-9"
-                    placeholder="Facultatif"
-                    aria-label={`Description du palier ${p.label || i + 1}`}
+                    onChange={(e) => majChamp(p.id, "description", e.target.value)}
+                    placeholder="Équivalence, catégorie de risque…"
+                    aria-label={`Description de ${p.label || `palier ${index + 1}`}`}
+                    className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
                   />
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-2 text-right">
                   <button
-                    onClick={() => supprimer(i)}
-                    className="text-muted-foreground hover:text-destructive transition-colors"
-                    aria-label={`Supprimer le palier ${p.label || i + 1}`}
+                    onClick={() => setASupprimer(index)}
+                    aria-label={`Supprimer le palier ${p.label || index + 1}`}
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive-subtle hover:text-destructive"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={15} />
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </Card>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="outline" onClick={ajouter}>
-          <Plus size={16} className="mr-2" />
-          Ajouter un palier
-        </Button>
-        <Button
-          onClick={enregistrer}
-          disabled={saving || !modifie || controles.err.length > 0}
-        >
-          {saving ? (
-            <Loader2 size={16} className="mr-2 animate-spin" />
-          ) : saved ? (
-            <Check size={16} className="mr-2" />
-          ) : null}
-          {saved && !modifie ? "Barème enregistré" : "Enregistrer le barème"}
-        </Button>
-        {modifie && (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setPaliers(initial);
-              setErrors([]);
-              setWarnings([]);
-            }}
+        <div className="border-t border-border px-4 py-3">
+          <button
+            onClick={ajouter}
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            <RotateCcw size={16} className="mr-2" />
-            Annuler les modifications
-          </Button>
-        )}
+            <Plus size={15} />
+            Ajouter un palier
+          </button>
+        </div>
+      </SectionCard>
+
+      {controles.err.length > 0 && (
+        <ul className="mt-3 list-disc space-y-0.5 pl-5 text-[12.5px] text-destructive">
+          {controles.err.map((e, i) => (
+            <li key={i}>{e}</li>
+          ))}
+        </ul>
+      )}
+      {controles.avert.length > 0 && (
+        <ul className="mt-3 list-disc space-y-0.5 pl-5 text-[12.5px] text-warning">
+          {controles.avert.map((a, i) => (
+            <li key={i}>{a}</li>
+          ))}
+        </ul>
+      )}
+
+      <div className="sticky bottom-0 z-10 -mx-1 mt-4 flex flex-wrap items-center justify-end gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur">
+        <span className="mr-auto text-[12.5px] text-muted-foreground">
+          {modifies > 0
+            ? `${modifies} palier${modifies > 1 ? "s" : ""} modifié${modifies > 1 ? "s" : ""}`
+            : "Aucune modification"}
+        </span>
+        <button
+          onClick={() => {
+            setPaliers(initial);
+            setEnregistre(false);
+          }}
+          disabled={modifies === 0}
+          className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-40"
+        >
+          Annuler
+        </button>
+        <button
+          onClick={enregistrer}
+          disabled={enregistrement || modifies === 0 || controles.err.length > 0}
+          className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {enregistrement && <Loader2 size={15} className="animate-spin" />}
+          Enregistrer le barème
+        </button>
       </div>
 
-      <Card className="p-4">
-        <h2 className="text-sm font-medium text-foreground mb-3">
-          Aperçu de l&apos;échelle
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {tries.map((p) => (
-            <span
-              key={p.id}
-              className={`px-2.5 py-1 rounded text-xs font-medium border ${ratingBadgeClass(p.label)}`}
-            >
-              {p.label || "—"} · {p.minScore}–{p.maxScore}
-            </span>
-          ))}
-        </div>
-      </Card>
+      {aSupprimer !== null && (
+        <DeleteConfirmation
+          isOpen
+          onCancel={() => setASupprimer(null)}
+          onConfirm={() => supprimer(aSupprimer)}
+          title="Supprimer ce palier ?"
+          message={`Le palier « ${paliers[aSupprimer]?.label || "sans libellé"} » sera retiré du barème. Les scores qu'il couvrait seront rattachés au palier inférieur. Les notes déjà enregistrées ne changent pas.`}
+        />
+      )}
     </div>
   );
 }
