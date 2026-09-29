@@ -27,8 +27,18 @@ const EVALUATION_INCLUDE = {
   version: { select: { id: true, versionNumber: true, status: true } },
 } as const;
 
+/**
+ * Champs joints à la liste des évaluations.
+ *
+ * Elle ne portait que le nom du projet et celui de l'analyste : la liste ne pouvait
+ * donc afficher ni le client, ni le montant, ni l'avancement d'un brouillon —
+ * autant de repères pour décider par quel dossier commencer. Le décompte des réponses
+ * renseignées vient du même appel, sans requête supplémentaire par ligne.
+ */
 const LIST_INCLUDE = {
-  project: { select: { nom: true } },
+  project: {
+    select: { id: true, nom: true, montant: true, secteur: true, client: { select: { id: true, nom: true } } },
+  },
   analyst: { select: { nom: true, prenom: true } },
 } as const;
 
@@ -167,8 +177,48 @@ export class EvaluationService {
       prisma.scoringEvaluation.count({ where }),
     ]);
 
+    // Avancement de la saisie : nombre de réponses portant une valeur, rapporté au
+    // nombre de critères notés du modèle. Les réponses sont créées vides à l'ouverture
+    // de l'évaluation — les compter toutes donnerait 84 dès le premier instant.
+    // Une seule requête groupée pour toute la page, jamais une par ligne.
+    const ids = evaluations.map((e) => e.id);
+    const renseignees = ids.length
+      ? await prisma.scoringEvaluationAnswer.groupBy({
+          by: ["evaluationId"],
+          where: {
+            evaluationId: { in: ids },
+            OR: [
+              { valueString: { not: null } },
+              { valueNumber: { not: null } },
+              { valueBoolean: { not: null } },
+              { valueDate: { not: null } },
+            ],
+          },
+          _count: { _all: true },
+        })
+      : [];
+    const parEvaluation = new Map(
+      renseignees.map((r) => [r.evaluationId, r._count._all])
+    );
+
+    const totauxParVersion = new Map<string, number>();
+    for (const versionId of new Set(evaluations.map((e) => e.modelVersionId))) {
+      totauxParVersion.set(
+        versionId,
+        await prisma.scoringNode.count({
+          where: { versionId, isActive: true, isScored: true },
+        })
+      );
+    }
+
     return {
-      data: evaluations,
+      data: evaluations.map((e) => ({
+        ...e,
+        avancement: {
+          repondues: parEvaluation.get(e.id) ?? 0,
+          total: totauxParVersion.get(e.modelVersionId) ?? 0,
+        },
+      })),
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     };
   }
