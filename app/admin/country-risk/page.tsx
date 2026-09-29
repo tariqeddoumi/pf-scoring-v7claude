@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { apiGet, apiPut } from "@/lib/api-client";
+import { apiGet, apiPut, messageErreurApi } from "@/lib/api-client";
 
 interface Country {
   id: string;
@@ -27,6 +27,7 @@ export default function CountryRiskPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCountries();
@@ -60,15 +61,20 @@ export default function CountryRiskPage() {
       setSaving(true);
       const res = await apiPut(`/api/admin/countries/${countryId}`, { riskScore: newScore });
 
+      // Un refus passait inaperçu : la note restait affichée comme si elle avait
+      // été enregistrée.
       if (res.ok) {
         const updatedCountries = countries.map((c) =>
           c.id === countryId ? { ...c, riskScore: newScore } : c
         );
         setCountries(updatedCountries);
+        setErreur(null);
+      } else {
+        setErreur(await messageErreurApi(res, "Enregistrement refusé."));
       }
     } catch (error) {
       console.error("Erreur:", error);
-      alert("Erreur lors de la mise à jour");
+      setErreur("Erreur réseau lors de la mise à jour.");
     } finally {
       setSaving(false);
     }
@@ -81,10 +87,13 @@ export default function CountryRiskPage() {
 
       if (res.ok) {
         setConfig({ mode: newMode });
+        setErreur(null);
+      } else {
+        setErreur(await messageErreurApi(res, "Changement de mode refusé."));
       }
     } catch (error) {
       console.error("Erreur:", error);
-      alert("Erreur lors de la mise à jour");
+      setErreur("Erreur réseau lors du changement de mode.");
     } finally {
       setSaving(false);
     }
@@ -105,6 +114,12 @@ export default function CountryRiskPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-8">
+        {erreur && (
+          <p className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+            {erreur}
+          </p>
+        )}
+
         {/* Header */}
         <div className="mb-8 flex items-center gap-4">
           <Link
