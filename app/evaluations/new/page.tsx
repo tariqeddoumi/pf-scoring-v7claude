@@ -27,7 +27,6 @@ export default function NewEvaluationPage() {
 
   const [formData, setFormData] = useState({
     projectId: "",
-    recommendation: "APPROVE",
     notes: "",
     status: "brouillon",
   });
@@ -69,6 +68,7 @@ export default function NewEvaluationPage() {
       const res = await apiPost("/api/scoring/evaluations", {
         projectId: formData.projectId,
         modelVersionId: modelVersionId,
+        notes: formData.notes,
       });
       if (!res.ok) {
         const d = await res.json();
@@ -162,20 +162,10 @@ export default function NewEvaluationPage() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-secondary-foreground mb-2">
-                Recommandation initiale
-              </label>
-              <select
-                value={formData.recommendation}
-                onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
-                className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground focus:border-ring focus:outline-none transition-colors"
-              >
-                <option value="APPROVE">Approuver</option>
-                <option value="REJECT">Rejeter</option>
-                <option value="PENDING">En attente</option>
-              </select>
-            </div>
+            {/* « Recommandation initiale » a été retirée : présélectionnée sur
+                « Approuver » avant toute analyse, elle induisait la décision, et la
+                recommandation est de toute façon produite par le moteur à partir des
+                réponses. Elle n'était d'ailleurs jamais envoyée. */}
 
             <div>
               <label className="block text-sm font-semibold text-secondary-foreground mb-2">
