@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
+import { withAdminAuth, withMinimumRole } from '@/lib/auth-middleware';
 import { successResponse, serverError, forbiddenError } from '@/lib/api-response';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+/**
+ * La lecture des circuits était réservée aux administrateurs du modèle : un analyste
+ * recevait 403 et l'écran affichait « Erreur lors du chargement des workflows », alors
+ * que c'est lui qui soumet les dossiers et attend leur passage en comité. La lecture
+ * est ouverte à partir du rôle d'analyste ; les décisions restent réservées.
+ */
 export async function GET(request: NextRequest) {
-  return withAdminAuth(request, async () => {
+  return withMinimumRole('risk_analyst', request, async () => {
     try {
       const { searchParams } = new URL(request.url);
       const status = searchParams.get('status');

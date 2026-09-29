@@ -1,254 +1,334 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Search, Filter, ChevronRight, AlertCircle } from 'lucide-react';
-import { apiGet } from '@/lib/api-client';
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { GitBranch, Loader2, Search, X } from "lucide-react";
+import { apiGet } from "@/lib/api-client";
+import { formatMADCompact, formatDate } from "@/lib/utils";
+import { scoreTextClass } from "@/lib/score-colors";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Note } from "@/components/ui/status-badge";
 
 interface Workflow {
   id: string;
   evaluationId: string;
   status: string;
   currentStep: number;
-  evaluation?: {
-    project?: { nom: string };
-    analyst?: { prenom: string; nom: string };
-    finalScore?: number;
-  };
-  steps?: Array<{ stepNumber: number; status: string }>;
-  approvals?: Array<{ status: string }>;
   createdAt: string;
+  updatedAt?: string;
+  submittedAt?: string | null;
+  evaluation?: {
+    id?: string;
+    finalScore?: number | null;
+    rating?: string | null;
+    project?: { id?: string; nom?: string; montant?: number | null } | null;
+    analyst?: { prenom?: string | null; nom?: string | null } | null;
+  } | null;
+  steps?: { stepNumber: number; stepName?: string; status: string }[];
+  approvals?: { status: string }[];
 }
 
-const statusColor = {
-  DRAFT: 'bg-muted text-foreground',
-  SUBMITTED: 'bg-primary/10 text-blue-800',
-  UNDER_REVIEW: 'bg-warning/10 text-warning',
-  REVIEWED: 'bg-purple-100 text-purple-800',
-  APPROVED: 'bg-success/10 text-success',
-  REJECTED: 'bg-destructive/10 text-destructive'
+/**
+ * Étapes du circuit, dans l'ordre. L'écran affichait « Étape actuelle : 0 » — un
+ * nombre nu, sans nom ni total — et deux brouillons s'y lisaient « 0 » alors que leur
+ * première étape était en cours.
+ */
+const ETAPES = [
+  { cle: "DRAFT", libelle: "Saisie" },
+  { cle: "SUBMITTED", libelle: "Revue risques" },
+  { cle: "UNDER_REVIEW", libelle: "Revue risques" },
+  { cle: "REVIEWED", libelle: "Comité" },
+  { cle: "APPROVED", libelle: "Décision" },
+  { cle: "REJECTED", libelle: "Décision" },
+];
+
+const STATUTS: Record<string, { libelle: string; ton: string }> = {
+  DRAFT: { libelle: "Saisie", ton: "bg-muted text-muted-foreground" },
+  SUBMITTED: { libelle: "Soumis", ton: "bg-warning-subtle text-warning" },
+  UNDER_REVIEW: { libelle: "En revue", ton: "bg-warning-subtle text-warning" },
+  REVIEWED: { libelle: "Revu", ton: "bg-accent text-accent-foreground" },
+  APPROVED: { libelle: "Approuvé", ton: "bg-success-subtle text-success" },
+  REJECTED: { libelle: "Rejeté", ton: "bg-destructive-subtle text-destructive" },
 };
 
+const ORDRE_ETAPES = ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "REVIEWED"];
+
+/** Position du circuit dans la file, pour la frise. */
+function position(w: Workflow): number {
+  const i = ORDRE_ETAPES.indexOf(w.status);
+  if (i >= 0) return i + 1;
+  return ORDRE_ETAPES.length + 1;
+}
+
+/**
+ * Circuits de validation.
+ *
+ * L'écran était illisible dans le thème sombre — bandeau, tuiles et cartes en
+ * `bg-white` codé en dur sous un texte presque blanc —, inaccessible aux analystes
+ * (la route exigeait le rôle d'administrateur du modèle) et orphelin : aucune entrée
+ * de menu, aucun lien depuis une autre page n'y menait. Les tuiles annonçaient
+ * « Total 6 » plutôt que ce qu'il y a à faire.
+ */
 export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
-  const [filteredWorkflows, setFilteredWorkflows] = useState<Workflow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [recherche, setRecherche] = useState("");
+  const [etape, setEtape] = useState<string>("");
 
   useEffect(() => {
-    fetchWorkflows();
+    (async () => {
+      try {
+        const res = await apiGet("/api/admin/scoring/workflows?limit=100");
+        if (!res.ok) {
+          throw new Error(
+            res.status === 403
+              ? "Vos droits ne permettent pas de consulter les circuits de validation."
+              : "Chargement des circuits impossible."
+          );
+        }
+        const corps = await res.json();
+        setWorkflows(corps.data ?? []);
+        setErreur(null);
+      } catch (e) {
+        setErreur(e instanceof Error ? e.message : "Chargement impossible.");
+      } finally {
+        setChargement(false);
+      }
+    })();
   }, []);
 
-  useEffect(() => {
-    filterWorkflows();
-  }, [workflows, searchQuery, statusFilter]);
-
-  const fetchWorkflows = async () => {
-    setIsLoading(true);
-    try {
-      const response = await apiGet('/api/admin/scoring/workflows?limit=100');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch workflows');
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        setWorkflows(data.data);
-      } else {
-        setError(data.error || 'Failed to fetch workflows');
-      }
-    } catch (err) {
-      console.error('Error fetching workflows:', err);
-      setError('Erreur lors du chargement des workflows');
-    } finally {
-      setIsLoading(false);
+  const compteurs = useMemo(() => {
+    const c = { aInstruire: 0, enComite: 0, clos: 0 };
+    for (const w of workflows) {
+      if (w.status === "SUBMITTED" || w.status === "UNDER_REVIEW") c.aInstruire += 1;
+      else if (w.status === "REVIEWED") c.enComite += 1;
+      else if (w.status === "APPROVED" || w.status === "REJECTED") c.clos += 1;
     }
-  };
+    return c;
+  }, [workflows]);
 
-  const filterWorkflows = () => {
-    let filtered = workflows;
+  const filtres = useMemo(() => {
+    const q = recherche.trim().toLowerCase();
+    return workflows
+      .filter((w) => {
+        const texte = `${w.evaluation?.project?.nom ?? ""} ${
+          w.evaluation?.analyst
+            ? `${w.evaluation.analyst.prenom ?? ""} ${w.evaluation.analyst.nom ?? ""}`
+            : ""
+        }`.toLowerCase();
+        return (!q || texte.includes(q)) && (!etape || w.status === etape);
+      })
+      .sort((a, b) => position(a) - position(b));
+  }, [workflows, recherche, etape]);
 
-    if (statusFilter) {
-      filtered = filtered.filter(w => w.status === statusFilter);
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(w =>
-        w.evaluation?.project?.nom?.toLowerCase().includes(query) ||
-        w.evaluation?.analyst?.nom?.toLowerCase().includes(query) ||
-        w.id.toLowerCase().includes(query)
-      );
-    }
-
-    setFilteredWorkflows(filtered);
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      DRAFT: 'Brouillon',
-      SUBMITTED: 'Soumis',
-      UNDER_REVIEW: 'En revue',
-      REVIEWED: 'Examiné',
-      APPROVED: 'Approuvé',
-      REJECTED: 'Rejeté'
-    };
-    return labels[status] || status;
-  };
-
-  const pendingApprovals = workflows.filter(w =>
-    w.approvals?.some(a => a.status === 'PENDING')
-  ).length;
+  if (chargement) {
+    return (
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-muted">
-      {/* Header */}
-      <div className="bg-white border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-3xl font-bold text-foreground">Workflows de Scoring</h1>
-          <p className="text-secondary-foreground mt-2">Gestion des évaluations en cours et approuvées</p>
+    <div>
+      <PageHeader
+        titre="Circuits de validation"
+        description="De la saisie de l'analyste à la décision du comité."
+      />
+
+      {erreur && (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          {erreur}
         </div>
+      )}
+
+      <div className="mb-4 grid grid-cols-3 gap-3">
+        <Tuile
+          libelle="À instruire"
+          valeur={compteurs.aInstruire}
+          actif={etape === "SUBMITTED"}
+          onClick={() => setEtape(etape === "SUBMITTED" ? "" : "SUBMITTED")}
+        />
+        <Tuile
+          libelle="En attente de comité"
+          valeur={compteurs.enComite}
+          actif={etape === "REVIEWED"}
+          onClick={() => setEtape(etape === "REVIEWED" ? "" : "REVIEWED")}
+        />
+        <Tuile libelle="Clos" valeur={compteurs.clos} />
       </div>
 
-      {/* Stats */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-border">
-            <p className="text-sm font-medium text-secondary-foreground">Total</p>
-            <p className="text-3xl font-bold text-foreground">{workflows.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-border">
-            <p className="text-sm font-medium text-secondary-foreground">En revue</p>
-            <p className="text-3xl font-bold text-warning">
-              {workflows.filter(w => w.status === 'UNDER_REVIEW').length}
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-border">
-            <p className="text-sm font-medium text-secondary-foreground">En attente d'approbation</p>
-            <p className="text-3xl font-bold text-primary">{pendingApprovals}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-border">
-            <p className="text-sm font-medium text-secondary-foreground">Approuvées</p>
-            <p className="text-3xl font-bold text-success">
-              {workflows.filter(w => w.status === 'APPROVED').length}
-            </p>
-          </div>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[260px] flex-1">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            type="text"
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Rechercher un dossier, un analyste…"
+            aria-label="Rechercher"
+            className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+          />
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Rechercher un projet ou analyste..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer"
-            >
-              <option value="">Tous les statuts</option>
-              <option value="DRAFT">Brouillon</option>
-              <option value="SUBMITTED">Soumis</option>
-              <option value="UNDER_REVIEW">En revue</option>
-              <option value="REVIEWED">Examiné</option>
-              <option value="APPROVED">Approuvé</option>
-              <option value="REJECTED">Rejeté</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="inline-block">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-            <p className="text-secondary-foreground mt-4">Chargement des workflows...</p>
-          </div>
-        ) : error ? (
-          <div className="bg-destructive/10 border border-red-200 rounded-lg p-6 flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-destructive flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-medium text-red-900">Erreur</h3>
-              <p className="text-destructive text-sm">{error}</p>
-            </div>
-          </div>
-        ) : filteredWorkflows.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-border">
-            <p className="text-muted-foreground">Aucun workflow trouvé</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredWorkflows.map((workflow) => (
-              <Link
-                key={workflow.id}
-                href={`/workflows/${workflow.id}`}
-                className="group block bg-white border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-                        {workflow.evaluation?.project?.nom || 'Projet sans nom'}
-                      </h3>
-                      <span className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap ${
-                        statusColor[workflow.status as keyof typeof statusColor]
-                      }`}>
-                        {getStatusLabel(workflow.status)}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <p className="text-secondary-foreground">Analyste</p>
-                        <p className="font-medium text-foreground">
-                          {workflow.evaluation?.analyst?.prenom} {workflow.evaluation?.analyst?.nom}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-secondary-foreground">Étape actuelle</p>
-                        <p className="font-medium text-foreground">{workflow.currentStep}</p>
-                      </div>
-                      <div>
-                        <p className="text-secondary-foreground">Score</p>
-                        <p className="font-medium text-foreground">
-                          {workflow.evaluation?.finalScore?.toFixed(1) || '-'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-secondary-foreground">Créée le</p>
-                        <p className="font-medium text-foreground">
-                          {new Date(workflow.createdAt).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                </div>
-              </Link>
-            ))}
-          </div>
+        {etape && (
+          <button
+            onClick={() => setEtape("")}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X size={14} />
+            Toutes les étapes
+          </button>
         )}
       </div>
+
+      {filtres.length === 0 ? (
+        <SectionCard sansPadding>
+          <EmptyState
+            icone={<GitBranch size={28} />}
+            titre={
+              workflows.length === 0 ? "Aucun circuit" : "Aucun circuit ne correspond"
+            }
+            description={
+              workflows.length === 0
+                ? "Un circuit s'ouvre lorsqu'une évaluation est soumise à validation."
+                : "Modifiez la recherche ou retirez le filtre d'étape."
+            }
+          />
+        </SectionCard>
+      ) : (
+        <SectionCard sansPadding>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                {[
+                  { t: "Dossier", a: "left" },
+                  { t: "Montant", a: "right" },
+                  { t: "Note", a: "left" },
+                  { t: "Étape", a: "left" },
+                  { t: "Analyste", a: "left" },
+                  { t: "Depuis", a: "left" },
+                ].map((c, i) => (
+                  <th
+                    key={i}
+                    className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${
+                      c.a === "right" ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {c.t}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtres.map((w) => {
+                const statut = STATUTS[w.status] ?? {
+                  libelle: w.status,
+                  ton: "bg-muted text-muted-foreground",
+                };
+                const total = ORDRE_ETAPES.length;
+                return (
+                  <tr
+                    key={w.id}
+                    className="border-b border-border last:border-b-0 hover:bg-surface"
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/workflows/${w.id}`}
+                        className="font-medium text-foreground hover:underline"
+                      >
+                        {w.evaluation?.project?.nom ?? "Dossier sans nom"}
+                      </Link>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right tabulaire">
+                      {w.evaluation?.project?.montant != null
+                        ? formatMADCompact(w.evaluation.project.montant)
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {w.evaluation?.rating ? (
+                        <Note
+                          note={w.evaluation.rating}
+                          score={w.evaluation.finalScore}
+                        />
+                      ) : w.evaluation?.finalScore != null ? (
+                        <span
+                          className={`tabulaire text-[12.5px] font-semibold ${scoreTextClass(w.evaluation.finalScore)}`}
+                        >
+                          {w.evaluation.finalScore.toFixed(1).replace(".", ",")}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    {/* L'étape est nommée et située dans le circuit : elle s'affichait
+                        sous la forme d'un nombre nu. */}
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${statut.ton}`}
+                      >
+                        {statut.libelle}
+                      </span>
+                      <span className="mt-0.5 block text-[11.5px] text-muted-foreground">
+                        étape {Math.min(position(w), total)} sur {total} —{" "}
+                        {ETAPES.find((e) => e.cle === w.status)?.libelle ?? "—"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[12.5px] text-muted-foreground">
+                      {w.evaluation?.analyst
+                        ? `${w.evaluation.analyst.prenom ?? ""} ${w.evaluation.analyst.nom ?? ""}`.trim()
+                        : "—"}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-[12.5px] text-muted-foreground">
+                      {formatDate(w.submittedAt ?? w.updatedAt ?? w.createdAt)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </SectionCard>
+      )}
     </div>
+  );
+}
+
+function Tuile({
+  libelle,
+  valeur,
+  actif,
+  onClick,
+}: {
+  libelle: string;
+  valeur: number;
+  actif?: boolean;
+  onClick?: () => void;
+}) {
+  const contenu = (
+    <>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {libelle}
+      </p>
+      <p className="mt-1 text-[19px] font-semibold text-foreground tabulaire">{valeur}</p>
+    </>
+  );
+  if (!onClick) {
+    return <div className="rounded-lg border border-border bg-card px-4 py-3">{contenu}</div>;
+  }
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={actif}
+      className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+        actif ? "border-primary bg-accent" : "border-border bg-card hover:bg-surface"
+      }`}
+    >
+      {contenu}
+    </button>
   );
 }

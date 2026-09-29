@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
+import { withAdminAuth, withMinimumRole } from '@/lib/auth-middleware';
 import { successResponse, serverError, notFoundError } from '@/lib/api-response';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Même ouverture en lecture que la liste : instruire un dossier suppose de le lire.
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  return withAdminAuth(request, async () => {
+  return withMinimumRole('risk_analyst', request, async () => {
     try {
       const { id } = await params;
 
@@ -41,7 +42,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               }
             }
           },
+          // Seules les racines : les réponses sont déjà incluses sous leur parent,
+          // et les renvoyer aussi au premier niveau les affichait en double.
           comments: {
+            where: { parentCommentId: null },
             include: {
               createdByUser: {
                 select: { id: true, email: true, nom: true, prenom: true }

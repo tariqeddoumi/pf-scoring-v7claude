@@ -9,6 +9,7 @@ import {
   BookOpen,
   Briefcase,
   CheckCircle,
+  GitBranch,
   GitCompare,
   LineChart,
   ScrollText,
@@ -46,6 +47,9 @@ const GROUPES: { titre: string; entrees: Entree[] }[] = [
       { icone: Users, libelle: "Clients", href: "/clients" },
       { icone: Briefcase, libelle: "Projets", href: "/projects" },
       { icone: CheckCircle, libelle: "Évaluations", href: "/evaluations", compteur: "aTraiter" },
+      // L'écran des circuits de validation n'était relié à rien : aucune entrée de
+      // menu, aucun lien depuis une autre page.
+      { icone: GitBranch, libelle: "Validations", href: "/workflows" },
     ],
   },
   {
