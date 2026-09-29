@@ -1,537 +1,170 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import {
-  ArrowLeft,
-  Loader2,
-  FileText,
-  MapPin,
-  DollarSign,
-  Zap,
-  Users,
-  BarChart3,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { apiGet, apiPut } from "@/lib/api-client";
-import { formatDateInput } from "@/lib/utils";
-import { Project } from "@/lib/types/models";
-import { Tabs } from "@/components/ui/Tabs";
-import { DynamicEntityForm } from "@/components/form/DynamicEntityForm";
+import { formatDateTime } from "@/lib/utils";
+import { PageHeader } from "@/components/ui/page-header";
+import { Note, StatutProjet } from "@/components/ui/status-badge";
+import {
+  ProjectForm,
+  versValeursProjet,
+  versPayloadProjet,
+  type ValeursProjet,
+} from "@/components/project/ProjectForm";
 
-export default function EditProjectPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+interface Projet {
+  id: string;
+  nom: string;
+  status: string;
+  grade?: string | null;
+  scoreGlobal?: number | null;
+  dateMiseAJour?: string | null;
+  user?: { nom?: string | null; prenom?: string | null } | null;
+}
+
+/**
+ * Modification d'un dossier projet.
+ *
+ * Le formulaire renvoyait l'intégralité de l'objet chargé : la note et le score
+ * calculés entre-temps par une évaluation étaient réécrits avec les valeurs d'avant,
+ * et le statut pouvait passer à « Approuvé » hors de tout comité. Les dates, reçues
+ * au format ISO, s'affichaient vides : on les croyait absentes. Si le chargement
+ * échouait, le formulaire restait affiché et pouvait être enregistré à vide.
+ */
+export default function ModifierProjetPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [useDynamicForms, setUseDynamicForms] = useState(false);
-  // Sector value-list (V9 reference). Empty → graceful fallback to free text.
-  const [sectorOptions, setSectorOptions] = useState<{ code: string; label: string }[]>([]);
+  const params = useParams();
+  const id = String(params?.id ?? "");
+  const [valeurs, setValeurs] = useState<ValeursProjet | null>(null);
+  const [projet, setProjet] = useState<Projet | null>(null);
+  const [chargement, setChargement] = useState(true);
+  const [erreurChargement, setErreurChargement] = useState<string | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [enCours, setEnCours] = useState(false);
 
-  useEffect(() => {
-    apiGet("/api/reference/sectors")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (json?.data?.length) setSectorOptions(json.data);
-      })
-      .catch(() => {
-        /* fallback to free-text input */
-      });
-  }, []);
-
-  useEffect(() => {
-    apiGet("/api/config/public")
-      .then((res) => (res.ok ? res.json() : {}))
-      .then((config: Record<string, any>) => {
-        setUseDynamicForms(config?.SCREENS_DYNAMIC_FORMS_ENABLED === "true" || config?.SCREENS_DYNAMIC_FORMS_ENABLED === "1");
-      })
-      .catch(() => {
-        /* fallback to hardcoded forms */
-      });
-  }, []);
-
-    const [formData, setFormData] = useState<any>({
-    // Identification
-    nom: "",
-    description: "",
-    secteur: "",
-    status: "brouillon",
-    countryCode: "",
-    // Localisation
-    pays: "",
-    // Finances
-    montant: "",
-    devise: "MAD",
-    coutTotal: "",
-    financement: "",
-    apportPropre: "",
-    taux: "",
-    dureeCredit: "",
-    typeCredit: "",
-    tauxCouverture: "",
-    ratio: "",
-    // Technique
-    sponsorPrincipal: "",
-    nomSPV: "",
-    constructeurEPC: "",
-    operateurOM: "",
-    technologie: "",
-    capaciteInstallee: "",
-    dureeProjet: "",
-    periodeAmorce: "",
-    periodeRemboursement: "",
-    // Dates
-    debutConstruction: "",
-    finConstruction: "",
-    // Structure
-    structureCapitalePrincipale: "",
-    // Evaluation
-    scoreGlobal: "",
-    grade: "",
-  });
-
-  // Fetch project data on mount
-  useEffect(() => {
-    const resolveAndFetch = async () => {
-      try {
-        const { id } = await params;
-        setProjectId(id);
-        const response = await apiGet(`/api/projects/${id}`);
-        if (!response.ok) throw new Error("Failed to fetch project");
-        const data = await response.json();
-        const project = data.data || data;
-        // Les dates arrivent en ISO complet (« 2026-01-15T00:00:00.000Z »), que
-        // <input type="date"> refuse : les champs s'affichaient vides et un
-        // enregistrement effaçait les dates existantes.
-        setFormData({
-          ...project,
-          debutConstruction: formatDateInput(project.debutConstruction),
-          finConstruction: formatDateInput(project.finConstruction),
-        });
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || "Failed to load project");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    resolveAndFetch();
-  }, [params]);
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear field error when user starts typing
-    if (fieldErrors[name]) {
-      setFieldErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    setFieldErrors({});
-
+  const charger = async () => {
+    setChargement(true);
+    setErreurChargement(null);
     try {
-      if (!projectId) throw new Error("Project ID not found");
-
-      // Le formulaire envoyait l'objet projet entier, scoreGlobal, grade et status
-      // compris : un score recalculé entre-temps par une évaluation était écrasé par
-      // la valeur chargée à l'ouverture de l'écran. Le statut, lui, relève du
-      // workflow d'évaluation et de comité, pas de la fiche.
-      const { scoreGlobal, grade, status, client, user, evaluations, scorings,
-              dateCreation, dateMiseAJour, creePar, id: _id, ...champsModifiables } = formData;
-      const response = await apiPut(`/api/projects/${projectId}`, champsModifiables);
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors && Array.isArray(data.errors)) {
-          const errors: Record<string, string> = {};
-          data.errors.forEach((err: any) => {
-            errors[err.field] = err.message;
-          });
-          setFieldErrors(errors);
-        }
-        throw new Error(data.error || "Failed to update project");
-      }
-
-      // Success - redirect to detail page
-      router.push(`/projects/${projectId}`);
-    } catch (err: any) {
-      setError(err.message || "Failed to update project");
+      const res = await apiGet(`/api/projects/${id}`);
+      if (!res.ok) throw new Error("Ce projet n'a pas pu être chargé.");
+      const corps = await res.json();
+      // La route renvoie le projet à plat ; d'autres routes l'enveloppent dans data.
+      const p = corps.data ?? corps;
+      setProjet(p);
+      setValeurs(versValeursProjet(p));
+    } catch (e) {
+      setErreurChargement(e instanceof Error ? e.message : "Chargement impossible.");
+      setValeurs(null);
     } finally {
-      setSubmitting(false);
+      setChargement(false);
     }
   };
 
-  if (loading) {
+  useEffect(() => {
+    if (id) charger();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const enregistrer = async (
+    _valeurs: ValeursProjet,
+    modifies: Partial<ValeursProjet>
+  ) => {
+    setEnCours(true);
+    setErreur(null);
+    try {
+      // Seuls les champs modifiés partent, et jamais le score, la note ni le statut :
+      // ils appartiennent à l'évaluation et au workflow, pas à la saisie.
+      const res = await apiPut(`/api/projects/${id}`, versPayloadProjet(modifies));
+      const corps = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          res.status === 403
+            ? "Vous n'êtes pas autorisé à modifier ce projet."
+            : corps.error || "Enregistrement impossible."
+        );
+      }
+      router.push(`/projects/${id}`);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Enregistrement impossible.");
+      setEnCours(false);
+    }
+  };
+
+  if (chargement) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-primary" size={40} />
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
-  const tabs = [
-    {
-      id: "identification",
-      label: "Identification",
-      icon: <FileText size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Nom du projet</label>
-              <input type="text" name="nom" value={formData.nom} onChange={handleChange}
-                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.nom ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
-              />
-              {fieldErrors.nom && <p className="text-destructive text-sm mt-1">{fieldErrors.nom}</p>}
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Description</label>
-              <textarea name="description" value={formData.description} onChange={handleChange} rows={3}
-                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.description ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
-              />
-              {fieldErrors.description && <p className="text-destructive text-sm mt-1">{fieldErrors.description}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Secteur</label>
-              {sectorOptions.length > 0 ? (
-                <select name="secteur" value={formData.secteur || ""} onChange={handleChange}
-                  className={`w-full px-4 py-2 bg-muted border ${fieldErrors.secteur ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
-                >
-                  <option value="">— Sélectionner un secteur —</option>
-                  {/* Preserve a legacy free-text value not present in the list */}
-                  {formData.secteur && !sectorOptions.some((s) => s.code === formData.secteur) && (
-                    <option value={formData.secteur}>{formData.secteur} (existant)</option>
-                  )}
-                  {sectorOptions.map((s) => (
-                    <option key={s.code} value={s.code}>{s.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <input type="text" name="secteur" value={formData.secteur} onChange={handleChange}
-                  className={`w-full px-4 py-2 bg-muted border ${fieldErrors.secteur ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
-                />
-              )}
-              {fieldErrors.secteur && <p className="text-destructive text-sm mt-1">{fieldErrors.secteur}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Statut</label>
-              <select name="status" value={formData.status} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring">
-                <option value="brouillon">Brouillon</option>
-                <option value="en_cours">En cours</option>
-                <option value="en_revue">En revue</option>
-                <option value="approuve">Approuvé</option>
-                <option value="rejete">Rejeté</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Code pays</label>
-              <input type="text" name="countryCode" value={formData.countryCode || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring" placeholder="MA, FR, etc."
-              />
-            </div>
-          </div>
+  if (erreurChargement || !valeurs || !projet) {
+    return (
+      <div>
+        <PageHeader titre="Modifier le projet" retour={{ href: "/projects", libelle: "Projets" }} />
+        <div className="rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          {erreurChargement}
         </div>
-      ),
-    },
-    {
-      id: "localisation",
-      label: "Localisation",
-      icon: <MapPin size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Pays</label>
-              <input type="text" name="pays" value={formData.pays || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "finances",
-      label: "Finances",
-      icon: <DollarSign size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Montant (MAD)</label>
-              <input type="number" name="montant" value={formData.montant} onChange={handleChange}
-                className={`w-full px-4 py-2 bg-muted border ${fieldErrors.montant ? "border-destructive" : "border-input"} rounded-lg text-foreground focus:outline-none focus:border-ring`}
-                step="0.01"
-              />
-              {fieldErrors.montant && <p className="text-destructive text-sm mt-1">{fieldErrors.montant}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Devise</label>
-              <input type="text" name="devise" value={formData.devise} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Coût total (MAD)</label>
-              <input type="number" name="coutTotal" value={formData.coutTotal || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Financement (MAD)</label>
-              <input type="number" name="financement" value={formData.financement || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Apport propre (MAD)</label>
-              <input type="number" name="apportPropre" value={formData.apportPropre || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Taux (%)</label>
-              <input type="number" name="taux" value={formData.taux || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Type de crédit</label>
-              <input type="text" name="typeCredit" value={formData.typeCredit || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Durée du crédit (ans)</label>
-              <input type="number" name="dureeCredit" value={formData.dureeCredit || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Taux de couverture (%)</label>
-              <input type="number" name="tauxCouverture" value={formData.tauxCouverture || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Ratio</label>
-              <input type="number" name="ratio" value={formData.ratio || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                step="0.01"
-              />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "technique",
-      label: "Technique",
-      icon: <Zap size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Sponsor principal</label>
-              <input type="text" name="sponsorPrincipal" value={formData.sponsorPrincipal || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Nom du SPV</label>
-              <input type="text" name="nomSPV" value={formData.nomSPV || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Constructeur EPC</label>
-              <input type="text" name="constructeurEPC" value={formData.constructeurEPC || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Opérateur O&M</label>
-              <input type="text" name="operateurOM" value={formData.operateurOM || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Technologie</label>
-              <input type="text" name="technologie" value={formData.technologie || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Capacité installée (MW)</label>
-              <input type="number" name="capaciteInstallee" value={formData.capaciteInstallee || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                step="0.1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Durée du projet (ans)</label>
-              <input type="number" name="dureeProjet" value={formData.dureeProjet || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Période d&apos;amorce (ans)</label>
-              <input type="number" name="periodeAmorce" value={formData.periodeAmorce || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Période de remboursement (ans)</label>
-              <input type="number" name="periodeRemboursement" value={formData.periodeRemboursement || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "dates",
-      label: "Calendrier",
-      icon: <FileText size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Début de construction</label>
-              <input type="date" name="debutConstruction" value={formData.debutConstruction || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Fin de construction</label>
-              <input type="date" name="finConstruction" value={formData.finConstruction || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "structure",
-      label: "Structure Capital",
-      icon: <Users size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Structure capitaleprincipale</label>
-              <textarea name="structureCapitalePrincipale" value={formData.structureCapitalePrincipale || ""} onChange={handleChange} rows={3}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-              />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "evaluation",
-      label: "Évaluation",
-      icon: <BarChart3 size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Score global</label>
-              <input type="number" name="scoreGlobal" value={formData.scoreGlobal || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Grade</label>
-              <input type="text" name="grade" value={formData.grade || ""} onChange={handleChange}
-                className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground focus:outline-none focus:border-ring"
-                disabled
-              />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Modifier le projet</h1>
-          <p className="text-muted-foreground mt-1">Mettez à jour les informations du projet</p>
-        </div>
-        <Link href={`/projects/${projectId}`} className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft size={20} />
-          <span>Retour</span>
-        </Link>
-      </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-card rounded-lg border border-border p-6">
-        {useDynamicForms ? (
-          <DynamicEntityForm
-            entity="project"
-            formData={formData}
-            fieldErrors={fieldErrors}
-            onChange={handleChange}
-            fallback={<Tabs tabs={tabs} defaultTab="identification" />}
-          />
-        ) : (
-          <Tabs tabs={tabs} defaultTab="identification" />
-        )}
-
-        {/* Form Actions */}
-        <div className="flex gap-3 mt-8 pt-6 border-t border-border">
-          <button type="submit" disabled={submitting}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 disabled:bg-secondary text-white font-semibold rounded-lg transition-colors">
-            {submitting ? (<><Loader2 size={18} className="animate-spin" /><span>Mise à jour...</span></>) : <span>Enregistrer les modifications</span>}
+        <div className="mt-4 flex gap-3">
+          <button
+            onClick={charger}
+            className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Réessayer
           </button>
-          <Link href={`/projects/${projectId}`} className="inline-flex items-center gap-2 px-6 py-2 bg-muted hover:bg-secondary text-foreground font-semibold rounded-lg transition-colors">
-            Annuler
+          <Link
+            href={`/projects/${id}`}
+            className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Retour au projet
           </Link>
         </div>
-      </form>
+      </div>
+    );
+  }
+
+  const evalue = projet.status !== "brouillon" && projet.scoreGlobal != null;
+
+  return (
+    <div>
+      <PageHeader
+        titre={`Modifier — ${projet.nom}`}
+        description={
+          projet.dateMiseAJour
+            ? `Dernière modification le ${formatDateTime(projet.dateMiseAJour)}${
+                projet.user ? ` par ${projet.user.prenom} ${projet.user.nom}` : ""
+              }`
+            : undefined
+        }
+        retour={{ href: `/projects/${id}`, libelle: "Fiche projet" }}
+        meta={
+          <div className="flex flex-wrap items-center gap-2">
+            <StatutProjet statut={projet.status} />
+            <Note note={projet.grade} score={projet.scoreGlobal} />
+          </div>
+        }
+      />
+
+      <ProjectForm
+        valeursInitiales={valeurs}
+        libelleAction="Enregistrer"
+        enCours={enCours}
+        onSubmit={enregistrer}
+        hrefAnnuler={`/projects/${id}`}
+        erreurGlobale={erreur}
+        rappel={
+          evalue ? (
+            <div className="mb-4 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+              Ce dossier porte déjà une note. Modifier le montant, la structure de
+              financement ou le calendrier peut exiger une réévaluation.
+            </div>
+          ) : null
+        }
+      />
     </div>
   );
 }

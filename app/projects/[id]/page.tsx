@@ -249,7 +249,15 @@ export default function ProjectDetailPage() {
                 libelle="Taux"
                 valeur={projet.taux !== undefined ? `${String(projet.taux).replace(".", ",")} %` : undefined}
               />
-              <Champ libelle="Taux de couverture" valeur={projet.tauxCouverture} />
+              {/* Le DSCR est un multiple de l'échéance, pas un pourcentage. */}
+              <Champ
+                libelle="DSCR"
+                valeur={
+                  projet.tauxCouverture !== undefined && projet.tauxCouverture !== null
+                    ? `${projet.tauxCouverture.toFixed(2).replace(".", ",")}x`
+                    : undefined
+                }
+              />
               <Champ libelle="Structure du capital" valeur={projet.structureCapitalePrincipale} large />
             </Grille>
           </SectionCard>

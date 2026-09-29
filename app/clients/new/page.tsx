@@ -58,6 +58,7 @@ export default function NouveauClientPage() {
         onSubmit={creer}
         hrefAnnuler="/clients"
         erreurGlobale={erreur}
+        creation
       />
     </div>
   );

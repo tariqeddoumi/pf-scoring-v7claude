@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Loader2, Save } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import { createClientSchema } from "@/lib/validation-schemas";
-import { formatMADCompact } from "@/lib/utils";
 import { REFERENTIELS_CLIENT, type OptionReferentiel } from "@/lib/referentiels";
 import { SectionCard } from "@/components/ui/section-card";
+import {
+  BarreActions,
+  Champ,
+  ChampMontant,
+  Selecteur,
+  SelecteurLibre,
+} from "@/components/ui/form-fields";
 
 /**
  * Formulaire de signalétique client, partagé par la création et la modification.
@@ -138,6 +144,7 @@ export function ClientForm({
   onSubmit,
   hrefAnnuler,
   erreurGlobale,
+  creation,
   clientId,
 }: {
   valeursInitiales: ValeursClient;
@@ -147,6 +154,8 @@ export function ClientForm({
   onSubmit: (valeurs: ValeursClient, modifies: Partial<ValeursClient>) => void;
   hrefAnnuler: string;
   erreurGlobale?: string | null;
+  /** En création, le bouton reste actif : il n'y a pas de valeur de départ à modifier. */
+  creation?: boolean;
   /** En modification : pour exclure la fiche courante de la détection de doublon. */
   clientId?: string;
 }) {
@@ -529,238 +538,13 @@ export function ClientForm({
         </SectionCard>
       </div>
 
-      {/* Barre d'actions suivant le défilement : la saisie fait quatre écrans de haut,
-          et le bouton d'enregistrement était au fond du dernier onglet. */}
-      <div className="sticky bottom-0 z-10 -mx-1 mt-4 flex flex-wrap items-center justify-end gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur">
-        {nbModifies > 0 && (
-          <span className="mr-auto text-[12.5px] text-muted-foreground">
-            {nbModifies} champ{nbModifies > 1 ? "s" : ""} modifié
-            {nbModifies > 1 ? "s" : ""}
-          </span>
-        )}
-        <Link
-          href={hrefAnnuler}
-          className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-        >
-          Annuler
-        </Link>
-        <button
-          type="submit"
-          disabled={enCours || nbModifies === 0}
-          title={nbModifies === 0 ? "Aucune modification à enregistrer" : undefined}
-          className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {enCours ? (
-            <Loader2 size={15} className="animate-spin" />
-          ) : (
-            <Save size={15} />
-          )}
-          {libelleAction}
-        </button>
-      </div>
+      <BarreActions
+        libelleAction={libelleAction}
+        enCours={enCours}
+        nbModifies={nbModifies}
+        hrefAnnuler={hrefAnnuler}
+        desactiveSiInchange={!creation}
+      />
     </form>
-  );
-}
-
-/* ── Éléments de formulaire ────────────────────────────────────────────────── */
-
-const CLASSE_CHAMP =
-  "w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none";
-
-function Etiquette({
-  cle,
-  libelle,
-  obligatoire,
-}: {
-  cle: string;
-  libelle: string;
-  obligatoire?: boolean;
-}) {
-  return (
-    <label
-      htmlFor={`champ-${cle}`}
-      className="mb-1 block text-[12.5px] font-medium text-foreground"
-    >
-      {libelle}
-      {obligatoire && <span className="ml-0.5 text-destructive">*</span>}
-    </label>
-  );
-}
-
-function Aide({ texte, erreur }: { texte?: string; erreur?: string }) {
-  if (erreur) return <p className="mt-1 text-[12px] text-destructive">{erreur}</p>;
-  if (texte) return <p className="mt-1 text-[12px] text-muted-foreground">{texte}</p>;
-  return null;
-}
-
-function Champ({
-  cle,
-  libelle,
-  valeur,
-  onChange,
-  type = "text",
-  placeholder,
-  aide,
-  erreur,
-  obligatoire,
-  multiligne,
-}: {
-  cle: string;
-  libelle: string;
-  valeur: string;
-  onChange: (v: string) => void;
-  type?: string;
-  placeholder?: string;
-  aide?: string;
-  erreur?: string;
-  obligatoire?: boolean;
-  multiligne?: boolean;
-}) {
-  return (
-    <div>
-      <Etiquette cle={cle} libelle={libelle} obligatoire={obligatoire} />
-      {multiligne ? (
-        <textarea
-          id={`champ-${cle}`}
-          value={valeur}
-          rows={3}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className={CLASSE_CHAMP}
-        />
-      ) : (
-        <input
-          id={`champ-${cle}`}
-          type={type}
-          value={valeur}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          aria-invalid={erreur ? true : undefined}
-          className={`${CLASSE_CHAMP} ${erreur ? "border-destructive" : ""}`}
-        />
-      )}
-      <Aide texte={aide} erreur={erreur} />
-    </div>
-  );
-}
-
-/**
- * Montant en dirhams : la saisie brute d'un milliard se fait à un zéro près. La
- * valeur est relue en clair sous le champ.
- */
-function ChampMontant({
-  cle,
-  libelle,
-  valeur,
-  onChange,
-  erreur,
-}: {
-  cle: string;
-  libelle: string;
-  valeur: string;
-  onChange: (v: string) => void;
-  erreur?: string;
-}) {
-  const nombre = valeur.trim() === "" ? null : Number(valeur);
-  return (
-    <div>
-      <Etiquette cle={cle} libelle={`${libelle} (MAD)`} />
-      <input
-        id={`champ-${cle}`}
-        type="number"
-        min={0}
-        step="1000"
-        value={valeur}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="0"
-        aria-invalid={erreur ? true : undefined}
-        className={`${CLASSE_CHAMP} tabulaire ${erreur ? "border-destructive" : ""}`}
-      />
-      <Aide
-        texte={
-          nombre !== null && Number.isFinite(nombre)
-            ? `= ${formatMADCompact(nombre)}`
-            : undefined
-        }
-        erreur={erreur}
-      />
-    </div>
-  );
-}
-
-function Selecteur({
-  cle,
-  libelle,
-  valeur,
-  onChange,
-  options,
-}: {
-  cle: string;
-  libelle: string;
-  valeur: string;
-  onChange: (v: string) => void;
-  options: OptionReferentiel[];
-}) {
-  // Une valeur héritée absente du référentiel reste proposée : sinon la fiche
-  // afficherait « Sélectionner » et un simple enregistrement l'effacerait.
-  const inconnue = valeur && !options.some((o) => o.valeur === valeur);
-  const aide = options.find((o) => o.valeur === valeur)?.aide;
-  return (
-    <div>
-      <Etiquette cle={cle} libelle={libelle} />
-      <select
-        id={`champ-${cle}`}
-        value={valeur}
-        onChange={(e) => onChange(e.target.value)}
-        className={CLASSE_CHAMP}
-      >
-        <option value="">— Non renseigné —</option>
-        {inconnue && <option value={valeur}>{valeur} (hors référentiel)</option>}
-        {options.map((o) => (
-          <option key={o.valeur} value={o.valeur}>
-            {o.libelle}
-          </option>
-        ))}
-      </select>
-      <Aide texte={aide} />
-    </div>
-  );
-}
-
-/** Liste de référence avec saisie libre possible, pour secteur et gestionnaire. */
-function SelecteurLibre({
-  cle,
-  libelle,
-  valeur,
-  onChange,
-  options,
-  aide,
-}: {
-  cle: string;
-  libelle: string;
-  valeur: string;
-  onChange: (v: string) => void;
-  options: { valeur: string; libelle: string }[];
-  aide?: string;
-}) {
-  return (
-    <div>
-      <Etiquette cle={cle} libelle={libelle} />
-      <input
-        id={`champ-${cle}`}
-        list={`liste-${cle}`}
-        value={valeur}
-        onChange={(e) => onChange(e.target.value)}
-        className={CLASSE_CHAMP}
-      />
-      <datalist id={`liste-${cle}`}>
-        {options.map((o) => (
-          <option key={o.valeur} value={o.valeur}>
-            {o.libelle}
-          </option>
-        ))}
-      </datalist>
-      <Aide texte={aide} />
-    </div>
   );
 }
