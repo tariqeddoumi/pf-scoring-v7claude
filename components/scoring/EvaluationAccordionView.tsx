@@ -365,7 +365,7 @@ function DomainAccordion({
             ))
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              <p>Ce domaine n'a pas encore de critères configurés.</p>
+              <p>Ce domaine n&apos;a pas encore de critères configurés.</p>
             </div>
           )}
         </div>
@@ -389,7 +389,7 @@ export function EvaluationAccordionView({
           <div>
             <h2 className="text-2xl font-bold text-foreground">Tous les champs</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Vue complète de tous les domaines et leurs critères d'évaluation
+              Vue complète de tous les domaines et leurs critères d&apos;évaluation
             </p>
           </div>
           <button

@@ -7,8 +7,15 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   viewer: ["read"],
 };
 
-export function withAuth(handler: Function) {
-  return async (req: NextRequest, context: any) => {
+/** Le gestionnaire reçoit aussi le rôle lu du jeton. */
+type GestionnaireRoute = (
+  req: NextRequest,
+  context: unknown,
+  userRole: string
+) => Promise<NextResponse> | NextResponse;
+
+export function withAuth(handler: GestionnaireRoute) {
+  return async (req: NextRequest, context: unknown) => {
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

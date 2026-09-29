@@ -250,13 +250,13 @@ export default function DynamicFormsAdmin() {
         <div className="text-secondary-foreground space-y-2 text-sm">
           <p><strong>Phase 1: Database Initialization</strong></p>
           <ul className="list-disc list-inside ml-2 mb-3">
-            <li>Click "Initialize Database" to seed FormSection and FieldConfiguration tables</li>
+            <li>Click &quot;Initialize Database&quot; to seed FormSection and FieldConfiguration tables</li>
             <li>This imports field definitions from lib/field-config.ts into the database</li>
           </ul>
 
           <p><strong>Phase 2: Enable Feature Flag</strong></p>
           <ul className="list-disc list-inside ml-2 mb-3">
-            <li>Click "Enable Dynamic Forms" to activate the feature</li>
+            <li>Click &quot;Enable Dynamic Forms&quot; to activate the feature</li>
             <li>Project screens (new/edit) will then use database configuration</li>
           </ul>
 

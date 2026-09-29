@@ -5,10 +5,11 @@
  */
 
 import prisma from '@/lib/prisma';
+import { randomUUID } from "crypto";
 import { FieldConfiguration, FormSection, FormPreset } from '@prisma/client';
 
 // In-memory cache for field configurations (with TTL)
-let configCache: {
+const configCache: {
   data: Map<string, any>;
   timestamp: number;
   ttl: number;
@@ -134,7 +135,7 @@ export const createFieldConfig = async (
     const field = await prisma.fieldConfiguration.create({
       data: {
         ...rest,
-        id: require('crypto').randomUUID(),
+        id: randomUUID(),
         customOptions: customOptions ? JSON.parse(typeof customOptions === 'string' ? customOptions : JSON.stringify(customOptions)) : undefined,
       } as any,
     });
@@ -218,7 +219,7 @@ export const createFormSection = async (
     const section = await prisma.formSection.create({
       data: {
         ...data,
-        id: require('crypto').randomUUID(),
+        id: randomUUID(),
       },
     });
 
@@ -316,7 +317,7 @@ export const createFormPreset = async (
     return await prisma.formPreset.create({
       data: {
         ...data,
-        id: require('crypto').randomUUID(),
+        id: randomUUID(),
       },
     });
   } catch (error) {
@@ -391,7 +392,7 @@ export const initializeFieldConfigurationsFromCode = async (): Promise<void> => 
     for (const section of CLIENT_SECTIONS) {
       const createdSection = await prisma.formSection.create({
         data: {
-          id: require('crypto').randomUUID(),
+          id: randomUUID(),
           entity: 'client',
           title: section.title,
           description: section.description,
@@ -406,7 +407,7 @@ export const initializeFieldConfigurationsFromCode = async (): Promise<void> => 
       // Create fields for this section
       for (const field of section.fields) {
         const fieldData: any = {
-          id: require('crypto').randomUUID(),
+          id: randomUUID(),
           entity: 'client',
           sectionId: createdSection.id,
           fieldName: field.name,
@@ -433,7 +434,7 @@ export const initializeFieldConfigurationsFromCode = async (): Promise<void> => 
     for (const section of PROJECT_SECTIONS) {
       const createdSection = await prisma.formSection.create({
         data: {
-          id: require('crypto').randomUUID(),
+          id: randomUUID(),
           entity: 'project',
           title: section.title,
           description: section.description,
@@ -448,7 +449,7 @@ export const initializeFieldConfigurationsFromCode = async (): Promise<void> => 
       // Create fields for this section
       for (const field of section.fields) {
         const fieldData: any = {
-          id: require('crypto').randomUUID(),
+          id: randomUUID(),
           entity: 'project',
           sectionId: createdSection.id,
           fieldName: field.name,

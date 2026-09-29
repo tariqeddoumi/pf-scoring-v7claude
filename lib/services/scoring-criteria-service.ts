@@ -5,10 +5,11 @@
  */
 
 import prisma from '@/lib/prisma';
+import { randomUUID } from "crypto";
 import { ScoringCriterion, ScoringThreshold, ScoringOption, ScoringGrille } from '@prisma/client';
 
 // In-memory cache for scoring criteria
-let scoringCache: {
+const scoringCache: {
   data: Map<string, any>;
   timestamp: number;
   ttl: number;
@@ -102,7 +103,7 @@ export const createScoringCriterion = async (
     const criterion = await prisma.scoringCriterion.create({
       data: {
         ...data,
-        id: require('crypto').randomUUID(),
+        id: randomUUID(),
       } as any,
     });
 
@@ -185,7 +186,7 @@ export const createScoringThreshold = async (
     const threshold = await prisma.scoringThreshold.create({
       data: {
         ...data,
-        id: require('crypto').randomUUID(),
+        id: randomUUID(),
       },
     });
 
@@ -268,7 +269,7 @@ export const createScoringOption = async (
     const option = await prisma.scoringOption.create({
       data: {
         ...data,
-        id: require('crypto').randomUUID(),
+        id: randomUUID(),
       },
     });
 
@@ -390,7 +391,7 @@ export const createScoringGrille = async (
     const grille = await prisma.scoringGrille.create({
       data: {
         ...data,
-        id: require('crypto').randomUUID(),
+        id: randomUUID(),
       },
     });
 
