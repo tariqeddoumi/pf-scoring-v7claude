@@ -27,7 +27,7 @@ describe("deriverAnalyses — portefeuille sans évaluation calculée", () => {
     expect(a.distributionNotes).toEqual([]);
     expect(a.moyennesParDomaine).toEqual([]);
     expect(a.tendance).toEqual([]);
-    expect(a.effectif).toEqual({ total: 5, calculees: 0, brouillons: 5 });
+    expect(a.effectif).toEqual({ total: 5, calculees: 0, brouillons: 5, rejetees: 0 });
   });
 
   test("un portefeuille vide ne produit rien non plus", () => {
@@ -53,8 +53,25 @@ describe("deriverAnalyses — score et distribution", () => {
     // Afficher toute l'échelle AAA…D avec des zéros laisserait croire à un
     // portefeuille qui la couvre.
     const a = deriverAnalyses(calculees, []);
-    expect(a.distributionNotes.map((n) => n.note)).toEqual(["BB", "B", "BBB"]);
+    expect(a.distributionNotes.map((n) => n.note).sort()).toEqual(["B", "BB", "BBB"]);
     expect(a.distributionNotes.find((n) => n.note === "BB")?.effectif).toBe(2);
+  });
+
+  test("la distribution suit l'ordre du barème et non l'effectif", () => {
+    // Trier par effectif puis alphabétiquement plaçait B avant BB.
+    const a = deriverAnalyses(calculees, []);
+    expect(a.distributionNotes.map((n) => n.note)).toEqual(["BBB", "BB", "B"]);
+  });
+
+  test("une évaluation rejetée sort du portefeuille", () => {
+    // Un dossier refusé n'est pas au portefeuille : il tirait la moyenne vers le bas
+    // et figurait dans la répartition comme s'il avait été octroyé.
+    const rejetee = evaluation("e9", 20, "D", "2026-04-20T10:00:00.000Z", "rejete");
+    const a = deriverAnalyses([...calculees, rejetee], []);
+    expect(a.scoreMoyen).toBe(60);
+    expect(a.effectif.calculees).toBe(4);
+    expect(a.effectif.rejetees).toBe(1);
+    expect(a.distributionNotes.map((n) => n.note)).not.toContain("D");
   });
 
   test("les parts de la distribution totalisent 100 %", () => {

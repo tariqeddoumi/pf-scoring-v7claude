@@ -26,6 +26,10 @@ export async function GET(req: NextRequest) {
           finalScore: true,
           rating: true,
           updatedAt: true,
+          projectId: true,
+          // Les agrégats se rattachent aux dossiers qui les produisent : sans le nom
+          // ni le montant, aucun chiffre de l'écran n'était reliable à un dossier.
+          project: { select: { nom: true, montant: true } },
         },
         orderBy: { updatedAt: "desc" },
       });
@@ -53,7 +57,16 @@ export async function GET(req: NextRequest) {
           weight: r.node.weight,
         }));
 
-      return successResponse(deriverAnalyses(evaluations, domaines));
+      return successResponse(
+        deriverAnalyses(
+          evaluations.map((e) => ({
+            ...e,
+            projectName: e.project?.nom ?? null,
+            montant: e.project?.montant ?? null,
+          })),
+          domaines
+        )
+      );
     } catch (error) {
       console.error("[ANALYTICS] GET error:", error);
       return serverError("Erreur lors du calcul des analyses");

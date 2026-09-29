@@ -1,42 +1,45 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BarChart3, Info, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { BarChart3, Info, Loader2 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
-import { Card } from "@/components/ui/card";
-import {
-  libelleMois,
-  type Analyses,
-} from "@/lib/services/analytics-derivation";
+import { formatMADCompact, formatDate } from "@/lib/utils";
+import { libelleMois, type Analyses } from "@/lib/services/analytics-derivation";
 import { ratingBadgeClass, scoreBarClass, scoreTextClass } from "@/lib/score-colors";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Note } from "@/components/ui/status-badge";
 
 /**
  * Analyses du portefeuille.
  *
- * L'écran affichait trois tableaux codés en dur — distribution des notes, scores
- * moyens par domaine, carte de chaleur annotée « Mock domain scores » — sous un
- * commentaire « Calculate analytics data » qui ne calculait rien, alors qu'aucune
- * évaluation n'était calculée en base. Tout provient désormais des évaluations
- * réellement notées, et l'écran dit sur combien d'entre elles il se fonde.
+ * Les chiffres sont dérivés des évaluations réellement calculées. Ils incluaient
+ * jusqu'ici les dossiers rejetés — un refus de mai tirait le score moyen vers le bas
+ * et sa note figurait dans la répartition comme s'il avait été octroyé —, la
+ * répartition se lisait par effectif (B avant BB, contre le barème), et rien ne
+ * reliait un chiffre à un dossier : la seule barre rouge ne disait pas de quels
+ * dossiers elle venait.
  */
-export default function AnalyticsPage() {
-  const [analyses, setAnalyses] = useState<Analyses | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [erreur, setErreur] = useState("");
+export default function AnalytiquePage() {
+  const [a, setA] = useState<Analyses | null>(null);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState<string | null>(null);
 
   const charger = useCallback(async () => {
     try {
       const res = await apiGet("/api/analytics");
       if (!res.ok) {
         const corps = await res.json().catch(() => ({}));
-        throw new Error(corps.error ?? "Chargement impossible.");
+        throw new Error(corps.error ?? "Chargement des analyses impossible.");
       }
-      setAnalyses((await res.json()).data ?? null);
+      setA((await res.json()).data ?? null);
+      setErreur(null);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : "Chargement impossible.");
     } finally {
-      setLoading(false);
+      setChargement(false);
     }
   }, []);
 
@@ -44,189 +47,216 @@ export default function AnalyticsPage() {
     charger();
   }, [charger]);
 
-  if (loading) {
+  if (chargement) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-primary" size={36} />
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Analytique</h1>
-        <p className="text-muted-foreground mt-2">
-          Lecture du portefeuille à partir des évaluations calculées.
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        titre="Analytique"
+        description="Lecture du portefeuille à partir des évaluations calculées."
+      />
 
       {erreur && (
-        <Card className="border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
           {erreur}
-        </Card>
+        </div>
       )}
 
-      {analyses && (
+      {a && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Indicateur
-              label="Évaluations calculées"
-              valeur={String(analyses.effectif.calculees)}
-              precision={`sur ${analyses.effectif.total} au total`}
+          <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Tuile
+              libelle="Dossiers notés"
+              valeur={String(a.effectif.calculees)}
+              precision={
+                a.effectif.rejetees > 0
+                  ? `${a.effectif.rejetees} rejeté${a.effectif.rejetees > 1 ? "s" : ""} exclu${a.effectif.rejetees > 1 ? "s" : ""}`
+                  : `sur ${a.effectif.total} évaluations`
+              }
             />
-            <Indicateur
-              label="En cours de saisie"
-              valeur={String(analyses.effectif.brouillons)}
-              precision="non encore calculées"
+            <Tuile
+              libelle="Encours noté"
+              valeur={a.encoursNote > 0 ? formatMADCompact(a.encoursNote) : "—"}
+              precision="montants sollicités"
             />
-            <Indicateur
-              label="Score moyen"
+            <Tuile
+              libelle="Score moyen"
               valeur={
-                analyses.scoreMoyen !== null
-                  ? analyses.scoreMoyen.toFixed(1)
+                a.scoreMoyen !== null
+                  ? a.scoreMoyen.toFixed(1).replace(".", ",")
                   : "—"
               }
-              precision={analyses.scoreMoyen !== null ? "sur 100" : "aucun calcul"}
-              classe={
-                analyses.scoreMoyen !== null
-                  ? scoreTextClass(analyses.scoreMoyen)
-                  : undefined
+              precision={a.scoreMoyen !== null ? "sur 100" : "aucun calcul"}
+              classe={a.scoreMoyen !== null ? scoreTextClass(a.scoreMoyen) : undefined}
+            />
+            <Tuile
+              libelle="Notes BBB ou mieux"
+              valeur={
+                a.partInvestissement !== null
+                  ? `${a.partInvestissement.toFixed(0)} %`
+                  : "—"
               }
+              precision="catégorie investissement"
             />
           </div>
 
-          {analyses.sansDonnees ? (
-            <Card className="p-8 text-center">
-              <BarChart3 className="mx-auto text-muted-foreground mb-3" size={32} />
-              <p className="text-foreground font-semibold">
-                Aucune évaluation n&apos;a encore été calculée
-              </p>
-              <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">
-                {analyses.effectif.total === 0
-                  ? "Le portefeuille ne comporte aucune évaluation."
-                  : `Les ${analyses.effectif.total} évaluations du portefeuille sont ` +
-                    "encore en saisie. Une analyse de portefeuille n'a de sens qu'à " +
-                    "partir de dossiers notés."}
-              </p>
-              <Link
-                href="/evaluations"
-                className="inline-flex items-center gap-2 mt-4 text-sm text-primary hover:underline"
-              >
-                Voir les évaluations
-                <ArrowRight size={14} />
-              </Link>
-            </Card>
+          {a.sansDonnees ? (
+            <SectionCard sansPadding>
+              <EmptyState
+                icone={<BarChart3 size={28} />}
+                titre="Aucune évaluation n'a encore été calculée"
+                description={
+                  a.effectif.total === 0
+                    ? "Le portefeuille ne comporte aucune évaluation."
+                    : `Les ${a.effectif.total} évaluations du portefeuille sont encore en saisie. Une analyse de portefeuille n'a de sens qu'à partir de dossiers notés.`
+                }
+                action={{ href: "/evaluations", libelle: "Voir les évaluations" }}
+              />
+            </SectionCard>
           ) : (
             <>
-              {analyses.effectif.calculees < 5 && (
-                <Card className="border-warning/40 bg-warning/10 p-4">
-                  <p className="text-sm text-warning inline-flex items-start gap-2">
-                    <Info size={16} className="mt-0.5 shrink-0" />
-                    Ces chiffres reposent sur {analyses.effectif.calculees} évaluation
-                    {analyses.effectif.calculees > 1 ? "s" : ""} calculée
-                    {analyses.effectif.calculees > 1 ? "s" : ""}. À cet effectif, ils
-                    décrivent ces dossiers, ils ne caractérisent pas un portefeuille.
-                  </p>
-                </Card>
+              {a.effectif.calculees < 5 && (
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+                  <Info size={16} className="mt-0.5 shrink-0" />
+                  <span>
+                    Ces chiffres reposent sur {a.effectif.calculees} dossier
+                    {a.effectif.calculees > 1 ? "s" : ""} noté
+                    {a.effectif.calculees > 1 ? "s" : ""}. À cet effectif, ils décrivent
+                    ces dossiers ; ils ne caractérisent pas un portefeuille.
+                  </span>
+                </div>
               )}
 
-              {analyses.distributionNotes.length > 0 && (
-                <Card className="p-5">
-                  <h2 className="font-semibold text-foreground mb-4">
-                    Notes attribuées
-                  </h2>
-                  <div className="space-y-2">
-                    {analyses.distributionNotes.map((n) => (
-                      <div key={n.note} className="flex items-center gap-3">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SectionCard
+                  titre="Notes attribuées"
+                  description="Dans l'ordre du barème ; seules les notes effectivement attribuées figurent."
+                >
+                  <ul className="space-y-2">
+                    {a.distributionNotes.map((n) => (
+                      <li key={n.note} className="flex items-center gap-3">
                         <span
-                          className={`text-xs font-medium px-2 py-0.5 rounded border w-16 text-center ${ratingBadgeClass(n.note)}`}
+                          className={`w-14 rounded-md border py-0.5 text-center text-[12.5px] font-bold ${ratingBadgeClass(n.note)}`}
                         >
                           {n.note}
                         </span>
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full"
+                        <span className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                          <span
+                            className="block h-full rounded-full bg-primary"
                             style={{ width: `${n.part}%` }}
                           />
-                        </div>
-                        <span className="text-sm text-muted-foreground w-24 text-right">
-                          {n.effectif} ({n.part.toFixed(0)} %)
                         </span>
-                      </div>
+                        <span className="w-20 text-right text-[12.5px] text-muted-foreground tabulaire">
+                          {n.effectif} · {n.part.toFixed(0)} %
+                        </span>
+                      </li>
                     ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    Seules les notes effectivement attribuées figurent ici.
-                  </p>
-                </Card>
-              )}
+                  </ul>
+                </SectionCard>
 
-              {analyses.moyennesParDomaine.length > 0 && (
-                <Card className="p-5">
-                  <h2 className="font-semibold text-foreground mb-4">
-                    Score moyen par domaine
-                  </h2>
-                  <div className="space-y-3">
-                    {analyses.moyennesParDomaine.map((d) => (
-                      <div key={d.code}>
-                        <div className="flex items-baseline justify-between gap-2 mb-1">
-                          <span className="text-sm text-foreground truncate">
-                            <span className="text-muted-foreground mr-2">{d.code}</span>
+                <SectionCard
+                  titre="Score moyen par domaine"
+                  description="Moyenne des scores de domaine sur les dossiers notés."
+                >
+                  <ul className="space-y-3">
+                    {a.moyennesParDomaine.map((d) => (
+                      <li key={d.code}>
+                        <div className="mb-1 flex items-baseline justify-between gap-2">
+                          <span className="truncate text-[13px] text-foreground">
+                            <span className="mr-2 text-muted-foreground">{d.code}</span>
                             {d.label}
                           </span>
                           <span
-                            className={`text-sm font-semibold ${scoreTextClass(d.scoreMoyen)}`}
+                            className={`text-[13px] font-semibold tabulaire ${scoreTextClass(d.scoreMoyen)}`}
                           >
-                            {d.scoreMoyen.toFixed(1)}
+                            {d.scoreMoyen.toFixed(1).replace(".", ",")}
                           </span>
                         </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${scoreBarClass(d.scoreMoyen)}`}
+                        <span className="block h-2 overflow-hidden rounded-full bg-muted">
+                          <span
+                            className={`block h-full rounded-full ${scoreBarClass(d.scoreMoyen)}`}
                             style={{
                               width: `${Math.min(100, Math.max(0, d.scoreMoyen))}%`,
                             }}
                           />
-                        </div>
-                      </div>
+                        </span>
+                      </li>
                     ))}
-                  </div>
-                </Card>
-              )}
+                  </ul>
+                </SectionCard>
+              </div>
 
-              {analyses.tendance.length > 1 && (
-                <Card className="p-5">
-                  <h2 className="font-semibold text-foreground mb-4">
-                    Évolution du score moyen
-                  </h2>
-                  <table className="w-full text-sm">
-                    <thead className="text-muted-foreground">
-                      <tr>
-                        <th className="text-left font-medium pb-2">Mois</th>
-                        <th className="text-right font-medium pb-2">Évaluations</th>
-                        <th className="text-right font-medium pb-2">Score moyen</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {analyses.tendance.map((p) => (
-                        <tr key={p.mois} className="border-t border-border">
-                          <td className="py-2 text-foreground">
-                            {libelleMois(p.mois)}
-                          </td>
-                          <td className="py-2 text-right text-muted-foreground">
-                            {p.effectif}
-                          </td>
-                          <td
-                            className={`py-2 text-right font-medium ${scoreTextClass(p.scoreMoyen)}`}
+              {/* Le tableau mensuel ne disait rien sur trois points ; la liste des
+                  dossiers notés relie chaque chiffre à un dossier ouvrable. */}
+              <SectionCard
+                titre="Dossiers notés"
+                description="Du mieux noté au moins bien noté."
+                className="mt-4"
+                sansPadding
+              >
+                <ul>
+                  {a.dossiers.map((d) => (
+                    <li key={d.evaluationId} className="border-b border-border last:border-b-0">
+                      <Link
+                        href={`/evaluations/${d.evaluationId}`}
+                        className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-surface"
+                      >
+                        <span className="font-medium text-foreground">
+                          {d.projectName}
+                        </span>
+                        <span className="flex items-center gap-4">
+                          <span
+                            className={`text-[13px] font-semibold tabulaire ${scoreTextClass(d.score)}`}
                           >
-                            {p.scoreMoyen.toFixed(1)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </Card>
+                            {d.score.toFixed(1).replace(".", ",")}
+                          </span>
+                          <Note note={d.note} />
+                          <span className="w-20 text-right text-[12px] text-muted-foreground">
+                            {formatDate(d.date)}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </SectionCard>
+
+              {a.tendance.length > 2 && (
+                <SectionCard
+                  titre="Évolution du score moyen"
+                  description="Par mois de dernière mise à jour de l'évaluation."
+                  className="mt-4"
+                >
+                  <ul className="space-y-2">
+                    {a.tendance.map((p) => (
+                      <li key={p.mois} className="flex items-center gap-3">
+                        <span className="w-24 shrink-0 text-[12.5px] text-muted-foreground">
+                          {libelleMois(p.mois)}
+                        </span>
+                        <span className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                          <span
+                            className={`block h-full rounded-full ${scoreBarClass(p.scoreMoyen)}`}
+                            style={{ width: `${Math.min(100, p.scoreMoyen)}%` }}
+                          />
+                        </span>
+                        <span
+                          className={`w-24 text-right text-[12.5px] font-semibold tabulaire ${scoreTextClass(p.scoreMoyen)}`}
+                        >
+                          {p.scoreMoyen.toFixed(1).replace(".", ",")}
+                          <span className="ml-1 font-normal text-muted-foreground">
+                            ({p.effectif})
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </SectionCard>
               )}
             </>
           )}
@@ -236,22 +266,26 @@ export default function AnalyticsPage() {
   );
 }
 
-function Indicateur({
-  label,
+function Tuile({
+  libelle,
   valeur,
   precision,
   classe,
 }: {
-  label: string;
+  libelle: string;
   valeur: string;
   precision: string;
   classe?: string;
 }) {
   return (
-    <Card className="p-5">
-      <p className="text-sm text-muted-foreground mb-1">{label}</p>
-      <p className={`text-3xl font-bold ${classe ?? "text-foreground"}`}>{valeur}</p>
-      <p className="text-xs text-muted-foreground mt-1">{precision}</p>
-    </Card>
+    <div className="rounded-lg border border-border bg-card px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {libelle}
+      </p>
+      <p className={`mt-1 text-[19px] font-semibold tabulaire ${classe ?? "text-foreground"}`}>
+        {valeur}
+      </p>
+      <p className="mt-0.5 text-[11.5px] text-muted-foreground">{precision}</p>
+    </div>
   );
 }
