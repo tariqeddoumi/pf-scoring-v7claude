@@ -147,6 +147,8 @@ export function versPayloadProjet(v: Partial<ValeursProjet>): Record<string, unk
   if ("montant" in v && sortie.montant === null) sortie.montant = 0;
   if ("description" in v && sortie.description === null) sortie.description = "";
   if ("secteur" in v && sortie.secteur === null) sortie.secteur = "";
+  // La devise est un code de trois lettres, non nullable côté schéma.
+  if ("devise" in v && !sortie.devise) sortie.devise = "MAD";
   return sortie;
 }
 
@@ -363,12 +365,15 @@ export function ProjectForm({
           description="Le montant sollicité est la part demandée à la banque ; le financement est la dette totale du montage."
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Le serveur exige un code de trois lettres : la devise ne peut pas
+                être laissée vide, sous peine d'un refus à l'enregistrement. */}
             <Selecteur
               cle="devise"
               libelle="Devise"
               valeur={devise}
               onChange={set("devise")}
               erreur={erreurs.devise}
+              sansVide
               options={DEVISES.map((d) => ({ valeur: d, libelle: d }))}
             />
             <ChampMontant

@@ -1,17 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
+
+/**
+ * Contrôle d'autorisation du parcours de saisie.
+ *
+ * Ces routes n'exigeaient qu'une session valide : un compte en lecture seule ou un
+ * auditeur pouvait créer une évaluation, saisir des réponses, lancer le calcul et
+ * soumettre le dossier à validation. La matrice de permissions fait foi.
+ */
+function refusPermission(action: "create" | "update") {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        action === "create"
+          ? "Vos droits ne permettent pas de créer une évaluation"
+          : "Vos droits ne permettent pas de modifier cette évaluation",
+      errorCode: "ERR_FORBIDDEN",
+    },
+    { status: 403 }
+  );
+}
 
 /**
  * POST /api/scoring/evaluations
  * Create a new evaluation for a project using a specific model version.
  * Initializes empty answers based on binding defaults.
  */
+
 async function handlePOST(
   req: NextRequest,
   user: AuthPayload
 ) {
   try {
+    if (!hasPermission(user.role as UserRole, "evaluation", "create")) {
+      return refusPermission("create");
+    }
+
     const { projectId, modelVersionId, notes } = await req.json();
 
     if (!projectId || !modelVersionId) {

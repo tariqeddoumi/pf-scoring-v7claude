@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth-middleware";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { createClientSchema } from "@/lib/validation-schemas";
 
-async function handler(request: NextRequest) {
+async function handler(request: NextRequest, user: AuthPayload) {
   // GET - List clients
   if (request.method === "GET") {
     try {
@@ -81,6 +83,15 @@ async function handler(request: NextRequest) {
   // POST - Create client
   if (request.method === "POST") {
     try {
+      // La route ne vérifiait aucun rôle : tout compte authentifié, y compris un
+      // compte en lecture seule ou un auditeur, pouvait créer une contrepartie.
+      if (!hasPermission(user.role as UserRole, "client", "create")) {
+        return NextResponse.json(
+          { success: false, error: "Vos droits ne permettent pas de créer un client" },
+          { status: 403 }
+        );
+      }
+
       const body = await request.json();
 
       // La route ne retenait que onze champs sur les vingt-neuf que le formulaire
@@ -139,9 +150,9 @@ async function handler(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  return withAuth(request, (req) => handler(req));
+  return withAuth(request, (req, user) => handler(req, user));
 }
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, (req) => handler(req));
+  return withAuth(request, (req, user) => handler(req, user));
 }

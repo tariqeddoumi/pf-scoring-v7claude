@@ -2,6 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { ScoringEngineV8 } from "@/lib/services/scoring";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
+
+/**
+ * Contrôle d'autorisation du parcours de saisie.
+ *
+ * Ces routes n'exigeaient qu'une session valide : un compte en lecture seule ou un
+ * auditeur pouvait créer une évaluation, saisir des réponses, lancer le calcul et
+ * soumettre le dossier à validation. La matrice de permissions fait foi.
+ */
+function refusPermission(action: "create" | "update") {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        action === "create"
+          ? "Vos droits ne permettent pas de créer une évaluation"
+          : "Vos droits ne permettent pas de modifier cette évaluation",
+      errorCode: "ERR_FORBIDDEN",
+    },
+    { status: 403 }
+  );
+}
 
 /**
  * POST /api/scoring/evaluations/[id]/calculate
@@ -14,12 +37,17 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
  * malus, règles et calibrage sectoriel compris — et jamais une approximation
  * recalculée dans le navigateur.
  */
+
 async function handlePOST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
   user: AuthPayload
 ) {
   try {
+    if (!hasPermission(user.role as UserRole, "evaluation", "update")) {
+      return refusPermission("update");
+    }
+
     const { id } = await params;
     const evaluationId = id;
     const apercu = req.nextUrl.searchParams.get("apercu") === "1";

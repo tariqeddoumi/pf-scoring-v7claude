@@ -3,6 +3,29 @@ import prisma from "@/lib/prisma-client";
 import { ScoringAnswerType } from "@prisma/client";
 import { normalizeAnswers } from "@/lib/services/scoring/answer-payload";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
+
+/**
+ * Contrôle d'autorisation du parcours de saisie.
+ *
+ * Ces routes n'exigeaient qu'une session valide : un compte en lecture seule ou un
+ * auditeur pouvait créer une évaluation, saisir des réponses, lancer le calcul et
+ * soumettre le dossier à validation. La matrice de permissions fait foi.
+ */
+function refusPermission(action: "create" | "update") {
+  return NextResponse.json(
+    {
+      success: false,
+      error:
+        action === "create"
+          ? "Vos droits ne permettent pas de créer une évaluation"
+          : "Vos droits ne permettent pas de modifier cette évaluation",
+      errorCode: "ERR_FORBIDDEN",
+    },
+    { status: 403 }
+  );
+}
 
 /**
  * PATCH /api/scoring/evaluations/[id]/answers
@@ -16,12 +39,17 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
  * enregistrable est retournée dans `ignored` : une sauvegarde partielle ne doit
  * jamais se présenter comme un succès complet.
  */
+
 async function handlePATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
   user: AuthPayload
 ) {
   try {
+    if (!hasPermission(user.role as UserRole, "evaluation", "update")) {
+      return refusPermission("update");
+    }
+
     const { id: evaluationId } = await params;
     const { answers } = await req.json();
 

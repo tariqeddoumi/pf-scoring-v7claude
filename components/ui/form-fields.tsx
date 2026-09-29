@@ -171,6 +171,7 @@ export function Selecteur({
   aide,
   obligatoire,
   erreur,
+  sansVide,
 }: {
   cle: string;
   libelle: string;
@@ -180,6 +181,8 @@ export function Selecteur({
   aide?: string;
   obligatoire?: boolean;
   erreur?: string;
+  /** Pour un champ que le serveur refuse vide, comme la devise. */
+  sansVide?: boolean;
 }) {
   // Une valeur héritée absente du référentiel reste proposée : sinon la fiche
   // afficherait « Sélectionner » et un simple enregistrement l'effacerait.
@@ -194,7 +197,7 @@ export function Selecteur({
         onChange={(e) => onChange(e.target.value)}
         className={`${CLASSE_CHAMP} ${erreur ? "border-destructive" : ""}`}
       >
-        <option value="">— Non renseigné —</option>
+        {!sansVide && <option value="">— Non renseigné —</option>}
         {inconnue && <option value={valeur}>{valeur} (hors référentiel)</option>}
         {options.map((o) => (
           <option key={o.valeur} value={o.valeur}>

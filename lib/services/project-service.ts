@@ -106,6 +106,9 @@ export class ProjectService {
           pays: true,
           countryCode: true,
           dateMiseAJour: true,
+          // La recherche transversale porte sur le sponsor : sans ce champ, taper le
+          // nom d'un sponsor ne remontait aucun de ses projets.
+          sponsorPrincipal: true,
           user: {
             select: { nom: true, prenom: true, email: true },
           },

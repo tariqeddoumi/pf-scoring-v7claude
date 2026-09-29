@@ -11,7 +11,7 @@ import {
   Loader2,
   Sliders,
 } from "lucide-react";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, messageErreurApi } from "@/lib/api-client";
 import { formatMAD, formatMADCompact } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { KpiCard } from "@/components/ui/kpi-card";
@@ -83,9 +83,16 @@ export default function DashboardPage() {
         apiGet("/api/evaluations?limit=200"),
         apiGet("/api/alerts"),
       ]);
+      // Un appel en échec était ignoré sans un mot : l'écran affichait des zéros,
+      // qu'on lisait comme un portefeuille vide plutôt que comme une panne.
+      const echecs: string[] = [];
       if (rProjets.ok) setProjets((await rProjets.json()).data ?? []);
+      else echecs.push(await messageErreurApi(rProjets, "Projets :"));
       if (rEvals.ok) setEvaluations((await rEvals.json()).data ?? []);
+      else echecs.push(await messageErreurApi(rEvals, "Évaluations :"));
       if (rAlertes.ok) setAlertes((await rAlertes.json()).data ?? []);
+      else echecs.push(await messageErreurApi(rAlertes, "Alertes :"));
+      setErreur(echecs.join(" · "));
     } catch (e) {
       setErreur(e instanceof Error ? e.message : "Chargement impossible.");
     } finally {
