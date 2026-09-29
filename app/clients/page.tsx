@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2, Plus, Search, Trash2, Users, X } from "lucide-react";
-import { apiGet, apiDelete } from "@/lib/api-client";
+import { apiGet, apiDelete, messageErreurApi } from "@/lib/api-client";
 import { formatMADCompact } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
@@ -59,7 +59,7 @@ export default function ClientsPage() {
     try {
       setChargement(true);
       const res = await apiGet("/api/clients?take=500");
-      if (!res.ok) throw new Error("Chargement des clients impossible.");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Chargement des clients impossible."));
       setClients((await res.json()).data ?? []);
       setErreur(null);
     } catch (e) {

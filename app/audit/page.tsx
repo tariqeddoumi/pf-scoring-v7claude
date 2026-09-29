@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileClock, Loader2, Search, X } from "lucide-react";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, messageErreurApi } from "@/lib/api-client";
 import { formatDate } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
@@ -146,7 +146,7 @@ export default function JournalAuditPage() {
     try {
       setChargement(true);
       const res = await apiGet(`/api/audit?limit=${limite}`);
-      if (!res.ok) throw new Error("Lecture du journal impossible.");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Lecture du journal impossible."));
       const corps = await res.json();
       // La route renvoyait un tableau nu ; elle renvoie désormais data + total.
       const data: LigneAudit[] = Array.isArray(corps) ? corps : (corps.data ?? []);

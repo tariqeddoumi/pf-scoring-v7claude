@@ -16,6 +16,44 @@ export const paginationSchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
+/**
+ * Plafond de pagination.
+ *
+ * Le schéma ci-dessus refuse une limite supérieure à 100, et les routes qui
+ * l'appliquaient à des paramètres d'URL levaient alors une exception : une liste
+ * demandée avec « limit=200 » répondait 400, et l'écran affichait « Chargement
+ * impossible » sans dire pourquoi. Un paramètre d'URL hors bornes n'est pas une
+ * faute de l'utilisateur : il se borne, il ne se refuse pas.
+ */
+export const PAGINATION_LIMITE_MAX = 200;
+
+export interface PaginationLue {
+  page: number;
+  limit: number;
+}
+
+/**
+ * Lit page et limit d'une requête sans jamais échouer : une valeur absente, illisible
+ * ou hors bornes est ramenée dans l'intervalle admis.
+ */
+export function lirePagination(
+  searchParams: URLSearchParams,
+  limiteParDefaut = 50
+): PaginationLue {
+  const entier = (valeur: string | null, defaut: number) => {
+    const n = Number.parseInt(valeur ?? "", 10);
+    return Number.isFinite(n) ? n : defaut;
+  };
+
+  const page = Math.max(1, entier(searchParams.get("page"), 1));
+  const limit = Math.min(
+    PAGINATION_LIMITE_MAX,
+    Math.max(1, entier(searchParams.get("limit"), limiteParDefaut))
+  );
+
+  return { page, limit };
+}
+
 export const idParamSchema = z.object({
   id: z.string().uuid(),
 });

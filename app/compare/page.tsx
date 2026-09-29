@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Download, Loader2, Scale, Search } from "lucide-react";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, messageErreurApi } from "@/lib/api-client";
 import { formatMADCompact, formatDate } from "@/lib/utils";
 import { scoreTextClass } from "@/lib/score-colors";
 import { PageHeader } from "@/components/ui/page-header";
@@ -74,7 +74,7 @@ export default function ComparaisonPage() {
           apiGet("/api/projects?limit=200"),
           apiGet("/api/reference/sectors"),
         ]);
-        if (!res.ok) throw new Error("Chargement des projets impossible.");
+        if (!res.ok) throw new Error(await messageErreurApi(res, "Chargement des projets impossible."));
         setProjets((await res.json()).data ?? []);
         if (resSecteurs.ok) {
           const liste: { code: string; label: string }[] =

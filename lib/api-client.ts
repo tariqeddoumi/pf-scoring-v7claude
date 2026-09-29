@@ -58,3 +58,34 @@ export async function apiPatch(url: string, body?: any, options?: RequestInit) {
 export async function apiDelete(url: string, options?: RequestInit) {
   return apiCall(url, { ...options, method: 'DELETE' });
 }
+
+/**
+ * Message d'erreur exploitable pour une réponse en échec.
+ *
+ * Les écrans affichaient « Chargement impossible » sans jamais lire ce que le serveur
+ * répondait : une limite de pagination refusée, un droit manquant et une panne de
+ * base se lisaient tous de la même façon, et il fallait ouvrir la console pour
+ * distinguer les trois.
+ */
+export async function messageErreurApi(
+  res: Response,
+  parDefaut = "Chargement impossible."
+): Promise<string> {
+  if (res.status === 401) return "Votre session a expiré : reconnectez-vous.";
+  if (res.status === 403) return "Vos droits ne permettent pas cette consultation.";
+  try {
+    const corps = await res.json();
+    const detail =
+      corps?.error ??
+      corps?.message ??
+      (Array.isArray(corps?.errors)
+        ? corps.errors.map((e: { message?: string }) => e.message).join(" — ")
+        : null);
+    if (typeof detail === "string" && detail.trim()) {
+      return `${parDefaut} ${detail}`;
+    }
+  } catch {
+    /* corps illisible : le message générique suffit */
+  }
+  return `${parDefaut} (erreur ${res.status})`;
+}

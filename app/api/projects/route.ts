@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
 import { ProjectService } from "@/lib/services/project-service";
-import { paginationSchema } from "@/lib/validation-schemas";
+import { lirePagination } from "@/lib/validation-schemas";
 
 /**
  * GET /api/projects - List all projects (paginated)
@@ -9,12 +9,12 @@ import { paginationSchema } from "@/lib/validation-schemas";
 async function handleGET(request: NextRequest, user: any) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    // Une limite hors bornes se borne au lieu de faire échouer la requête : la
+    // liste répondait 400 et l'écran affichait « Chargement impossible ».
+    const { page, limit } = lirePagination(searchParams, 50);
     const status = searchParams.get("status");
     const secteur = searchParams.get("secteur");
 
-    const validated = paginationSchema.parse({ page, limit });
 
     const filters = {
       ...(status && { status }),
@@ -22,14 +22,22 @@ async function handleGET(request: NextRequest, user: any) {
     };
 
     const result = await ProjectService.getAllProjects(
-      validated.page,
-      validated.limit,
+      page,
+      limit,
       filters
     );
 
     return NextResponse.json(result, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    // La route répondait 400 à toute erreur, y compris une panne de base : l'écran
+    // lisait « requête invalide » là où le serveur était en défaut, et le message
+    // brut ne disait rien d'exploitable.
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[LISTE] GET error:", message);
+    return NextResponse.json(
+      { success: false, error: "Erreur lors de la récupération de la liste" },
+      { status: 500 }
+    );
   }
 }
 

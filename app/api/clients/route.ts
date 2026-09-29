@@ -8,8 +8,14 @@ async function handler(request: NextRequest) {
   if (request.method === "GET") {
     try {
       const { searchParams } = new URL(request.url);
-      const skip = parseInt(searchParams.get("skip") || "0");
-      const take = parseInt(searchParams.get("take") || "10");
+      // Bornes : un paramètre illisible ou démesuré ne doit ni faire échouer la
+      // requête, ni ramener la table entière.
+      const skipDemande = Number.parseInt(searchParams.get("skip") ?? "", 10);
+      const takeDemande = Number.parseInt(searchParams.get("take") ?? "", 10);
+      const skip = Number.isFinite(skipDemande) ? Math.max(0, skipDemande) : 0;
+      const take = Number.isFinite(takeDemande)
+        ? Math.min(500, Math.max(1, takeDemande))
+        : 10;
       const search = searchParams.get("search") || "";
 
       const where = search
