@@ -1,410 +1,447 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import {
-  ArrowLeft,
-  Edit2,
-  Loader2,
-  Building2,
-  MapPin,
+  AlertTriangle,
   Briefcase,
-  Shield,
-  Users,
-  BarChart3,
+  Globe,
+  Loader2,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
 } from "lucide-react";
-import { Tabs } from "@/components/ui/Tabs";
 import { apiGet } from "@/lib/api-client";
+import { formatMAD, formatMADCompact, formatDate } from "@/lib/utils";
+import { KYC_A_TRAITER, CONFORMITE_A_TRAITER } from "@/lib/referentiels";
+import { ratingBadgeClass } from "@/lib/score-colors";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionCard } from "@/components/ui/section-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Note, StatutProjet } from "@/components/ui/status-badge";
+import { usePermission } from "@/lib/hooks/usePermission";
+
+interface ProjetLie {
+  id: string;
+  nom: string;
+  status: string;
+  montant?: number | null;
+  grade?: string | null;
+  scoreGlobal?: number | null;
+}
 
 interface Client {
   id: string;
   nom: string;
-  email?: string;
-  telephone?: string;
-  secteur?: string;
-  pays?: string;
-  type?: string;
-  description?: string;
+  email?: string | null;
+  telephone?: string | null;
+  secteur?: string | null;
+  pays?: string | null;
+  type?: string | null;
+  description?: string | null;
   status: string;
   createdAt: string;
-  // Extended fields
-  raisonSociale?: string;
-  nomCommercial?: string;
-  typeClient?: string;
-  formeJuridique?: string;
-  segmentClientele?: string;
-  effectifs?: number;
-  capitalSocial?: number;
-  chiffreAffaires?: number;
-  ville?: string;
-  adresse?: string;
-  codePostal?: string;
-  website?: string;
-  centreAffaires?: string;
-  gestionnaire?: string;
-  ratingInterne?: string;
-  statutBancaire?: string;
-  dateRelation?: string;
-  exposition?: number;
-  statusKYC?: string;
-  statusConformite?: string;
+  updatedAt?: string | null;
+  raisonSociale?: string | null;
+  nomCommercial?: string | null;
+  typeClient?: string | null;
+  formeJuridique?: string | null;
+  segmentClientele?: string | null;
+  effectifs?: number | null;
+  capitalSocial?: number | null;
+  chiffreAffaires?: number | null;
+  ville?: string | null;
+  adresse?: string | null;
+  codePostal?: string | null;
+  website?: string | null;
+  centreAffaires?: string | null;
+  gestionnaire?: string | null;
+  ratingInterne?: string | null;
+  statutBancaire?: string | null;
+  dateRelation?: string | null;
+  exposition?: number | null;
+  statusKYC?: string | null;
+  statusConformite?: string | null;
+  projects?: ProjetLie[];
 }
 
-export default function ClientDetailPage({
+/**
+ * Fiche client.
+ *
+ * Tout ce qui décide — notation interne, exposition, KYC, conformité — était enfoui
+ * dans les cinquième et sixième onglets, quand l'onglet d'accueil répétait le nom du
+ * client sous trois libellés. Les projets du client, pourtant renvoyés par l'API,
+ * n'étaient pas affichés du tout. Une exposition nulle s'affichait « Non renseigné ».
+ */
+export default function FicheClientPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const router = useRouter();
+  const { id } = use(params);
+  const { can } = usePermission();
   const [client, setClient] = useState<Client | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [clientId, setClientId] = useState<string | null>(null);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState<string | null>(null);
+
+  const charger = useCallback(async () => {
+    try {
+      setChargement(true);
+      const res = await apiGet(`/api/clients/${id}`);
+      if (!res.ok) throw new Error("Cette fiche client est introuvable.");
+      setClient((await res.json()).data);
+      setErreur(null);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Chargement impossible.");
+      setClient(null);
+    } finally {
+      setChargement(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    const resolveAndFetch = async () => {
-      try {
-        const { id } = await params;
-        setClientId(id);
-        const response = await apiGet(`/api/clients/${id}`);
-        if (!response.ok) throw new Error("Failed to fetch client");
-        const data = await response.json();
-        setClient(data.data || data);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || "Failed to load client");
-        setClient(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    charger();
+  }, [charger]);
 
-    resolveAndFetch();
-  }, [params]);
-
-  if (loading) {
+  if (chargement) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-primary" size={40} />
+      <div className="flex min-h-[55vh] items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={30} />
       </div>
     );
   }
 
-  if (error || !client) {
+  if (erreur || !client) {
     return (
-      <div className="space-y-6">
-        <Link
-          href="/clients"
-          className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft size={20} />
-          <span>Retour aux clients</span>
-        </Link>
-        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 text-destructive">
-          {error || "Client non trouvé"}
+      <div>
+        <PageHeader titre="Client" retour={{ href: "/clients", libelle: "Clients" }} />
+        <div className="rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
+          {erreur}
         </div>
       </div>
     );
   }
 
-  const renderFieldValue = (value: any) => {
-    if (value === null || value === undefined || value === "") {
-      return <span className="text-muted-foreground italic">Non renseigné</span>;
-    }
-    if (typeof value === "object" && value.toLocaleDateString) {
-      return new Date(value).toLocaleDateString("fr-FR");
-    }
-    return value;
-  };
-
-  const tabs = [
-    {
-      id: "identity",
-      label: "Identité & Admin",
-      icon: <Building2 size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Nom du client
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.nom)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Raison sociale
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.raisonSociale)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Nom commercial
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.nomCommercial)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Type de client
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.typeClient)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Forme juridique
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.formeJuridique)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Statut
-              </label>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-                client.status === "Actif"
-                  ? "bg-success/15 text-success"
-                  : "bg-warning/15 text-warning"
-              }`}>
-                {renderFieldValue(client.status)}
-              </span>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "organisation",
-      label: "Organisation & Secteur",
-      icon: <Briefcase size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Secteur
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.secteur)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Segment clientèle
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.segmentClientele)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Effectifs
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.effectifs)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Capital social (MAD)
-              </label>
-              <p className="text-foreground">{client.capitalSocial ? client.capitalSocial.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Chiffre d&apos;affaires (MAD)
-              </label>
-              <p className="text-foreground">{client.chiffreAffaires ? client.chiffreAffaires.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-              Description / Activités
-            </label>
-            <p className="text-foreground whitespace-pre-wrap">{renderFieldValue(client.description)}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "localisation",
-      label: "Localisation",
-      icon: <MapPin size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Pays
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.pays)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Ville
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.ville)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Code postal
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.codePostal)}</p>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-              Adresse
-            </label>
-            <p className="text-foreground whitespace-pre-wrap">{renderFieldValue(client.adresse)}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "contact",
-      label: "Contact",
-      icon: <Users size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Email
-              </label>
-              <p className="text-foreground break-all">{renderFieldValue(client.email)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Téléphone
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.telephone)}</p>
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Site web
-              </label>
-              <p className="text-foreground break-all">{renderFieldValue(client.website)}</p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "banking",
-      label: "Relations Bancaires",
-      icon: <BarChart3 size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Centre d&apos;affaires
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.centreAffaires)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Gestionnaire
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.gestionnaire)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Rating interne
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.ratingInterne)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Statut bancaire
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.statutBancaire)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Date du début de relation
-              </label>
-              <p className="text-foreground">{client.dateRelation ? new Date(client.dateRelation).toLocaleDateString("fr-FR") : renderFieldValue(null)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Exposition (MAD)
-              </label>
-              <p className="text-foreground">{client.exposition ? client.exposition.toLocaleString("fr-FR") : renderFieldValue(null)}</p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "kyc",
-      label: "KYC & Conformité",
-      icon: <Shield size={18} />,
-      content: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Statut KYC
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.statusKYC)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Statut conformité
-              </label>
-              <p className="text-foreground">{renderFieldValue(client.statusConformite)}</p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-  ];
+  const kycATraiter = KYC_A_TRAITER.includes(client.statusKYC ?? "");
+  const conformiteATraiter = CONFORMITE_A_TRAITER.includes(client.statusConformite ?? "");
+  const projets = client.projects ?? [];
+  // Le total n'a de sens que si au moins un projet porte un montant.
+  const avecMontant = projets.filter((p) => p.montant != null);
+  const encours = avecMontant.reduce((s, p) => s + (p.montant ?? 0), 0);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center space-x-4">
-          <Link
-            href="/clients"
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+    <div>
+      <PageHeader
+        titre={client.raisonSociale || client.nom}
+        description={[
+          client.typeClient,
+          client.formeJuridique,
+          client.secteur,
+          client.ville,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+        retour={{ href: "/clients", libelle: "Clients" }}
+        meta={
+          <div className="flex flex-wrap items-center gap-2">
+            {client.ratingInterne && (
+              <span
+                className={`rounded-md border px-2 py-0.5 text-[12.5px] font-bold ${ratingBadgeClass(client.ratingInterne)}`}
+              >
+                {client.ratingInterne}
+              </span>
+            )}
+            {client.statutBancaire && <Puce libelle={client.statutBancaire} />}
+            {client.statusKYC && (
+              <Puce libelle={`KYC : ${client.statusKYC}`} alerte={kycATraiter} />
+            )}
+            {client.statusConformite && (
+              <Puce
+                libelle={`Conformité : ${client.statusConformite}`}
+                alerte={conformiteATraiter}
+              />
+            )}
+            {client.status !== "Actif" && <Puce libelle={client.status} alerte />}
+          </div>
+        }
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {can("project", "create") && (
+              <Link
+                href={`/projects/new?clientId=${client.id}`}
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+              >
+                <Plus size={15} />
+                Nouveau projet
+              </Link>
+            )}
+            {/* Le bouton s'affichait pour tout le monde, y compris en lecture seule. */}
+            {can("client", "update") && (
+              <Link
+                href={`/clients/${client.id}/edit`}
+                className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <Pencil size={15} />
+                Modifier
+              </Link>
+            )}
+          </div>
+        }
+      />
+
+      {(kycATraiter || conformiteATraiter) && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+          <AlertTriangle size={16} className="shrink-0" />
+          <span>
+            {kycATraiter && `KYC ${client.statusKYC?.toLowerCase()}`}
+            {kycATraiter && conformiteATraiter && " · "}
+            {conformiteATraiter && `conformité ${client.statusConformite?.toLowerCase()}`}
+            {" — à régulariser avant tout nouvel engagement."}
+          </span>
+          {can("client", "update") && (
+            <Link
+              href={`/clients/${client.id}/edit`}
+              className="ml-auto shrink-0 font-semibold underline"
+            >
+              Mettre à jour
+            </Link>
+          )}
+        </div>
+      )}
+
+      <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Chiffre libelle="Exposition" valeur={client.exposition} />
+        <Chiffre libelle="Capital social" valeur={client.capitalSocial} />
+        <Chiffre libelle="Chiffre d'affaires" valeur={client.chiffreAffaires} />
+        <Chiffre libelle="Effectifs" valeur={client.effectifs} brut />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <SectionCard
+            titre={`Projets (${projets.length})`}
+            description={
+              avecMontant.length > 0 ? `${formatMADCompact(encours)} demandés` : undefined
+            }
+            sansPadding
           >
-            <ArrowLeft size={20} />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{client.nom}</h1>
-            <p className="text-muted-foreground mt-1 text-sm">ID: {client.id}</p>
-          </div>
+            {projets.length === 0 ? (
+              <EmptyState
+                icone={<Briefcase size={26} />}
+                titre="Aucun projet"
+                description="Ce client ne porte encore aucun dossier de financement."
+                action={
+                  can("project", "create")
+                    ? {
+                        href: `/projects/new?clientId=${client.id}`,
+                        libelle: "Nouveau projet",
+                      }
+                    : undefined
+                }
+              />
+            ) : (
+              <ul>
+                {projets.map((p) => (
+                  <li key={p.id} className="border-b border-border last:border-b-0">
+                    <Link
+                      href={`/projects/${p.id}`}
+                      className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-surface"
+                    >
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-foreground">{p.nom}</span>
+                        <StatutProjet statut={p.status} />
+                      </span>
+                      <span className="flex items-center gap-4">
+                        {p.montant != null && (
+                          <span
+                            className="tabulaire text-[12.5px] text-muted-foreground"
+                            title={formatMAD(p.montant)}
+                          >
+                            {formatMADCompact(p.montant)}
+                          </span>
+                        )}
+                        <Note note={p.grade} score={p.scoreGlobal} />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
+
+          <SectionCard titre="Profil">
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+              <Ligne libelle="Nom usuel" valeur={client.nom} />
+              <Ligne libelle="Raison sociale" valeur={client.raisonSociale} />
+              <Ligne libelle="Nom commercial" valeur={client.nomCommercial} />
+              <Ligne libelle="Type" valeur={client.typeClient ?? client.type} />
+              <Ligne libelle="Forme juridique" valeur={client.formeJuridique} />
+              <Ligne libelle="Segment" valeur={client.segmentClientele} />
+              <Ligne libelle="Secteur" valeur={client.secteur} />
+              <Ligne libelle="Pays" valeur={client.pays} />
+            </dl>
+            {client.description && (
+              <p className="mt-4 border-t border-border pt-3 text-[13px] leading-relaxed text-muted-foreground">
+                {client.description}
+              </p>
+            )}
+          </SectionCard>
         </div>
-        <button
-          onClick={() => clientId && router.push(`/clients/${clientId}/edit`)}
-          className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
-        >
-          <Edit2 size={20} />
-          <span>Modifier</span>
-        </button>
+
+        <div className="space-y-4">
+          <SectionCard titre="Relation bancaire">
+            <dl className="space-y-3">
+              <Ligne libelle="Gestionnaire" valeur={client.gestionnaire} />
+              <Ligne libelle="Centre d'affaires" valeur={client.centreAffaires} />
+              <Ligne libelle="Statut" valeur={client.statutBancaire} />
+              <Ligne libelle="Notation interne" valeur={client.ratingInterne} />
+              <Ligne
+                libelle="Entrée en relation"
+                valeur={client.dateRelation ? formatDate(client.dateRelation) : null}
+              />
+              <Ligne libelle="KYC" valeur={client.statusKYC} alerte={kycATraiter} />
+              <Ligne
+                libelle="Conformité"
+                valeur={client.statusConformite}
+                alerte={conformiteATraiter}
+              />
+            </dl>
+          </SectionCard>
+
+          <SectionCard titre="Coordonnées">
+            <ul className="space-y-2.5 text-[13px]">
+              {client.email && (
+                <li className="flex items-center gap-2">
+                  <Mail size={15} className="shrink-0 text-muted-foreground" />
+                  <a href={`mailto:${client.email}`} className="text-primary hover:underline">
+                    {client.email}
+                  </a>
+                </li>
+              )}
+              {client.telephone && (
+                <li className="flex items-center gap-2">
+                  <Phone size={15} className="shrink-0 text-muted-foreground" />
+                  <a
+                    href={`tel:${client.telephone.replace(/\s/g, "")}`}
+                    className="text-primary hover:underline"
+                  >
+                    {client.telephone}
+                  </a>
+                </li>
+              )}
+              {client.website && (
+                <li className="flex items-center gap-2">
+                  <Globe size={15} className="shrink-0 text-muted-foreground" />
+                  <a
+                    href={
+                      client.website.startsWith("http")
+                        ? client.website
+                        : `https://${client.website}`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {client.website}
+                  </a>
+                </li>
+              )}
+              {(client.adresse || client.ville) && (
+                <li className="flex items-start gap-2">
+                  <MapPin size={15} className="mt-0.5 shrink-0 text-muted-foreground" />
+                  <span className="text-foreground">
+                    {[client.adresse, client.codePostal, client.ville, client.pays]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </span>
+                </li>
+              )}
+              {!client.email &&
+                !client.telephone &&
+                !client.website &&
+                !client.adresse &&
+                !client.ville && (
+                  <li className="text-muted-foreground">Aucune coordonnée renseignée.</li>
+                )}
+            </ul>
+          </SectionCard>
+        </div>
       </div>
 
-      {/* Tabs Content */}
-      <div className="bg-card rounded-lg border border-border p-6">
-        <Tabs tabs={tabs} defaultTab="identity" />
-      </div>
+      <p className="mt-4 text-[12px] text-muted-foreground">
+        Fiche créée le {formatDate(client.createdAt)}
+        {client.updatedAt && ` · modifiée le ${formatDate(client.updatedAt)}`}
+      </p>
+    </div>
+  );
+}
 
-      {/* Meta Information */}
-      <div className="bg-card rounded-lg border border-border p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Informations système</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-              Créé le
-            </label>
-            <p className="text-foreground">
-              {new Date(client.createdAt).toLocaleDateString("fr-FR")}
-            </p>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-2">
-              Identifiant
-            </label>
-            <p className="text-foreground font-mono text-sm">{client.id}</p>
-          </div>
-        </div>
-      </div>
+function Puce({ libelle, alerte }: { libelle: string; alerte?: boolean }) {
+  return (
+    <span
+      className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ${
+        alerte ? "bg-warning-subtle text-warning" : "bg-muted text-muted-foreground"
+      }`}
+    >
+      {libelle}
+    </span>
+  );
+}
+
+/**
+ * Chiffre clé. Une exposition de zéro est une information — elle s'affichait
+ * « Non renseigné », le test portant sur la valeur et non sur sa présence.
+ */
+function Chiffre({
+  libelle,
+  valeur,
+  brut,
+}: {
+  libelle: string;
+  valeur: number | null | undefined;
+  brut?: boolean;
+}) {
+  const connu = valeur !== null && valeur !== undefined;
+  return (
+    <div className="rounded-lg border border-border bg-card px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {libelle}
+      </p>
+      <p
+        className="mt-1 text-[17px] font-semibold text-foreground tabulaire"
+        title={connu && !brut ? formatMAD(valeur) : undefined}
+      >
+        {connu
+          ? brut
+            ? valeur.toLocaleString("fr-FR")
+            : formatMADCompact(valeur)
+          : "—"}
+      </p>
+    </div>
+  );
+}
+
+function Ligne({
+  libelle,
+  valeur,
+  alerte,
+}: {
+  libelle: string;
+  valeur?: string | null;
+  alerte?: boolean;
+}) {
+  return (
+    <div>
+      <dt className="text-[11.5px] text-muted-foreground">{libelle}</dt>
+      <dd
+        className={`text-[13px] ${
+          alerte ? "font-semibold text-warning" : "text-foreground"
+        }`}
+      >
+        {valeur || "—"}
+      </dd>
     </div>
   );
 }

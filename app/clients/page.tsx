@@ -12,6 +12,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 import { usePermission } from "@/lib/hooks/usePermission";
 import { ratingBadgeClass } from "@/lib/score-colors";
+// Les valeurs qui appellent une action viennent du référentiel, comme les listes de
+// saisie : la liste et le formulaire ne peuvent plus diverger.
+import { KYC_A_TRAITER, CONFORMITE_A_TRAITER } from "@/lib/referentiels";
 
 interface Client {
   id: string;
@@ -30,9 +33,6 @@ interface Client {
   projects?: { id: string }[];
 }
 
-/** Valeurs de conformité et de KYC qui appellent une action. */
-const KYC_A_TRAITER = ["En attente", "Rejet", "Expiration", "À renouveler"];
-const CONFORMITE_A_TRAITER = ["En attente", "Non conforme", "Alerte"];
 
 /**
  * Liste des clients.

@@ -13,7 +13,19 @@ export async function GET(
       const client = await prisma.client.findUnique({
         where: { id },
         include: {
-          projects: { select: { id: true, nom: true, status: true } },
+          // La fiche affiche l'encours demandé et la note de chaque dossier :
+          // sans montant ni note, la liste des projets n'apprend rien.
+          projects: {
+            select: {
+              id: true,
+              nom: true,
+              status: true,
+              montant: true,
+              grade: true,
+              scoreGlobal: true,
+            },
+            orderBy: { dateCreation: "desc" },
+          },
         },
       });
 
