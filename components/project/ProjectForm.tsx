@@ -572,14 +572,16 @@ export function ProjectForm({
               erreur={erreurs.technologie}
               placeholder="Éolien terrestre — turbines 4,2 MW"
             />
+            {/* L'unité dépend de la technologie : MW pour un parc éolien, m³/jour
+                pour une station de dessalement. Le suffixe « MW » était codé en dur. */}
             <Champ
               cle="capaciteInstallee"
               libelle="Capacité installée"
               type="number"
-              suffixe="MW"
               valeur={v.capaciteInstallee}
               onChange={set("capaciteInstallee")}
               erreur={erreurs.capaciteInstallee}
+              aide="Dans l'unité de la technologie retenue : MW, m³/jour, tonnes/an…"
             />
           </div>
         </SectionCard>
