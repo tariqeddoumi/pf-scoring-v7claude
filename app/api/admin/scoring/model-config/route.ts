@@ -13,6 +13,7 @@ import { NextRequest } from 'next/server';
 import { withAdminAuth } from '@/lib/auth-middleware';
 import { successResponse, serverError, errorResponse, validationError } from '@/lib/api-response';
 import prisma from '@/lib/prisma-client';
+import { verifierVersionModifiable } from '@/lib/services/scoring/version-guard';
 
 export async function GET(req: NextRequest) {
   return withAdminAuth(req, async () => {
@@ -54,6 +55,16 @@ export async function PUT(req: NextRequest) {
 
       if (!versionId) {
         return validationError([{ field: 'versionId', message: 'Requis' }]);
+      }
+
+      // La méthode d'agrégation et l'échelle décident du calcul : les changer sur une
+      // version publiée rendrait irreproductibles les notes déjà attribuées.
+      const verdict = await verifierVersionModifiable(versionId);
+      if (!verdict.modifiable) {
+        return errorResponse(verdict.message ?? 'Version non modifiable', {
+          status: 409,
+          errorCode: 'ERR_VERSION_PUBLIEE',
+        });
       }
 
       const body = await req.json();

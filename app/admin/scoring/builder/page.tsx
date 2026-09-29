@@ -516,6 +516,7 @@ export default function ScoringBuilderPage() {
         <ModelConfigurationPanel
           versionId={modelVersion.id}
           onConfigUpdate={loadModel}
+          lectureSeule={lectureSeule}
         />
       )}
 
