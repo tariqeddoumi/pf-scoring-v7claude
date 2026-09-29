@@ -2,11 +2,26 @@ import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import {
+  verifierNoeudModifiable,
+  verifierPlageModifiable,
+} from "@/lib/services/scoring/version-guard";
 
 /**
  * POST /api/admin/scoring/ranges
  * Ajoute une plage numérique à un critère (table BP_PF_v7pp_scoring_ranges)
  */
+/**
+ * Une version publiée ne se modifie plus : ses évaluations doivent rester
+ * reproductibles. Le contrôle est côté serveur, aucun écran ne peut le contourner.
+ */
+function refusVersionFigee(message?: string) {
+  return errorResponse(message ?? "Version non modifiable", {
+    status: 409,
+    errorCode: "ERR_VERSION_PUBLIEE",
+  });
+}
+
 export async function POST(req: NextRequest) {
   return withAdminAuth(req, async () => {
     try {
@@ -36,6 +51,9 @@ export async function POST(req: NextRequest) {
       if (!criterion) {
         return errorResponse("Critère introuvable", { status: 404, errorCode: "NOT_FOUND" });
       }
+
+      const verdict = await verifierNoeudModifiable(nodeId);
+      if (!verdict.modifiable) return refusVersionFigee(verdict.message);
 
       const LEAF_NODE_TYPES = ["CRITERION", "SUB_CRITERION", "SUB_SUB_CRITERION", "LEAF"];
       if (!LEAF_NODE_TYPES.includes(criterion.nodeType)) {
@@ -82,6 +100,9 @@ export async function PUT(req: NextRequest) {
         ]);
       }
 
+      const verdict = await verifierPlageModifiable(rangeId);
+      if (!verdict.modifiable) return refusVersionFigee(verdict.message);
+
       const range = await prisma.scoringNodeRange.update({
         where: { id: rangeId },
         data: {
@@ -113,6 +134,9 @@ export async function DELETE(req: NextRequest) {
       if (!rangeId) {
         return validationError([{ field: "rangeId", message: "Requis" }]);
       }
+
+      const verdict = await verifierPlageModifiable(rangeId);
+      if (!verdict.modifiable) return refusVersionFigee(verdict.message);
 
       await prisma.scoringNodeRange.delete({ where: { id: rangeId } });
 

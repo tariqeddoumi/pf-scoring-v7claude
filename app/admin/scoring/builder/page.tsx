@@ -55,10 +55,21 @@ interface ScoringNode {
   ranges?: ScoringRange[];
 }
 
+interface VersionDisponible {
+  id: string;
+  versionNumber: number;
+  label: string;
+  status: string;
+  isPublished: boolean;
+  modelId: string;
+}
+
 interface ModelVersion {
   id: string;
   versionNumber: number;
   label: string;
+  status?: string;
+  isPublished?: boolean;
 }
 
 const DOMAIN_META: Record<string, { icon: string; color: string }> = {
@@ -81,6 +92,7 @@ export default function ScoringBuilderPage() {
   const [expandedDomains, setExpandedDomains] = useState<Set<string>>(new Set());
   const [expandedCriteria, setExpandedCriteria] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [duplication, setDuplication] = useState(false);
 
   // Modal states
   const [nodeModalOpen, setNodeModalOpen] = useState(false);
@@ -100,6 +112,7 @@ export default function ScoringBuilderPage() {
     loadModel();
   }, []);
 
+  /** En lecture seule, aucune action d'édition n'est proposée : le serveur les refuse. */
   const openCreateDomainModal = () => {
     setNodeModalType("DOMAIN");
     setNodeModalData(undefined);
@@ -236,27 +249,104 @@ export default function ScoringBuilderPage() {
     await loadModel();
   };
 
+  /**
+   * Charge la version à éditer.
+   *
+   * L'écran chargeait la version publiée et écrivait directement dessus : créer,
+   * modifier ou supprimer un domaine ou un critère changeait le modèle en production,
+   * sous les évaluations déjà calculées avec lui. Il travaille désormais sur le
+   * brouillon le plus récent ; à défaut, il ouvre la version publiée en lecture seule
+   * et propose d'en tirer un brouillon.
+   */
   const loadModel = async () => {
     try {
       setLoading(true);
-      const res = await apiGet("/api/scoring/questionnaire");
-      if (!res.ok) {
-        const d = await res.json();
+
+      // Version publiée, pour connaître le modèle et disposer d'un repli.
+      const resPubliee = await apiGet("/api/scoring/questionnaire");
+      if (!resPubliee.ok) {
+        const d = await resPubliee.json();
         throw new Error(d.error || "Erreur chargement");
       }
-      const data = await res.json();
-      setQuestionnaire(data.data || []);
-      setModelVersion({
-        id: data.modelVersionId,
-        versionNumber: data.modelVersion?.versionNumber ?? 1,
-        label: data.modelVersion?.label ?? "V1",
-      });
-      const ids = new Set<string>((data.data || []).map((d: ScoringNode) => d.id));
+      const publiee = await resPubliee.json();
+
+      let cible = {
+        id: publiee.modelVersionId as string,
+        versionNumber: publiee.modelVersion?.versionNumber ?? 1,
+        label: publiee.modelVersion?.label ?? "V1",
+        status: publiee.modelVersion?.status ?? "PUBLISHED",
+        isPublished: publiee.modelVersion?.isPublished ?? true,
+      };
+      let arbre = publiee.data || [];
+
+      const resModeles = await apiGet("/api/admin/scoring/models");
+      if (resModeles.ok) {
+        const modeles = (await resModeles.json()).data ?? [];
+        const modele = modeles[0];
+        if (modele?.id) {
+          const resVersions = await apiGet(
+            `/api/admin/scoring/models/${modele.id}/versions`
+          );
+          if (resVersions.ok) {
+            const liste: VersionDisponible[] = (await resVersions.json()).data ?? [];
+            const brouillon = liste.find(
+              (v) => !v.isPublished && (v.status === "DRAFT" || v.status === "IN_REVIEW")
+            );
+            if (brouillon) {
+              const resArbre = await apiGet(
+                `/api/scoring/questionnaire?versionId=${brouillon.id}`
+              );
+              if (resArbre.ok) {
+                const data = await resArbre.json();
+                arbre = data.data || [];
+                cible = {
+                  id: brouillon.id,
+                  versionNumber: brouillon.versionNumber,
+                  label: brouillon.label,
+                  status: brouillon.status,
+                  isPublished: brouillon.isPublished,
+                };
+              }
+            }
+          }
+        }
+      }
+
+      setQuestionnaire(arbre);
+      setModelVersion(cible);
+      const ids = new Set<string>((arbre as ScoringNode[]).map((d) => d.id));
       setExpandedDomains(ids);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
+    }
+  };
+
+  /** Tire un brouillon de la version publiée : c'est lui qui se modifie ensuite. */
+  const creerBrouillon = async () => {
+    if (!modelVersion) return;
+    setDuplication(true);
+    setError("");
+    try {
+      const resModeles = await apiGet("/api/admin/scoring/models");
+      const modeles = resModeles.ok ? ((await resModeles.json()).data ?? []) : [];
+      const modeleId = modeles[0]?.id;
+      if (!modeleId) throw new Error("Modèle introuvable.");
+
+      const res = await apiPost(`/api/admin/scoring/models/${modeleId}/versions`, {
+        sourceVersionId: modelVersion.id,
+        changeReason: "Brouillon créé depuis l'éditeur de modèle",
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || "Création du brouillon impossible.");
+      }
+      await loadModel();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Création du brouillon impossible.");
+    } finally {
+      setDuplication(false);
     }
   };
 
@@ -336,8 +426,11 @@ export default function ScoringBuilderPage() {
     });
   };
 
+  // Les poids sont relatifs et somment à 100 : le contrôle les attendait en fraction
+  // et annonçait « Poids total : 10000.0 % » sur un modèle pourtant équilibré.
   const totalWeight = questionnaire.reduce((s, d) => s + (d.weight ?? 0), 0);
-  const weightValid = Math.abs(totalWeight - 1.0) < 0.01;
+  const weightValid = Math.abs(totalWeight - 100) < 0.01;
+  const lectureSeule = Boolean(modelVersion?.isPublished);
 
   if (loading) {
     return (
@@ -358,12 +451,37 @@ export default function ScoringBuilderPage() {
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-foreground">Constructeur de Modèle</h1>
+          <h1 className="text-3xl font-bold text-foreground">Éditeur du modèle</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Créez et modifiez le modèle de scoring PF V7++
+            {modelVersion
+              ? `Version ${modelVersion.label} — ${
+                  lectureSeule ? "publiée, lecture seule" : "brouillon"
+                }`
+              : "Structure des domaines, critères et options"}
           </p>
         </div>
       </div>
+
+      {/* Une version publiée ne se modifie pas : les évaluations calculées avec elle
+          doivent rester reproductibles. L'écran écrivait dessus sans le dire. */}
+      {lectureSeule && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
+          <AlertCircle size={16} className="shrink-0" />
+          <span className="min-w-0 flex-1">
+            Cette version est publiée : sa structure ne peut plus être modifiée, faute
+            de quoi les notes déjà calculées ne seraient plus reproductibles. Créez un
+            brouillon pour la faire évoluer.
+          </span>
+          <button
+            onClick={creerBrouillon}
+            disabled={duplication}
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {duplication && <Loader2 size={15} className="animate-spin" />}
+            Créer un brouillon
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl bg-destructive/10 border border-destructive/30 p-4 text-destructive text-sm">
@@ -381,7 +499,8 @@ export default function ScoringBuilderPage() {
               <AlertCircle size={18} className="text-warning" />
             )}
             <span className="font-medium">
-              Poids total: <strong>{(totalWeight * 100).toFixed(1)}%</strong>
+              Poids total :{" "}
+              <strong>{totalWeight.toFixed(2).replace(".", ",")} %</strong>
             </span>
           </div>
           <div className="text-xs text-muted-foreground grid grid-cols-3 gap-4">
@@ -434,6 +553,7 @@ export default function ScoringBuilderPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    {!lectureSeule && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -443,6 +563,8 @@ export default function ScoringBuilderPage() {
                     >
                       <Edit2 size={14} />
                     </button>
+                    )}
+                    {!lectureSeule && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -453,6 +575,7 @@ export default function ScoringBuilderPage() {
                     >
                       <Trash2 size={14} />
                     </button>
+                    )}
                     {isExpanded ? (
                       <ChevronDown size={18} className="text-muted-foreground" />
                     ) : (
@@ -469,6 +592,7 @@ export default function ScoringBuilderPage() {
                         <p className="text-xs text-muted-foreground mb-3">Aucun critère dans ce domaine</p>
                         <button
                           onClick={() => openCreateCriterionModal(domain.id)}
+                          disabled={lectureSeule}
                           className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary/90 text-white font-medium rounded text-xs transition-colors"
                         >
                           <Plus size={14} />
@@ -502,6 +626,7 @@ export default function ScoringBuilderPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
+                              {!lectureSeule && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -511,6 +636,8 @@ export default function ScoringBuilderPage() {
                               >
                                 <Edit2 size={14} />
                               </button>
+                              )}
+                              {!lectureSeule && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -521,6 +648,7 @@ export default function ScoringBuilderPage() {
                               >
                                 <Trash2 size={14} />
                               </button>
+                              )}
                               {hasDetails && (
                                 isExpCrit ? (
                                   <ChevronDown size={14} className="text-muted-foreground" />
@@ -540,6 +668,7 @@ export default function ScoringBuilderPage() {
                                     <span>Options</span>
                                     <button
                                       onClick={() => openCreateOptionModal(criterion.id, criterion.code)}
+                          disabled={lectureSeule}
                                       className="p-1 hover:bg-secondary rounded text-secondary-foreground"
                                     >
                                       <Plus size={14} />
@@ -567,7 +696,7 @@ export default function ScoringBuilderPage() {
                                             </button>
                                             <button
                                               onClick={() => handleDeleteOption(opt.id)}
-                                              disabled={saving}
+                                              disabled={saving || lectureSeule}
                                               className="text-destructive hover:text-destructive/80 disabled:opacity-50"
                                             >
                                               <Trash2 size={12} />
@@ -586,6 +715,7 @@ export default function ScoringBuilderPage() {
                                     <span>Plages</span>
                                     <button
                                       onClick={() => openCreateRangeModal(criterion.id, criterion.code)}
+                          disabled={lectureSeule}
                                       className="p-1 hover:bg-secondary rounded text-secondary-foreground"
                                     >
                                       <Plus size={14} />
@@ -617,7 +747,7 @@ export default function ScoringBuilderPage() {
                                             </button>
                                             <button
                                               onClick={() => handleDeleteRange(r.id)}
-                                              disabled={saving}
+                                              disabled={saving || lectureSeule}
                                               className="text-destructive hover:text-destructive/80 disabled:opacity-50"
                                             >
                                               <Trash2 size={12} />
@@ -637,6 +767,7 @@ export default function ScoringBuilderPage() {
                     {domain.children && domain.children.length > 0 && <div className="px-5 py-3 border-t border-border bg-muted/20">
                       <button
                         onClick={() => openCreateCriterionModal(domain.id)}
+                          disabled={lectureSeule}
                         className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/30 rounded transition-colors text-sm"
                       >
                         <Plus size={14} />
@@ -662,6 +793,7 @@ export default function ScoringBuilderPage() {
         <div className="flex gap-3 justify-end">
           <button
             onClick={openCreateDomainModal}
+                          disabled={lectureSeule}
             className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <Plus size={16} />
