@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { apiGet, apiPost, apiDelete } from "@/lib/api-client";
+import { apiGet, apiPost, apiDelete, messageErreurApi } from "@/lib/api-client";
 
 interface Binding {
   id: string;
@@ -31,6 +31,10 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
     loadBindings();
   }, [nodeId, versionId]);
 
+  // Les échecs passaient inaperçus : l'écran gardait l'ancien contenu et l'ajout ou
+  // la suppression semblaient réussir.
+  const [erreur, setErreur] = useState<string | null>(null);
+
   const loadBindings = async () => {
     try {
       setIsLoading(true);
@@ -38,9 +42,13 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
       if (res.ok) {
         const data = await res.json();
         setBindings(data.data || []);
+        setErreur(null);
+      } else {
+        setErreur(await messageErreurApi(res, "Lecture des liaisons impossible."));
       }
     } catch (e) {
       console.error("Load bindings error:", e);
+      setErreur("Erreur réseau lors de la lecture des liaisons.");
     } finally {
       setIsLoading(false);
     }
@@ -61,9 +69,13 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
         setBindings([...bindings, data.data]);
         setFormData({ sourceEntity: "PROJECT", sourceField: "", bindingMode: "AUTO_EDITABLE" });
         setShowForm(false);
+        setErreur(null);
+      } else {
+        setErreur(await messageErreurApi(res, "Ajout refusé."));
       }
     } catch (e) {
       console.error("Add binding error:", e);
+      setErreur("Erreur réseau lors de l'ajout.");
     }
   };
 
@@ -72,9 +84,13 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
       const res = await apiDelete(`/api/admin/scoring/bindings?id=${bindingId}`);
       if (res.ok) {
         setBindings(bindings.filter((b) => b.id !== bindingId));
+        setErreur(null);
+      } else {
+        setErreur(await messageErreurApi(res, "Suppression refusée."));
       }
     } catch (e) {
       console.error("Delete binding error:", e);
+      setErreur("Erreur réseau lors de la suppression.");
     }
   };
 
@@ -82,6 +98,12 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
 
   return (
     <div className="space-y-4">
+      {erreur && (
+        <p className="rounded-md border border-destructive/40 bg-destructive-subtle px-3 py-2 text-sm text-destructive">
+          {erreur}
+        </p>
+      )}
+
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {bindings.length === 0 ? (
           <p className="text-muted-foreground text-sm">Aucune liaison pour ce nœud</p>

@@ -98,7 +98,7 @@ export class ScoringVersionService {
       );
     }
 
-    let updateData: any = {
+    const updateData: any = {
       status: targetStatus,
       updatedAt: new Date(),
     };

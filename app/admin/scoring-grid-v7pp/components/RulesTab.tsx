@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Ban, Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut, apiDelete, messageErreurApi } from "@/lib/api-client";
 import {
   ACTIONS_REGLE,
   MALUS_MAX,
@@ -110,9 +110,13 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
       if (res.ok) {
         const data = await res.json();
         setRules(data.data || []);
+        setErreursServeur([]);
+      } else {
+        setErreursServeur([await messageErreurApi(res, "Lecture des règles impossible.")]);
       }
     } catch (e) {
       console.error("Load rules error:", e);
+      setErreursServeur(["Erreur réseau lors de la lecture des règles."]);
     } finally {
       setIsLoading(false);
     }
@@ -259,9 +263,18 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
   const handleDeleteRule = async (ruleId: string) => {
     try {
       const res = await apiDelete(`/api/admin/scoring/rules?id=${ruleId}`);
-      if (res.ok) setRules(rules.filter((r) => r.id !== ruleId));
+      // Un refus passait inaperçu : la règle restait en place et l'administrateur
+      // croyait l'avoir supprimée — notamment depuis qu'une version publiée refuse
+      // toute modification.
+      if (res.ok) {
+        setRules(rules.filter((r) => r.id !== ruleId));
+        setErreursServeur([]);
+      } else {
+        setErreursServeur([await messageErreurApi(res, "Suppression refusée.")]);
+      }
     } catch (e) {
       console.error("Delete rule error:", e);
+      setErreursServeur(["Erreur réseau lors de la suppression."]);
     }
   };
 

@@ -220,7 +220,7 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
   };
 
   if (node.answerType !== "OPTION_SINGLE") {
-    return <p className="text-muted-foreground">Ce nœud n'utilise pas les options</p>;
+    return <p className="text-muted-foreground">Ce nœud n&apos;utilise pas les options</p>;
   }
 
   return (
@@ -327,7 +327,7 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
   };
 
   if (node.answerType !== "NUMERIC_RANGE") {
-    return <p className="text-muted-foreground">Ce nœud n'utilise pas les plages</p>;
+    return <p className="text-muted-foreground">Ce nœud n&apos;utilise pas les plages</p>;
   }
 
   return (

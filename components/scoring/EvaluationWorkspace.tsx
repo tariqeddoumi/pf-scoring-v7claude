@@ -779,7 +779,7 @@ export function EvaluationWorkspace({
                     ))
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
-                      <p>Ce domaine n'a pas encore de critères configurés.</p>
+                      <p>Ce domaine n&apos;a pas encore de critères configurés.</p>
                     </div>
                   )}
                 </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Briefcase, Loader2, Plus, Search, Trash2, X } from "lucide-react";
-import { apiGet, apiDelete } from "@/lib/api-client";
+import { apiGet, apiDelete, messageErreurApi } from "@/lib/api-client";
 import { formatMAD, formatMADCompact } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
@@ -65,7 +65,7 @@ export default function ProjectsPage() {
         apiGet("/api/projects?limit=200"),
         apiGet("/api/reference/sectors"),
       ]);
-      if (!res.ok) throw new Error("Chargement des projets impossible.");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Chargement des projets impossible."));
       setProjets((await res.json()).data ?? []);
       if (resSecteurs.ok) {
         const liste: { code: string; label: string }[] =

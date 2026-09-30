@@ -14,7 +14,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { apiGet, apiDelete, apiPut } from "@/lib/api-client";
+import { apiGet, apiDelete, apiPut, messageErreurApi } from "@/lib/api-client";
 import { formatMAD, formatMADCompact, formatDate } from "@/lib/utils";
 import { GRADE_THRESHOLDS } from "@/lib/constants";
 import { PageHeader } from "@/components/ui/page-header";
@@ -100,7 +100,7 @@ export default function EvaluationsPage() {
     try {
       setChargement(true);
       const res = await apiGet("/api/evaluations?limit=200");
-      if (!res.ok) throw new Error("Chargement des évaluations impossible.");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Chargement des évaluations impossible."));
       setEvaluations((await res.json()).data ?? []);
       setErreur(null);
     } catch (e) {

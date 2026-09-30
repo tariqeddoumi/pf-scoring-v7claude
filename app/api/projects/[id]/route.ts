@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { withAuth, hasMinimumRole, type AuthPayload } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
 import { ProjectService } from "@/lib/services/project-service";
 
 interface RouteParams {
@@ -35,8 +37,21 @@ async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: 
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    if (project.creePar !== user.userId && user.role !== "system_admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Seuls le créateur et le super-administrateur pouvaient modifier un dossier :
+    // le responsable des risques, qui doit pouvoir le corriger, recevait 403 alors
+    // que l'interface lui proposait le bouton — la matrice de permissions lui accorde
+    // « project: update ». L'API suit désormais cette matrice : chacun modifie ses
+    // dossiers, et à partir du responsable des risques, ceux de tous.
+    const peutModifier =
+      hasPermission(user.role as UserRole, "project", "update") &&
+      (project.creePar === user.userId ||
+        hasMinimumRole(user.role as UserRole, "risk_manager"));
+
+    if (!peutModifier) {
+      return NextResponse.json(
+        { error: "Vos droits ne permettent pas de modifier ce projet" },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -64,8 +79,18 @@ async function handleDELETE(request: NextRequest, user: AuthPayload, params: { i
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    if (project.creePar !== user.userId && user.role !== "system_admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // La suppression suit la même règle, avec la permission correspondante : un
+    // analyste ne supprime pas, même ses propres dossiers.
+    const peutSupprimer =
+      hasPermission(user.role as UserRole, "project", "delete") &&
+      (project.creePar === user.userId ||
+        hasMinimumRole(user.role as UserRole, "risk_manager"));
+
+    if (!peutSupprimer) {
+      return NextResponse.json(
+        { error: "Vos droits ne permettent pas de supprimer ce projet" },
+        { status: 403 }
+      );
     }
 
     await ProjectService.deleteProject(params.id, user.userId);

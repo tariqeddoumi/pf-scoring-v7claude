@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { updateClientSchema } from "@/lib/validation-schemas";
 
@@ -51,7 +53,15 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withAuth(request, async (req) => {
+  return withAuth(request, async (req, user) => {
+    // Aucune vérification de rôle n'était faite : un compte en lecture seule pouvait
+    // modifier la signalétique d'une contrepartie, notation interne comprise.
+    if (!hasPermission(user.role as UserRole, "client", "update")) {
+      return NextResponse.json(
+        { success: false, error: "Vos droits ne permettent pas de modifier ce client" },
+        { status: 403 }
+      );
+    }
     const { id } = await params;
     try {
       const body = await req.json();
@@ -104,7 +114,13 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withAuth(request, async (req) => {
+  return withAuth(request, async (req, user) => {
+    if (!hasPermission(user.role as UserRole, "client", "delete")) {
+      return NextResponse.json(
+        { success: false, error: "Vos droits ne permettent pas de supprimer ce client" },
+        { status: 403 }
+      );
+    }
     const { id } = await params;
     try {
       await prisma.client.delete({ where: { id } });

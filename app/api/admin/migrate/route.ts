@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { execSync } from "child_process";
 
 /**
  * Migration endpoint - Manually trigger database migrations
@@ -33,8 +34,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { execSync } = require("child_process");
-
     // Run prisma migrate deploy
     const output = execSync("npx prisma migrate deploy", {
       encoding: "utf-8",

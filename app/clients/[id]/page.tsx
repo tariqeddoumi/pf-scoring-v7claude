@@ -13,7 +13,7 @@ import {
   Phone,
   Plus,
 } from "lucide-react";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, messageErreurApi } from "@/lib/api-client";
 import { formatMAD, formatMADCompact, formatDate } from "@/lib/utils";
 import { KYC_A_TRAITER, CONFORMITE_A_TRAITER } from "@/lib/referentiels";
 import { ratingBadgeClass } from "@/lib/score-colors";
@@ -90,7 +90,7 @@ export default function FicheClientPage({
     try {
       setChargement(true);
       const res = await apiGet(`/api/clients/${id}`);
-      if (!res.ok) throw new Error("Cette fiche client est introuvable.");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Cette fiche client est introuvable."));
       setClient((await res.json()).data);
       setErreur(null);
     } catch (e) {

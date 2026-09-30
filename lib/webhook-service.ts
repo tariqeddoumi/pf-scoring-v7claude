@@ -15,8 +15,11 @@ interface WebhookPayload {
   data: any;
 }
 
+/** Un abonné à un événement : il reçoit la charge utile et peut être asynchrone. */
+type GestionnaireWebhook = (payload: WebhookPayload) => void | Promise<void>;
+
 export class WebhookService {
-  private handlers: Map<WebhookEvent, Function[]> = new Map();
+  private handlers: Map<WebhookEvent, GestionnaireWebhook[]> = new Map();
 
   constructor() {
     this.registerDefaultHandlers();
@@ -72,7 +75,7 @@ export class WebhookService {
     });
   }
 
-  on(event: WebhookEvent, handler: Function) {
+  on(event: WebhookEvent, handler: GestionnaireWebhook) {
     if (!this.handlers.has(event)) {
       this.handlers.set(event, []);
     }

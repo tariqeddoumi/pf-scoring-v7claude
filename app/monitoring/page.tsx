@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Loader2 } from "lucide-react";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, messageErreurApi } from "@/lib/api-client";
 import { formatMAD, formatMADCompact, formatDate } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
@@ -64,7 +64,7 @@ export default function MonitoringPage() {
     (async () => {
       try {
         const res = await apiGet("/api/projects?limit=200");
-        if (!res.ok) throw new Error("Chargement des projets impossible.");
+        if (!res.ok) throw new Error(await messageErreurApi(res, "Chargement des projets impossible."));
         const liste: Projet[] = (await res.json()).data ?? [];
         setProjets(liste);
 

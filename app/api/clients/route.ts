@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth-middleware";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { createClientSchema } from "@/lib/validation-schemas";
 
-async function handler(request: NextRequest) {
+async function handler(request: NextRequest, user: AuthPayload) {
   // GET - List clients
   if (request.method === "GET") {
     try {
       const { searchParams } = new URL(request.url);
-      const skip = parseInt(searchParams.get("skip") || "0");
-      const take = parseInt(searchParams.get("take") || "10");
+      // Bornes : un paramètre illisible ou démesuré ne doit ni faire échouer la
+      // requête, ni ramener la table entière.
+      const skipDemande = Number.parseInt(searchParams.get("skip") ?? "", 10);
+      const takeDemande = Number.parseInt(searchParams.get("take") ?? "", 10);
+      const skip = Number.isFinite(skipDemande) ? Math.max(0, skipDemande) : 0;
+      const take = Number.isFinite(takeDemande)
+        ? Math.min(500, Math.max(1, takeDemande))
+        : 10;
       const search = searchParams.get("search") || "";
 
       const where = search
@@ -75,6 +83,15 @@ async function handler(request: NextRequest) {
   // POST - Create client
   if (request.method === "POST") {
     try {
+      // La route ne vérifiait aucun rôle : tout compte authentifié, y compris un
+      // compte en lecture seule ou un auditeur, pouvait créer une contrepartie.
+      if (!hasPermission(user.role as UserRole, "client", "create")) {
+        return NextResponse.json(
+          { success: false, error: "Vos droits ne permettent pas de créer un client" },
+          { status: 403 }
+        );
+      }
+
       const body = await request.json();
 
       // La route ne retenait que onze champs sur les vingt-neuf que le formulaire
@@ -133,9 +150,9 @@ async function handler(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  return withAuth(request, (req) => handler(req));
+  return withAuth(request, (req, user) => handler(req, user));
 }
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, (req) => handler(req));
+  return withAuth(request, (req, user) => handler(req, user));
 }
