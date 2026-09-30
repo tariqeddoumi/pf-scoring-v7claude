@@ -14,7 +14,8 @@ import {
   FileSearch,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, apiPost, messageErreurApi } from "@/lib/api-client";
+import { usePermission } from "@/lib/hooks/usePermission";
 import { scoreBarClass, scoreTextClass } from "@/lib/score-colors";
 
 interface Evaluation {
@@ -112,6 +113,33 @@ export default function EvaluationDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [evalId, setEvalId] = useState<string | null>(null);
+  const { can } = usePermission();
+  const [reouverture, setReouverture] = useState(false);
+  const [motif, setMotif] = useState("");
+  const [enCours, setEnCours] = useState(false);
+  const [erreurReouverture, setErreurReouverture] = useState<string | null>(null);
+
+  /**
+   * Remise en saisie d'une évaluation soumise ou rejetée.
+   *
+   * Une évaluation soumise ne pouvait plus être corrigée : le bouton « Reprendre la
+   * saisie » n'apparaît que pour un brouillon, et rien ne ramenait un dossier soumis à
+   * l'état de brouillon. Le score ne se corrige jamais directement — on corrige les
+   * réponses, puis on relance le calcul — d'où ce retour en saisie, motivé et tracé.
+   */
+  const remettreEnSaisie = async () => {
+    if (!evalId) return;
+    setEnCours(true);
+    setErreurReouverture(null);
+    try {
+      const res = await apiPost(`/api/scoring/evaluations/${evalId}/reopen`, { motif });
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Remise en saisie impossible."));
+      router.push(`/evaluations/${evalId}/saisie`);
+    } catch (e) {
+      setErreurReouverture(e instanceof Error ? e.message : "Remise en saisie impossible.");
+      setEnCours(false);
+    }
+  };
 
   useEffect(() => {
     const resolveAndFetch = async () => {
@@ -307,8 +335,54 @@ export default function EvaluationDetailPage({
               <span>Reprendre la saisie</span>
             </button>
           )}
+          {(evaluation.status === "soumis" || evaluation.status === "rejete") &&
+            can("evaluation", "update") && (
+              <button
+                onClick={() => setReouverture(true)}
+                className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-lg transition-all"
+              >
+                <Edit2 size={20} />
+                <span>Corriger l&apos;évaluation</span>
+              </button>
+            )}
         </div>
       </div>
+
+      {reouverture && (
+        <div className="rounded-lg border border-warning/40 bg-warning-subtle p-4 space-y-3">
+          <p className="text-sm text-foreground">
+            <strong>Remettre l&apos;évaluation en saisie ?</strong> Elle repasse en brouillon et
+            sort du circuit de validation. Le score ne se corrige pas directement : modifiez
+            les réponses concernées, relancez le calcul, puis soumettez à nouveau. Le motif
+            est conservé dans les notes et le journal d&apos;audit.
+          </p>
+          <textarea
+            value={motif}
+            onChange={(e) => setMotif(e.target.value)}
+            rows={2}
+            placeholder="Motif de la correction (ex. erreur de saisie sur le DSCR de l'année 3)"
+            aria-label="Motif de la correction"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
+          />
+          {erreurReouverture && <p className="text-sm text-destructive">{erreurReouverture}</p>}
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => { setReouverture(false); setErreurReouverture(null); }}
+              className="h-9 rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground hover:bg-accent"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={remettreEnSaisie}
+              disabled={enCours || motif.trim().length < 5}
+              className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
+            >
+              {enCours && <Loader2 size={15} className="animate-spin" />}
+              Remettre en saisie
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Score Card */}
       {evaluation.finalScore !== undefined && evaluation.finalScore !== null && (
