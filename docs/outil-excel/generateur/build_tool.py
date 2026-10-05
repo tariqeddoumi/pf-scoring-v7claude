@@ -14,7 +14,7 @@ import modules_vba
 
 SANS_VBA = "--sans-vba" in sys.argv
 ICI = os.path.dirname(os.path.abspath(__file__))
-SORTIE = os.path.join(ICI, "Outil_Scoring_PF_V8.xlsx" if SANS_VBA else "Outil_Scoring_PF_V8.xlsm")
+SORTIE = os.path.join(ICI, "Outil_Scoring_PF_V8_v2.xlsx" if SANS_VBA else "Outil_Scoring_PF_V8_v2.xlsm")
 
 # ===================================================================== barèmes (doctrine V8)
 REGIMES = [("R1", "Contrat ferme à quantité garantie (take-or-pay)", 1.10, 1.20, 1.30),
@@ -214,6 +214,216 @@ R["lecon"] = R["lecon_title"] + 1
 assert R["regime"] == 15 and R["expo"] == 23 and R["choc"] == 70 and R["p_first"] == 72 and R["p_last"] == 131
 assert R["n1"] == 142 and R["n3_saisi"] == 150 and R["dsra"] == 152 and R["fx"] == 153 and R["note"] == 6
 
+# Ligne « À SAISIR » du tableau de bord et barre de navigation (lignes figées)
+R["a_saisir"] = 4
+R["nav"] = 12
+# Check-list de saisie : colonnes masquées P (libellé), Q (adresse), R (1 = fait, 0 = manquant)
+CK_COL_LIB, CK_COL_ADR, CK_COL_OK = 15, 16, 17
+R["ck_first"] = 14
+
+
+def _checklist():
+    """Saisies attendues, dans l'ordre du dossier : (libellé, adresse, condition « fait », plage colorée si manquant).
+
+    La condition est une expression Excel vraie quand la saisie est faite. Les saisies
+    conditionnelles (EPC en P1, stratégie si dette à refinancer > 30 %, etc.) ne sont
+    exigées que lorsque la règle qui les lit s'applique.
+    """
+    b = lambda k: f"$B${R[k]}"
+    rempli = lambda k: f'{b(k)}<>""'
+    nombre = lambda k: f"ISNUMBER({b(k)})"
+    p1 = f'{b("phase")}="P1"'
+    f1, f2, t = R["se_first"], R["se_last"], R["se_tot"]
+    pf, pl = R["p_first"], R["p_last"]
+    g1, g2 = R["grid_first"], R["grid_last"]
+    x1, b8 = R["x_first"], R["b_last"]
+    items = [
+        ("1 · Régime de revenus", "regime", rempli("regime")),
+        ("1 · Secteur du projet", "secteur", rempli("secteur")),
+        ("1 · Phase du projet", "phase", rempli("phase")),
+        ("1 · Périodicité des échéances", "period", rempli("period")),
+        ("2 · Exposition de la banque (MMAD)", "expo", nombre("expo")),
+        ("2 · Recettes, coûts et dette en dirhams ?", "mad", rempli("mad")),
+        ("2 · Durée du financement (ans)", "duree", nombre("duree")),
+        ("2 · Technologie éprouvée ?", "techno", rempli("techno")),
+        ("2 · EPC clé-en-main de moins de 18 mois ? (phase P1)", "epc18", f"OR(NOT({p1}),{rempli('epc18')})"),
+        ("2 · Acheteur principal unique ?", "unique", rempli("unique")),
+        ("2 · Première référence technologique ?", "premiere", rempli("premiere")),
+        ("2 · Opération consortiale ?", "consortium", rempli("consortium")),
+        ("2 · Contrat de revenus de plus de 20 ans ?", "plus20", rempli("plus20")),
+        ("2 · Site à risque climatique élevé ?", "climat", rempli("climat")),
+        ("2 · Nombre de contreparties clés", "nbcp", nombre("nbcp")),
+        ("3 · Emplois : montants du besoin à terminaison", f"B{f1}", f"N($B${t})>0", f"B{f1}"),
+        ("3 · Ressources engagées : montants", f"E{f1}", f"N($E${t})>0", f"E{f1}"),
+        ("3 · Nature de chaque ressource", f"F{f1}", f'SUMPRODUCT(ISNUMBER($E${f1}:$E${f2})*($F${f1}:$F${f2}=""))=0', None),
+        ("3 · Plan de remédiation (couverture entre 95 et 100 %)", "remed",
+         f'OR(NOT(AND({p1},ISNUMBER({b("couv")}),N({b("couv")})>=P_N3_V,N({b("couv")})<P_N3_F)),{rempli("remed")})'),
+        ("6 · Choc du scénario défavorable (%)", "choc", nombre("choc")),
+        ("6 · Échéancier : CFADS d'au moins deux périodes", f"B{pf}", f"COUNT($B${pf}:$B${pl})>=2", None),
+        ("6 · Service de la dette de chaque période", f"C{pf}",
+         f"SUMPRODUCT(ISNUMBER($B${pf}:$B${pl})*(1-ISNUMBER($C${pf}:$C${pl})))=0", None),
+        ("7 · N4 — Liquidité (DSRA, lignes, cascade)", f"B{R['n1'] + 3}", f'$B${R["n1"] + 3}<>""', f"B{R['n1'] + 3}"),
+        ("7 · N5 — Levier et fonds propres à risque", f"B{R['n1'] + 4}", f'$B${R["n1"] + 4}<>""', f"B{R['n1'] + 4}"),
+        ("7 · N6 — Exposition résiduelle taux, change, refinancement", f"B{R['n1'] + 5}", f'$B${R["n1"] + 5}<>""', f"B{R['n1'] + 5}"),
+        ("7 · N3 hors phase P1 : note LLCR", "n3_saisi", f"OR({p1},{rempli('n3_saisi')})"),
+        ("7 · LLCR (plafond C4)", "llcr", nombre("llcr")),
+        ("7 · DSRA en mois (plafond C7)", "dsra", nombre("dsra")),
+        ("7 · Exposition nette en devises (plafond C6)", "fx", nombre("fx")),
+        ("7 · Dette à refinancer à maturité (plafond C8)", "refi", nombre("refi")),
+        ("7 · Stratégie de refinancement approuvée ?", "strat", f"OR(N({b('refi')})<=P_C8,{rempli('strat')})"),
+        ("7 · Part des recettes de l'acheteur principal (C10)", "part_ach", nombre("part_ach")),
+        ("7 · Qualité de crédit de l'acheteur principal", "qual", rempli("qual")),
+        # Pas de contrat de revenus en régime R4 (exposition au marché) : C5 ne s'y applique pas.
+        ("7 · Durée résiduelle du contrat de revenus (C5)", "duree_contrat", f'OR({b("regime")}="R4",{nombre("duree_contrat")})'),
+        ("7 · Durée résiduelle de la dette", "duree_dette", nombre("duree_dette")),
+        ("7 · Solution documentée (contrat plus court que la dette) ?", "solution",
+         f'OR(NOT(AND({nombre("duree_contrat")},{nombre("duree_dette")})),N({b("duree_contrat")})>=N({b("duree_dette")}),{rempli("solution")})'),
+        ("7 · Plan d'adaptation climatique financé ? (C11)", "plan_adapt", f'OR({b("climat")}<>"Oui",{rempli("plan_adapt")})'),
+        ("7 · Capacité résiduelle du sponsor (C12)", "sponsor", rempli("sponsor")),
+        ("7 · Opérateur remplaçable ? (C13)", "operateur", rempli("operateur")),
+        ("7 · Écart fin O&M / fin de dette (opérateur non remplaçable)", "ecart_om", f'OR({b("operateur")}<>"Non",{nombre("ecart_om")})'),
+        ("7 · Facteur commun au-delà de la limite interne (C14)", "facteur", rempli("facteur")),
+        ("8 · Grille : sous-critère requis non noté", f'="B"&IF(COUNT($P${g1}:$P${g2})=0,{g1},MIN($P${g1}:$P${g2}))',
+         f"COUNT($P${g1}:$P${g2})=0", None),
+        ("10 · Verrous X1 à B8 : répondre Oui ou Non", f"E{x1}", f"COUNTBLANK($E${x1}:$E${b8})=0", None),
+    ]
+    out = []
+    for it in items:
+        lib, cle, ok = it[:3]
+        if len(it) == 4:
+            out.append((lib, cle, ok, it[3]))
+        elif cle in R:
+            out.append((lib, f"B{R[cle]}", ok, f"B{R[cle]}"))
+        else:
+            out.append((lib, cle, ok, None))
+    return out
+
+
+CHECKLIST = _checklist()
+assert R["ck_first"] + len(CHECKLIST) - 1 < R["regime"] + 60  # reste loin de la grille (colonne P)
+
+# ===================================================================== aide à la saisie
+# Info-bulle affichée quand on sélectionne une cellule de saisie (titre ≤ 32 car., texte ≤ 255).
+AIDE = {
+    "titre": ("Intitulé du dossier", "Référence et nom du projet, ex. « PF-2026-014 · Centrale solaire de Ouarzazate »."),
+    "spv": ("SPV et localisation", "Société de projet emprunteuse et lieu du site."),
+    "resume": ("Résumé du projet", "Objet, contrat de recettes, montage financier : trois ou quatre lignes."),
+    "regime": ("Régime de revenus", "R1 contrat ferme (take-or-pay) ; R2 paiement à la disponibilité ; R3 contrat à risque de volume ; "
+                                    "R4 exposition au marché. Fixe les seuils DSCR."),
+    "secteur": ("Secteur du projet", "Code du secteur. Il ajoute l'écart sectoriel Δ au seuil DSCR du régime (onglet Paramètres)."),
+    "phase": ("Phase du projet", "P1 construction ; P2 montée en charge (+0,05 sur les seuils) ; P3 exploitation stabilisée. "
+                                 "La phase fixe les poids des domaines."),
+    "period": ("Périodicité des échéances", "Fréquence du service de la dette. Le DSCR se mesure échéance par échéance, jamais en annuel."),
+    "famille": ("Famille de financement", "PF-FLUX : société de projet remboursée par les flux du projet. La vente d'actifs (R5) est hors outil."),
+    "expo": ("Exposition de la banque", "Montant total engagé par la banque sur le projet, en millions de dirhams (MMAD). Ex. : 250."),
+    "mad": ("Tout en dirhams ?", "Oui si recettes, coûts et dette sont intégralement en MAD. Non dès qu'une part est en devises."),
+    "duree": ("Durée du financement", "Durée totale de la dette, en années. Ex. : 15."),
+    "techno": ("Technologie éprouvée ?", "Oui si la technologie compte au moins 3 références industrielles de plus de 3 ans."),
+    "epc18": ("EPC clé-en-main < 18 mois ?", "Phase P1 seulement : Oui si le contrat EPC est forfaitaire, à prix et délai garantis, "
+                                           "pour une durée de moins de 18 mois."),
+    "unique": ("Acheteur principal unique ?", "Oui si l'essentiel des recettes provient d'un acheteur principal unique et identifié."),
+    "premiere": ("Première référence ?", "Oui si la technologie est une première dans la juridiction (régime L)."),
+    "consortium": ("Opération consortiale ?", "Oui si le financement est consortial au sens de la directive 3/W/2025 (régime L)."),
+    "plus20": ("Contrat de plus de 20 ans ?", "Oui si la concession ou le contrat de revenus dépasse 20 ans (régime L)."),
+    "climat": ("Risque climatique élevé ?", "Oui si le site est classé à risque climatique physique élevé : régime L, "
+                                            "et plafond C11 sans plan d'adaptation financé."),
+    "nbcp": ("Contreparties clés", "Nombre de contreparties clés : acheteur, EPC, opérateur, fournisseurs critiques… "
+                                   "Au-delà de 3, régime L."),
+    "emp_lib": ("Emploi", "Poste du besoin à terminaison : CAPEX, intérêts intercalaires, DSRA initiale, aléas…"),
+    "emp_mt": ("Montant de l'emploi", "Montant en millions de dirhams (MMAD)."),
+    "res_lib": ("Ressource", "Ressource engagée : dette senior, capital, quasi-fonds propres, subvention…"),
+    "res_mt": ("Montant de la ressource", "Montant engagé, en millions de dirhams (MMAD)."),
+    "nature": ("Nature de la ressource", "À choisir dans la liste. Dette senior et dette subordonnée forment la quote-part "
+                                         "de dette (plafond C9 au-delà de 85 %)."),
+    "remed": ("Plan de remédiation", "Phase P1 : Oui si un plan approuvé couvre l'écart lorsque les ressources couvrent "
+                                     "entre 95 % et 100 % du besoin."),
+    "hyp": ("Hypothèse d'exploitation", "Information libre, non utilisée par le calcul."),
+    "choc": ("Scénario défavorable", "Baisse du CFADS appliquée à chaque période. Ex. : saisir 15% pour une baisse de 15 %. "
+                                     "Sans effet sur les périodes dont le CFADS stressé est saisi."),
+    "choc_lib": ("Description du stress", "Décrivez le scénario défavorable, ex. « production P90 et tarif −10 % »."),
+    "p_lib": ("Période", "Libellé de l'échéance, ex. « An 1 · S1 ». Le bouton « Préparer l'échéancier » les génère."),
+    "p_cfads": ("CFADS central", "Flux disponible pour le service de la dette sur la période, en MMAD. "
+                                 "Un CFADS négatif est noté Critique d'office."),
+    "p_service": ("Service de la dette", "Intérêts et principal dus sur la période, en MMAD. 0 = période de différé, "
+                                         "exclue du DSCR."),
+    "p_stress": ("CFADS stressé (facultatif)", "Laisser vide pour appliquer le choc de la ligne 70. Sinon, CFADS du scénario "
+                                               "défavorable issu du modèle de flux."),
+    "n_note": ("Note de l'indicateur", "100 Très favorable · 80 Favorable · 50 Vigilance · 20 Critique. "
+                                       "« Info. insuffisante » est comptée à 20 et rend la note provisoire."),
+    "n_lib": ("Justification", "Mesure et pièce justificative, ex. « DSRA 6 mois, cascade de paiement signée »."),
+    "n3_saisi": ("N3 hors phase P1", "Note fondée sur le LLCR : 100, 80, 50 ou 20. En phase P1, N3 est calculé "
+                                     "automatiquement à partir du test de financement à terminaison."),
+    "llcr": ("LLCR", "Loan Life Coverage Ratio, en nombre de fois, ex. 1,35. Plafond C4 en dessous de 1,10."),
+    "dsra": ("DSRA", "Réserve de service de la dette, en mois de service. Plafond C7 en dessous de 3 mois."),
+    "fx": ("Exposition en devises", "Exposition nette non couverte, en % du service annuel de la dette. Saisir 0% si tout "
+                                    "est en dirhams. Plafond C6 au-delà de 25 %."),
+    "refi": ("Dette à refinancer", "Part du nominal à refinancer à maturité (ballon), en %. 0% si l'amortissement est "
+                                   "complet. Plafond C8 au-delà de 30 % sans stratégie."),
+    "strat": ("Stratégie de refinancement", "Oui si une stratégie de refinancement est approuvée : neutralise le plafond C8."),
+    "part_ach": ("Part de l'acheteur principal", "Part des recettes portée par l'acheteur principal, en %. Ex. : 100%."),
+    "qual": ("Qualité de l'acheteur", "Notation interne de l'acheteur principal. Plafond C10 si sa part dépasse 85 % "
+                                      "et qu'il est noté sous BBB− ou non noté."),
+    "duree_contrat": ("Durée du contrat de revenus", "Durée résiduelle du contrat de revenus, en années. Plafond C5 s'il "
+                                                     "expire avant la dette sans solution documentée."),
+    "duree_dette": ("Durée résiduelle de la dette", "Durée résiduelle de la dette, en années."),
+    "solution": ("Solution documentée ?", "Oui si une solution documentée couvre l'expiration du contrat avant la dette : "
+                                          "neutralise C5."),
+    "plan_adapt": ("Plan d'adaptation financé ?", "Oui si un plan d'adaptation climatique est financé : neutralise C11."),
+    "sponsor": ("Capacité du sponsor ?", "Oui si la capacité résiduelle du sponsor couvre l'appel d'equity restant. "
+                                         "Non : plafond C12."),
+    "operateur": ("Opérateur remplaçable ?", "Oui si l'opérateur O&M peut être remplacé. Non, avec un contrat O&M "
+                                             "expirant plus de 5 ans avant la dette : plafond C13."),
+    "ecart_om": ("Écart O&M / dette (ans)", "Années entre la fin du contrat O&M et la fin de la dette. "
+                                            "À renseigner si l'opérateur n'est pas remplaçable."),
+    "facteur": ("Facteur commun ?", "Oui si l'exposition du groupe bancaire sur un facteur commun dépasse la limite "
+                                    "interne : plafond C14."),
+    "grille": ("Note du sous-critère", "100 Très favorable · 80 Favorable · 50 Vigilance · 20 Critique. "
+                                       "« Info. insuffisante » : comptée à 20, la note devient provisoire (C15, B7)."),
+    "comm": ("Commentaire du domaine", "Constats et pièces qui justifient les notes du domaine."),
+    "verrou": ("Verrou constaté ?", "Oui si le fait générateur est constaté, Non sinon. Une exclusion X empêche toute "
+                                    "note ; un blocage B rend la note provisoire."),
+    "verrouB6": ("Modèle de flux (B6)", "Question inversée : Oui si le modèle de flux daté est complet et rapproché des "
+                                        "états financiers. Non déclenche le blocage B6."),
+    "lecon": ("Conclusion", "Ce que le dossier enseigne, ou la recommandation de l'analyste au comité."),
+}
+for _k, (_t, _m) in AIDE.items():
+    assert len(_t) <= 32, _k
+    assert len(_m) <= 255, (_k, len(_m))
+
+# Contrôles numériques (message d'erreur en français)
+NUM = {
+    "pos": ({"validate": "decimal", "criteria": ">=", "value": 0}, "Saisissez un nombre positif ou nul."),
+    "reel": ({"validate": "decimal", "criteria": "between", "minimum": -1e9, "maximum": 1e9}, "Saisissez un nombre."),
+    "duree": ({"validate": "decimal", "criteria": "between", "minimum": 0, "maximum": 99}, "Saisissez une durée en années (0 à 99)."),
+    "ecart": ({"validate": "decimal", "criteria": "between", "minimum": -99, "maximum": 99}, "Saisissez un nombre d'années (−99 à 99)."),
+    "nb": ({"validate": "integer", "criteria": "between", "minimum": 0, "maximum": 99}, "Saisissez un nombre entier."),
+    "pct": ({"validate": "decimal", "criteria": "between", "minimum": 0, "maximum": 1},
+            "Saisissez un pourcentage entre 0 % et 100 %, par exemple 15%."),
+    "pct5": ({"validate": "decimal", "criteria": "between", "minimum": 0, "maximum": 5},
+             "Saisissez un pourcentage, par exemple 25% (500 % au plus)."),
+    "choc": ({"validate": "decimal", "criteria": "between", "minimum": 0, "maximum": 0.95},
+             "Saisissez la baisse du CFADS en pourcentage, par exemple 15% (95 % au plus)."),
+    "ratio": ({"validate": "decimal", "criteria": "between", "minimum": 0, "maximum": 20},
+              "Saisissez un ratio en nombre de fois, par exemple 1,35."),
+    "mois": ({"validate": "decimal", "criteria": "between", "minimum": 0, "maximum": 60},
+             "Saisissez un nombre de mois de service (0 à 60)."),
+}
+
+
+def validation(ws, plage, cle, liste=None, num=None):
+    """Liste déroulante ou contrôle numérique, avec info-bulle et message d'erreur en français."""
+    titre, message = AIDE[cle]
+    if liste:
+        opt = {"validate": "list", "source": liste, "error_title": "Valeur non admise",
+               "error_message": "Choisissez une valeur dans la liste déroulante (flèche à droite de la cellule)."}
+    elif num:
+        regle, erreur = NUM[num]
+        opt = dict(regle, error_title="Valeur non admise", error_message=erreur)
+    else:
+        opt = {"validate": "any"}
+    opt.update(input_title=titre, input_message=message)
+    ws.data_validation(plage, opt)
+
 
 def a(col, row, absolu=True):
     """Adresse A1 (colonne lettre, ligne 1-based)."""
@@ -222,19 +432,20 @@ def a(col, row, absolu=True):
 
 def ecrire_classeur():
     wb = xlsxwriter.Workbook(SORTIE)
-    wb.set_properties({"title": "Outil de scoring Project Finance V8", "subject": "Scoring PF — Maroc",
+    wb.set_properties({"title": "Outil de scoring Project Finance V8 — version 2", "subject": "Scoring PF — Maroc",
                        "comments": "Dossiers d'étude fictifs. Paramètres candidats non approuvés."})
     F = formats(wb)
 
     ws_acc = wb.add_worksheet("Accueil")
     ws_syn = wb.add_worksheet("Synthèse")
+    ws_fic = wb.add_worksheet("Fiche comité")
     ws_cas = {k: wb.add_worksheet(k) for k in cas_data.CAS}
     ws_mod = wb.add_worksheet("Modèle")
     ws_par = wb.add_worksheet("Paramètres")
     ws_dia = wb.add_worksheet("Diagnostic")
     ws_jou = wb.add_worksheet("Journal")
 
-    noms_vba = {"Accueil": "wsAccueil", "Synthèse": "wsSynthese", "Modèle": "wsModele",
+    noms_vba = {"Accueil": "wsAccueil", "Synthèse": "wsSynthese", "Fiche comité": "wsFiche", "Modèle": "wsModele",
                 "Paramètres": "wsParam", "Diagnostic": "wsDiag", "Journal": "wsJournal"}
     for k in cas_data.CAS:
         noms_vba[k] = "ws" + k
@@ -247,7 +458,9 @@ def ecrire_classeur():
     for k, ws in ws_cas.items():
         dossier(wb, ws, F, cas_data.CAS[k], k)
     dossier(wb, ws_mod, F, None, None)
+    ws_mod.hide()
     synthese(ws_syn, F, list(cas_data.CAS))
+    fiche(wb, ws_fic, F, "C3")
     accueil(ws_acc, F)
     diagnostic(ws_dia, F)
     journal(ws_jou, F)
@@ -255,12 +468,11 @@ def ecrire_classeur():
 
     if not SANS_VBA:
         mods = [{"name": "ThisWorkbook", "type": "document", "base": "workbook",
-                 "code": modules_vba.THIS_WORKBOOK}]
+                 "code": code_module(modules_vba.THIS_WORKBOOK)}]
         for ws in wb.worksheets():
             mods.append({"name": noms_vba[ws.name], "type": "document", "base": "worksheet",
                          "code": "Option Explicit\r\n"})
-        code = (modules_vba.MOD_OUTIL.replace("{GRID_START}", str(R["grid_first"]))
-                .replace("{GRID_END}", str(R["grid_last"])))
+        code = code_module()
         mods.append({"name": "modOutil", "type": "module", "code": code})
         binp = os.path.join(ICI, "vbaProject.bin")
         with open(binp, "wb") as fh:
@@ -269,9 +481,25 @@ def ecrire_classeur():
         with open(os.path.join(ICI, "modOutil.bas"), "w", encoding="cp1252", newline="\r\n") as fh:
             fh.write('Attribute VB_Name = "modOutil"\n' + code.replace("\r\n", "\n"))
         with open(os.path.join(ICI, "ThisWorkbook.cls.txt"), "w", encoding="cp1252", newline="\r\n") as fh:
-            fh.write(modules_vba.THIS_WORKBOOK.replace("\r\n", "\n"))
+            fh.write(code_module(modules_vba.THIS_WORKBOOK).replace("\r\n", "\n"))
     wb.close()
     return SORTIE
+
+
+def code_module(source=None):
+    """Source du module modOutil, avec les adresses du dossier issues de la mise en page R."""
+    remplacements = {
+        "{GRID_START}": R["grid_first"], "{GRID_END}": R["grid_last"],
+        "{CK_FIRST}": R["ck_first"], "{CK_LAST}": R["ck_first"] + len(CHECKLIST) - 1,
+        "{P_FIRST}": R["p_first"], "{P_LAST}": R["p_last"], "{PERIOD}": R["period"], "{DUREE}": R["duree"],
+        "{DMIN}": R["dmin"], "{NA}": R["na"], "{A_SAISIR}": R["a_saisir"], "{REGIME}": R["regime"],
+        "{PHASE}": R["phase"], "{SECTEUR}": R["secteur"], "{C_FIRST}": R["c_first"], "{C_LAST}": R["c_last"],
+    }
+    code = modules_vba.MOD_OUTIL if source is None else source
+    for k, v in remplacements.items():
+        code = code.replace(k, str(v))
+    assert "{" not in code.replace("{00020", ""), "adresse non remplacée dans le module VBA"
+    return code
 
 
 # ===================================================================== formats
@@ -284,25 +512,43 @@ def formats(wb):
         return wb.add_format(d)
 
     vert = "#1F4E3D"
+    # Cellules de saisie : déverrouillées (locked=False). Les feuilles sont protégées
+    # sans mot de passe : seules les cellules jaunes acceptent une saisie, les formules
+    # ne peuvent plus être écrasées par mégarde.
+    SAISIE = dict(font_color="#0000FF", bg_color="#FFF2CC", locked=False)
     return {
         "titre": f(bold=True, font_size=16, font_color=vert),
-        "titre_in": f(bold=True, font_size=16, font_color="#0000FF", bg_color="#FFF2CC"),
+        "titre_in": f(bold=True, font_size=16, **SAISIE),
         "sous": f(italic=True, font_color="#555555"),
-        "sous_in": f(italic=True, font_color="#0000FF", bg_color="#FFF2CC"),
+        "sous_in": f(italic=True, **SAISIE),
         "wrap": f(text_wrap=True, valign="top"),
-        "wrap_in": f(text_wrap=True, valign="top", font_color="#0000FF", bg_color="#FFF2CC"),
+        "wrap_in": f(text_wrap=True, valign="top", **SAISIE),
         "section": f(bold=True, font_color="white", bg_color=vert, font_size=11),
         "hdr": f(bold=True, bg_color="#DDE8E3", border=1, text_wrap=True),
+        "hdr_in": f(bold=True, border=1, text_wrap=True, **SAISIE),
         "lab": f(border=1),
         "labb": f(border=1, bold=True),
         "txt": f(border=1, text_wrap=True),
-        "in": f(border=1, font_color="#0000FF", bg_color="#FFF2CC"),
-        "in_c": f(border=1, font_color="#0000FF", bg_color="#FFF2CC", align="center"),
-        "in_num": f(border=1, font_color="#0000FF", bg_color="#FFF2CC", num_format="#,##0.0"),
-        "in_2d": f(border=1, font_color="#0000FF", bg_color="#FFF2CC", num_format="0.00"),
-        "in_pct": f(border=1, font_color="#0000FF", bg_color="#FFF2CC", num_format="0.0%"),
-        "in_int": f(border=1, font_color="#0000FF", bg_color="#FFF2CC", num_format="0"),
-        "in_wrap": f(border=1, font_color="#0000FF", bg_color="#FFF2CC", text_wrap=True),
+        "in": f(border=1, **SAISIE),
+        "in_c": f(border=1, align="center", **SAISIE),
+        "in_num": f(border=1, num_format="#,##0.0", **SAISIE),
+        "in_2d": f(border=1, num_format="0.00", **SAISIE),
+        "in_pct": f(border=1, num_format="0.0%", **SAISIE),
+        "in_int": f(border=1, num_format="0", **SAISIE),
+        "in_wrap": f(border=1, text_wrap=True, **SAISIE),
+        "in_big": f(bold=True, font_size=12, border=2, align="center", **SAISIE),
+        "lien": f(font_color="#0563C1", underline=1),
+        "lien_b": f(font_color="#0563C1", underline=1, border=1, bold=True),
+        "nav": f(font_color="#0563C1", underline=1, align="center", bg_color="#EEF3F1", border=1),
+        "nav_lab": f(bold=True, bg_color="#EEF3F1", border=1),
+        "date": f(border=1, num_format="dd/mm/yyyy", align="center"),
+        "leg_saisie": f(border=1, align="center", **SAISIE),
+        "leg_manq": f(border=1, align="center", font_color="#0000FF", bg_color="#F8CBAD"),
+        "leg_calc": f(border=1, align="center"),
+        "leg_vert": f(border=1, align="center", bg_color="#C6EFCE", font_color="#006100"),
+        "leg_ambre": f(border=1, align="center", bg_color="#FFE699", font_color="#7F6000"),
+        "leg_rouge": f(border=1, align="center", bg_color="#F8CBAD", font_color="#9C0006"),
+        "cadre": f(border=1, valign="top", text_wrap=True, locked=False),
         "num": f(border=1, num_format="#,##0.0"),
         "num1": f(border=1, num_format="0.0"),
         "num2": f(border=1, num_format="0.00"),
@@ -320,15 +566,17 @@ def formats(wb):
         "kpi_pct": f(bold=True, border=1, align="center", num_format="0%"),
         "kpi_txt": f(bold=True, border=1, text_wrap=True),
         "total": f(bold=True, border=1, num_format="#,##0.0", top=2),
-        "param": f(border=1, font_color="#0000FF", bg_color="#FFF2CC"),
-        "param_pct": f(border=1, font_color="#0000FF", bg_color="#FFF2CC", num_format="0%"),
-        "param_2d": f(border=1, font_color="#0000FF", bg_color="#FFF2CC", num_format="0.00"),
+        "param": f(border=1, **SAISIE),
+        "param_pct": f(border=1, num_format="0%", **SAISIE),
+        "param_2d": f(border=1, num_format="0.00", **SAISIE),
         "note_src": f(italic=True, font_color="#7F7F7F", font_size=8, text_wrap=True),
         "hidden": f(font_color="#FFFFFF"),
         "rouge": wb.add_format({"bg_color": "#F8CBAD", "font_color": "#9C0006"}),
         "ambre": wb.add_format({"bg_color": "#FFE699", "font_color": "#7F6000"}),
         "vertc": wb.add_format({"bg_color": "#C6EFCE", "font_color": "#006100"}),
         "gris": wb.add_format({"font_color": "#A6A6A6"}),
+        # saisie obligatoire encore vide : orange, redevient jaune une fois remplie
+        "manquant": wb.add_format({"bg_color": "#F8CBAD", "border": 1, "border_color": "#C55A11"}),
     }
 
 
@@ -397,6 +645,7 @@ def parametres(wb, ws, F):
     ws.write(hi, 1, "Total (doit valoir 100 %)", F["labb"])
     for j, col in enumerate("CDE"):
         ws.write_formula(hi, 2 + j, f"=SUM({col}{lo}:{col}{hi})", F["pct"])
+    ws.conditional_format(hi, 2, hi, 4, {"type": "formula", "criteria": f"=ROUND(C{hi + 1},4)<>1", "format": F["rouge"]})
     nom("P_DomCodes", f"$A${lo}:$A${hi}"); nom("P_DomLib", f"$B${lo}:$B${hi}")
     nom("P_PoidsDom", f"$C${lo}:$E${hi}"); nom("P_PoidsHdr", f"$C${lo - 1}:$E${lo - 1}")
 
@@ -410,6 +659,7 @@ def parametres(wb, ws, F):
         ws.write_number(r + 1 + i, 2, p, F["param_pct"])
     lo, hi = r + 2, r + 1 + len(NOYAU)
     ws.write(hi, 1, "Total", F["labb"]); ws.write_formula(hi, 2, f"=SUM(C{lo}:C{hi})", F["pct"])
+    ws.conditional_format(hi, 2, hi, 2, {"type": "formula", "criteria": f"=ROUND(C{hi + 1},4)<>1", "format": F["rouge"]})
     nom("P_PoidsN", f"$C${lo}:$C${hi}")
 
     # Ancres
@@ -493,21 +743,27 @@ def parametres(wb, ws, F):
         col = "ABCDE"[k]
         nom(n, f"${col}${r + 2}:${col}${r + 1 + len(vals)}")
     ws.freeze_panes(3, 0)
+    ws.protect("", {"format_columns": True, "format_rows": True})
 
 
 # ===================================================================== dossier
 def dossier(wb, ws, F, cas, code):
     vierge = cas is None
-    ws.set_column("A:A", 50)
-    ws.set_column("B:G", 15)
+    ws.set_column("A:A", 46)
+    ws.set_column("B:G", 14)
     ws.set_column("H:H", 18)
     ws.set_column("I:I", 3)
     ws.set_column("J:M", 10, None, {"hidden": True})
-    ws.set_column("N:N", 22)
+    ws.set_column("N:N", 24)
+    ws.set_column("O:O", 3)
+    ws.set_column("P:R", 10, None, {"hidden": True})
     ws.freeze_panes(12, 0)
     ws.set_landscape(); ws.fit_to_pages(1, 0); ws.set_paper(9)
+    ws.repeat_rows(0, 10)
     ws.hide_gridlines(2)
     ws.write("J1", "MODELE" if vierge else "DOSSIER_V8", F["hidden"])
+    # Feuille protégée sans mot de passe : seules les cellules jaunes sont modifiables.
+    ws.protect("", {"format_columns": True, "format_rows": True})
 
     m = cas["meta"] if cas else {}
     fin = cas["fin"] if cas else {}
@@ -529,14 +785,36 @@ def dossier(wb, ws, F, cas, code):
     def section(row, titre):
         ws.merge_range(row - 1, 0, row - 1, 7, titre, F["section"])
 
-    def lv(ref):  # validation liste
-        return {"validate": "list", "source": ref}
-
     # ---------------------------------------------------------------- en-tête
     ws.write("A1", f"{m['ref']} · {m['nom']}" if cas else "Nouveau dossier — intitulé du projet", F["titre_in"])
     ws.write("A2", f"{m['spv']} — {m['lieu']}" if cas else "SPV — localisation", F["sous_in"])
     ws.merge_range("A3:H3", m.get("resume", "Résumé du projet : objet, contrat de recettes, financement."), F["wrap_in"])
     ws.set_row(2, 42)
+    validation(ws, "A1", "titre"); validation(ws, "A2", "spv"); validation(ws, "A3", "resume")
+
+    # ---------------------------------------------------------------- ligne « À SAISIR »
+    ck1, ckn = R["ck_first"], R["ck_first"] + len(CHECKLIST) - 1
+    plage_ok = f"$R${ck1}:$R${ckn}"
+    ra = R["a_saisir"]
+    ws.write(f"A{ra}", "À SAISIR (cellules orange)", F["kpi_lab"])
+    fx(f"B{ra}", f"=COUNTIF({plage_ok},0)", F["kpi"])
+    ws.merge_range(f"C{ra}:F{ra}", "", F["kpi_txt"])
+    fx(f"C{ra}", f'=IF(B{ra}=0,"Saisie complète : lisez la note ci-dessous, puis « Fiche comité ».",'
+                 f'"Prochaine saisie : "&INDEX($P${ck1}:$P${ckn},MATCH(0,{plage_ok},0)))', F["kpi_txt"])
+    ws.merge_range(f"G{ra}:H{ra}", "", F["lien_b"])
+    fx(f"G{ra}", f'=IF(B{ra}=0,"",HYPERLINK("#"&INDEX($Q${ck1}:$Q${ckn},MATCH(0,{plage_ok},0)),"→ Aller à la cellule "'
+                 f'&INDEX($Q${ck1}:$Q${ckn},MATCH(0,{plage_ok},0))))', F["lien_b"])
+    ws.set_row(ra - 1, 22)
+    ws.conditional_format(f"B{ra}", {"type": "formula", "criteria": f"=AND(ISNUMBER($B${ra}),$B${ra}=0)", "format": F["vertc"]})
+    ws.conditional_format(f"B{ra}", {"type": "formula", "criteria": f"=AND(ISNUMBER($B${ra}),$B${ra}>0)", "format": F["manquant"]})
+
+    # ---------------------------------------------------------------- navigation
+    rn = R["nav"]
+    ws.write(f"A{rn}", "Aller à la section :", F["nav_lab"])
+    for col, (lib, cible) in zip("BCDEFGH", [
+            ("1 · Routage", 13), ("3 · Sources", 37), ("6 · Échéancier", 69), ("7 · Noyau", 140),
+            ("8 · Grille", R["grid_hdr"] - 1), ("10 · Verrous", R["ver_title"]), ("11 · Plafonds", R["pl_title"])]):
+        fx(f"{col}{rn}", f'=HYPERLINK("#A{cible}","{lib}")', F["nav"])
 
     # ---------------------------------------------------------------- tableau de bord
     section(5, "TABLEAU DE BORD — se met à jour à chaque saisie")
@@ -571,23 +849,29 @@ def dossier(wb, ws, F, cas, code):
     ws.write("A10", "Régime de proportionnalité retenu", F["kpi_lab"]); fx("B10", f"=B{R['prop']}", F["kpi"])
     ws.write("C10", "DSCR minimum", F["kpi_lab"]); fx("D10", f"=D{R['dmin']}", F["kpi3"])
     ws.write("E10", "DSCR stressé min.", F["kpi_lab"]); fx("F10", f"=D{R['dstress']}", F["kpi3"])
-    ws.write("A11", "Complétude de la grille", F["kpi_lab"]); fx("B11", f"=B{R['compl_crit']}", F["kpi_pct"])
+    ws.write("A11", "Complétude (noyau N1-N6 et grille)", F["kpi_lab"]); fx("B11", f"=B{R['compl_crit']}", F["kpi_pct"])
     ws.write("C11", "Noyau financier D7", F["kpi_lab"]); fx("D11", f"=D{R['d7']}", F["kpi"])
     ws.write("E11", "Orientation", F["kpi_lab"])
     ws.merge_range("F11:H11", "", F["kpi_txt"])
     fx("F11", f'=IFERROR(INDEX(P_ConvOrient,MATCH(B{R["na"]},P_ConvNote,0)),"")', F["kpi_txt"])
-    # couleurs de la note
+    # Couleurs de la note. Règles sur formule : en règle « valeur de cellule », Excel classe
+    # un texte au-dessus de tout nombre — « — » (hors périmètre) ou une cellule vide
+    # s'affichaient en vert.
     for rng in ("B6", "D7"):
-        ws.conditional_format(rng, {"type": "cell", "criteria": ">=", "value": 8, "format": F["vertc"]})
-        ws.conditional_format(rng, {"type": "cell", "criteria": "between", "minimum": 6, "maximum": 7.99, "format": F["ambre"]})
-        ws.conditional_format(rng, {"type": "cell", "criteria": "<", "value": 6, "format": F["rouge"]})
+        c = "$" + rng[0] + "$" + rng[1:]
+        ws.conditional_format(rng, {"type": "formula", "criteria": f"=AND(ISNUMBER({c}),{c}>=8)", "format": F["vertc"]})
+        ws.conditional_format(rng, {"type": "formula", "criteria": f"=AND(ISNUMBER({c}),{c}>=6,{c}<8)", "format": F["ambre"]})
+        ws.conditional_format(rng, {"type": "formula", "criteria": f"=AND(ISNUMBER({c}),{c}<6)", "format": F["rouge"]})
+    ws.conditional_format("B6", {"type": "formula", "criteria": '=$B$6="—"', "format": F["rouge"]})
 
-    # boutons
+    # boutons : une colonne à droite du tableau de bord, dans les lignes figées
     if not SANS_VBA:
-        for i, (cap, mac) in enumerate([("Contrôler la saisie", "ControlerDossier"), ("Exporter en PDF", "ExporterPDF"),
-                                        ("Dupliquer ce dossier", "DupliquerDossier"), ("Synthèse", "AllerSynthese"),
-                                        ("Accueil", "AllerAccueil")]):
-            ws.insert_button(1 + i * 2, 13, {"macro": mac, "caption": cap, "width": 150, "height": 28})
+        for i, (cap, mac) in enumerate([("Contrôler la saisie", "ControlerDossier"), ("Fiche comité", "OuvrirFiche"),
+                                        ("Exporter en PDF", "ExporterPDF"), ("Préparer l'échéancier", "PreparerEcheancier"),
+                                        ("Effacer l'échéancier", "EffacerEcheancier"), ("Dupliquer ce dossier", "DupliquerDossier"),
+                                        ("Synthèse", "AllerSynthese"), ("Accueil", "AllerAccueil")]):
+            ws.insert_button(0, 13, {"macro": mac, "caption": cap, "width": 165, "height": 30,
+                                     "x_offset": 6, "y_offset": 4 + i * 37})
 
     # ---------------------------------------------------------------- 1 routage
     section(13, "1 · ROUTAGE — pilote les seuils DSCR et les poids de domaine")
@@ -601,17 +885,18 @@ def dossier(wb, ws, F, cas, code):
         ws.write(r - 1, 0, lab, F["lab"])
         v = {"regime": m.get("regime"), "secteur": m.get("secteur"), "phase": m.get("phase")}[key]
         val(v, F["in_c"], r, 1)
-        ws.data_validation(r - 1, 1, r - 1, 1, lv(liste))
+        validation(ws, f"B{r}", key, liste=liste)
         l1, l2 = lib.split("|")
         ws.merge_range(r - 1, 2, r - 1, 7, "", F["calc_txt"])
         fx(f"C{r}", f'=IFERROR(INDEX({l1},MATCH(B{r},{l2},0)),"")', F["calc_txt"])
     ws.write(R["period"] - 1, 0, "Périodicité du service de la dette", F["lab"])
     val("Semestrielle" if cas else "", F["in_c"], R["period"], 1)
-    ws.data_validation(R["period"] - 1, 1, R["period"] - 1, 1, lv("=L_Periodicite"))
+    validation(ws, f"B{R['period']}", "period", liste="=L_Periodicite")
     ws.merge_range(R["period"] - 1, 2, R["period"] - 1, 7,
                    "Jamais annuelle : le DSCR se mesure échéance par échéance.", F["calc_txt"])
     ws.write(R["famille"] - 1, 0, "A — Famille de financement", F["lab"])
-    val("PF-FLUX" if cas else "", F["in_c"], R["famille"], 1)
+    val("PF-FLUX", F["in_c"], R["famille"], 1)
+    validation(ws, f"B{R['famille']}", "famille")
     ws.merge_range(R["famille"] - 1, 2, R["famille"] - 1, 7,
                    "SPV dédiée, remboursement par les flux du projet (R5 vente d'actifs : hors outil).", F["calc_txt"])
 
@@ -620,25 +905,24 @@ def dossier(wb, ws, F, cas, code):
     ws.write(R["capex"] - 1, 0, "CAPEX du projet économique complet (MMAD)", F["lab"])
     fx(f"B{R['capex']}", f"=B{R['se_tot']}", F["num"])
     ws.merge_range(R["capex"] - 1, 2, R["capex"] - 1, 7, "Repris du total des emplois (section 3).", F["calc_txt"])
-    champs = [("expo", "Exposition de la banque (MMAD)", "in_num", None),
-              ("mad", "Recettes, coûts et dette intégralement en dirhams", "in_c", "=L_OuiNon"),
-              ("duree", "Durée du financement (ans)", "in_int", None),
-              ("techno", "Technologie : ≥ 3 références industrielles de plus de 3 ans", "in_c", "=L_OuiNon"),
-              ("epc18", "En P1 : EPC clé-en-main forfaitaire, prix et délai garantis, < 18 mois", "in_c", "=L_OuiNon"),
-              ("unique", "Acheteur principal unique et identifié", "in_c", "=L_OuiNon"),
-              ("premiere", "Technologie constituant une première référence dans la juridiction", "in_c", "=L_OuiNon"),
-              ("consortium", "Opération consortiale relevant de la directive 3/W/2025", "in_c", "=L_OuiNon"),
-              ("plus20", "Concession ou contrat de revenus de plus de 20 ans", "in_c", "=L_OuiNon"),
-              ("climat", "Site classé à risque climatique physique élevé", "in_c", "=L_OuiNon"),
-              ("nbcp", "Nombre de contreparties clés", "in_int", None)]
-    for key, lab, fmt, liste in champs:
+    champs = [("expo", "Exposition de la banque (MMAD)", "in_num", None, "pos"),
+              ("mad", "Recettes, coûts et dette intégralement en dirhams", "in_c", "=L_OuiNon", None),
+              ("duree", "Durée du financement (ans)", "in_int", None, "duree"),
+              ("techno", "Technologie : ≥ 3 références industrielles de plus de 3 ans", "in_c", "=L_OuiNon", None),
+              ("epc18", "En P1 : EPC clé-en-main forfaitaire, prix et délai garantis, < 18 mois", "in_c", "=L_OuiNon", None),
+              ("unique", "Acheteur principal unique et identifié", "in_c", "=L_OuiNon", None),
+              ("premiere", "Technologie constituant une première référence dans la juridiction", "in_c", "=L_OuiNon", None),
+              ("consortium", "Opération consortiale relevant de la directive 3/W/2025", "in_c", "=L_OuiNon", None),
+              ("plus20", "Concession ou contrat de revenus de plus de 20 ans", "in_c", "=L_OuiNon", None),
+              ("climat", "Site classé à risque climatique physique élevé", "in_c", "=L_OuiNon", None),
+              ("nbcp", "Nombre de contreparties clés", "in_int", None, "nb")]
+    for key, lab, fmt, liste, num in champs:
         r = R[key]
         ws.write(r - 1, 0, lab, F["lab"])
         v = ex.get(key) if cas else None
         comment = RECONST if (cas and key in CHAMPS_RECONST and key not in DOCUMENTE.get(code, set()) and v not in (None, "")) else None
         val(v, F[fmt], r, 1, comment)
-        if liste:
-            ws.data_validation(r - 1, 1, r - 1, 1, lv(liste))
+        validation(ws, f"B{r}", key, liste=liste, num=num)
     rb = R
     nbV = f'COUNTIF($F${R["x_first"]}:$F${R["b_last"]},"Oui")'
     nbP = f'COUNTIF($E${R["c_first"]}:$E${R["c_last"]},"Oui")'
@@ -690,8 +974,14 @@ def dossier(wb, ws, F, cas, code):
                       else "Ligne dédiée engagée" if "ligne" in t else "Quasi-fonds propres" if "quasi" in t
                       else "Fonds propres")
         val(nature, F["in"], r, 5)
-        ws.data_validation(r - 1, 5, r - 1, 5, lv("=L_Nature"))
     f1, f2, t = R["se_first"], R["se_last"], R["se_tot"]
+    validation(ws, f"A{f1}:A{f2}", "emp_lib")
+    validation(ws, f"B{f1}:B{f2}", "emp_mt", num="pos")
+    validation(ws, f"D{f1}:D{f2}", "res_lib")
+    validation(ws, f"E{f1}:E{f2}", "res_mt", num="pos")
+    validation(ws, f"F{f1}:F{f2}", "nature", liste="=L_Nature")
+    # nature manquante en face d'un montant de ressource
+    ws.conditional_format(f"F{f1}:F{f2}", {"type": "formula", "criteria": f"=AND(ISNUMBER($E{f1}),$F{f1}=\"\")", "format": F["manquant"]})
     ws.write(t - 1, 0, "Total emplois (besoin à terminaison)", F["labb"]); fx(f"B{t}", f"=SUM(B{f1}:B{f2})", F["total"])
     ws.write(t - 1, 3, "Total ressources engagées", F["labb"]); fx(f"E{t}", f"=SUM(E{f1}:E{f2})", F["total"])
     ws.write(R["couv"] - 1, 0, "Couverture du besoin à terminaison (ressources / emplois)", F["lab"])
@@ -700,7 +990,7 @@ def dossier(wb, ws, F, cas, code):
     fx(f"B{R['quote']}", f'=IF(N(B{t})=0,"",(SUMIF(F{f1}:F{f2},"Dette senior",E{f1}:E{f2})+SUMIF(F{f1}:F{f2},"Dette subordonnée",E{f1}:E{f2}))/B{t})', F["pct"])
     ws.write(R["remed"] - 1, 0, "Plan de remédiation approuvé (couverture entre 95 % et 100 %)", F["lab"])
     val(ex.get("plan_remed", "") if cas else "", F["in_c"], R["remed"], 1)
-    ws.data_validation(R["remed"] - 1, 1, R["remed"] - 1, 1, lv("=L_OuiNon"))
+    validation(ws, f"B{R['remed']}", "remed", liste="=L_OuiNon")
 
     # ---------------------------------------------------------------- 4 hypothèses
     section(52, "4 · HYPOTHÈSES D'EXPLOITATION (information, non calculées)")
@@ -711,6 +1001,7 @@ def dossier(wb, ws, F, cas, code):
         val(h[0], F["in"], r, 0)
         ws.merge_range(r - 1, 1, r - 1, 7, "", F["in"])
         val(h[1], F["in"], r, 1)
+    validation(ws, f"A{R['hyp_first']}:B{R['hyp_last']}", "hyp")
 
     # ---------------------------------------------------------------- 5 seuils
     section(62, "5 · SEUILS DSCR APPLICABLES = base du régime + Δ secteur + majoration de phase")
@@ -746,6 +1037,8 @@ def dossier(wb, ws, F, cas, code):
     ws.merge_range(R["choc"] - 1, 2, R["choc"] - 1, 7, "", F["in_wrap"])
     val(fin.get("stress_lib", "Description du scénario défavorable") if cas else "Description du scénario défavorable",
         F["in_wrap"], R["choc"], 2)
+    validation(ws, f"B{R['choc']}", "choc", num="choc")
+    validation(ws, f"C{R['choc']}", "choc_lib")
     for c, h in enumerate(["Période", "CFADS central", "Service de la dette", "DSCR", "Classement",
                            "CFADS stressé (saisie facultative)", "DSCR stressé", "DSCR annuel (paire de semestres)"]):
         ws.write(R["ech_hdr"] - 1, c, h, F["hdr"])
@@ -766,6 +1059,14 @@ def dossier(wb, ws, F, cas, code):
         else:
             ws.write_blank(r - 1, 7, None, F["num3"])
     pf, pl = R["p_first"], R["p_last"]
+    validation(ws, f"A{pf}:A{pl}", "p_lib")
+    validation(ws, f"B{pf}:B{pl}", "p_cfads", num="reel")
+    validation(ws, f"C{pf}:C{pl}", "p_service", num="pos")
+    validation(ws, f"F{pf}:F{pl}", "p_stress", num="reel")
+    # service de la dette manquant en face d'un CFADS
+    ws.conditional_format(f"C{pf}:C{pl}", {"type": "formula", "criteria": f"=AND(ISNUMBER($B{pf}),NOT(ISNUMBER($C{pf})))", "format": F["manquant"]})
+    # tant que moins de deux périodes sont saisies, les deux premières lignes sont à remplir
+    ws.conditional_format(f"B{pf}:C{pf + 1}", {"type": "formula", "criteria": f"=AND(COUNT($B${pf}:$B${pl})<2,B{pf}=\"\")", "format": F["manquant"]})
     ws.conditional_format(f"E{pf}:E{pl}", {"type": "cell", "criteria": "==", "value": '"Critique"', "format": F["rouge"]})
     ws.conditional_format(f"E{pf}:E{pl}", {"type": "cell", "criteria": "==", "value": '"Vigilance"', "format": F["ambre"]})
     ws.conditional_format(f"E{pf}:E{pl}", {"type": "cell", "criteria": "==", "value": '"Très favorable"', "format": F["vertc"]})
@@ -813,43 +1114,45 @@ def dossier(wb, ws, F, cas, code):
             fx(f"B{r}", formules_n[i], F["calc"])
         else:
             val(fin.get(f"n{i + 1}") if cas else None, F["in_c"], r, 1)
-            ws.data_validation(r - 1, 1, r - 1, 1, lv("=L_Notes"))
+            validation(ws, f"B{r}", "n_note", liste="=L_Notes")
         fx(f"C{r}", f"=INDEX(P_PoidsN,{i + 1})", F["pct"])
-        fx(f"D{r}", f'=IF(ISNUMBER(B{r}),B{r}*C{r},0)', F["num1"])
+        # Indicateur non noté ou « Info. insuffisante » : compté à la valeur conservatrice
+        # (comme dans la grille), et la complétude du noyau rend la note provisoire.
+        fx(f"D{r}", f'=IF(ISNUMBER(B{r}),B{r},P_InfoInsuff)*C{r}', F["num1"])
         ws.merge_range(r - 1, 4, r - 1, 7, "", F["calc_txt"] if i in mesures else F["in_wrap"])
         if i in mesures:
             fx(f"E{r}", mesures[i], F["calc_txt"])
         else:
             val(fin.get(f"n{i + 1}_lib", "") if cas else "", F["in_wrap"], r, 4)
+            validation(ws, f"E{r}", "n_lib")
     ws.write(R["d7"] - 1, 0, "D7 — SCORE DU NOYAU FINANCIER", F["labb"])
     fx(f"D{R['d7']}", f"=SUM(D{n}:D{n + 5})", F["kpi"])
 
     ws.merge_range(R["d7"], 0, R["d7"], 7, "Données du noyau et des plafonds (alimentent N3 hors P1 et les plafonds C4 à C14)", F["hdr"])
     donnees = [
-        ("n3_saisi", "N3 hors phase P1 : note fondée sur le LLCR (100, 80, 50, 20)", "in_c", "=L_Notes", None if not cas or m["phase"] == "P1" else fin.get("n3")),
-        ("llcr", "LLCR (x) — plafond C4", "in_2d", None, fin.get("llcr") if cas else None),
-        ("dsra", "DSRA en mois de service de dette — plafond C7", "in_num", None, fin.get("dsra_mois") if cas else None),
-        ("fx", "Exposition nette en devises non couverte, en % du service annuel — C6", "in_pct", None, (fin.get("fx_net_pct") / 100) if cas else None),
-        ("refi", "Dette à refinancer à maturité, en % du nominal — C8", "in_pct", None, ex.get("refi") if cas else None),
-        ("strat", "Stratégie de refinancement approuvée", "in_c", "=L_OuiNon", ex.get("strat") if cas else None),
-        ("part_ach", "Part des recettes portée par l'acheteur principal — C10", "in_pct", None, ex.get("part_ach") if cas else None),
-        ("qual", "Qualité de crédit interne de l'acheteur principal", "in_c", "=L_QualAch", ex.get("qual") if cas else None),
-        ("duree_contrat", "Durée résiduelle du contrat de revenus (ans) — C5", "in_num", None, ex.get("duree_contrat") if cas else None),
-        ("duree_dette", "Durée résiduelle de la dette (ans)", "in_num", None, ex.get("duree_dette") if cas else None),
-        ("solution", "Solution documentée si le contrat expire avant la dette", "in_c", "=L_OuiNon", ex.get("solution") if cas else None),
-        ("plan_adapt", "Plan d'adaptation climatique financé — C11", "in_c", "=L_OuiNon", ex.get("plan_adapt") if cas else None),
-        ("sponsor", "Capacité résiduelle du sponsor suffisante pour l'appel d'equity restant — C12", "in_c", "=L_OuiNon", ex.get("sponsor") if cas else None),
-        ("operateur", "Opérateur remplaçable — C13", "in_c", "=L_OuiNon", ex.get("operateur") if cas else None),
-        ("ecart_om", "Écart entre la fin du contrat O&M et la fin de la dette (ans)", "in_num", None, ex.get("ecart_om") if cas else None),
-        ("facteur", "Exposition du groupe sur un facteur commun au-delà de la limite interne — C14", "in_c", "=L_OuiNon", ex.get("facteur") if cas else None),
+        ("n3_saisi", "N3 hors phase P1 : note fondée sur le LLCR (100, 80, 50, 20)", "in_c", "=L_Notes", None, None if not cas or m["phase"] == "P1" else fin.get("n3")),
+        ("llcr", "LLCR (x) — plafond C4", "in_2d", None, "ratio", fin.get("llcr") if cas else None),
+        ("dsra", "DSRA en mois de service de dette — plafond C7", "in_num", None, "mois", fin.get("dsra_mois") if cas else None),
+        ("fx", "Exposition nette en devises non couverte, en % du service annuel — C6", "in_pct", None, "pct5", (fin.get("fx_net_pct") / 100) if cas else None),
+        ("refi", "Dette à refinancer à maturité, en % du nominal — C8", "in_pct", None, "pct", ex.get("refi") if cas else None),
+        ("strat", "Stratégie de refinancement approuvée", "in_c", "=L_OuiNon", None, ex.get("strat") if cas else None),
+        ("part_ach", "Part des recettes portée par l'acheteur principal — C10", "in_pct", None, "pct", ex.get("part_ach") if cas else None),
+        ("qual", "Qualité de crédit interne de l'acheteur principal", "in_c", "=L_QualAch", None, ex.get("qual") if cas else None),
+        ("duree_contrat", "Durée résiduelle du contrat de revenus (ans) — C5", "in_num", None, "duree", ex.get("duree_contrat") if cas else None),
+        ("duree_dette", "Durée résiduelle de la dette (ans)", "in_num", None, "duree", ex.get("duree_dette") if cas else None),
+        ("solution", "Solution documentée si le contrat expire avant la dette", "in_c", "=L_OuiNon", None, ex.get("solution") if cas else None),
+        ("plan_adapt", "Plan d'adaptation climatique financé — C11", "in_c", "=L_OuiNon", None, ex.get("plan_adapt") if cas else None),
+        ("sponsor", "Capacité résiduelle du sponsor suffisante pour l'appel d'equity restant — C12", "in_c", "=L_OuiNon", None, ex.get("sponsor") if cas else None),
+        ("operateur", "Opérateur remplaçable — C13", "in_c", "=L_OuiNon", None, ex.get("operateur") if cas else None),
+        ("ecart_om", "Écart entre la fin du contrat O&M et la fin de la dette (ans)", "in_num", None, "ecart", ex.get("ecart_om") if cas else None),
+        ("facteur", "Exposition du groupe sur un facteur commun au-delà de la limite interne — C14", "in_c", "=L_OuiNon", None, ex.get("facteur") if cas else None),
     ]
-    for key, lab, fmt, liste, v in donnees:
+    for key, lab, fmt, liste, num, v in donnees:
         r = R[key]
         ws.write(r - 1, 0, lab, F["lab"])
         comment = RECONST if (cas and key in CHAMPS_RECONST and key not in DOCUMENTE.get(code, set()) and v not in (None, "")) else None
         val(v, F[fmt], r, 1, comment)
-        if liste:
-            ws.data_validation(r - 1, 1, r - 1, 1, lv(liste))
+        validation(ws, f"B{r}", key, liste=liste, num=num)
 
     # ---------------------------------------------------------------- 8 grille
     section(R["grid_hdr"] - 1, "8 · GRILLE QUALITATIVE — notes 100 / 80 / 50 / 20 ou « Info. insuffisante »")
@@ -867,6 +1170,7 @@ def dossier(wb, ws, F, cas, code):
         fx(f"D{h}", f'=IF(N(C{h})=0,"",SUMPRODUCT(B{s1}:B{s2},C{s1}:C{s2})+P_InfoInsuff*SUMPRODUCT((1-ISNUMBER(B{s1}:B{s2}))*C{s1}:C{s2}))', F["kpi"])
         ws.merge_range(h - 1, 4, h - 1, 7, "", F["in_wrap"])
         val(comm.get(d, ""), F["in_wrap"], h, 4)
+        validation(ws, f"E{h}", "comm")
         if comm.get(d):
             ws.set_row(h - 1, 45)
         ws.write(h - 1, 9, "DOM", F["hidden"])
@@ -877,17 +1181,23 @@ def dossier(wb, ws, F, cas, code):
             r = s1 + j
             ws.write(r - 1, 0, "      " + sl, F["lab"])
             val(notes[j] if j < len(notes) else None, F["in_c"], r, 1)
-            ws.data_validation(r - 1, 1, r - 1, 1, lv("=L_Notes"))
+            validation(ws, f"B{r}", "grille", liste="=L_Notes")
             fx(f"C{r}", f'=INDEX(P_SCPoids,MATCH(L{r},P_SCCle,0))', F["pct"])
             ws.write(r - 1, 9, "SC", F["hidden"])
             fx(f"K{r}", f"=K{h}", F["hidden"])
             ws.write(r - 1, 11, f"{d}.{j + 1}", F["hidden"])
+            # P : numéro de ligne d'un sous-critère requis encore vide (sert au lien « Aller à »)
+            fx(f"P{r}", f'=IF(AND(K{r}=1,B{r}=""),ROW(),"")', F["hidden"])
             ws.conditional_format(f"A{r}:D{r}", {"type": "formula", "criteria": f"=$K${r}=0", "format": F["gris"]})
+            ws.conditional_format(f"B{r}", {"type": "formula", "criteria": f'=AND($K${r}=1,$B${r}="")', "format": F["manquant"]})
     g1, g2 = R["grid_first"], R["grid_last"]
     ws.write(R["couv_pond"] - 1, 0, "Couverture pondérée de la grille (minimum 95 % pour une note validée)", F["lab"])
     fx(f"B{R['couv_pond']}", f'=IF(SUMIF(J{g1}:J{g2},"DOM",C{g1}:C{g2})=0,"",SUM(M{g1}:M{g2})/SUMIF(J{g1}:J{g2},"DOM",C{g1}:C{g2}))', F["pct"])
-    ws.write(R["compl_crit"] - 1, 0, "Complétude des critères requis par la phase (100 % exigé)", F["lab"])
-    fx(f"B{R['compl_crit']}", f'=IF(SUMIF(J{g1}:J{g2},"SC",K{g1}:K{g2})=0,"",SUMPRODUCT((J{g1}:J{g2}="SC")*(K{g1}:K{g2}=1)*ISNUMBER(B{g1}:B{g2}))/SUMIF(J{g1}:J{g2},"SC",K{g1}:K{g2}))', F["pct"])
+    ws.write(R["compl_crit"] - 1, 0, "Complétude des critères requis : N1 à N6 et sous-critères de la phase (100 % exigé)", F["lab"])
+    n1, n6 = R["n1"], R["n6"]
+    # Le noyau financier entre dans la complétude : un N4 laissé vide donnait jusqu'ici
+    # une note « validable ».
+    fx(f"B{R['compl_crit']}", f'=IF(SUMIF(J{g1}:J{g2},"SC",K{g1}:K{g2})=0,"",(COUNT(B{n1}:B{n6})+SUMPRODUCT((J{g1}:J{g2}="SC")*(K{g1}:K{g2}=1)*ISNUMBER(B{g1}:B{g2})))/(6+SUMIF(J{g1}:J{g2},"SC",K{g1}:K{g2})))', F["pct"])
 
     # ---------------------------------------------------------------- 9 agrégation
     section(R["agr_title"], "9 · AGRÉGATION ET NOTE CALCULÉE")
@@ -925,7 +1235,8 @@ def dossier(wb, ws, F, cas, code):
         val("Oui" if (cas and c == "B6") else ("Non" if cas else ""), F["in_c"], r, 4,
             ("Les cas d'étude ne présentent qu'un échéancier représentatif (4 à 6 périodes). En production, "
              "l'échéancier complet est exigé ; à défaut, saisir « Non » : le blocage B6 s'applique.") if (cas and c == "B6") else None)
-        ws.data_validation(r - 1, 4, r - 1, 4, lv("=L_OuiNon"))
+        validation(ws, f"E{r}", "verrouB6" if c == "B6" else "verrou", liste="=L_OuiNon")
+        ws.conditional_format(f"E{r}", {"type": "formula", "criteria": f'=$E${r}=""', "format": F["manquant"]})
         if c.startswith("B"):
             ws.write(r - 1, 6, item[2], F["lab"])
         else:
@@ -959,7 +1270,8 @@ def dossier(wb, ws, F, cas, code):
         "C3": (f'={B("dstress").replace("$B","$D")}', "=P_C3", f'=IF({B("dstress").replace("$B","$D")}="","n.r.",IF({B("dstress").replace("$B","$D")}<P_C3,"Oui","Non"))'),
         "C4": (f'={B("llcr")}', "=P_C4", f'=IF({B("llcr")}="","n.r.",IF({B("llcr")}<P_C4,"Oui","Non"))'),
         "C5": (f'=IF({B("duree_contrat")}="","",{B("duree_contrat")}&" ans / dette "&{B("duree_dette")}&" ans")', '="contrat < dette"',
-               f'=IF(OR({B("duree_contrat")}="",{B("duree_dette")}=""),"n.r.",IF(AND({B("duree_contrat")}<{B("duree_dette")},{B("solution")}<>"Oui"),"Oui","Non"))'),
+               # sans contrat de revenus (régime R4, exposition au marché) le plafond est sans objet
+               f'=IF($B${R["regime"]}="R4","n.a.",IF(OR({B("duree_contrat")}="",{B("duree_dette")}=""),"n.r.",IF(AND({B("duree_contrat")}<{B("duree_dette")},{B("solution")}<>"Oui"),"Oui","Non")))'),
         "C6": (f'={B("fx")}', "=P_C6", f'=IF({B("fx")}="","n.r.",IF({B("fx")}>P_C6,"Oui","Non"))'),
         "C7": (f'={B("dsra")}', "=P_C7", f'=IF({B("dsra")}="","n.r.",IF({B("dsra")}<P_C7,"Oui","Non"))'),
         "C8": (f'={B("refi")}', "=P_C8", f'=IF({B("refi")}="","n.r.",IF(AND({B("refi")}>P_C8,{B("strat")}<>"Oui"),"Oui","Non"))'),
@@ -1005,10 +1317,23 @@ def dossier(wb, ws, F, cas, code):
                             f'IF(E{R["c_last"]}="Oui","Note provisoire — évaluation partielle (C15)","Note validable, à soumettre au comité"))))'), F["kpi_txt"])
 
     # ---------------------------------------------------------------- 13 enseignement
-    section(R["lecon_title"], "13 · CE QUE CE CAS ENSEIGNE")
+    section(R["lecon_title"], "13 · CE QUE CE CAS ENSEIGNE" if cas else "13 · CONCLUSION DE L'ANALYSTE")
     ws.merge_range(R["lecon"] - 1, 0, R["lecon"] - 1, 7, cas["lecon"] if cas else "", F["wrap_in"])
+    validation(ws, f"A{R['lecon']}", "lecon")
     ws.set_row(R["lecon"] - 1, 60)
     ws.print_area(0, 0, R["lecon"], 7)
+
+    # ---------------------------------------------------------------- check-list (colonnes P:R masquées)
+    for i, (lib, adr, ok, cf) in enumerate(CHECKLIST):
+        r = R["ck_first"] + i
+        ws.write(r - 1, CK_COL_LIB, lib, F["hidden"])
+        if adr.startswith("="):
+            fx(f"Q{r}", adr, F["hidden"])
+        else:
+            ws.write(r - 1, CK_COL_ADR, adr, F["hidden"])
+        fx(f"R{r}", f"=IF({ok},1,0)", F["hidden"])
+        if cf:
+            ws.conditional_format(cf, {"type": "formula", "criteria": f"=NOT({ok})", "format": F["manquant"]})
 
 
 # ===================================================================== Synthèse
@@ -1026,7 +1351,9 @@ LIGNES_SYN = [("Intitulé du dossier", "A1", "calc_txt"), ("Régime de revenus",
               ("Plafonds actifs", "B8", "calc_txt"),
               ("Plafond le plus contraignant", f"B{R['plafond']}", "int"),
               ("NOTE APPROUVÉE", f"B{R['na']}", "int"),
-              ("Statut", f"B{R['statut']}", "calc_txt")]
+              ("Statut", f"B{R['statut']}", "calc_txt"),
+              ("Saisies obligatoires manquantes", f"B{R['a_saisir']}", "int"),
+              ("Prochaine saisie", f"C{R['a_saisir']}", "calc_txt")]
 
 
 def synthese(ws, F, onglets):
@@ -1034,14 +1361,17 @@ def synthese(ws, F, onglets):
     ws.set_column("B:X", 17)
     ws.set_column("Z:Z", 8, None, {"hidden": True})
     ws.write("A1", "Synthèse des dossiers", F["titre"])
-    ws.write("A2", "Une colonne par onglet de dossier. Le bouton « Mettre à jour la synthèse » ajoute les dossiers "
-                   "créés depuis l'accueil. Aucune valeur n'est saisie ici : tout est lu dans les dossiers.", F["sous"])
+    ws.write("A2", "Une colonne par onglet de dossier, lue en direct. Les dossiers créés par « Nouveau dossier » sont "
+                   "ajoutés automatiquement ; sans macros, tapez le nom de l'onglet en ligne 4.", F["sous"])
     ws.write("A4", "Onglet", F["hdr"])
     for j in range(23):
         if j < len(onglets):
-            ws.write(3, 1 + j, onglets[j], F["hdr"])
+            ws.write(3, 1 + j, onglets[j], F["hdr_in"])
         else:
-            ws.write_blank(3, 1 + j, None, F["hdr"])
+            ws.write_blank(3, 1 + j, None, F["hdr_in"])
+    ws.data_validation("B4:X4", {"validate": "any", "input_title": "Nom de l'onglet du dossier",
+                                 "input_message": "Rempli par les macros. Sans macros, tapez ici le nom exact de l'onglet "
+                                                  "d'un dossier pour l'ajouter à la synthèse."})
     for i, (lib, adr, fmt) in enumerate(LIGNES_SYN):
         r = 5 + i
         ws.write(r - 1, 0, lib, F["labb"] if lib.startswith("NOTE") else F["lab"])
@@ -1049,12 +1379,17 @@ def synthese(ws, F, onglets):
         for j in range(23):
             col = xl_rowcol_to_cell(0, 1 + j)[:-1]
             ws.write_formula(r - 1, 1 + j, f'=IF({col}$4="","",IFERROR(INDIRECT("\'"&{col}$4&"\'!"&$Z{r}),""))', F[fmt])
-    rna = 5 + [l for l, _, _ in LIGNES_SYN].index("NOTE APPROUVÉE")
+    libs = [l for l, _, _ in LIGNES_SYN]
+    rna = 5 + libs.index("NOTE APPROUVÉE")
     ws.set_row(rna - 1, 24)
-    ws.conditional_format(f"B{rna}:X{rna}", {"type": "cell", "criteria": ">=", "value": 8, "format": F["vertc"]})
-    ws.conditional_format(f"B{rna}:X{rna}", {"type": "cell", "criteria": "between", "minimum": 6, "maximum": 7, "format": F["ambre"]})
-    ws.conditional_format(f"B{rna}:X{rna}", {"type": "cell", "criteria": "between", "minimum": 1, "maximum": 5, "format": F["rouge"]})
-    ws.set_row(4, 45); ws.set_row(4 + 13, 45); ws.set_row(4 + 16, 45)
+    # règles sur formule : une colonne vide (texte "") ne doit pas s'afficher en vert
+    ws.conditional_format(f"B{rna}:X{rna}", {"type": "formula", "criteria": f"=AND(ISNUMBER(B{rna}),B{rna}>=8)", "format": F["vertc"]})
+    ws.conditional_format(f"B{rna}:X{rna}", {"type": "formula", "criteria": f"=AND(ISNUMBER(B{rna}),B{rna}>=6,B{rna}<8)", "format": F["ambre"]})
+    ws.conditional_format(f"B{rna}:X{rna}", {"type": "formula", "criteria": f'=OR(AND(ISNUMBER(B{rna}),B{rna}<6),B{rna}="—")', "format": F["rouge"]})
+    rms = 5 + libs.index("Saisies obligatoires manquantes")
+    ws.conditional_format(f"B{rms}:X{rms}", {"type": "formula", "criteria": f"=AND(ISNUMBER(B{rms}),B{rms}>0)", "format": F["manquant"]})
+    for lib in ("Intitulé du dossier", "Plafonds actifs", "Statut", "Prochaine saisie"):
+        ws.set_row(4 + libs.index(lib), 45)
     ws.freeze_panes(4, 1)
     r = 5 + len(LIGNES_SYN) + 2
     ws.write(r - 1, 0, "Les trois démonstrations à retenir", F["labb"])
@@ -1064,58 +1399,253 @@ def synthese(ws, F, onglets):
         "CAS 5 — Proportionnalité : le régime simplifié allège la grille de jugement, jamais les plafonds. Un noyau financier à 97 reste plafonné à 6 par la concentration sur un acheteur unique non noté."]):
         ws.merge_range(r + k, 0, r + k, 6, t, F["wrap"])
         ws.set_row(r + k, 32)
+    ws.set_landscape(); ws.set_paper(9); ws.fit_to_pages(1, 1)
+    ws.print_area(0, 0, 5 + len(LIGNES_SYN) - 1, 7)
+    ws.protect("", {"format_columns": True, "format_rows": True})
     if not SANS_VBA:
         ws.insert_button("I1", {"macro": "MettreAJourSynthese", "caption": "Mettre à jour la synthèse", "width": 190, "height": 28})
         ws.insert_button("L1", {"macro": "ExporterPDF", "caption": "Exporter en PDF", "width": 130, "height": 28})
         ws.insert_button("O1", {"macro": "AllerAccueil", "caption": "Accueil", "width": 100, "height": 28})
 
 
-# ===================================================================== Accueil
-def accueil(ws, F):
-    ws.set_column("A:A", 3); ws.set_column("B:B", 110); ws.set_column("C:C", 3); ws.set_column("D:D", 30)
+# ===================================================================== Fiche comité
+def lire(adr):
+    """Valeur d'une cellule du dossier choisi en B4 (vide si absente)."""
+    ref = f'INDIRECT("\'"&$B$4&"\'!{adr}")'
+    return f'=IF($B$4="","",IFERROR(IF({ref}="","",{ref}),""))'
+
+
+def fiche(wb, ws, F, defaut):
+    ws.set_column("A:A", 38)
+    ws.set_column("B:F", 15)
+    ws.set_column("G:G", 3)
+    ws.set_column("H:H", 24)
     ws.hide_gridlines(2)
-    ws.write("B2", "Outil de scoring Project Finance — modèle V8", F["titre"])
-    ws.write("B3", "Classeur Excel dynamique piloté par macros VBA. Toutes les notes sont produites par des formules ; "
-                   "les macros créent, dupliquent, contrôlent, exportent et tracent.", F["sous"])
-    lignes = [
-        ("AVERTISSEMENT", True),
-        ("Les six dossiers fournis (C1 à C5) sont FICTIFS et construits à des fins pédagogiques. Les seuils, poids et plafonds "
-         "sont des paramètres CANDIDATS, non approuvés par le Comité de validation : ne pas les utiliser en production avant validation.", False),
-        ("", False),
-        ("DÉMARRER", True),
-        ("1. Activez les macros à l'ouverture (bandeau jaune « Activer le contenu »). Sans macros, le classeur calcule tout de même ; "
-         "seuls les boutons sont inactifs.", False),
-        ("2. Ouvrez un dossier existant (onglets C1 à C5) ou cliquez sur « Nouveau dossier ».", False),
-        ("3. Saisissez uniquement les cellules JAUNES à texte bleu. Toutes les autres cellules sont des formules.", False),
-        ("4. Le tableau de bord en haut de chaque dossier (lignes 5 à 11, toujours visible) se met à jour à chaque saisie.", False),
-        ("5. « Contrôler la saisie » liste ce qui manque ; « Exporter en PDF » produit la fiche du dossier ; la synthèse compare tous les dossiers.", False),
-        ("", False),
-        ("CE QUI EST AUTOMATIQUE", True),
-        ("• Seuils DSCR : base du régime + écart sectoriel + majoration de phase, lus dans l'onglet Paramètres.", False),
-        ("• DSCR par échéance, DSCR minimum retenu, DSCR stressé, DSCR moyen et annuel affichés à titre indicatif seulement.", False),
-        ("• Noyau financier : N1 et N2 notés à partir des DSCR ; N3 en construction à partir du test de financement à terminaison.", False),
-        ("• Plafonds C1 à C15 déclenchés par les données saisies — un plafond ne se tape plus à la main.", False),
-        ("• Verrous X (hors périmètre) et B (note provisoire) ; B3 et B7 détectés automatiquement.", False),
-        ("• Régime de proportionnalité S / M / L calculé, avec escalade automatique (verrou : S vers M ; plafond : M vers L).", False),
-        ("• Poids des domaines selon la phase ; domaine sans poids (D3 en exploitation) grisé et exclu de la complétude.", False),
-        ("", False),
-        ("RACCOURCIS", True),
-        ("Onglet Diagnostic : les anomalies relevées dans le classeur d'origine et leur correction.   "
-         "Onglet Journal : trace des créations, duplications, contrôles, exports et changements de routage.", False),
+    ws.set_portrait(); ws.set_paper(9); ws.fit_to_pages(1, 1)
+    ws.write("A1", "Fiche comité — notation Project Finance (modèle V8)", F["titre"])
+    ws.write("A2", "Choisissez le dossier dans la cellule jaune. Tout est lu dans l'onglet du dossier ; "
+                   "imprimez la page ou utilisez « Exporter en PDF ».", F["sous"])
+    ws.write("A4", "Dossier (nom de l'onglet)", F["kpi_lab"])
+    ws.merge_range("B4:C4", defaut, F["in_big"])
+    ws.data_validation("B4", {"validate": "list", "source": "='Synthèse'!$B$4:$X$4",
+                              "input_title": "Dossier à présenter",
+                              "input_message": "Choisissez un dossier dans la liste (celle de la synthèse).",
+                              "error_title": "Dossier inconnu",
+                              "error_message": "Choisissez un dossier présent dans la synthèse."})
+    ws.write("D4", "Édité le", F["kpi_lab"])
+    ws.write_formula("E4", "=TODAY()", F["date"])
+    ws.set_row(3, 24)
+
+    def sec(row, titre):
+        ws.merge_range(row - 1, 0, row - 1, 5, titre, F["section"])
+
+    def ligne(row, lib, adr, fmt="calc_txt", fusion=True, h=None):
+        ws.write(row - 1, 0, lib, F["kpi_lab"])
+        if fusion:
+            ws.merge_range(row - 1, 1, row - 1, 5, "", F[fmt])
+        ws.write_formula(row - 1, 1, lire(adr), F[fmt])
+        if h:
+            ws.set_row(row - 1, h)
+
+    sec(6, "IDENTIFICATION")
+    ligne(7, "Intitulé", "A1")
+    ligne(8, "Société de projet — localisation", "A2")
+    ligne(9, "Résumé", "A3", h=48)
+
+    sec(11, "NOTATION")
+    ws.write("A12", "NOTE APPROUVÉE (1 à 10)", F["kpi_lab"])
+    ws.write_formula("B12", lire(f"B{R['na']}"), F["big"])
+    ws.merge_range("C12:F12", "", F["bigtxt"])
+    ws.write_formula("C12", lire("D6"), F["bigtxt"])
+    ws.set_row(11, 34)
+    for cr, crit, fmtname in ((f"=AND(ISNUMBER($B$12),$B$12>=8)", None, "vertc"),
+                              (f"=AND(ISNUMBER($B$12),$B$12>=6,$B$12<8)", None, "ambre"),
+                              ('=OR(AND(ISNUMBER($B$12),$B$12<6),$B$12="—")', None, "rouge")):
+        ws.conditional_format("B12", {"type": "formula", "criteria": cr, "format": F[fmtname]})
+    ligne(13, "Statut", f"B{R['statut']}", h=30)
+    ligne(14, "Orientation", "F11")
+    ws.write("A15", "Score global (sur 100)", F["kpi_lab"]); ws.write_formula("B15", lire(f"B{R['global']}"), F["kpi"])
+    ws.write("C15", "Note calculée", F["kpi_lab"]); ws.write_formula("D15", lire(f"B{R['note_calc']}"), F["kpi"])
+    ws.write("E15", "Plafond", F["kpi_lab"]); ws.write_formula("F15", lire("F7"), F["kpi"])
+    ligne(16, "Plafonds actifs", "B8", h=30)
+    ligne(17, "Verrous actifs (X, B)", "B9")
+    ligne(18, "Saisies obligatoires manquantes", f"B{R['a_saisir']}", fmt="kpi", fusion=False)
+    ws.merge_range("C18:F18", "", F["calc_txt"])
+    ws.write_formula("C18", lire(f"C{R['a_saisir']}"), F["calc_txt"])
+    ws.conditional_format("B18", {"type": "formula", "criteria": "=AND(ISNUMBER($B$18),$B$18>0)", "format": F["manquant"]})
+
+    sec(20, "ROUTAGE ET PROPORTIONNALITÉ")
+    for k, (lib, cle) in enumerate([("Régime de revenus", "regime"), ("Secteur", "secteur"), ("Phase", "phase"),
+                                    ("Régime de proportionnalité (S / M / L)", "prop")]):
+        r = 21 + k
+        ws.write(r - 1, 0, lib, F["kpi_lab"])
+        ws.write_formula(r - 1, 1, lire(f"B{R[cle]}"), F["calc"])
+        ws.merge_range(r - 1, 2, r - 1, 5, "", F["calc_txt"])
+        ws.write_formula(r - 1, 2, lire(f"C{R[cle]}"), F["calc_txt"])
+    ws.set_row(23, 30)
+
+    sec(26, "INDICATEURS FINANCIERS")
+    for c, h in enumerate(["Indicateur", "Valeur", "Repère", "Appréciation"]):
+        ws.write(26, c, h, F["hdr"])
+    ws.merge_range(26, 3, 26, 5, "Appréciation", F["hdr"])
+    indic = [
+        ("DSCR minimum par échéance (retenu)", f"D{R['dmin']}", "num3", f"B{R['seuils']}", "num2", f"E{R['dmin']}"),
+        ("DSCR minimum sous scénario défavorable", f"D{R['dstress']}", "num3", None, None, f"E{R['dstress']}"),
+        ("DSCR moyen (indicatif)", f"D{R['dmoy']}", "num3", None, None, None),
+        ("DSCR annuel minimum (indicatif)", f"D{R['dann']}", "num3", None, None, None),
+        ("Couverture du besoin à terminaison", f"B{R['couv']}", "pct", None, None, None),
+        ("Quote-part de dette", f"B{R['quote']}", "pct", "=P_C9", "pct", None),
+        ("LLCR", f"B{R['llcr']}", "num2", "=P_C4", "num2", None),
+        ("DSRA (mois de service)", f"B{R['dsra']}", "num1", "=P_C7", "num1", None),
+        ("CAPEX du projet (MMAD)", f"B{R['capex']}", "num", None, None, None),
+        ("Exposition de la banque (MMAD)", f"B{R['expo']}", "num", None, None, None),
     ]
-    r = 5
-    for t, titre in lignes:
-        ws.write(r - 1, 1, t, F["section"] if titre else F["wrap"])
-        if not titre and len(t) > 120:
-            ws.set_row(r - 1, 28)
-        r += 1
+    for k, (lib, adr, fmt, rep, fmt_rep, appr) in enumerate(indic):
+        r = 28 + k
+        ws.write(r - 1, 0, lib, F["lab"])
+        ws.write_formula(r - 1, 1, lire(adr), F[fmt])
+        if rep is None:
+            ws.write_blank(r - 1, 2, None, F["lab"])
+        elif rep.startswith("="):
+            ws.write_formula(r - 1, 2, rep, F[fmt_rep])
+        else:
+            ws.write_formula(r - 1, 2, lire(rep), F[fmt_rep])
+        ws.merge_range(r - 1, 3, r - 1, 5, "", F["calc"])
+        if appr:
+            ws.write_formula(r - 1, 3, lire(appr), F["calc"])
+            ws.conditional_format(r - 1, 3, r - 1, 3, {"type": "cell", "criteria": "==", "value": '"Critique"', "format": F["rouge"]})
+            ws.conditional_format(r - 1, 3, r - 1, 3, {"type": "cell", "criteria": "==", "value": '"Vigilance"', "format": F["ambre"]})
+    ws.write_comment("C28", "Repère du DSCR : seuil critique applicable (régime + secteur + phase).")
+
+    sec(39, "SCORES PAR DOMAINE")
+    for c, h in enumerate(["Domaine", "Score / 100", "Poids (phase)", "Contribution"]):
+        ws.write(39, c, h, F["hdr"])
+    d1 = 41
+    for i in range(9):
+        r = d1 + i
+        src = R["agr_first"] + i
+        ws.write_formula(r - 1, 0, lire(f"A{src}"), F["lab"])
+        ws.write_formula(r - 1, 1, lire(f"B{src}"), F["num1"])
+        ws.write_formula(r - 1, 2, lire(f"C{src}"), F["pct"])
+        ws.write_formula(r - 1, 3, lire(f"D{src}"), F["num1"])
+    ws.write(d1 + 9 - 1, 0, "SCORE GLOBAL", F["labb"])
+    ws.write_formula(d1 + 9 - 1, 3, lire(f"B{R['global']}"), F["kpi"])
+    graphe = wb.add_chart({"type": "bar"})
+    graphe.add_series({"name": "Score / 100",
+                       "categories": f"='Fiche comité'!$A${d1}:$A${d1 + 8}",
+                       "values": f"='Fiche comité'!$B${d1}:$B${d1 + 8}",
+                       "fill": {"color": "#1F4E3D"}, "gap": 60,
+                       "data_labels": {"value": True, "num_format": "0"}})
+    graphe.set_title({"name": "Score par domaine", "name_font": {"size": 10}})
+    graphe.set_x_axis({"min": 0, "max": 100, "major_unit": 20, "num_font": {"size": 8}})
+    graphe.set_y_axis({"reverse": True, "num_font": {"size": 8}})
+    graphe.set_legend({"none": True})
+    graphe.set_size({"width": 300, "height": 230})
+    ws.insert_chart("E40", graphe, {"x_offset": 4, "y_offset": 2})
+
+    sec(52, "CE QUE LE DOSSIER ENSEIGNE / CONCLUSION DE L'ANALYSTE")
+    ws.merge_range("A53:F53", "", F["wrap"])
+    ws.write_formula("A53", lire(f"A{R['lecon']}"), F["wrap"])
+    ws.set_row(52, 64)
+
+    sec(55, "AVIS ET DÉCISION DU COMITÉ (à compléter à la main)")
+    for k, lib in enumerate(["Décision", "Conditions et réserves", "Date du comité", "Signatures"]):
+        r = 56 + k
+        ws.write(r - 1, 0, lib, F["kpi_lab"])
+        ws.merge_range(r - 1, 1, r - 1, 5, "", F["cadre"])
+        ws.set_row(r - 1, 30)
+    ws.print_area("A1:F59")
+    ws.protect("", {"format_columns": True, "format_rows": True})
     if not SANS_VBA:
-        boutons = [("Nouveau dossier", "NouveauDossier"), ("Dupliquer le dossier actif", "DupliquerDossier"),
-                   ("Supprimer le dossier actif", "SupprimerDossier"), ("Mettre à jour la synthèse", "AllerSynthese"),
-                   ("Tout recalculer", "Recalculer"), ("Paramètres du modèle", "AllerParametres"),
-                   ("Diagnostic du classeur d'origine", "AllerDiagnostic")]
+        ws.insert_button("H1", {"macro": "ExporterPDF", "caption": "Exporter en PDF", "width": 160, "height": 30})
+        ws.insert_button("H3", {"macro": "AllerDossierFiche", "caption": "Ouvrir le dossier", "width": 160, "height": 30})
+        ws.insert_button("H5", {"macro": "AllerAccueil", "caption": "Accueil", "width": 160, "height": 30})
+
+
+# ===================================================================== Accueil
+def accueil(ws, F, nb_lignes=23):
+    ws.hide_gridlines(2)
+    ws.set_column("A:A", 2); ws.set_column("B:B", 14); ws.set_column("C:C", 46); ws.set_column("D:D", 8)
+    ws.set_column("E:E", 11); ws.set_column("F:F", 46); ws.set_column("G:G", 11); ws.set_column("H:H", 3)
+    ws.set_column("I:I", 32)
+    ws.write("B2", "Outil de scoring Project Finance — modèle V8", F["titre"])
+    ws.write("B3", "Version 2 de l'outil · notes calculées par formules, macros pour créer, contrôler, imprimer et tracer.", F["sous"])
+
+    def bandeau(row, titre):
+        ws.merge_range(row - 1, 1, row - 1, 6, titre, F["section"])
+
+    def texte(row, t, h=None):
+        ws.merge_range(row - 1, 1, row - 1, 6, t, F["wrap"])
+        if h:
+            ws.set_row(row - 1, h)
+
+    bandeau(5, "SCORER UN PROJET EN 5 ÉTAPES")
+    etapes = [
+        "1. Cliquez « Nouveau dossier » (à droite) et donnez un nom court à l'onglet, par exemple PORT-NADOR.",
+        "2. Remplissez les cellules ORANGE : ce sont les saisies obligatoires encore vides. Elles deviennent jaunes une fois "
+        "remplies. Sélectionnez une cellule pour lire l'aide qui s'affiche ; les listes déroulantes évitent les fautes de frappe.",
+        "3. Suivez la ligne « À SAISIR » en haut du dossier : elle compte ce qui manque et donne un lien vers la prochaine "
+        "cellule à remplir. La barre « Aller à la section » permet de circuler dans le dossier.",
+        "4. Lisez le tableau de bord : note approuvée, plafonds et verrous actifs, statut. La note se recalcule à chaque saisie.",
+        "5. Cliquez « Contrôler la saisie », puis « Fiche comité » pour imprimer la page de synthèse ou l'exporter en PDF.",
+    ]
+    for k, t in enumerate(etapes):
+        texte(6 + k, t, 28 if len(t) > 110 else None)
+
+    bandeau(12, "LÉGENDE")
+    for col, (lib, fmt) in zip("BCDEFG", [("Saisie", "leg_saisie"), ("Saisie obligatoire manquante", "leg_manq"),
+                                          ("Calcul", "leg_calc"), ("Note ≥ 8", "leg_vert"),
+                                          ("Note 6 ou 7 — Vigilance", "leg_ambre"), ("Note ≤ 5", "leg_rouge")]):
+        ws.write(f"{col}13", lib, F[fmt])
+    texte(14, "Les cellules de calcul sont protégées (sans mot de passe) pour éviter d'écraser une formule par erreur. "
+              "Pour modifier la structure : onglet Révision › Ôter la protection de la feuille.", 28)
+
+    bandeau(16, "VOS DOSSIERS — cliquez sur un nom pour ouvrir le dossier")
+    for c, h in enumerate(["Onglet", "Intitulé", "Phase", "Note approuvée", "Statut", "Saisies manquantes"]):
+        ws.write(16, 1 + c, h, F["hdr"])
+    libs = [l for l, _, _ in LIGNES_SYN]
+    lig = lambda lib: 5 + libs.index(lib)
+    r0 = 18
+    for k in range(nb_lignes):
+        r = r0 + k
+        col = xl_rowcol_to_cell(0, 1 + k)[:-1]
+        nom = f"'Synthèse'!${col}$4"
+        ws.write_formula(r - 1, 1, f'=IF({nom}="","",HYPERLINK("#\'"&{nom}&"\'!A1",{nom}))', F["lien_b"])
+        for c, (lib, fmt) in enumerate([("Intitulé du dossier", "calc_txt"), ("Phase", "calc"), ("NOTE APPROUVÉE", "kpi"),
+                                         ("Statut", "calc_txt"), ("Saisies obligatoires manquantes", "int")]):
+            ws.write_formula(r - 1, 2 + c, f"=IF({nom}=\"\",\"\",'Synthèse'!${col}${lig(lib)})", F[fmt])
+    rl = r0 + nb_lignes - 1
+    ws.conditional_format(f"E{r0}:E{rl}", {"type": "formula", "criteria": f"=AND(ISNUMBER(E{r0}),E{r0}>=8)", "format": F["vertc"]})
+    ws.conditional_format(f"E{r0}:E{rl}", {"type": "formula", "criteria": f"=AND(ISNUMBER(E{r0}),E{r0}>=6,E{r0}<8)", "format": F["ambre"]})
+    ws.conditional_format(f"E{r0}:E{rl}", {"type": "formula", "criteria": f'=OR(AND(ISNUMBER(E{r0}),E{r0}<6),E{r0}="—")', "format": F["rouge"]})
+    ws.conditional_format(f"G{r0}:G{rl}", {"type": "formula", "criteria": f"=AND(ISNUMBER(G{r0}),G{r0}>0)", "format": F["manquant"]})
+
+    r = rl + 2
+    bandeau(r, "BON À SAVOIR")
+    notes = [
+        "Les six dossiers fournis (C1 à C5) sont FICTIFS et pédagogiques. Les seuils, poids et plafonds de l'onglet Paramètres "
+        "sont des paramètres CANDIDATS, non approuvés par le Comité de validation : ne pas les utiliser en production avant validation.",
+        "Macros : activez-les à l'ouverture (bandeau « Activer le contenu »). Sans macros, tout se calcule quand même ; seuls les "
+        "boutons sont inactifs. Pour créer un dossier sans macros : clic droit sur un onglet › Afficher › Modèle, puis clic droit "
+        "sur Modèle › Déplacer ou copier › Créer une copie ; renommez la copie et tapez son nom en ligne 4 de la Synthèse.",
+        "Automatique : seuils DSCR (régime + secteur + phase), DSCR par échéance et stressé, N1 à N3, plafonds C1 à C15, "
+        "verrous B3 et B7, régime de proportionnalité S / M / L avec escalade, poids des domaines selon la phase.",
+        "Onglet Diagnostic : anomalies du classeur d'origine et corrections de la version 2. Onglet Journal : trace des "
+        "créations, contrôles, exports et changements de routage.",
+    ]
+    for k, t in enumerate(notes):
+        texte(r + 1 + k, t, 40 if len(t) > 220 else 28)
+    ws.freeze_panes(4, 0)
+    ws.protect("", {"format_columns": True, "format_rows": True})
+    if not SANS_VBA:
+        boutons = [("Nouveau dossier", "NouveauDossier"), ("Fiche comité", "OuvrirFiche"),
+                   ("Synthèse des dossiers", "AllerSynthese"), ("Dupliquer le dossier actif", "DupliquerDossier"),
+                   ("Supprimer un dossier…", "SupprimerDossier"), ("Tout recalculer", "Recalculer"),
+                   ("Paramètres du modèle", "AllerParametres"), ("Diagnostic et corrections", "AllerDiagnostic"),
+                   ("Journal des actions", "AllerJournal")]
         for i, (cap, mac) in enumerate(boutons):
-            ws.insert_button(4 + i * 2, 3, {"macro": mac, "caption": cap, "width": 210, "height": 30})
+            ws.insert_button(4, 8, {"macro": mac, "caption": cap, "width": 220, "height": 30,
+                                    "x_offset": 4, "y_offset": i * 37})
 
 
 # ===================================================================== Diagnostic
@@ -1150,6 +1680,30 @@ DIAG = [
      "Échéancier de 60 périodes. Les cas conservent leurs périodes d'origine ; B6 est renseigné « Oui » avec un commentaire rappelant la limite."),
     ("Outil", "Élevée", "Aucune macro : ajouter un dossier suppose de recopier un onglet à la main et de réécrire la synthèse.",
      "Macros : nouveau dossier, duplication, suppression, contrôle de saisie, recalcul, export PDF, synthèse et journal."),
+]
+
+# Défauts de la première version de l'outil, corrigés dans la version 2
+DIAG_V2 = [
+    ("Tableau de bord", "Moyenne", "Couleur de la note : la règle « valeur ≥ 8 » classe un texte au-dessus de tout nombre. Un dossier hors périmètre (« — ») ou vide s'affichait en vert, comme une bonne note.",
+     "Règles sur formule (ESTNUM) : vert, ambre ou rouge seulement pour une note numérique ; « — » en rouge."),
+    ("Synthèse", "Moyenne", "Même défaut sur la ligne NOTE APPROUVÉE : les colonnes sans dossier apparaissaient en vert.",
+     "Même correction, appliquée aussi à l'accueil et à la fiche comité."),
+    ("Noyau financier", "Élevée", "Un indicateur N4 à N6 laissé vide ou noté « Info. insuffisante » comptait 0 sans rendre la note provisoire : le dossier restait « validable » avec un noyau incomplet.",
+     "Complétude étendue à N1-N6 (B7 et C15 se déclenchent) ; indicateur non noté compté à 20, comme dans la grille."),
+    ("Plafonds", "Faible", "C5 (contrat de revenus plus court que la dette) restait « non évalué » en régime R4, où il n'existe pas de contrat de revenus.",
+     "C5 indiqué « n.a. » (sans objet) en régime R4."),
+    ("Saisie", "Élevée", "Aucune protection : une frappe dans une cellule de formule l'écrasait sans alerte et faussait la note.",
+     "Feuilles protégées sans mot de passe : seules les cellules jaunes acceptent une saisie."),
+    ("Saisie", "Moyenne", "Rien n'indiquait ce qui restait à saisir ; montants et pourcentages acceptaient n'importe quelle valeur (15 au lieu de 15 %).",
+     "Saisies obligatoires vides en orange, ligne « À SAISIR » avec lien vers la prochaine cellule, info-bulles, contrôles numériques avec message en français."),
+    ("Macros", "Moyenne", "L'export PDF échouait pour un classeur ouvert depuis OneDrive ou SharePoint (chemin web) et imposait le dossier du classeur.",
+     "Fenêtre « Enregistrer sous » pour choisir l'emplacement ; message explicite en cas d'échec."),
+    ("Macros", "Faible", "Un onglet copié à la main depuis le Modèle (sans macros) n'était pas reconnu par la synthèse ; le Modèle visible pouvait être rempli par erreur.",
+     "Copies du Modèle reconnues ; Modèle masqué."),
+    ("Macros", "Faible", "Le contrôle de saisie s'interrompait sur une erreur d'exécution si une cellule contenait une valeur d'erreur (#N/A).",
+     "Lecture des cellules protégée contre les valeurs d'erreur ; contrôle fondé sur la même check-list que la ligne « À SAISIR »."),
+    ("Ergonomie", "Amélioration", "Pas de page de présentation au comité ; libellés de l'échéancier à taper un par un.",
+     "Onglet « Fiche comité » imprimable avec graphique des domaines ; boutons « Préparer l'échéancier » et « Effacer l'échéancier »."),
 ]
 
 
@@ -1196,7 +1750,20 @@ def diagnostic(ws, F):
                    "de la doctrine. Les nouveaux champs (exposition bancaire, qualité de l'acheteur, etc.) sont reconstitués à partir "
                    "du récit : leurs cellules portent un commentaire « à confirmer ».", F["wrap"])
     ws.set_row(rr, 58)
+
+    r = rr + 2
+    ws.write(r, 1, "Version 2 de l'outil : défauts de la première version corrigés", F["labb"])
+    for c, h in enumerate(["N°", "Zone", "Gravité", "Défaut constaté (version 1)", "Correction (version 2)"]):
+        ws.write(r + 1, c, h, F["hdr"])
+    for i, (zone, grav, constat, corr) in enumerate(DIAG_V2):
+        rr = r + 2 + i
+        ws.write_number(rr, 0, i + 1, F["int"])
+        ws.write(rr, 1, zone, F["lab"]); ws.write(rr, 2, grav, F["lab"])
+        ws.write(rr, 3, constat, F["txt"]); ws.write(rr, 4, corr, F["txt"])
+        ws.set_row(rr, 45)
+    ws.conditional_format(r + 2, 2, r + 1 + len(DIAG_V2), 2, {"type": "cell", "criteria": "==", "value": '"Élevée"', "format": F["ambre"]})
     ws.freeze_panes(4, 0)
+    ws.protect("", {"format_columns": True, "format_rows": True})
 
 
 def journal(ws, F):
@@ -1207,6 +1774,9 @@ def journal(ws, F):
     for c, h in enumerate(["Date", "Utilisateur", "Action", "Dossier", "Détail"]):
         ws.write(3, c, h, F["hdr"])
     ws.freeze_panes(4, 0)
+    ws.protect("", {"format_columns": True, "format_rows": True, "autofilter": True, "sort": True})
+    if not SANS_VBA:
+        ws.insert_button("G1", {"macro": "AllerAccueil", "caption": "Accueil", "width": 100, "height": 28})
 
 
 if __name__ == "__main__":

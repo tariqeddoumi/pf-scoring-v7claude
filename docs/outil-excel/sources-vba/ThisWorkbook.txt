@@ -2,6 +2,7 @@ Option Explicit
 
 Private Sub Workbook_Open()
     On Error Resume Next
+    modOutil.ProtegerTout
     Application.Calculate
     modOutil.MajSynthese False
     Me.Worksheets(modOutil.ONGLET_ACCUEIL).Activate
@@ -13,8 +14,8 @@ Private Sub Workbook_SheetChange(ByVal Sh As Object, ByVal Target As Range)
     If Not modOutil.EstDossier(Sh) Then Exit Sub
     If Not Intersect(Target, Sh.Range("B15:B17")) Is Nothing Then
         modOutil.Journaliser "Routage modifié", Sh.Name, _
-            Sh.Range("B15").Value & " / " & Sh.Range("B16").Value & " / " & Sh.Range("B17").Value & _
-            " -> note approuvée " & Sh.Range("B6").Text
+            modOutil.Txt(Sh.Range("B15").Value) & " / " & modOutil.Txt(Sh.Range("B16").Value) & " / " & _
+            modOutil.Txt(Sh.Range("B17").Value) & " -> note approuvée " & Sh.Range("B6").Text
     End If
 Fin:
 End Sub
