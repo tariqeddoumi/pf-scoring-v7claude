@@ -433,6 +433,8 @@ export class ScoringEngineV8 {
         rootResults,
         sectorial,
         blockingRuleCodes,
+        // conservé dans la trace : les contrôles de décision le relisent
+        publicationBlocked,
         ruleDiagnostics,
         rating: ratingResolution,
       },

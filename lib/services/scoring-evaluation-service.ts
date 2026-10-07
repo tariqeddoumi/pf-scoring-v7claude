@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma-client";
 import { ScoringEngineV8 } from "./scoring";
+import { motifsRefusDecisionFavorable } from "./scoring/decision-guard";
 
 export class ScoringEvaluationService {
   /**
@@ -65,8 +66,9 @@ export class ScoringEvaluationService {
       where: { id: data.nodeId },
     });
 
-    if (!node) {
-      throw new Error("Node not found");
+    // Un nœud d'une autre version du modèle n'appartient pas à la grille du dossier.
+    if (!node || node.versionId !== evaluation.modelVersionId) {
+      throw new Error("Node not found in the evaluation's model version");
     }
 
     // Check if answer already exists
@@ -109,6 +111,20 @@ export class ScoringEvaluationService {
         },
       });
     }
+
+    // La réponse modifiée invalide le calcul courant : il faudra recalculer.
+    await prisma.scoringEvaluation.update({
+      where: { id: data.evaluationId },
+      data: {
+        finalScore: null,
+        rating: null,
+        recommendation: null,
+        probabilityOfDefault: null,
+        malusTotal: 0,
+        triggeredRulesJson: null,
+        summaryJson: null,
+      },
+    });
 
     return answer;
   }
@@ -171,11 +187,36 @@ export class ScoringEvaluationService {
       throw new Error("Only submitted evaluations can be approved");
     }
 
+    // Statut seul ne suffit pas : NO_GO, calcul à jour et séparation des fonctions.
+    const motifs = motifsRefusDecisionFavorable({
+      evaluation: {
+        status: String(evaluation.status),
+        finalScore: evaluation.finalScore,
+        summaryJson: evaluation.summaryJson,
+        analystId: evaluation.analystId,
+      },
+      decideurId: approvedBy,
+    });
+    if (motifs.length > 0) {
+      throw new Error(`Can only approve when allowed — ${motifs.join(" ")}`);
+    }
+
     const updated = await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
       data: {
         status: "valide",
         validatedAt: new Date(),
+      },
+    });
+    await prisma.scoringChangeLog.create({
+      data: {
+        entityType: "ScoringEvaluation",
+        entityId: evaluationId,
+        evaluationId,
+        action: "VALIDATE",
+        newValueJson: JSON.stringify({ status: "valide" }),
+        changedBy: approvedBy,
+        comment: "Évaluation approuvée",
       },
     });
 

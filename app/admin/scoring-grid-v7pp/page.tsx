@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { apiGet, apiPost, apiPut } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut, messageErreurApi } from "@/lib/api-client";
 import { VersionHeaderBar } from "./components/VersionHeaderBar";
 import { ScoringGridSplit } from "./components/ScoringGridSplit";
 import { StatsDashboard } from "./components/StatsDashboard";
@@ -144,7 +144,8 @@ export default function ScoringGridRefactoredPage() {
         `/api/admin/scoring/models/${activeModel.id}/versions/${activeVersion.id}/publish`,
         {}
       );
-      if (!res.ok) throw new Error("Erreur lors de la publication");
+      // le serveur explique le refus (grille invalide, séparation des fonctions…)
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de la publication"));
       await loadVersions(activeModel.id);
     } catch (e) {
       setError((e as Error).message);

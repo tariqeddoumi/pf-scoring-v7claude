@@ -22,11 +22,10 @@
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 
-// Le secret utilisé pour signer et vérifier tous les tokens JWT.
-// IMPORTANT : changer cette valeur en production via la variable d'environnement JWT_SECRET.
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "your-secret-key-change-in-production"
-);
+import { secretJwt } from "./jwt-secret";
+
+// La clé de signature est celle du contrôle des appels API (lib/jwt-secret.ts) :
+// plus de clé de repli constante en production.
 
 // ============================================================================
 // MOT DE PASSE
@@ -73,7 +72,7 @@ export async function createToken(payload: {
     .setProtectedHeader({ alg: "HS256" }) // Algorithme de signature HMAC SHA-256
     .setIssuedAt()                          // Timestamp de création (iat)
     .setExpirationTime("24h")               // Expiration dans 24 heures (exp)
-    .sign(JWT_SECRET);
+    .sign(secretJwt());
 }
 
 /**
@@ -87,7 +86,7 @@ export async function verifyToken(token: string): Promise<{
   role: string;
 } | null> {
   try {
-    const verified = await jwtVerify(token, JWT_SECRET);
+    const verified = await jwtVerify(token, secretJwt());
     return verified.payload as { userId: string; email: string; role: string };
   } catch {
     // Token invalide ou expiré : on retourne null plutôt que de lever une exception

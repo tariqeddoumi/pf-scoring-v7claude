@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth } from '@/lib/auth-middleware';
 import { successResponse, serverError, notFoundError, validationError } from '@/lib/api-response';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma-client';
+import {
+  DECISIONS_ADMISES,
+  estFavorable,
+  motifRefusDelegation,
+  motifsRefusDecisionFavorable,
+  statutApresDecision,
+} from '@/lib/services/scoring/decision-guard';
 
-const prisma = new PrismaClient();
-
+/**
+ * POST /api/admin/scoring/workflows/[id]/approve — décision du circuit de validation.
+ *
+ * La route passait le circuit à APPROVED sur simple demande : règle rédhibitoire
+ * déclenchée, analyste qui approuve son propre dossier ou approbation supérieure
+ * demandée n'empêchaient rien. Les contrôles sont ceux de decision-guard ; un refus
+ * est renvoyé en 409 avec ses motifs, sans enregistrer de décision.
+ */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withAdminAuth(request, async (req, user) => {
     try {
@@ -20,66 +33,104 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         requiresHigherApproval
       } = body;
 
-      // Validate required fields
       const errors = [];
-      if (!decisionType) errors.push({ field: 'decisionType', message: 'Decision type required' });
-      if (!riskRating) errors.push({ field: 'riskRating', message: 'Risk rating required' });
-      if (!justification) errors.push({ field: 'justification', message: 'Justification required' });
-
+      if (!decisionType) errors.push({ field: 'decisionType', message: 'Type de décision requis' });
+      else if (!(DECISIONS_ADMISES as readonly string[]).includes(decisionType)) {
+        errors.push({ field: 'decisionType', message: `Type de décision inconnu : ${decisionType}` });
+      }
+      if (!riskRating) errors.push({ field: 'riskRating', message: 'Note de risque requise' });
+      if (!justification) errors.push({ field: 'justification', message: 'Justification requise' });
       if (errors.length > 0) {
         return validationError(errors);
       }
 
       const workflow = await prisma.scoringWorkflow.findUnique({
-        where: { id }
+        where: { id },
+        include: {
+          evaluation: { select: { status: true, finalScore: true, summaryJson: true, analystId: true } },
+          decisions: {
+            orderBy: { decidedAt: 'desc' },
+            take: 1,
+            select: { decidedBy: true, requiresHigherApproval: true, decidedByUser: { select: { role: true } } },
+          },
+        },
       });
-
       if (!workflow) {
         return notFoundError('Workflow');
       }
 
-      // Create decision
-      const decision = await prisma.scoringDecision.create({
-        data: {
-          workflowId: id,
-          decisionType,
-          riskRating,
-          justification,
-          recommendation,
-          hasConditions: hasConditions || false,
-          conditionsJson,
-          decidedBy: user.userId,
-          requiresHigherApproval: requiresHigherApproval || false,
-          decidedAt: new Date()
-        },
-        include: {
-          decidedByUser: {
-            select: { id: true, email: true, nom: true, prenom: true }
-          }
-        }
-      });
+      const refus = (motifs: string[]) =>
+        NextResponse.json(
+          { success: false, error: motifs.join(' '), errors: motifs, errorCode: 'DECISION_REFUSEE' },
+          { status: 409 }
+        );
 
-      // Update workflow status based on decision
-      let newStatus = workflow.status;
-      if (decisionType === 'APPROVE' || decisionType === 'APPROVE_WITH_CONDITIONS') {
-        newStatus = 'APPROVED';
-      } else if (decisionType === 'REJECT') {
-        newStatus = 'REJECTED';
+      if (workflow.status === 'APPROVED' || workflow.status === 'REJECTED') {
+        return refus(['Le circuit est clos : la décision a déjà été rendue.']);
       }
 
-      await prisma.scoringWorkflow.update({
-        where: { id },
-        data: {
-          status: newStatus,
-          approvedAt: newStatus === 'APPROVED' ? new Date() : undefined,
-          approvedBy: newStatus === 'APPROVED' ? user.userId : undefined,
-          rejectedAt: newStatus === 'REJECTED' ? new Date() : undefined,
-          rejectedBy: newStatus === 'REJECTED' ? user.userId : undefined
-        }
-      });
+      const derniere = workflow.decisions[0];
+      const delegation = motifRefusDelegation(
+        derniere
+          ? { decidedBy: derniere.decidedBy, requiresHigherApproval: derniere.requiresHigherApproval, role: derniere.decidedByUser?.role }
+          : null,
+        user.userId,
+        user.role
+      );
+      if (delegation) return refus([delegation]);
 
-      return successResponse(decision, { status: 201 });
-    } catch (error: any) {
+      if (estFavorable(decisionType)) {
+        const motifs = motifsRefusDecisionFavorable({
+          evaluation: {
+            status: String(workflow.evaluation.status),
+            finalScore: workflow.evaluation.finalScore,
+            summaryJson: workflow.evaluation.summaryJson,
+            analystId: workflow.evaluation.analystId,
+          },
+          decideurId: user.userId,
+          soumisPar: workflow.submittedBy,
+        });
+        if (motifs.length > 0) return refus(motifs);
+      }
+
+      const exigeSuperieur = Boolean(requiresHigherApproval);
+      const newStatus = statutApresDecision(decisionType, exigeSuperieur);
+
+      const [decision] = await prisma.$transaction([
+        prisma.scoringDecision.create({
+          data: {
+            workflowId: id,
+            decisionType,
+            riskRating,
+            justification,
+            recommendation,
+            hasConditions: hasConditions || false,
+            conditionsJson,
+            decidedBy: user.userId,
+            requiresHigherApproval: exigeSuperieur,
+            decidedAt: new Date()
+          },
+          include: {
+            decidedByUser: {
+              select: { id: true, email: true, nom: true, prenom: true }
+            }
+          }
+        }),
+        prisma.scoringWorkflow.update({
+          where: { id },
+          data: {
+            status: newStatus,
+            reviewCompletedAt: newStatus === 'REVIEWED' ? new Date() : undefined,
+            approvedAt: newStatus === 'APPROVED' ? new Date() : undefined,
+            approvedBy: newStatus === 'APPROVED' ? user.userId : undefined,
+            rejectedAt: newStatus === 'REJECTED' ? new Date() : undefined,
+            rejectedBy: newStatus === 'REJECTED' ? user.userId : undefined
+          }
+        }),
+      ]);
+
+      return successResponse({ ...decision, workflowStatus: newStatus }, { status: 201 });
+    } catch (error: unknown) {
       console.error('[Workflow Approve]', error);
       return serverError('Erreur lors de la création de la décision');
     }

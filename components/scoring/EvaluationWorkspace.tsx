@@ -535,6 +535,8 @@ export function EvaluationWorkspace({
 
   /* ── Calculate ─────────────────────────────────────────── */
   const handleCalculate = async () => {
+    // Une sauvegarde automatique en attente invaliderait le calcul juste effectué.
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     setIsCalculating(true);
     setError(null);
     setSuccessMsg(null);
@@ -573,6 +575,8 @@ export function EvaluationWorkspace({
   /* ── Submit ────────────────────────────────────────────── */
   const handleSubmit = async () => {
     if (!confirm("Soumettre l'évaluation pour validation ?")) return;
+    // Une sauvegarde automatique en attente invaliderait le calcul juste effectué.
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     setIsCalculating(true);
     setError(null);
     try {

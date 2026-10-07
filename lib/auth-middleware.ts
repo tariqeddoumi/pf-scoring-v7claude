@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { secretJwt } from "./jwt-secret";
 import {
   hasPermission,
   hasMinimumRole,
@@ -34,26 +35,26 @@ export interface AuthPayload {
   exp?: number; // Expiration (timestamp d'expiration)
 }
 
-function getJwtSecret(): string {
-  const _rawSecret =
-    process.env.SUPABASE_JWT_SECRET ||
-    process.env.JWT_SECRET;
+/**
+ * Compte encore autorisé ? Un jeton reste valide 24 h : sans ce contrôle, un compte
+ * désactivé ou supprimé gardait l'accès jusqu'à expiration, avec l'ancien rôle. Le
+ * rôle retenu est celui de la base, pas celui figé dans le jeton. Le résultat est
+ * gardé 30 secondes pour ne pas interroger la base à chaque appel.
+ */
+const DUREE_CACHE_COMPTE_MS = 30_000;
+const cacheComptes = new Map<string, { role: string | null; expire: number }>();
 
-  if (!_rawSecret && process.env.NODE_ENV === "production") {
-    throw new Error("FATAL: JWT_SECRET ou SUPABASE_JWT_SECRET doit être défini en production");
-  }
-
-  return _rawSecret || "dev-secret-key-change-in-production";
-}
-
-let JWT_SECRET_BYTES: Uint8Array | null = null;
-
-function getJwtSecretBytes(): Uint8Array {
-  if (!JWT_SECRET_BYTES) {
-    const secret = getJwtSecret();
-    JWT_SECRET_BYTES = new TextEncoder().encode(secret);
-  }
-  return JWT_SECRET_BYTES;
+async function roleDuCompteActif(userId: string): Promise<string | null> {
+  const enCache = cacheComptes.get(userId);
+  if (enCache && enCache.expire > Date.now()) return enCache.role;
+  const { default: prisma } = await import("./prisma-client");
+  const compte = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, isActive: true, deletedAt: true },
+  });
+  const role = compte && compte.isActive && !compte.deletedAt ? String(compte.role) : null;
+  cacheComptes.set(userId, { role, expire: Date.now() + DUREE_CACHE_COMPTE_MS });
+  return role;
 }
 
 /**
@@ -71,8 +72,12 @@ export async function authenticateRequest(
     }
 
     const token = authHeader.substring(7); // Extraire le token après "Bearer "
-    const { payload } = await jwtVerify(token, getJwtSecretBytes());
-    return payload as unknown as AuthPayload;
+    const { payload } = await jwtVerify(token, secretJwt());
+    const jeton = payload as unknown as AuthPayload;
+    if (!jeton?.userId) return null;
+    const role = await roleDuCompteActif(jeton.userId);
+    if (!role) return null;
+    return { ...jeton, role };
   } catch {
     // Token invalide, expiré, ou signature incorrecte
     return null;
