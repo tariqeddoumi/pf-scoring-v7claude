@@ -17,6 +17,7 @@ import { Tabs } from "@/components/ui/Tabs";
 import { apiGet, apiPost, messageErreurApi } from "@/lib/api-client";
 import { usePermission } from "@/lib/hooks/usePermission";
 import { scoreBarClass, scoreTextClass } from "@/lib/score-colors";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface Evaluation {
   id: string;
@@ -108,6 +109,7 @@ export default function EvaluationDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const voirScores = useVoirScores();
   const router = useRouter();
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -413,7 +415,7 @@ export default function EvaluationDetailPage({
 
       {/* Tabs */}
       <div className="bg-card rounded-lg border border-border p-6">
-        <Tabs tabs={tabs} defaultTab="general" />
+        <Tabs tabs={voirScores ? tabs : tabs.filter((t) => t.id !== "scores")} defaultTab="general" />
       </div>
 
       {/* Meta */}

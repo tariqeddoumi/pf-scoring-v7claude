@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Note } from "@/components/ui/status-badge";
+import { PageReserveeScores } from "@/components/providers/visibilite-scores";
 
 /**
  * Analyses du portefeuille.
@@ -22,7 +23,7 @@ import { Note } from "@/components/ui/status-badge";
  * reliait un chiffre à un dossier : la seule barre rouge ne disait pas de quels
  * dossiers elle venait.
  */
-export default function AnalytiquePage() {
+function AnalytiquePageContenu() {
   const [a, setA] = useState<Analyses | null>(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -287,5 +288,14 @@ function Tuile({
       </p>
       <p className="mt-0.5 text-[11.5px] text-muted-foreground">{precision}</p>
     </div>
+  );
+}
+
+// Écran consacré aux scores : réservé aux rôles qui les voient.
+export default function AnalytiquePage() {
+  return (
+    <PageReserveeScores titre="Analytique">
+      <AnalytiquePageContenu />
+    </PageReserveeScores>
   );
 }

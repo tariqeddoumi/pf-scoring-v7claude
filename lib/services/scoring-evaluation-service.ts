@@ -1,5 +1,7 @@
 import prisma from "@/lib/prisma-client";
 import { ScoringEngineV8 } from "./scoring";
+import { motifsRefusDecisionFavorable, motifsRefusSoumission } from "./scoring/decision-guard";
+import { ouvrirCircuit } from "./scoring/circuit";
 
 export class ScoringEvaluationService {
   /**
@@ -17,6 +19,9 @@ export class ScoringEvaluationService {
 
     if (!version) {
       throw new Error("Scoring model version not found");
+    }
+    if (!version.isPublished || version.modelId !== data.modelId) {
+      throw new Error("Only the published version of this model can be used");
     }
 
     const evaluation = await prisma.scoringEvaluation.create({
@@ -65,8 +70,9 @@ export class ScoringEvaluationService {
       where: { id: data.nodeId },
     });
 
-    if (!node) {
-      throw new Error("Node not found");
+    // Un nœud d'une autre version du modèle n'appartient pas à la grille du dossier.
+    if (!node || node.versionId !== evaluation.modelVersionId) {
+      throw new Error("Node not found in the evaluation's model version");
     }
 
     // Check if answer already exists
@@ -88,7 +94,6 @@ export class ScoringEvaluationService {
           valueNumber: data.valueNumber,
           valueBoolean: data.valueBoolean,
           valueDate: data.valueDate,
-          manualScore: data.manualScore,
           comment: data.comment,
           updatedAt: new Date(),
         },
@@ -104,11 +109,24 @@ export class ScoringEvaluationService {
           valueNumber: data.valueNumber,
           valueBoolean: data.valueBoolean,
           valueDate: data.valueDate,
-          manualScore: data.manualScore,
           comment: data.comment,
         },
       });
     }
+
+    // La réponse modifiée invalide le calcul courant : il faudra recalculer.
+    await prisma.scoringEvaluation.update({
+      where: { id: data.evaluationId },
+      data: {
+        finalScore: null,
+        rating: null,
+        recommendation: null,
+        probabilityOfDefault: null,
+        malusTotal: 0,
+        triggeredRulesJson: null,
+        summaryJson: null,
+      },
+    });
 
     return answer;
   }
@@ -141,16 +159,27 @@ export class ScoringEvaluationService {
       throw new Error("Only draft evaluations can be submitted");
     }
 
-    // Calculate scores
-    await this.calculateScores(evaluationId);
-
-    const updated = await prisma.scoringEvaluation.update({
+    // Calcul serveur, puis contrôle des préconditions de soumission
+    await this.calculateScores(evaluationId, submittedBy);
+    const recalcule = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },
-      data: {
-        status: "soumis",
-        submittedAt: new Date(),
-      },
+      select: { summaryJson: true },
     });
+    const motifs = motifsRefusSoumission(recalcule?.summaryJson ?? null);
+    if (motifs.length > 0) {
+      throw new Error(`Only complete evaluations can be submitted — ${motifs.join(" ")}`);
+    }
+
+    const [updated] = await prisma.$transaction([
+      prisma.scoringEvaluation.update({
+        where: { id: evaluationId },
+        data: {
+          status: "soumis",
+          submittedAt: new Date(),
+        },
+      }),
+      ouvrirCircuit(evaluationId, submittedBy),
+    ]);
 
     return updated;
   }
@@ -171,12 +200,45 @@ export class ScoringEvaluationService {
       throw new Error("Only submitted evaluations can be approved");
     }
 
+    // Statut seul ne suffit pas : NO_GO, calcul à jour et séparation des fonctions.
+    const motifs = motifsRefusDecisionFavorable({
+      evaluation: {
+        status: String(evaluation.status),
+        finalScore: evaluation.finalScore,
+        summaryJson: evaluation.summaryJson,
+        analystId: evaluation.analystId,
+      },
+      decideurId: approvedBy,
+      soumisPar: (
+        await prisma.scoringWorkflow.findUnique({ where: { evaluationId }, select: { submittedBy: true } })
+      )?.submittedBy,
+    });
+    if (motifs.length > 0) {
+      throw new Error(`Can only approve when allowed — ${motifs.join(" ")}`);
+    }
+
     const updated = await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
       data: {
         status: "valide",
         validatedAt: new Date(),
       },
+    });
+    await prisma.scoringChangeLog.create({
+      data: {
+        entityType: "ScoringEvaluation",
+        entityId: evaluationId,
+        evaluationId,
+        action: "VALIDATE",
+        newValueJson: JSON.stringify({ status: "valide" }),
+        changedBy: approvedBy,
+        comment: "Évaluation approuvée",
+      },
+    });
+    // le circuit de validation suit la décision (même état partout)
+    await prisma.scoringWorkflow.updateMany({
+      where: { evaluationId: evaluationId, status: { notIn: ["APPROVED", "REJECTED"] } },
+      data: { status: "APPROVED", approvedAt: new Date(), approvedBy: approvedBy },
     });
 
     return updated;
@@ -221,9 +283,9 @@ export class ScoringEvaluationService {
    * rating, les malus, les règles déclenchées et l'éventuel blocage en proviennent,
    * et non plus d'une table de correspondance locale divergente.
    */
-  static async calculateScores(evaluationId: string) {
+  static async calculateScores(evaluationId: string, auteur: string | null = null) {
     const trace = await ScoringEngineV8.scoreEvaluation(evaluationId);
-    await ScoringEngineV8.persistTrace(trace);
+    await ScoringEngineV8.persistTrace(trace, auteur);
 
     return {
       finalScore: trace.finalScore,

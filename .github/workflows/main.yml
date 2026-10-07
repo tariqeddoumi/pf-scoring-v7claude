@@ -21,19 +21,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: ".nvmrc"
           cache: "npm"
 
+      # npm ci installe exactement le lockfile (npm install pouvait le modifier)
       - name: Install dependencies
-        run: npm install
-        
+        run: npm ci
+
       - name: Generate Prisma Client
         run: npx prisma generate
       
-      - name: Debug Tailwind packages
-        run: |
-          npm ls tailwindcss postcss autoprefixer
-          
+      - name: Audit des dépendances de production
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Lint
         run: npm run lint
 

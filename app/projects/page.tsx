@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Note, StatutProjet } from "@/components/ui/status-badge";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 import { usePermission } from "@/lib/hooks/usePermission";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface Projet {
   id: string;
@@ -44,6 +45,7 @@ const STATUTS = [
 ];
 
 export default function ProjectsPage() {
+  const voirScores = useVoirScores();
   const router = useRouter();
   const { can } = usePermission();
   const [projets, setProjets] = useState<Projet[]>([]);
@@ -246,7 +248,7 @@ export default function ProjectsPage() {
                     { t: "Client", a: "left" },
                     { t: "Secteur", a: "left" },
                     { t: "Montant", a: "right" },
-                    { t: "Note", a: "left" },
+                    ...(voirScores ? [{ t: "Note", a: "left" }] : []),
                     { t: "Statut", a: "left" },
                     { t: "Chargé", a: "left" },
                     { t: "", a: "right" },
@@ -289,9 +291,11 @@ export default function ProjectsPage() {
                     >
                       {formatMADCompact(p.montant)}
                     </td>
-                    <td className="px-4 py-3">
-                      <Note note={p.grade} score={p.scoreGlobal} />
-                    </td>
+                    {voirScores && (
+                      <td className="px-4 py-3">
+                        <Note note={p.grade} score={p.scoreGlobal} />
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <StatutProjet statut={p.status} />
                     </td>

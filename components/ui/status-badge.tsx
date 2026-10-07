@@ -1,5 +1,8 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { ratingBadgeClass } from "@/lib/score-colors";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 /**
  * Puces d'état : statut de projet, statut d'évaluation, note de crédit.
@@ -80,6 +83,8 @@ export function Note({
   score?: number | null;
   taille?: "normale" | "grande";
 }) {
+  const voirScores = useVoirScores();
+  if (!voirScores) return null; // note réservée aux rôles qui voient les scores
   if (!note) return <span className="text-sm text-muted-foreground">—</span>;
   return (
     <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">

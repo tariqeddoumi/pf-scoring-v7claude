@@ -13,14 +13,18 @@ import {
   RotateCcw,
   LayoutList,
   Columns,
+  FileSearch,
 } from "lucide-react";
 import { DomainSidebar } from "./DomainSidebar";
-import { LiveScorePanel, type AnswerValue, type ServerScore } from "./LiveScorePanel";
+import { LiveScorePanel, lireServerScore, type AnswerValue, type ServerScore } from "./LiveScorePanel";
 import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
-import { apiPost, apiPatch } from "@/lib/api-client";
+import { apiPost, apiPatch, messageErreurApi } from "@/lib/api-client";
 import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 import { AggregationEngine } from "@/lib/services/scoring/score-calculator";
+import { AnalyseDocumentsIA } from "./AnalyseDocumentsIA";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
+import { commentaireSource, type Proposition } from "@/lib/services/ia-documents/resultat";
 
 interface EvaluationWorkspaceProps {
   evaluationId: string;
@@ -125,6 +129,9 @@ function NodeInput({
    */
   const contribution = (valeur: number) =>
     AggregationEngine.rescaleTo100(valeur, node.scoreMin, node.scoreMax);
+  // Les points de chaque réponse ne s'affichent qu'aux rôles qui voient les scores :
+  // sinon l'analyste choisirait la réponse qui rapporte le plus.
+  const voirScores = useVoirScores();
 
   return (
     <div className="space-y-2">
@@ -162,13 +169,15 @@ function NodeInput({
                       <span className="text-[13.5px] font-semibold text-foreground">
                         {opt.label}
                       </span>
-                      <span
-                        className={`shrink-0 text-[12.5px] font-semibold tabulaire ${
-                          choisie ? "text-primary" : "text-muted-foreground"
-                        }`}
-                      >
-                        {contribution(opt.score).toFixed(0)} / 100
-                      </span>
+                      {voirScores && (
+                        <span
+                          className={`shrink-0 text-[12.5px] font-semibold tabulaire ${
+                            choisie ? "text-primary" : "text-muted-foreground"
+                          }`}
+                        >
+                          {contribution(opt.score).toFixed(0)} / 100
+                        </span>
+                      )}
                     </span>
                     {opt.quandChoisir && (
                       <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
@@ -222,8 +231,8 @@ function NodeInput({
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {r.label || `${r.minValue}–${r.maxValue}`} →{" "}
-                  {contribution(r.score).toFixed(0)} / 100
+                  {r.label || `${r.minValue}–${r.maxValue}`}
+                  {voirScores && <> → {contribution(r.score).toFixed(0)} / 100</>}
                 </span>
               );
             })}
@@ -431,6 +440,8 @@ export function EvaluationWorkspace({
   const [serverScore, setServerScore] = useState<ServerScore | null>(null);
   const [isScoring, setIsScoring] = useState(false);
   const [isStale, setIsStale] = useState(false);
+  const [panneauIA, setPanneauIA] = useState(false);
+  const voirScoresPanneau = useVoirScores();
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentDomain = questionnaire.find((d) => d.id === currentDomainId) ?? questionnaire[0];
@@ -446,14 +457,7 @@ export function EvaluationWorkspace({
       );
       if (!res.ok) return;
       const { data } = await res.json();
-      setServerScore({
-        finalScore: data.finalScore,
-        rating: data.rating,
-        malusTotal: data.malusTotal ?? 0,
-        blocked: !!data.blocked,
-        blockingRuleCodes: data.blockingRuleCodes ?? [],
-        domains: data.domains ?? [],
-      });
+      setServerScore(lireServerScore(data));
       setIsStale(false);
     } catch {
       // Un aperçu qui échoue ne doit pas interrompre la saisie : le panneau
@@ -471,11 +475,13 @@ export function EvaluationWorkspace({
 
   /* ── Save answers ──────────────────────────────────────── */
   const saveAnswers = useCallback(
-    async (showFeedback = true) => {
+    async (showFeedback = true, source?: Record<string, AnswerValue>) => {
       setIsSaving(true);
       setError(null);
       try {
-        const payload = Object.entries(answers).map(([nodeId, a]) => ({
+        // source : réponses à enregistrer tout de suite, avant que l'état React ne
+        // soit relu (reprise des propositions de l'analyse documentaire).
+        const payload = Object.entries(source ?? answers).map(([nodeId, a]) => ({
           nodeId,
           valueString: a.valueString,
           valueNumber: a.valueNumber,
@@ -533,8 +539,27 @@ export function EvaluationWorkspace({
     triggerAutoSave();
   };
 
+  /* ── Analyse documentaire : reprise des propositions validées ── */
+  const appliquerPropositions = async (propositions: Proposition[]) => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    const suivantes = { ...answers };
+    for (const p of propositions) {
+      suivantes[p.nodeId] = {
+        valueString: p.valueString,
+        valueNumber: p.valueNumber,
+        valueBoolean: p.valueBoolean,
+        comment: commentaireSource(p, "l'analyste"),
+      };
+    }
+    setAnswers(suivantes);
+    setIsStale(true);
+    await saveAnswers(false, suivantes);
+  };
+
   /* ── Calculate ─────────────────────────────────────────── */
   const handleCalculate = async () => {
+    // Une sauvegarde automatique en attente invaliderait le calcul juste effectué.
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     setIsCalculating(true);
     setError(null);
     setSuccessMsg(null);
@@ -549,19 +574,18 @@ export function EvaluationWorkspace({
       }
 
       const { data } = await res.json();
-      setServerScore({
-        finalScore: data.finalScore,
-        rating: data.rating,
-        malusTotal: data.malusTotal ?? 0,
-        blocked: !!data.blocked,
-        blockingRuleCodes: data.blockingRuleCodes ?? [],
-        domains: data.domains ?? [],
-      });
+      setServerScore(lireServerScore(data));
       setIsStale(false);
       setSuccessMsg(
         data.blocked
           ? `Calcul effectué — BLOCAGE : ${data.blockingRuleCodes.join(", ")}`
-          : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
+          : typeof data.finalScore !== "number"
+            ? data.incomplet
+              ? "Calcul effectué — compléments obligatoires attendus avant soumission"
+              : "Calcul effectué."
+            : data.incomplet
+              ? `Score provisoire : ${data.finalScore.toFixed(1)} pts — compléments obligatoires attendus avant soumission`
+              : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
       );
     } catch (e: any) {
       setError(e.message);
@@ -573,6 +597,8 @@ export function EvaluationWorkspace({
   /* ── Submit ────────────────────────────────────────────── */
   const handleSubmit = async () => {
     if (!confirm("Soumettre l'évaluation pour validation ?")) return;
+    // Une sauvegarde automatique en attente invaliderait le calcul juste effectué.
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     setIsCalculating(true);
     setError(null);
     try {
@@ -588,7 +614,8 @@ export function EvaluationWorkspace({
         `/api/scoring/evaluations/${evaluationId}/submit`,
         { notes: "" }
       );
-      if (!subRes.ok) throw new Error("Soumission échouée");
+      // le serveur dit ce qui manque (donnée obligatoire, règle critique…)
+      if (!subRes.ok) throw new Error(await messageErreurApi(subRes, "Soumission échouée"));
 
       onComplete(evaluationId, data.finalScore, data.rating);
     } catch (e: any) {
@@ -669,6 +696,13 @@ export function EvaluationWorkspace({
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
+            onClick={() => setPanneauIA(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
+          >
+            <FileSearch size={14} />
+            Pièces et IA
+          </button>
+          <button
             onClick={() => saveAnswers(true)}
             disabled={isSaving}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary disabled:opacity-50 text-foreground text-sm rounded-lg transition-all"
@@ -694,6 +728,15 @@ export function EvaluationWorkspace({
           </button>
         </div>
       </div>
+
+      {panneauIA && (
+        <AnalyseDocumentsIA
+          evaluationId={evaluationId}
+          answers={answers}
+          onFermer={() => setPanneauIA(false)}
+          onAppliquer={appliquerPropositions}
+        />
+      )}
 
       {/* ── Main layout ─────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
@@ -824,6 +867,7 @@ export function EvaluationWorkspace({
         {/* Right: Live score panel */}
         <LiveScorePanel
           score={serverScore}
+          masquerScores={!voirScoresPanneau}
           isScoring={isScoring}
           isStale={isStale}
           isSaving={isSaving}

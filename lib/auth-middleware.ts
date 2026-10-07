@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { secretJwt } from "./jwt-secret";
+import { roleDuCompteActif } from "./compte-actif";
+import { masquerScores, peutVoirScores } from "./score-visibility";
 import {
   hasPermission,
   hasMinimumRole,
@@ -34,28 +37,6 @@ export interface AuthPayload {
   exp?: number; // Expiration (timestamp d'expiration)
 }
 
-function getJwtSecret(): string {
-  const _rawSecret =
-    process.env.SUPABASE_JWT_SECRET ||
-    process.env.JWT_SECRET;
-
-  if (!_rawSecret && process.env.NODE_ENV === "production") {
-    throw new Error("FATAL: JWT_SECRET ou SUPABASE_JWT_SECRET doit être défini en production");
-  }
-
-  return _rawSecret || "dev-secret-key-change-in-production";
-}
-
-let JWT_SECRET_BYTES: Uint8Array | null = null;
-
-function getJwtSecretBytes(): Uint8Array {
-  if (!JWT_SECRET_BYTES) {
-    const secret = getJwtSecret();
-    JWT_SECRET_BYTES = new TextEncoder().encode(secret);
-  }
-  return JWT_SECRET_BYTES;
-}
-
 /**
  * Vérifie le token JWT dans le header Authorization.
  * Retourne le payload décodé si valide, null sinon.
@@ -71,8 +52,12 @@ export async function authenticateRequest(
     }
 
     const token = authHeader.substring(7); // Extraire le token après "Bearer "
-    const { payload } = await jwtVerify(token, getJwtSecretBytes());
-    return payload as unknown as AuthPayload;
+    const { payload } = await jwtVerify(token, secretJwt());
+    const jeton = payload as unknown as AuthPayload;
+    if (!jeton?.userId) return null;
+    const role = await roleDuCompteActif(jeton.userId);
+    if (!role) return null;
+    return { ...jeton, role };
   } catch {
     // Token invalide, expiré, ou signature incorrecte
     return null;
@@ -94,7 +79,28 @@ export async function withAuth(
       { status: 401 }
     );
   }
-  return handler(request, user);
+  const reponse = await handler(request, user);
+  return filtrerScores(reponse, user.role);
+}
+
+/**
+ * Retire les scores des réponses JSON pour les rôles qui ne doivent pas les voir
+ * (lib/score-visibility.ts). Point de passage unique de toutes les routes protégées :
+ * une route ajoutée plus tard est couverte sans y penser.
+ */
+async function filtrerScores(reponse: NextResponse, role: string): Promise<NextResponse> {
+  if (peutVoirScores(role)) return reponse;
+  const type = reponse.headers.get("content-type") ?? "";
+  if (!type.includes("application/json")) return reponse;
+  let corps: unknown;
+  try {
+    corps = await reponse.clone().json();
+  } catch {
+    return reponse;
+  }
+  const entetes = new Headers(reponse.headers);
+  entetes.delete("content-length");
+  return NextResponse.json(masquerScores(corps), { status: reponse.status, headers: entetes });
 }
 
 /**

@@ -132,7 +132,7 @@ export default function ScoringAdminPage() {
           versionNumber: data.modelVersion?.versionNumber ?? 1,
           label: data.modelVersion?.label ?? "V1",
           modelCode: "PF_V7PP",
-          modelLabel: "PF V7++ - Project Finance Standard Model",
+          modelLabel: data.modelVersion?.model?.label ?? "Modèle Project Finance",
           domainCount: arbre.length,
           criteriaCount: arbre.reduce(
             (s: number, d: ScoringNode) => s + (d.children?.length ?? 0),
@@ -187,7 +187,7 @@ export default function ScoringAdminPage() {
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-foreground">Modèle de Scoring</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Configuration du modèle PF V7++ actif
+            Configuration du modèle actif
           </p>
         </div>
         <div className="flex gap-2">
@@ -234,7 +234,7 @@ export default function ScoringAdminPage() {
           <div className="flex gap-6 flex-wrap">
             <div>
               <div className="text-xs text-muted-foreground mb-1">Version</div>
-              <div className="text-primary font-semibold">V{modelVersion.versionNumber}</div>
+              <div className="text-primary font-semibold">Version {modelVersion.versionNumber}</div>
             </div>
             <div>
               <div className="text-xs text-muted-foreground mb-1">Domaines</div>

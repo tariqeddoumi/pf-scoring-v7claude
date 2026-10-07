@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Ancienne adresse de l'éditeur de grille (portait le nom de version du modèle).
+  async redirects() {
+    return [{ source: "/admin/scoring-grid-v7pp", destination: "/admin/grille-scoring", permanent: true }];
+  },
   output: "standalone",
 
   // Disable ESLint during build

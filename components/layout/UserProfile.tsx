@@ -149,7 +149,7 @@ export function UserProfile() {
               {[
                 { href: "/admin", icone: Settings, texte: "Paramétrage" },
                 { href: "/admin/users", icone: Users, texte: "Utilisateurs" },
-                { href: "/admin/scoring-grid-v7pp", icone: BarChart3, texte: "Grille de scoring" },
+                { href: "/admin/grille-scoring", icone: BarChart3, texte: "Grille de scoring" },
               ].map(({ href, icone: Icone, texte }) => (
                 <Link
                   key={href}

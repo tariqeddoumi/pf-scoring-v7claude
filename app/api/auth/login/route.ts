@@ -81,6 +81,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Un compte désactivé ou supprimé ne se connecte plus, même avec le bon mot de passe.
+    if (!user.isActive || user.deletedAt) {
+      return NextResponse.json(
+        { error: "Ce compte est désactivé. Contactez l'administrateur.", errorCode: "ERR_AUTH_DISABLED" },
+        { status: 403 }
+      );
+    }
+
     // Créer le token JWT
     const token = await createToken({
       userId: user.id,

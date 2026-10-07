@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma-client';
+import { withAuth } from '@/lib/auth-middleware';
 
 /**
  * GET /api/v9/scoring-model
  * Returns active V9 scoring model with socle structure
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const model = await prisma.v9ScoringModel.findFirst({
       where: { isActive: true },
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     if (!model) {
       return NextResponse.json(
-        { error: 'No active V9 model found' },
+        { error: 'Aucun modèle actif' },
         { status: 404 }
       );
     }
@@ -45,4 +46,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Paramétrage du modèle : lisible par les utilisateurs connectés seulement.
+export async function GET(request: NextRequest) {
+  return withAuth(request, (req) => handleGET(req));
 }

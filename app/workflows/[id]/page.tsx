@@ -12,6 +12,7 @@ import { SectionCard } from "@/components/ui/section-card";
 import { Note } from "@/components/ui/status-badge";
 import { usePermission } from "@/lib/hooks/usePermission";
 import { GRADE_THRESHOLDS } from "@/lib/constants";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface Utilisateur {
   id?: string;
@@ -110,6 +111,7 @@ const nomDe = (u?: Utilisateur | null) =>
  * apparaissaient deux fois, l'API renvoyant à la fois les racines et leurs réponses.
  */
 export default function CircuitPage() {
+  const voirScores = useVoirScores();
   const params = useParams();
   const id = String(params?.id ?? "");
   const { can } = usePermission();
@@ -536,6 +538,7 @@ export default function CircuitPage() {
 
           <SectionCard titre="Évaluation">
             <dl className="space-y-2 text-[12.5px]">
+              {voirScores && (<>
               <div>
                 <dt className="text-muted-foreground">Score final</dt>
                 <dd
@@ -550,6 +553,7 @@ export default function CircuitPage() {
                 <dt className="text-muted-foreground">Note calculée</dt>
                 <dd className="text-foreground">{w.evaluation?.rating ?? "—"}</dd>
               </div>
+              </>)}
               <div>
                 <dt className="text-muted-foreground">Soumis le</dt>
                 <dd className="text-foreground">

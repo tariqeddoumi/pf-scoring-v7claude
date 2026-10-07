@@ -4,8 +4,12 @@ import {
   submitEvaluationSchema,
   validateEvaluationSchema,
   rejectEvaluationSchema,
+  updateEvaluationSchema,
 } from "@/lib/validation-schemas";
 import type { z } from "zod";
+import { ScoringEngineV8 } from "@/lib/services/scoring/scoring-engine-v8";
+import { motifsRefusDecisionFavorable, motifsRefusSoumission } from "@/lib/services/scoring/decision-guard";
+import { ouvrirCircuit } from "@/lib/services/scoring/circuit";
 
 /**
  * Service des évaluations — unifié sur le modèle ScoringEvaluation.
@@ -106,7 +110,8 @@ export class EvaluationService {
         modelVersionId: version.id,
         analystId: createdBy,
         status: "brouillon",
-        finalScore: validated.finalScore ?? null,
+        // le score vient du moteur, jamais de la requête de création
+        finalScore: null,
         malusTotal: 0,
         notes: validated.notes ?? null,
         summaryJson: buildSummaryJson(null, {
@@ -223,65 +228,111 @@ export class EvaluationService {
     };
   }
 
+  /**
+   * Soumission (route historique /api/evaluations/submit).
+   *
+   * Elle reprenait score, note, PD et malus fournis par le navigateur (9,9 et AAA
+   * acceptés sans aucun calcul). Le schéma est désormais strict — seules des notes
+   * sont admises — et la note est recalculée par le moteur avant la soumission.
+   */
   static async submitEvaluation(
     id: string,
     data: z.infer<typeof submitEvaluationSchema>,
-    _submittedBy: string
+    submittedBy: string
   ) {
     const validated = submitEvaluationSchema.parse(data);
-
-    const current = await prisma.scoringEvaluation.findUnique({
-      where: { id },
-      select: { status: true, summaryJson: true },
-    });
-    if (!current) throw new Error("Evaluation not found");
-    if (current.status !== "brouillon") {
-      throw new Error("Can only submit draft evaluations");
-    }
-
-    return prisma.scoringEvaluation.update({
-      where: { id },
-      data: {
-        status: "soumis",
-        submittedAt: new Date(),
-        finalScore: validated.finalScore,
-        rating: validated.rating,
-        probabilityOfDefault: validated.probabilityOfDefault,
-        malusTotal: validated.malusTotal,
-        notes: validated.notes,
-        triggeredRulesJson: validated.triggeredNOGOs
-          ? JSON.stringify(validated.triggeredNOGOs)
-          : undefined,
-        summaryJson: buildSummaryJson(current.summaryJson, {
-          appliedMALUS: validated.appliedMALUS,
-        }),
-      },
-      include: EVALUATION_INCLUDE,
-    });
-  }
-
-  static async validateEvaluation(
-    id: string,
-    data: z.infer<typeof validateEvaluationSchema>,
-    _validatedBy: string
-  ) {
-    const validated = validateEvaluationSchema.parse(data);
 
     const current = await prisma.scoringEvaluation.findUnique({
       where: { id },
       select: { status: true },
     });
     if (!current) throw new Error("Evaluation not found");
+    if (current.status !== "brouillon") {
+      throw new Error("Can only submit draft evaluations");
+    }
+
+    // Calcul serveur exclusivement : score, note, malus et trace viennent du moteur.
+    const trace = await ScoringEngineV8.scoreEvaluation(id);
+    await ScoringEngineV8.persistTrace(trace, submittedBy);
+    const motifs = motifsRefusSoumission(trace.traceJson);
+    if (motifs.length > 0) throw new Error(`Soumission refusée : ${motifs.join(" ")}`);
+
+    const [evaluation] = await prisma.$transaction([
+      prisma.scoringEvaluation.update({
+        where: { id },
+        data: {
+          status: "soumis",
+          submittedAt: new Date(),
+          ...(validated.notes !== undefined ? { notes: validated.notes } : {}),
+        },
+        include: EVALUATION_INCLUDE,
+      }),
+      ouvrirCircuit(id, submittedBy),
+    ]);
+    await prisma.scoringChangeLog.create({
+      data: {
+        entityType: "ScoringEvaluation",
+        entityId: id,
+        evaluationId: id,
+        action: "SUBMIT",
+        newValueJson: JSON.stringify({ status: "soumis", finalScore: trace.finalScore, rating: trace.rating }),
+        changedBy: submittedBy,
+        comment: "Évaluation soumise (note recalculée par le moteur)",
+      },
+    });
+    return evaluation;
+  }
+
+  /**
+   * Validation (route historique /api/evaluations/validate).
+   *
+   * Une recommandation REJECT mettait le projet « approuvé », et rien n'empêchait de
+   * valider un dossier frappé d'une règle rédhibitoire ou sa propre analyse. Un REJECT
+   * rejette désormais le dossier ; une validation favorable passe par decision-guard.
+   */
+  static async validateEvaluation(
+    id: string,
+    data: z.infer<typeof validateEvaluationSchema>,
+    validatedBy: string
+  ) {
+    const validated = validateEvaluationSchema.parse(data);
+
+    if (validated.recommendation === "REJECT") {
+      return this.rejectEvaluation(
+        id,
+        { reason: "Recommandation de rejet lors de la validation", notes: validated.notes },
+        validatedBy
+      );
+    }
+
+    const current = await prisma.scoringEvaluation.findUnique({
+      where: { id },
+      select: { status: true, finalScore: true, summaryJson: true, analystId: true },
+    });
+    if (!current) throw new Error("Evaluation not found");
     if (current.status !== "soumis") {
       throw new Error("Can only validate submitted evaluations");
     }
+    const circuit = await prisma.scoringWorkflow.findUnique({
+      where: { evaluationId: id },
+      select: { submittedBy: true },
+    });
+    const motifs = motifsRefusDecisionFavorable({
+      evaluation: { ...current, status: String(current.status) },
+      decideurId: validatedBy,
+      soumisPar: circuit?.submittedBy,
+    });
+    if (motifs.length > 0) {
+      throw new Error(`Validation refusée : ${motifs.join(" ")}`);
+    }
 
+    const recommendation = validated.recommendation ?? "APPROVE";
     const evaluation = await prisma.scoringEvaluation.update({
       where: { id },
       data: {
         status: "valide",
         validatedAt: new Date(),
-        recommendation: validated.recommendation,
+        recommendation,
         notes: validated.notes,
       },
       include: EVALUATION_INCLUDE,
@@ -295,6 +346,22 @@ export class EvaluationService {
         grade: evaluation.rating,
       },
     });
+    await prisma.scoringChangeLog.create({
+      data: {
+        entityType: "ScoringEvaluation",
+        entityId: id,
+        evaluationId: id,
+        action: "VALIDATE",
+        newValueJson: JSON.stringify({ status: "valide", recommendation }),
+        changedBy: validatedBy,
+        comment: "Évaluation validée",
+      },
+    });
+    // le circuit de validation suit la décision (même état partout)
+    await prisma.scoringWorkflow.updateMany({
+      where: { evaluationId: id, status: { notIn: ["APPROVED", "REJECTED"] } },
+      data: { status: "APPROVED", approvedAt: new Date(), approvedBy: validatedBy },
+    });
 
     return evaluation;
   }
@@ -302,7 +369,7 @@ export class EvaluationService {
   static async rejectEvaluation(
     id: string,
     data: z.infer<typeof rejectEvaluationSchema>,
-    _rejectedBy: string
+    rejectedBy: string
   ) {
     const validated = rejectEvaluationSchema.parse(data);
 
@@ -329,6 +396,17 @@ export class EvaluationService {
     await prisma.project.update({
       where: { id: evaluation.projectId },
       data: { status: "rejete" },
+    });
+    await prisma.scoringChangeLog.create({
+      data: {
+        entityType: "ScoringEvaluation",
+        entityId: id,
+        evaluationId: id,
+        action: "REJECT",
+        newValueJson: JSON.stringify({ status: "rejete", reason: validated.reason ?? null }),
+        changedBy: rejectedBy,
+        comment: "Évaluation rejetée",
+      },
     });
 
     return evaluation;
@@ -399,10 +477,19 @@ export class EvaluationService {
     });
   }
 
-  static async updateEvaluation(id: string, data: any, _updatedBy: string) {
+  /**
+   * Mise à jour libre (PUT /api/evaluations/[id]) : notes uniquement.
+   *
+   * La route reprenait finalScore, rating et status d'un corps quelconque, ce qui
+   * permettait d'écrire une note ou un statut final sans moteur ni transition. Toute
+   * propriété de résultat ou de statut est rejetée explicitement.
+   */
+  static async updateEvaluation(id: string, data: unknown, _updatedBy: string) {
+    const validated = updateEvaluationSchema.parse(data);
+
     const current = await prisma.scoringEvaluation.findUnique({
       where: { id },
-      select: { status: true, summaryJson: true },
+      select: { status: true },
     });
     if (!current) throw new Error("Evaluation not found");
     if (current.status !== "brouillon") {
@@ -411,41 +498,24 @@ export class EvaluationService {
 
     return prisma.scoringEvaluation.update({
       where: { id },
-      data: {
-        finalScore: data.finalScore ?? undefined,
-        rating: data.rating ?? undefined,
-        recommendation: data.recommendation ?? undefined,
-        probabilityOfDefault: data.probabilityOfDefault ?? undefined,
-        malusTotal: data.malusTotal ?? undefined,
-        notes: data.notes ?? undefined,
-        status: data.status ?? undefined,
-        triggeredRulesJson: data.triggeredNOGOs
-          ? JSON.stringify(data.triggeredNOGOs)
-          : undefined,
-        // Les scores par domaine ne sont plus des colonnes : le modèle a neuf domaines
-        // paramétrables, pas huit champs figés. Ils sont conservés dans summaryJson.
-        summaryJson: buildSummaryJson(current.summaryJson, {
-          scoreFinancier: data.scoreFinancier,
-          scoreTechnique: data.scoreTechnique,
-          scoreMarche: data.scoreMarche,
-          scoreEnvironnemental: data.scoreEnvironnemental,
-          scoreSocial: data.scoreSocial,
-          scoreGouvernance: data.scoreGouvenance ?? data.scoreGouvernance,
-          scoreJuridique: data.scoreJuridique,
-          scorePays: data.scorePays,
-          appliedMALUS: data.appliedMALUS,
-        }),
-      },
+      data: { ...(validated.notes !== undefined ? { notes: validated.notes } : {}) },
       include: EVALUATION_INCLUDE,
     });
   }
 
+  /**
+   * Suppression physique réservée aux brouillons. Une évaluation soumise, validée ou
+   * rejetée est une pièce du dossier de crédit : elle s'archive, elle ne s'efface pas.
+   */
   static async deleteEvaluation(id: string) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, status: true },
     });
     if (!evaluation) throw new Error("Evaluation not found");
+    if (String(evaluation.status) !== "brouillon") {
+      throw new Error("Seule une évaluation en brouillon peut être supprimée ; archivez les autres.");
+    }
 
     await prisma.scoringEvaluation.delete({ where: { id } });
     return { success: true, id };

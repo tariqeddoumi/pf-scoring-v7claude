@@ -1,47 +1,145 @@
 # -*- coding: utf-8 -*-
-"""Sources VBA de l'outil de scoring PF V8 (encodage cp1252 : pas de symbole hors Windows-1252)."""
+"""Sources VBA de l'outil de scoring PF V8, version 2 (encodage cp1252 : pas de symbole hors Windows-1252).
+
+Les adresses entre accolades ({P_FIRST}, {CK_FIRST}...) sont remplacées à la construction
+par celles de la mise en page du dossier (build_tool.R).
+"""
 
 MOD_OUTIL = r'''Option Explicit
 
 ' =====================================================================
-'  Outil de scoring Project Finance V8 - macros de pilotage
+'  Outil de scoring Project Finance V8 - version 2 - macros de pilotage
 '  Toutes les notes sont calculees par les FORMULES des onglets : les
-'  macros ne font que creer, dupliquer, controler, exporter et tracer.
+'  macros creent, dupliquent, controlent, preparent l'echeancier,
+'  exportent et tracent. Les feuilles sont protegees SANS mot de passe.
 ' =====================================================================
 
 Public Const MARQUEUR As String = "DOSSIER_V8"
+Public Const MARQUEUR_MODELE As String = "MODELE"
 Public Const ONGLET_MODELE As String = "Modèle"
 Public Const ONGLET_SYNTHESE As String = "Synthèse"
+Public Const ONGLET_FICHE As String = "Fiche comité"
 Public Const ONGLET_JOURNAL As String = "Journal"
 Public Const ONGLET_ACCUEIL As String = "Accueil"
 Public Const ONGLET_PARAM As String = "Paramètres"
+Public Const ONGLET_DIAG As String = "Diagnostic"
+
+Private Const LIGNE_P1 As Long = {P_FIRST}
+Private Const LIGNE_PN As Long = {P_LAST}
+Private Const CK_PREMIERE As Long = {CK_FIRST}
+Private Const CK_DERNIERE As Long = {CK_LAST}
+Private Const MAX_DOSSIERS As Long = 23
+Private Const MAX_LIGNES_MSG As Long = 12
+
+' ---------------------------------------------------------------------
+'  Utilitaires
+' ---------------------------------------------------------------------
+' Texte d'une valeur de cellule, sans erreur d'execution sur #N/A, #DIV/0!...
+Public Function Txt(ByVal v As Variant) As String
+    If IsError(v) Then
+        Txt = "#ERREUR"
+    ElseIf IsEmpty(v) Then
+        Txt = ""
+    Else
+        Txt = Trim$(CStr(v))
+    End If
+End Function
+
+Private Function EstNombre(ByVal v As Variant) As Boolean
+    If IsError(v) Or IsEmpty(v) Then Exit Function
+    Select Case VarType(v)
+        Case vbDouble, vbSingle, vbInteger, vbLong, vbCurrency, vbDecimal
+            EstNombre = True
+    End Select
+End Function
+
+' Protection sans mot de passe. UserInterfaceOnly laisse les macros ecrire
+' tout en empechant l'utilisateur d'ecraser une formule.
+Public Sub Proteger(ByVal ws As Worksheet)
+    On Error Resume Next
+    ws.Protect Password:="", DrawingObjects:=True, Contents:=True, Scenarios:=True, _
+               UserInterfaceOnly:=True, AllowFormattingColumns:=True, AllowFormattingRows:=True, _
+               AllowSorting:=True, AllowFiltering:=True
+End Sub
+
+Public Sub ProtegerTout()
+    Dim ws As Worksheet
+    For Each ws In ThisWorkbook.Worksheets
+        Proteger ws
+    Next ws
+End Sub
+
+Private Sub Activer(ByVal nom As String)
+    On Error GoTo Absent
+    ThisWorkbook.Worksheets(nom).Activate
+    Exit Sub
+Absent:
+    MsgBox "Onglet « " & nom & " » introuvable.", vbExclamation
+End Sub
 
 ' ---------------------------------------------------------------------
 '  Navigation
 ' ---------------------------------------------------------------------
 Public Sub AllerAccueil()
-    ThisWorkbook.Worksheets(ONGLET_ACCUEIL).Activate
+    Activer ONGLET_ACCUEIL
 End Sub
 
 Public Sub AllerSynthese()
     MajSynthese False
-    ThisWorkbook.Worksheets(ONGLET_SYNTHESE).Activate
+    Activer ONGLET_SYNTHESE
 End Sub
 
 Public Sub AllerParametres()
-    ThisWorkbook.Worksheets(ONGLET_PARAM).Activate
+    Activer ONGLET_PARAM
 End Sub
 
 Public Sub AllerDiagnostic()
-    ThisWorkbook.Worksheets("Diagnostic").Activate
+    Activer ONGLET_DIAG
+End Sub
+
+Public Sub AllerJournal()
+    Activer ONGLET_JOURNAL
 End Sub
 
 ' ---------------------------------------------------------------------
 '  Reconnaissance d'un onglet dossier
 ' ---------------------------------------------------------------------
-Public Function EstDossier(ByVal ws As Worksheet) As Boolean
-    On Error Resume Next
-    EstDossier = (CStr(ws.Range("J1").Value) = MARQUEUR)
+' Un dossier porte DOSSIER_V8 en J1 (colonne masquee). Une copie faite a la
+' main depuis le Modele (MODELE en J1) est aussi reconnue.
+Public Function EstDossier(ByVal ws As Object) As Boolean
+    Dim m As String
+    On Error GoTo Non
+    If TypeName(ws) <> "Worksheet" Then Exit Function
+    m = Txt(ws.Range("J1").Value)
+    If m = MARQUEUR Then
+        EstDossier = True
+    ElseIf m = MARQUEUR_MODELE And ws.Name <> ONGLET_MODELE Then
+        EstDossier = True
+    End If
+    Exit Function
+Non:
+    EstDossier = False
+End Function
+
+Private Function FeuilleExiste(ByVal nom As String) As Boolean
+    Dim ws As Worksheet
+    For Each ws In ThisWorkbook.Worksheets
+        If StrComp(ws.Name, nom, vbTextCompare) = 0 Then
+            FeuilleExiste = True
+            Exit Function
+        End If
+    Next ws
+End Function
+
+Private Function ListeDossiers() As String
+    Dim ws As Worksheet, s As String
+    For Each ws In ThisWorkbook.Worksheets
+        If EstDossier(ws) Then
+            If s <> "" Then s = s & ", "
+            s = s & ws.Name
+        End If
+    Next ws
+    ListeDossiers = "Dossiers existants : " & s
 End Function
 
 Private Function NomValide(ByVal nom As String) As Boolean
@@ -65,208 +163,370 @@ Private Function NomValide(ByVal nom As String) As Boolean
     NomValide = True
 End Function
 
-Private Function FeuilleExiste(ByVal nom As String) As Boolean
-    Dim ws As Worksheet
-    For Each ws In ThisWorkbook.Worksheets
-        If StrComp(ws.Name, nom, vbTextCompare) = 0 Then
-            FeuilleExiste = True
-            Exit Function
-        End If
-    Next ws
+' Dossier vise par une action : l'onglet actif s'il s'agit d'un dossier, sinon
+' le nom demande a l'utilisateur. Renvoie Nothing si l'action est abandonnee.
+Private Function DossierCible(ByVal titre As String) As Worksheet
+    Dim nom As String
+    If EstDossier(ActiveSheet) Then
+        Set DossierCible = ActiveSheet
+        Exit Function
+    End If
+    nom = Trim$(InputBox("Nom de l'onglet du dossier :" & vbCrLf & vbCrLf & ListeDossiers(), titre))
+    If nom = "" Then Exit Function
+    If Not FeuilleExiste(nom) Then
+        MsgBox "Aucun onglet ne porte le nom « " & nom & " ».", vbExclamation, titre
+        Exit Function
+    End If
+    If Not EstDossier(ThisWorkbook.Worksheets(nom)) Then
+        MsgBox "« " & nom & " » n'est pas un onglet de dossier.", vbExclamation, titre
+        Exit Function
+    End If
+    Set DossierCible = ThisWorkbook.Worksheets(nom)
+End Function
+
+Private Function DossierActif(ByVal titre As String) As Worksheet
+    If EstDossier(ActiveSheet) Then
+        Set DossierActif = ActiveSheet
+    Else
+        MsgBox "Placez-vous d'abord sur l'onglet d'un dossier.", vbExclamation, titre
+    End If
 End Function
 
 ' ---------------------------------------------------------------------
 '  Creation, duplication, suppression
 ' ---------------------------------------------------------------------
 Public Sub NouveauDossier()
-    Dim nom As String, wsM As Worksheet, wsN As Worksheet, etatVisible As Long
-    nom = Trim$(InputBox("Nom court du nouvel onglet (ex. C6 ou PORT-NADOR) :", "Nouveau dossier"))
+    Dim nom As String, intitule As String, wsM As Worksheet, wsN As Worksheet, etat As Long
+    nom = Trim$(InputBox("Nom court du nouvel onglet (ex. C6 ou PORT-NADOR) :", "Nouveau dossier (1/2)"))
     If nom = "" Then Exit Sub
     If Not NomValide(nom) Then Exit Sub
+    intitule = Trim$(InputBox("Intitulé du projet (facultatif, modifiable ensuite en A1) :", "Nouveau dossier (2/2)"))
 
+    On Error GoTo Echec
     Application.ScreenUpdating = False
     Set wsM = ThisWorkbook.Worksheets(ONGLET_MODELE)
-    etatVisible = wsM.Visible
+    etat = wsM.Visible
     wsM.Visible = xlSheetVisible
     wsM.Copy Before:=wsM
-    Set wsN = ThisWorkbook.Worksheets(wsM.Index - 1)
+    Set wsN = ActiveSheet
+    wsM.Visible = etat
     wsN.Name = nom
+    Proteger wsN
     wsN.Range("J1").Value = MARQUEUR
-    wsN.Range("A1").Value = "Nouveau dossier " & nom
-    wsM.Visible = etatVisible
+    If intitule <> "" Then
+        wsN.Range("A1").Value = intitule
+    Else
+        wsN.Range("A1").Value = "Nouveau dossier " & nom
+    End If
     Application.ScreenUpdating = True
 
     MajSynthese False
     Journaliser "Création", nom, "Dossier créé à partir du modèle vierge"
     wsN.Activate
-    wsN.Range("B15").Select
-    MsgBox "Dossier « " & nom & " » créé." & vbCrLf & _
-           "Renseignez les cellules jaunes, de haut en bas : routage, sources et emplois," & vbCrLf & _
-           "échéancier, noyau financier, grille, plafonds et verrous." & vbCrLf & _
-           "La note se met à jour à chaque saisie.", vbInformation, "Nouveau dossier"
+    Application.Goto wsN.Range("B{REGIME}"), True
+    MsgBox "Dossier « " & nom & " » créé." & vbCrLf & vbCrLf & _
+           "1. Remplissez les cellules ORANGE (saisies obligatoires), de haut en bas." & vbCrLf & _
+           "2. La ligne « À SAISIR » en haut indique la prochaine saisie et donne un lien pour y aller." & vbCrLf & _
+           "3. Sélectionnez une cellule pour afficher son aide.", vbInformation, "Nouveau dossier"
+    Exit Sub
+Echec:
+    Application.ScreenUpdating = True
+    MsgBox "Création impossible : " & Err.Description, vbExclamation, "Nouveau dossier"
 End Sub
 
 Public Sub DupliquerDossier()
     Dim ws As Worksheet, nom As String, wsN As Worksheet
-    Set ws = ActiveSheet
-    If Not EstDossier(ws) Then
-        MsgBox "Placez-vous d'abord sur l'onglet du dossier à dupliquer.", vbExclamation
-        Exit Sub
-    End If
-    nom = Trim$(InputBox("Nom du nouvel onglet (copie de « " & ws.Name & " ») :", "Dupliquer", ws.Name & "-v2"))
+    Set ws = DossierCible("Dupliquer un dossier")
+    If ws Is Nothing Then Exit Sub
+    nom = Trim$(InputBox("Nom du nouvel onglet (copie de « " & ws.Name & " ») :", "Dupliquer un dossier", Left$(ws.Name, 28) & "-v2"))
     If nom = "" Then Exit Sub
     If Not NomValide(nom) Then Exit Sub
+
+    On Error GoTo Echec
     Application.ScreenUpdating = False
     ws.Copy After:=ws
-    Set wsN = ThisWorkbook.Worksheets(ws.Index + 1)
+    Set wsN = ActiveSheet
     wsN.Name = nom
+    Proteger wsN
+    wsN.Range("J1").Value = MARQUEUR
     Application.ScreenUpdating = True
     MajSynthese False
     Journaliser "Duplication", nom, "Copie de " & ws.Name
     wsN.Activate
+    MsgBox "Copie « " & nom & " » créée : modifiez-la pour tester une variante (montage, stress, couverture...).", _
+           vbInformation, "Dupliquer un dossier"
+    Exit Sub
+Echec:
+    Application.ScreenUpdating = True
+    MsgBox "Duplication impossible : " & Err.Description, vbExclamation, "Dupliquer un dossier"
 End Sub
 
 Public Sub SupprimerDossier()
     Dim ws As Worksheet, nom As String
-    Set ws = ActiveSheet
-    If Not EstDossier(ws) Then
-        MsgBox "Placez-vous d'abord sur l'onglet du dossier à supprimer.", vbExclamation
-        Exit Sub
-    End If
+    Set ws = DossierCible("Supprimer un dossier")
+    If ws Is Nothing Then Exit Sub
     nom = ws.Name
     If MsgBox("Supprimer définitivement le dossier « " & nom & " » ?" & vbCrLf & _
-              "Cette action est irréversible.", vbYesNo + vbExclamation + vbDefaultButton2, "Supprimer") <> vbYes Then Exit Sub
+              "Cette action est irréversible.", vbYesNo + vbExclamation + vbDefaultButton2, "Supprimer un dossier") <> vbYes Then Exit Sub
     Application.DisplayAlerts = False
     ws.Delete
     Application.DisplayAlerts = True
     MajSynthese False
     Journaliser "Suppression", nom, ""
-    ThisWorkbook.Worksheets(ONGLET_SYNTHESE).Activate
+    Activer ONGLET_ACCUEIL
 End Sub
 
 ' ---------------------------------------------------------------------
-'  Synthese : une colonne par onglet dossier, formules INDIRECT
+'  Synthese : la ligne 4 recoit le nom des onglets dossiers ; les formules
+'  (INDIRECT) des lignes suivantes lisent chaque dossier.
 ' ---------------------------------------------------------------------
 Public Sub MajSynthese(Optional ByVal avecMessage As Boolean = True)
-    Dim wsS As Worksheet, ws As Worksheet, col As Long, derniere As Long
+    Dim wsS As Worksheet, ws As Worksheet, col As Long, nb As Long, trop As Long
+    On Error GoTo Echec
     Set wsS = ThisWorkbook.Worksheets(ONGLET_SYNTHESE)
-    derniere = wsS.Cells(wsS.Rows.Count, "Z").End(xlUp).Row
+    Proteger wsS
     Application.ScreenUpdating = False
-    wsS.Range(wsS.Cells(4, 2), wsS.Cells(derniere, 24)).ClearContents
+    wsS.Range(wsS.Cells(4, 2), wsS.Cells(4, 1 + MAX_DOSSIERS)).ClearContents
     col = 2
     For Each ws In ThisWorkbook.Worksheets
         If EstDossier(ws) Then
-            If col > 24 Then Exit For
-            wsS.Cells(4, col).Value = ws.Name
-            col = col + 1
+            If col <= 1 + MAX_DOSSIERS Then
+                ' apostrophe : un nom comme 2026 ou VRAI reste du texte
+                wsS.Cells(4, col).Value = "'" & ws.Name
+                col = col + 1
+            Else
+                trop = trop + 1
+            End If
         End If
     Next ws
-    If col > 2 Then
-        wsS.Range(wsS.Cells(5, 2), wsS.Cells(derniere, col - 1)).FormulaR1C1 = _
-            "=IF(R4C="""","""",IFERROR(INDIRECT(""'""&R4C&""'!""&RC26),""""))"
-    End If
+    nb = col - 2
     Application.Calculate
     Application.ScreenUpdating = True
-    If avecMessage Then MsgBox (col - 2) & " dossier(s) dans la synthèse.", vbInformation, "Synthèse"
+    If avecMessage Then
+        If trop > 0 Then
+            MsgBox nb & " dossier(s) dans la synthèse ; " & trop & " dossier(s) au-delà de " & MAX_DOSSIERS & _
+                   " ne sont pas affichés.", vbExclamation, "Synthèse"
+        Else
+            MsgBox nb & " dossier(s) dans la synthèse.", vbInformation, "Synthèse"
+        End If
+    End If
+    Exit Sub
+Echec:
+    Application.ScreenUpdating = True
+    If avecMessage Then MsgBox "Mise à jour de la synthèse impossible : " & Err.Description, vbExclamation, "Synthèse"
 End Sub
 
-' Point d'entrée des boutons : une macro liée à un bouton ne prend pas d'argument.
+' Point d'entree des boutons : une macro liee a un bouton ne prend pas d'argument.
 Public Sub MettreAJourSynthese()
     MajSynthese True
 End Sub
 
-' ---------------------------------------------------------------------
-'  Recalcul complet et controle de saisie du dossier actif
-' ---------------------------------------------------------------------
 Public Sub Recalculer()
     Application.CalculateFull
     MajSynthese False
     MsgBox "Recalcul terminé. La synthèse est à jour.", vbInformation, "Recalcul"
 End Sub
 
+' ---------------------------------------------------------------------
+'  Controle de saisie : lit la check-list du dossier (colonnes P:R masquees),
+'  la meme que celle de la ligne « A SAISIR ».
+' ---------------------------------------------------------------------
 Public Sub ControlerDossier()
-    Dim ws As Worksheet, msg As String, r As Long, nb As Long, premier As Range
-    Set ws = ActiveSheet
-    If Not EstDossier(ws) Then
-        MsgBox "Placez-vous sur l'onglet d'un dossier.", vbExclamation
-        Exit Sub
-    End If
+    Dim ws As Worksheet, msg As String, attention As String, texte As String
+    Dim r As Long, nb As Long, nbAtt As Long, premier As Range, adr As String, nr As Long
+    Set ws = DossierActif("Contrôler la saisie")
+    If ws Is Nothing Then Exit Sub
     Application.Calculate
 
-    AjouterSiVide ws, "B15", "Régime de revenus", msg, premier
-    AjouterSiVide ws, "B16", "Secteur", msg, premier
-    AjouterSiVide ws, "B17", "Phase", msg, premier
-    AjouterSiVide ws, "B23", "Exposition de la banque", msg, premier
-    AjouterSiVide ws, "B70", "Choc de stress (scénario défavorable)", msg, premier
-
-    nb = Application.WorksheetFunction.Count(ws.Range("B72:B131"))
-    If nb < 2 Then msg = msg & "- Échéancier : moins de deux périodes renseignées." & vbCrLf
-    For r = 72 To 131
-        ' Comparaisons faites sur le texte : une valeur numérique comparée à "" provoque
-        ' une incompatibilité de type en VBA.
-        If Len(Trim$(CStr(ws.Cells(r, 2).Value))) > 0 And Len(Trim$(CStr(ws.Cells(r, 3).Value))) = 0 Then
-            msg = msg & "- Période ligne " & r & " : CFADS sans service de la dette." & vbCrLf
-        End If
-        If Len(Trim$(CStr(ws.Cells(r, 2).Value))) > 0 Then
-            If IsNumeric(ws.Cells(r, 2).Value) Then
-                If CDbl(ws.Cells(r, 2).Value) < 0 Then msg = msg & "- Période ligne " & r & " : CFADS négatif (N1 noté Critique)." & vbCrLf
+    For r = CK_PREMIERE To CK_DERNIERE
+        If Txt(ws.Cells(r, 18).Value) <> "1" Then
+            nb = nb + 1
+            adr = Txt(ws.Cells(r, 17).Value)
+            If nb <= MAX_LIGNES_MSG Then msg = msg & "- " & Txt(ws.Cells(r, 16).Value) & "   (" & adr & ")" & vbCrLf
+            If premier Is Nothing Then
+                On Error Resume Next
+                Set premier = ws.Range(adr)
+                On Error GoTo 0
             End If
         End If
     Next r
+    If nb > MAX_LIGNES_MSG Then msg = msg & "... et " & (nb - MAX_LIGNES_MSG) & " autre(s)." & vbCrLf
 
-    For r = 145 To 147
-        AjouterSiVide ws, "B" & r, "Noyau " & ws.Cells(r, 1).Value, msg, premier
-    Next r
-    If CStr(ws.Range("B17").Value) <> "P1" Then AjouterSiVide ws, "B150", "N3 hors phase P1 (LLCR)", msg, premier
-    AjouterSiVide ws, "B152", "DSRA en mois de service", msg, premier
-    AjouterSiVide ws, "B153", "Exposition nette en devises", msg, premier
-
-    For r = {GRID_START} To {GRID_END}
-        If CStr(ws.Cells(r, 10).Value) = "SC" And CStr(ws.Cells(r, 11).Value) = "1" Then
-            If Not IsNumeric(ws.Cells(r, 2).Value) Or Trim$(CStr(ws.Cells(r, 2).Value)) = "" Then
-                msg = msg & "- Grille : " & Trim$(ws.Cells(r, 1).Value) & " non noté." & vbCrLf
-                If premier Is Nothing Then Set premier = ws.Cells(r, 2)
+    For r = LIGNE_P1 To LIGNE_PN
+        If EstNombre(ws.Cells(r, 2).Value) Then
+            If ws.Cells(r, 2).Value < 0 Then
+                nbAtt = nbAtt + 1
+                If nbAtt <= 6 Then attention = attention & "- " & Txt(ws.Cells(r, 1).Value) & " : CFADS négatif (N1 noté Critique)." & vbCrLf
             End If
         End If
+        If Txt(ws.Cells(r, 5).Value) = "Différé" Then
+            nbAtt = nbAtt + 1
+            If nbAtt <= 6 Then attention = attention & "- " & Txt(ws.Cells(r, 1).Value) & " : période de différé, exclue du DSCR." & vbCrLf
+        End If
     Next r
+    nr = Application.WorksheetFunction.CountIf(ws.Range("E{C_FIRST}:E{C_LAST}"), "n.r.")
+    If nr > 0 Then attention = attention & "- " & nr & " plafond(s) non évalué(s) faute de donnée (section 11)." & vbCrLf
 
-    If msg = "" Then
-        MsgBox "Aucune donnée manquante détectée." & vbCrLf & vbCrLf & _
-               "Note approuvée : " & ws.Range("B6").Text & "   (" & ws.Range("D6").Text & ")" & vbCrLf & _
-               "Plafonds actifs : " & ws.Range("B8").Text, vbInformation, "Contrôle du dossier " & ws.Name
+    If nb = 0 Then
+        texte = "Toutes les saisies obligatoires sont faites." & vbCrLf & vbCrLf & _
+                "Note approuvée : " & ws.Range("B6").Text & "   (" & ws.Range("D6").Text & ")" & vbCrLf & _
+                "Statut : " & ws.Range("F6").Text & vbCrLf & _
+                "Plafonds actifs : " & ws.Range("B8").Text
+        If attention <> "" Then texte = texte & vbCrLf & vbCrLf & "Points d'attention :" & vbCrLf & attention
+        texte = texte & vbCrLf & vbCrLf & "Étape suivante : bouton « Fiche comité »."
+        MsgBox texte, vbInformation, "Contrôle du dossier " & ws.Name
     Else
-        MsgBox "Points à compléter :" & vbCrLf & vbCrLf & msg, vbExclamation, "Contrôle du dossier " & ws.Name
-        If Not premier Is Nothing Then premier.Select
+        texte = nb & " saisie(s) obligatoire(s) manquante(s) :" & vbCrLf & vbCrLf & msg
+        If attention <> "" Then texte = texte & vbCrLf & "Points d'attention :" & vbCrLf & attention
+        texte = texte & vbCrLf & "Le curseur va sur la première cellule à remplir (en orange)."
+        MsgBox texte, vbExclamation, "Contrôle du dossier " & ws.Name
+        If Not premier Is Nothing Then Application.Goto premier
     End If
-    Journaliser "Contrôle", ws.Name, IIf(msg = "", "Complet", "Incomplet")
-End Sub
-
-Private Sub AjouterSiVide(ByVal ws As Worksheet, ByVal adr As String, ByVal libelle As String, _
-                          ByRef msg As String, ByRef premier As Range)
-    If Trim$(CStr(ws.Range(adr).Value)) = "" Then
-        msg = msg & "- " & libelle & " (" & adr & ")" & vbCrLf
-        If premier Is Nothing Then Set premier = ws.Range(adr)
-    End If
+    Journaliser "Contrôle", ws.Name, IIf(nb = 0, "Complet", nb & " saisie(s) manquante(s)")
 End Sub
 
 ' ---------------------------------------------------------------------
-'  Export PDF de la fiche du dossier actif
+'  Echeancier : libelles des periodes, effacement
+' ---------------------------------------------------------------------
+Public Sub PreparerEcheancier()
+    Dim ws As Worksheet, per As String, parAn As Long, suffixe As String
+    Dim rep As String, nbAns As Long, n As Long, i As Long, defaut As Long, maxi As Long
+    Set ws = DossierActif("Préparer l'échéancier")
+    If ws Is Nothing Then Exit Sub
+
+    per = Txt(ws.Range("B{PERIOD}").Value)
+    If per = "" Then per = "Semestrielle"
+    Select Case per
+        Case "Trimestrielle"
+            parAn = 4: suffixe = "T"
+        Case "Mensuelle"
+            parAn = 12: suffixe = "M"
+        Case Else
+            parAn = 2: suffixe = "S"
+    End Select
+    maxi = LIGNE_PN - LIGNE_P1 + 1
+
+    defaut = 10
+    If EstNombre(ws.Range("B{DUREE}").Value) Then
+        If ws.Range("B{DUREE}").Value >= 1 Then defaut = CLng(ws.Range("B{DUREE}").Value)
+    End If
+    rep = Trim$(InputBox("Nombre d'années de remboursement :" & vbCrLf & vbCrLf & _
+                         "Périodicité « " & per & " » : " & parAn & " échéance(s) par an, " & maxi & " périodes au plus.", _
+                         "Préparer l'échéancier", CStr(defaut)))
+    If rep = "" Then Exit Sub
+    If Not IsNumeric(rep) Then
+        MsgBox "Saisissez un nombre d'années.", vbExclamation, "Préparer l'échéancier"
+        Exit Sub
+    End If
+    nbAns = CLng(rep)
+    If nbAns < 1 Then
+        MsgBox "Saisissez au moins une année.", vbExclamation, "Préparer l'échéancier"
+        Exit Sub
+    End If
+    n = nbAns * parAn
+    If n > maxi Then
+        n = maxi
+        MsgBox "L'échéancier compte au plus " & maxi & " périodes : seules les " & maxi & " premières sont préparées.", _
+               vbInformation, "Préparer l'échéancier"
+    End If
+    If Application.WorksheetFunction.CountA(ws.Range("A" & LIGNE_P1 & ":C" & LIGNE_PN)) > 0 Then
+        If MsgBox("L'échéancier contient déjà des saisies." & vbCrLf & _
+                  "Remplacer les libellés de période ? Les montants saisis sont conservés.", _
+                  vbYesNo + vbQuestion, "Préparer l'échéancier") <> vbYes Then Exit Sub
+    End If
+
+    Proteger ws
+    Application.ScreenUpdating = False
+    If Txt(ws.Range("B{PERIOD}").Value) = "" Then ws.Range("B{PERIOD}").Value = per
+    ws.Range("A" & LIGNE_P1 & ":A" & LIGNE_PN).ClearContents
+    For i = 0 To n - 1
+        If suffixe = "M" Then
+            ws.Cells(LIGNE_P1 + i, 1).Value = "An " & (i \ parAn + 1) & " · M" & Format((i Mod parAn) + 1, "00")
+        Else
+            ws.Cells(LIGNE_P1 + i, 1).Value = "An " & (i \ parAn + 1) & " · " & suffixe & ((i Mod parAn) + 1)
+        End If
+    Next i
+    Application.ScreenUpdating = True
+    Application.Goto ws.Range("B" & LIGNE_P1), True
+    Journaliser "Échéancier préparé", ws.Name, n & " périodes (" & per & ")"
+    MsgBox n & " périodes préparées." & vbCrLf & vbCrLf & _
+           "Saisissez pour chacune le CFADS central (colonne B) et le service de la dette (colonne C). " & _
+           "Le CFADS stressé (colonne F) est facultatif.", vbInformation, "Préparer l'échéancier"
+End Sub
+
+Public Sub EffacerEcheancier()
+    Dim ws As Worksheet
+    Set ws = DossierActif("Effacer l'échéancier")
+    If ws Is Nothing Then Exit Sub
+    If MsgBox("Effacer toutes les périodes de l'échéancier de « " & ws.Name & " » ?" & vbCrLf & _
+              "(libellés, CFADS central, service de la dette, CFADS stressé)", _
+              vbYesNo + vbExclamation + vbDefaultButton2, "Effacer l'échéancier") <> vbYes Then Exit Sub
+    Proteger ws
+    ws.Range("A" & LIGNE_P1 & ":C" & LIGNE_PN).ClearContents
+    ws.Range("F" & LIGNE_P1 & ":F" & LIGNE_PN).ClearContents
+    Journaliser "Échéancier effacé", ws.Name, ""
+    Application.Goto ws.Range("A" & LIGNE_P1), True
+End Sub
+
+' ---------------------------------------------------------------------
+'  Fiche comite
+' ---------------------------------------------------------------------
+Public Sub OuvrirFiche()
+    Dim wsF As Worksheet, nom As String
+    If EstDossier(ActiveSheet) Then nom = ActiveSheet.Name
+    MajSynthese False
+    Set wsF = ThisWorkbook.Worksheets(ONGLET_FICHE)
+    If nom <> "" Then
+        Proteger wsF
+        wsF.Range("B4").Value = "'" & nom
+        Application.Calculate
+    End If
+    wsF.Activate
+    wsF.Range("B4").Select
+End Sub
+
+Public Sub AllerDossierFiche()
+    Dim nom As String
+    nom = Txt(ThisWorkbook.Worksheets(ONGLET_FICHE).Range("B4").Value)
+    If nom = "" Or Not FeuilleExiste(nom) Then
+        MsgBox "Choisissez d'abord un dossier dans la cellule B4.", vbExclamation, "Fiche comité"
+        Exit Sub
+    End If
+    ThisWorkbook.Worksheets(nom).Activate
+End Sub
+
+' ---------------------------------------------------------------------
+'  Export PDF de l'onglet actif (dossier, synthese ou fiche comite)
 ' ---------------------------------------------------------------------
 Public Sub ExporterPDF()
-    Dim ws As Worksheet, chemin As String
+    Dim ws As Worksheet, chemin As Variant, dossier As String, nomFichier As String, sujet As String
     Set ws = ActiveSheet
-    If Not EstDossier(ws) And ws.Name <> ONGLET_SYNTHESE Then
-        MsgBox "Placez-vous sur un dossier ou sur la synthèse.", vbExclamation
+    If Not EstDossier(ws) And ws.Name <> ONGLET_SYNTHESE And ws.Name <> ONGLET_FICHE Then
+        MsgBox "Placez-vous sur un dossier, sur la fiche comité ou sur la synthèse.", vbExclamation, "Exporter en PDF"
         Exit Sub
     End If
-    If ThisWorkbook.Path = "" Then
-        MsgBox "Enregistrez d'abord le classeur : le PDF est créé dans le même dossier.", vbExclamation
-        Exit Sub
+    If ws.Name = ONGLET_FICHE Then
+        sujet = "Fiche_comite_" & Txt(ws.Range("B4").Value)
+    ElseIf ws.Name = ONGLET_SYNTHESE Then
+        sujet = "Synthese"
+    Else
+        sujet = "Dossier_" & ws.Name
     End If
-    chemin = ThisWorkbook.Path & Application.PathSeparator & "Fiche_" & ws.Name & "_" & Format(Now, "yyyymmdd_hhnn") & ".pdf"
-    ws.ExportAsFixedFormat Type:=xlTypePDF, Filename:=chemin, Quality:=xlQualityStandard, _
+    nomFichier = sujet & "_" & Format(Now, "yyyymmdd_hhnn") & ".pdf"
+    ' Classeur ouvert depuis OneDrive ou SharePoint : son chemin est une adresse web.
+    dossier = ThisWorkbook.Path
+    If dossier = "" Or LCase$(Left$(dossier, 4)) = "http" Then dossier = CurDir$
+    chemin = Application.GetSaveAsFilename(InitialFileName:=dossier & Application.PathSeparator & nomFichier, _
+                                           FileFilter:="Fichier PDF (*.pdf), *.pdf", Title:="Exporter en PDF")
+    If VarType(chemin) = vbBoolean Then Exit Sub
+    On Error GoTo Echec
+    ws.ExportAsFixedFormat Type:=xlTypePDF, Filename:=CStr(chemin), Quality:=xlQualityStandard, _
                            IncludeDocProperties:=True, IgnorePrintAreas:=False, OpenAfterPublish:=True
-    Journaliser "Export PDF", ws.Name, chemin
+    Journaliser "Export PDF", ws.Name, CStr(chemin)
+    Exit Sub
+Echec:
+    MsgBox "Export impossible : " & Err.Description & vbCrLf & _
+           "Vérifiez que le fichier n'est pas déjà ouvert et que le dossier est accessible.", vbExclamation, "Exporter en PDF"
 End Sub
 
 ' ---------------------------------------------------------------------
@@ -276,13 +536,14 @@ Public Sub Journaliser(ByVal action As String, ByVal dossier As String, ByVal de
     Dim wsJ As Worksheet, r As Long
     On Error GoTo Fin
     Set wsJ = ThisWorkbook.Worksheets(ONGLET_JOURNAL)
+    Proteger wsJ
     r = wsJ.Cells(wsJ.Rows.Count, 1).End(xlUp).Row + 1
     If r < 5 Then r = 5
     wsJ.Cells(r, 1).Value = Now
     wsJ.Cells(r, 1).NumberFormat = "dd/mm/yyyy hh:mm"
     wsJ.Cells(r, 2).Value = Application.UserName
     wsJ.Cells(r, 3).Value = action
-    wsJ.Cells(r, 4).Value = dossier
+    wsJ.Cells(r, 4).Value = "'" & dossier
     wsJ.Cells(r, 5).Value = detail
 Fin:
 End Sub
@@ -292,6 +553,7 @@ THIS_WORKBOOK = r'''Option Explicit
 
 Private Sub Workbook_Open()
     On Error Resume Next
+    modOutil.ProtegerTout
     Application.Calculate
     modOutil.MajSynthese False
     Me.Worksheets(modOutil.ONGLET_ACCUEIL).Activate
@@ -301,10 +563,10 @@ End Sub
 Private Sub Workbook_SheetChange(ByVal Sh As Object, ByVal Target As Range)
     On Error GoTo Fin
     If Not modOutil.EstDossier(Sh) Then Exit Sub
-    If Not Intersect(Target, Sh.Range("B15:B17")) Is Nothing Then
+    If Not Intersect(Target, Sh.Range("B{REGIME}:B{PHASE}")) Is Nothing Then
         modOutil.Journaliser "Routage modifié", Sh.Name, _
-            Sh.Range("B15").Value & " / " & Sh.Range("B16").Value & " / " & Sh.Range("B17").Value & _
-            " -> note approuvée " & Sh.Range("B6").Text
+            modOutil.Txt(Sh.Range("B{REGIME}").Value) & " / " & modOutil.Txt(Sh.Range("B{SECTEUR}").Value) & " / " & _
+            modOutil.Txt(Sh.Range("B{PHASE}").Value) & " -> note approuvée " & Sh.Range("B6").Text
     End If
 Fin:
 End Sub

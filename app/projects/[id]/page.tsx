@@ -11,6 +11,7 @@ import { SectionCard } from "@/components/ui/section-card";
 import { KpiCard } from "@/components/ui/kpi-card";
 import { Note, StatutEvaluation, StatutProjet } from "@/components/ui/status-badge";
 import { usePermission } from "@/lib/hooks/usePermission";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface Projet {
   id: string;
@@ -71,6 +72,7 @@ interface Evaluation {
  * intervenants pour finir.
  */
 export default function ProjectDetailPage() {
+  const voirScores = useVoirScores();
   const params = useParams();
   const router = useRouter();
   const { can } = usePermission();
@@ -215,7 +217,7 @@ export default function ProjectDetailPage() {
             partFondsPropres !== null && partFondsPropres < 20 ? "alerte" : "neutre"
           }
         />
-        <KpiCard
+        {voirScores && <KpiCard
           libelle="Note"
           valeur={projet.grade ?? "—"}
           precision={
@@ -223,7 +225,7 @@ export default function ProjectDetailPage() {
               ? `Score ${projet.scoreGlobal.toFixed(1).replace(".", ",")} / 100`
               : "Aucune évaluation calculée"
           }
-        />
+        />}
         <KpiCard
           libelle="Durée du crédit"
           valeur={projet.dureeCredit ?? "—"}

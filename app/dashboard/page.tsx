@@ -19,6 +19,7 @@ import { SectionCard } from "@/components/ui/section-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Note, StatutProjet } from "@/components/ui/status-badge";
 import { ratingBadgeClass, scoreTone } from "@/lib/score-colors";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface Projet {
   id: string;
@@ -70,6 +71,7 @@ const ECHELLE = ["AAA", "AA", "A", "BBB", "BB", "B", "CCC", "CC", "C", "D"];
  * lecture du portefeuille. Chaque chiffre dit ce qu'il recouvre.
  */
 export default function DashboardPage() {
+  const voirScores = useVoirScores();
   const [projets, setProjets] = useState<Projet[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [alertes, setAlertes] = useState<Alerte[]>([]);
@@ -200,7 +202,7 @@ export default function DashboardPage() {
               : "Aucun dossier en attente"
           }
         />
-        <KpiCard
+        {voirScores && <KpiCard
           libelle="Score moyen"
           valeur={
             chiffres.scoreMoyen !== null
@@ -210,7 +212,7 @@ export default function DashboardPage() {
           unite={chiffres.scoreMoyen !== null ? "/ 100" : undefined}
           ton={chiffres.scoreMoyen !== null ? scoreTone(chiffres.scoreMoyen) === "success" ? "favorable" : scoreTone(chiffres.scoreMoyen) === "warning" ? "vigilance" : scoreTone(chiffres.scoreMoyen) === "destructive" ? "alerte" : "neutre" : "neutre"}
           precision={`sur ${chiffres.calculees.length} évaluation${chiffres.calculees.length > 1 ? "s" : ""} calculée${chiffres.calculees.length > 1 ? "s" : ""}`}
-        />
+        />}
         <KpiCard
           libelle="Projets suivis"
           valeur={projets.length}
@@ -287,7 +289,7 @@ export default function DashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr>
-                      {["Projet", "Client", "Montant", "Note", "Statut"].map((h, i) => (
+                      {["Projet", "Client", "Montant", ...(voirScores ? ["Note"] : []), "Statut"].map((h, i) => (
                         <th
                           key={h}
                           className={`px-4 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${i === 2 ? "text-right" : "text-left"}`}
@@ -311,9 +313,11 @@ export default function DashboardPage() {
                         <td className="whitespace-nowrap px-4 py-2.5 text-right" title={formatMAD(p.montant)}>
                           {formatMADCompact(p.montant)}
                         </td>
-                        <td className="px-4 py-2.5">
-                          <Note note={p.grade} score={p.scoreGlobal} />
-                        </td>
+                        {voirScores && (
+                          <td className="px-4 py-2.5">
+                            <Note note={p.grade} score={p.scoreGlobal} />
+                          </td>
+                        )}
                         <td className="px-4 py-2.5">
                           <StatutProjet statut={p.status} />
                         </td>
@@ -327,7 +331,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-4">
-          <SectionCard
+          {voirScores && <SectionCard
             titre="Notes attribuées"
             actions={
               <span className="text-[12px] text-muted-foreground">
@@ -363,7 +367,7 @@ export default function DashboardPage() {
                 </p>
               </>
             )}
-          </SectionCard>
+          </SectionCard>}
 
           <SectionCard titre="Engagements par secteur">
             {chiffres.parSecteur.length === 0 ? (

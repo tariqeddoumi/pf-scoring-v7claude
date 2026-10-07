@@ -125,7 +125,9 @@ export const createProjectSchema = z.object({
   devise: z.string().length(3).default("MAD"),
   countryCode: z.string().max(5).optional().nullable(),
   clientId: z.string().uuid("ID client invalide").optional().nullable(),
-  status: z.string().optional(),
+  // « approuve » et « rejete » ne se saisissent pas : ils résultent d'une décision
+  // du circuit de validation (contrôles NO_GO, délégation, séparation des fonctions).
+  status: z.enum(["brouillon", "en_cours", "en_revue"]).optional(),
   // Extended fields
   pays: z.string().trim().max(100).nullable().optional(),
   sponsorPrincipal: z.string().trim().max(200).nullable().optional(),
@@ -148,14 +150,14 @@ export const createProjectSchema = z.object({
   periodeRemboursement: intOrString(),
   tauxCouverture: numberOrString(),
   ratio: numberOrString(),
-  scoreGlobal: numberOrString(),
-  grade: z.string().max(10).nullable().optional(),
+  // scoreGlobal et grade ne sont plus acceptés : ils viennent du moteur, recopiés
+  // lors de la validation de l'évaluation. Une propriété inconnue est ignorée.
 });
 
 export const updateProjectSchema = createProjectSchema.partial();
 
 export const updateProjectStatusSchema = z.object({
-  status: z.enum(["brouillon", "en_cours", "en_revue", "approuve", "rejete"]),
+  status: z.enum(["brouillon", "en_cours", "en_revue"]),
 });
 
 export const projectListQuerySchema = paginationSchema.extend({
@@ -258,21 +260,24 @@ export const createEvaluationSchema = z.object({
   notes: z.string().max(5000).optional(),
 });
 
-export const updateEvaluationSchema = z.object({
-  notes: z.string().max(5000).optional(),
-  status: z.enum(["brouillon", "soumis", "valide", "rejete"]).optional(),
-});
+/**
+ * Saisie libre d'une évaluation : notes uniquement. Le score, la note, la PD, les
+ * malus et le statut ne viennent jamais du client — ils sont calculés par le moteur
+ * ou changés par une transition dédiée. `.strict()` rejette toute autre propriété
+ * au lieu de l'ignorer en silence.
+ */
+export const updateEvaluationSchema = z
+  .object({
+    notes: z.string().max(5000).optional(),
+  })
+  .strict();
 
-export const submitEvaluationSchema = z.object({
-  id: z.string().uuid().optional(),
-  finalScore: z.number().min(0).max(10),
-  rating: z.enum(["AAA", "AA", "A", "BBB", "BB", "B", "CCC", "D"]).optional(),
-  probabilityOfDefault: z.number().min(0).max(1).optional(),
-  triggeredNOGOs: z.array(z.unknown()).optional(),
-  appliedMALUS: z.record(z.string(), z.unknown()).optional(),
-  malusTotal: z.number().optional(),
-  notes: z.string().max(5000).optional(),
-});
+export const submitEvaluationSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    notes: z.string().max(5000).optional(),
+  })
+  .strict();
 
 export const validateEvaluationSchema = z.object({
   id: z.string().uuid().optional(),

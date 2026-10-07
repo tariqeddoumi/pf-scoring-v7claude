@@ -37,9 +37,14 @@ async function handleRequest(
         valueNumber,
         valueBoolean,
         valueDate,
-        manualScore,
         comment
       } = body;
+      if ('manualScore' in body) {
+        return NextResponse.json(
+          { error: 'Une note manuelle passe par une dérogation approuvée, pas par la saisie.' },
+          { status: 400 }
+        );
+      }
 
       if (!nodeId) {
         return NextResponse.json(
@@ -58,7 +63,7 @@ async function handleRequest(
         valueNumber,
         valueBoolean,
         valueDate: valueDate ? new Date(valueDate) : undefined,
-        manualScore,
+        // manualScore n'est plus accepté : une note manuelle passe par une dérogation
         comment,
         recordedBy: user.userId
       });

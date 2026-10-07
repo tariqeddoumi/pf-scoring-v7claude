@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { DashboardConfigProvider } from "@/lib/dashboard-config-context";
 import { ReactQueryProvider } from "@/lib/react-query-provider";
 import { AppConfigProvider } from "@/components/providers/app-config-provider";
+import { VisibiliteScoresProvider } from "@/components/providers/visibilite-scores";
 import { ThemeWrapper } from "@/components/providers/theme-wrapper";
 import { getPublicConfig } from "@/lib/services/app-config-service";
 import "./globals.css";
@@ -31,7 +32,9 @@ export default async function RootLayout({
           <ThemeWrapper>
             <ReactQueryProvider>
               <DashboardConfigProvider>
-                <AppShell>{children}</AppShell>
+                <VisibiliteScoresProvider>
+                  <AppShell>{children}</AppShell>
+                </VisibiliteScoresProvider>
               </DashboardConfigProvider>
             </ReactQueryProvider>
           </ThemeWrapper>

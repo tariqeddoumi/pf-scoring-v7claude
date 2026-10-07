@@ -14,6 +14,7 @@ import {
 import { buildConditionContext, buildCriteresContext } from "./condition-context";
 import { actionRegle, bloquePublication, estBloquante } from "./rule-vocabulary";
 import { getRatingScales } from "@/lib/services/scoring-configuration-service";
+import { choisirValeur, type OrigineValeur } from "./value-selection";
 import {
   getDomainGranularity,
   GRANULARITY_DEPTH,
@@ -70,8 +71,9 @@ export interface SectorialTrace {
     description: string;
     isNoGo: boolean;
     penalty: number | null;
+    effet: "INFORMATION";
   }>;
-  stressTests: Array<{ code: string; description: string }>;
+  stressTests: Array<{ code: string; description: string; effet: "INFORMATION" }>;
 }
 
 export interface EvaluationTrace {
@@ -91,12 +93,31 @@ export interface EvaluationTrace {
   publicationBlocked: boolean;
   /** Rules skipped because their condition could not be evaluated. */
   ruleDiagnostics: RuleDiagnostic[];
+  /** Critères obligatoires sans donnée réelle (absente, ou seulement une valeur par défaut). */
+  donneesObligatoiresManquantes: string[];
+  /** Règles bloquantes (NO_GO, HARD_STOP) dont la condition n'a pas pu être évaluée. */
+  reglesCritiquesNonEvaluees: string[];
+  /** Critères notés sur une valeur par défaut ou de repli, et non sur une donnée de la source. */
+  valeursParDefaut: string[];
+  /** Dérogations approuvées appliquées : note calculée et note retenue. */
+  derogations: Derogation[];
+  /** Vrai si une donnée obligatoire ou une règle critique manque : la note est provisoire. */
+  incomplet: boolean;
   /** D'où vient la note : "referentiel" (table paramétrable) ou "repli" (barème codé). */
   ratingSource: RatingSource;
   /** Renseigné lorsque le score tombe dans un interstice du barème. */
   ratingWarning?: string;
   /** Present when sectorial calibration is enabled and a sector matched. */
   sectorial?: SectorialTrace;
+}
+
+export interface Derogation {
+  overrideId: string;
+  nodeCode: string;
+  scoreCalcule: number;
+  scoreRetenu: number;
+  motif: string;
+  approuvePar: string | null;
 }
 
 export class ScoringEngineV8 {
@@ -123,6 +144,26 @@ export class ScoringEngineV8 {
       where: { evaluationId },
     });
     const answersByNode = new Map(answers.map((a) => [a.nodeId, a]));
+
+    // Seules les dérogations APPROUVÉES modifient une note ; une dérogation en attente
+    // n'a aucun effet. Le score calculé et le score retenu sont tous deux tracés.
+    const derogationsApprouvees = await prisma.scoringOverride.findMany({
+      where: { evaluationId, status: "APPROVED" },
+    });
+    const derogationParNode = new Map(derogationsApprouvees.map((o) => [o.nodeId, o]));
+    const derogations: Derogation[] = [];
+    const donneesObligatoiresManquantes: string[] = [];
+    const reglesCritiquesNonEvaluees: string[] = [];
+    const valeursParDefaut: string[] = [];
+    // Instantané des entrées réellement utilisées : critère, valeur, origine.
+    const entrees: Array<{ code: string; valeur: unknown; origine: OrigineValeur }> = [];
+    // Valeur retenue par critère, la même pour le calcul et pour les conditions des
+    // règles : sinon une règle lisait la ligne de réponse brute pendant que le score
+    // utilisait la donnée automatique.
+    const valeursRetenues = new Map<
+      string,
+      { valueString: string | null; valueNumber: number | null; valueBoolean: boolean | null }
+    >();
 
     // FIX 1: Load options and ranges for ALL nodes upfront
     const nodeIds = Array.from(tree.nodesById.keys());
@@ -185,17 +226,20 @@ export class ScoringEngineV8 {
       const answer = answersByNode.get(node.id);
       const binding = resolvedBindings.get(node.id);
 
+      // Priorité saisie / donnée automatique selon le mode : voir value-selection.ts.
+      const choix = choisirValeur(answer, binding);
+      const origine: OrigineValeur = choix.origine;
+      if (origine !== "AUCUNE") {
+        const v = choix.valeur;
+        valeursRetenues.set(node.id, {
+          valueString: typeof v === "string" ? v : v instanceof Date ? v.toISOString() : null,
+          valueNumber: typeof v === "number" ? v : null,
+          valueBoolean: typeof v === "boolean" ? v : null,
+        });
+      }
       let valueSnapshot: ResolvedValueSnapshot | undefined;
-      if (answer) {
-        const raw =
-          answer.valueString ??
-          answer.valueNumber ??
-          answer.valueBoolean ??
-          answer.valueDate ??
-          answer.valueJson;
-        valueSnapshot = ValueResolver.resolveValue(raw, binding);
-      } else if (binding?.isAvailable) {
-        valueSnapshot = ValueResolver.resolveValue(binding.resolvedValue, binding);
+      if (origine !== "AUCUNE") {
+        valueSnapshot = ValueResolver.resolveValue(choix.valeur, binding);
       }
 
       // Decide whether this node is a scoring leaf (read its answer) or an
@@ -248,6 +292,33 @@ export class ScoringEngineV8 {
           node.scoreMax
         );
         explanation = scoreOut.explanation;
+        if (origine === "DEFAUT") {
+          valeursParDefaut.push(node.code);
+          explanation += " — valeur par défaut, non issue de la source";
+        }
+      }
+
+      if (treatAsLeaf) {
+        entrees.push({ code: node.code, valeur: choix.valeur ?? null, origine });
+        // Une donnée obligatoire absente n'est ni un zéro « normal » ni une non-
+        // applicabilité : la note devient provisoire et la décision est bloquée.
+        if (node.isMandatory && (origine === "AUCUNE" || origine === "DEFAUT")) {
+          donneesObligatoiresManquantes.push(node.code);
+        }
+        const derogation = derogationParNode.get(node.id);
+        if (derogation && derogation.overriddenScore !== null && derogation.overriddenScore !== undefined) {
+          const retenu = Math.max(0, Math.min(100, derogation.overriddenScore));
+          derogations.push({
+            overrideId: derogation.id,
+            nodeCode: node.code,
+            scoreCalcule: rawScore,
+            scoreRetenu: retenu,
+            motif: derogation.reason,
+            approuvePar: derogation.approvedBy,
+          });
+          explanation += ` — dérogation approuvée : ${rawScore.toFixed(1)} → ${retenu.toFixed(1)}`;
+          rawScore = retenu;
+        }
       } else if (treatAsAggregator) {
         const childIds = tree.childrenOf.get(node.id) || [];
         const children = childIds.map((id) => nodeScores.get(id)).filter(Boolean) as NodeResult[];
@@ -309,7 +380,7 @@ export class ScoringEngineV8 {
     const criteres = buildCriteresContext({
       nodes: Array.from(tree.nodesById.values()),
       nodeScores,
-      answersByNode,
+      answersByNode: valeursRetenues,
       optionsByNode,
     });
 
@@ -331,6 +402,8 @@ export class ScoringEngineV8 {
         const verdict = evaluateCondition(rule.conditionExpression, conditionCtx);
 
         if (!verdict.evaluated) {
+          // Une règle bloquante non évaluable ne cesse pas de protéger la décision.
+          if (estBloquante(rule)) reglesCritiquesNonEvaluees.push(rule.code);
           ruleDiagnostics.push({
             ruleId: rule.id,
             ruleCode: rule.code,
@@ -384,6 +457,9 @@ export class ScoringEngineV8 {
     if (sectorialOn) {
       sectorWeighting = await resolveSectorWeighting(evaluation.project?.secteur);
     }
+    // Calibrage sectoriel actif mais aucun profil pour le secteur du projet : la note
+    // n'est pas finalisable (pondération de base appliquée sans le dire auparavant).
+    const profilSectorielManquant = sectorialOn && !sectorWeighting;
     const factorFor = (code: string): number =>
       sectorWeighting?.weightFactors.get(code) ?? 1;
 
@@ -427,12 +503,52 @@ export class ScoringEngineV8 {
       };
     }
 
+    // Paquet de reproductibilité : paramètres globaux lus pour CE calcul (ils ne sont
+    // pas versionnés avec le modèle) et entrées utilisées, avec leurs empreintes. Deux
+    // calculs aux empreintes identiques doivent donner le même résultat ; une
+    // empreinte différente explique un écart (paramètre modifié, donnée source changée).
+    let bareme: unknown = null;
+    try {
+      bareme = (await getRatingScales()).map((b) => ({ label: b.label, min: b.minScore, max: b.maxScore }));
+    } catch {
+      bareme = "illisible";
+    }
+    const parametres = {
+      modelVersionId: evaluation.modelVersionId,
+      granularite: domainGranularity,
+      sectorielActif: sectorialOn,
+      secteurProjet: evaluation.project?.secteur ?? null,
+      bareme,
+    };
+    const { createHash } = await import("crypto");
+    const empreinte = (v: unknown) => createHash("sha256").update(JSON.stringify(v)).digest("hex");
+    const reproductibilite = {
+      calculeLe: new Date().toISOString(),
+      parametres,
+      empreinteParametres: empreinte(parametres),
+      entrees,
+      empreinteEntrees: empreinte(entrees),
+    };
+
     const blocked = blockingRuleCodes.length > 0;
+    const incomplet =
+      donneesObligatoiresManquantes.length > 0 ||
+      reglesCritiquesNonEvaluees.length > 0 ||
+      profilSectorielManquant;
     const traceJson = JSON.stringify(
       {
         rootResults,
         sectorial,
         blockingRuleCodes,
+        incomplet,
+        profilSectorielManquant,
+        donneesObligatoiresManquantes,
+        reglesCritiquesNonEvaluees,
+        valeursParDefaut,
+        derogations,
+        reproductibilite,
+        // conservé dans la trace : les contrôles de décision le relisent
+        publicationBlocked,
         ruleDiagnostics,
         rating: ratingResolution,
       },
@@ -449,7 +565,9 @@ export class ScoringEngineV8 {
       ratingWarning: ratingResolution.warning,
       recommendation: blocked
         ? `Blocage — condition rédhibitoire déclenchée (${blockingRuleCodes.join(", ")})`
-        : this.scoreToRecommendation(finalScoreAdjusted),
+        : incomplet
+          ? "Provisoire — données obligatoires ou règles critiques indisponibles"
+          : await this.avisIndicatif(ratingResolution.rating),
       malusTotal,
       rootResults,
       traceJson,
@@ -458,6 +576,11 @@ export class ScoringEngineV8 {
       blockingRuleCodes,
       publicationBlocked,
       ruleDiagnostics,
+      donneesObligatoiresManquantes,
+      reglesCritiquesNonEvaluees,
+      valeursParDefaut,
+      derogations,
+      incomplet,
       sectorial,
     };
   }
@@ -536,26 +659,29 @@ export class ScoringEngineV8 {
     };
   }
 
-  private static scoreToRecommendation(score: number): string {
-    if (score >= 80) return "Approuver - Profil très solide";
-    if (score >= 60) return "Approuver avec conditions";
-    if (score >= 40) return "Examiner en comité";
-    return "Rejeter - Profil insuffisant";
+  /**
+   * Avis indicatif lié au grade. Il était tiré de seuils codés (80, 60, 40)
+   * indépendants du barème paramétrable : modifier le barème ne changeait pas l'avis.
+   * Il reprend désormais la description du grade dans le barème ; le grade mesure le
+   * risque, la décision relève du circuit de validation.
+   */
+  private static async avisIndicatif(rating: string): Promise<string> {
+    try {
+      const echelle = (await getRatingScales()).find((s) => s.label === rating);
+      if (echelle?.description) return `Grade ${rating} — ${echelle.description}`;
+    } catch {
+      // barème illisible : avis neutre ci-dessous
+    }
+    return `Grade ${rating} — avis à rendre par le circuit de validation`;
   }
 
-  static async persistTrace(trace: EvaluationTrace): Promise<void> {
-    await prisma.scoringEvaluation.update({
-      where: { id: trace.evaluationId },
-      data: {
-        finalScore: trace.finalScore,
-        rating: trace.rating,
-        recommendation: trace.recommendation,
-        malusTotal: trace.malusTotal,
-        triggeredRulesJson: JSON.stringify(trace.triggeredRuleIds),
-        summaryJson: trace.traceJson,
-      },
-    });
-
+  /**
+   * Enregistre le résultat en UNE transaction : résumé et résultats par nœud. Le
+   * résumé était écrit avant la transaction des nœuds ; une panne entre les deux
+   * laissait un score récent avec des détails anciens. Chaque calcul est en outre
+   * journalisé (score, note, empreinte de la trace) : l'historique n'est plus écrasé.
+   */
+  static async persistTrace(trace: EvaluationTrace, auteur: string | null = null): Promise<void> {
     const results: Array<{ evaluationId: string; nodeId: string; data: NodeResult }> = [];
     const collectResults = (nodes: NodeResult[]) => {
       for (const node of nodes) {
@@ -565,7 +691,31 @@ export class ScoringEngineV8 {
     };
     collectResults(trace.rootResults);
 
+    const { createHash } = await import("crypto");
+    // Empreinte stable : sans l'horodatage du calcul, deux calculs identiques ont la
+    // même empreinte.
+    let traceSansDate: unknown = trace.traceJson;
+    try {
+      const t = JSON.parse(trace.traceJson);
+      if (t?.reproductibilite) delete t.reproductibilite.calculeLe;
+      traceSansDate = JSON.stringify(t);
+    } catch {
+      // trace non JSON : empreinte sur le texte brut
+    }
+    const empreinte = createHash("sha256").update(String(traceSansDate)).digest("hex");
+
     await prisma.$transaction([
+      prisma.scoringEvaluation.update({
+        where: { id: trace.evaluationId },
+        data: {
+          finalScore: trace.finalScore,
+          rating: trace.rating,
+          recommendation: trace.recommendation,
+          malusTotal: trace.malusTotal,
+          triggeredRulesJson: JSON.stringify(trace.triggeredRuleIds),
+          summaryJson: trace.traceJson,
+        },
+      }),
       prisma.scoringEvaluationNodeResult.deleteMany({
         where: { evaluationId: trace.evaluationId },
       }),
@@ -581,6 +731,24 @@ export class ScoringEngineV8 {
           ruleImpactJson: JSON.stringify(data.ruleImpacts),
           traceJson: JSON.stringify(data),
         })),
+      }),
+      prisma.scoringChangeLog.create({
+        data: {
+          entityType: "ScoringEvaluation",
+          entityId: trace.evaluationId,
+          evaluationId: trace.evaluationId,
+          versionId: trace.modelVersionId,
+          action: "SCORING_RUN",
+          newValueJson: JSON.stringify({
+            finalScore: trace.finalScore,
+            rating: trace.rating,
+            blocked: trace.blocked,
+            incomplet: trace.incomplet,
+            empreinteTrace: empreinte,
+          }),
+          changedBy: auteur,
+          comment: "Calcul de la note",
+        },
       }),
     ]);
   }

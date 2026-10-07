@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
+import { PageReserveeScores } from "@/components/providers/visibilite-scores";
 
 interface NodeResult {
   nodeId: string;
@@ -17,7 +18,7 @@ interface NodeResult {
   ruleImpacts: any[];
 }
 
-export default function ResultsPage() {
+function ResultsPageContenu() {
   const params = useParams();
   const router = useRouter();
   const evaluationId = params.id as string;
@@ -176,5 +177,14 @@ function SummaryCard({
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value || "-"}</p>
     </div>
+  );
+}
+
+// Écran consacré aux scores : réservé aux rôles qui les voient.
+export default function ResultsPage() {
+  return (
+    <PageReserveeScores titre="Résultats détaillés">
+      <ResultsPageContenu />
+    </PageReserveeScores>
   );
 }

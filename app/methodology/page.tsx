@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import { ratingBadgeClass, scoreTextClass } from "@/lib/score-colors";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
+import { REGISTRE_TEXTES, statutTexte } from "@/lib/referentiel-reglementaire";
 
 interface Methodologie {
   version: {
@@ -110,7 +111,7 @@ export default function MethodologiePage() {
     <div>
       <PageHeader
         titre="Méthodologie"
-        description={`Modèle appliqué : ${m.version.label ?? `version ${m.version.numero}`}${
+        description={`Modèle de notation Project Finance en vigueur${
           m.version.publieLe ? `, publié le ${formatDate(m.version.publieLe)}` : ""
         }`}
       />
@@ -223,24 +224,32 @@ export default function MethodologiePage() {
             )}
           </SectionCard>
 
-          <SectionCard titre="Cadre de référence">
-            <ul className="space-y-2 text-[13px] leading-relaxed text-muted-foreground">
+          <SectionCard
+            titre="Cadre de référence"
+            description="Registre des textes et de leur traduction dans l'outil — à valider par la Conformité et le Juridique."
+          >
+            <ul className="space-y-3 text-[13px] leading-relaxed text-muted-foreground">
+              {REGISTRE_TEXTES.map((t) => (
+                <li key={t.code}>
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <strong className="text-foreground">
+                      {t.emetteur} — {t.type} {t.intitule}
+                    </strong>
+                    <span className="text-[12px]">
+                      {[t.date ? `du ${t.date.split("-").reverse().join("/")}` : null, t.articles]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </div>
+                  <div className="text-[12px]">
+                    {statutTexte(t)} · dans l&apos;outil : {t.etatOutil}
+                  </div>
+                  <div>{t.consequence}</div>
+                </li>
+              ))}
               <li>
-                <strong className="text-foreground">Bank Al-Maghrib</strong> — dispositif
-                de notation interne, traçabilité des décisions et conservation des
-                justificatifs.
-              </li>
-              <li>
-                <strong className="text-foreground">Bâle III</strong> — approche par les
-                notations internes et exigences en fonds propres.
-              </li>
-              <li>
-                <strong className="text-foreground">Normes de performance de la SFI
-                (IFC)</strong> — évaluation des risques environnementaux et sociaux.
-              </li>
-              <li>
-                <strong className="text-foreground">BERD</strong> — exigences sociales et
-                de gouvernance appliquées au financement de projet.
+                <strong className="text-foreground">Normes de performance de la SFI (IFC) et BERD</strong> —
+                évaluation des risques environnementaux, sociaux et de gouvernance du projet.
               </li>
             </ul>
           </SectionCard>
@@ -292,18 +301,10 @@ export default function MethodologiePage() {
             </p>
           </SectionCard>
 
-          <SectionCard titre="Version appliquée">
+          {/* Le nom et le numéro de version du modèle ne figurent que dans les tables
+              de paramétrage (administration). */}
+          <SectionCard titre="Modèle en vigueur">
             <dl className="space-y-2 text-[12.5px]">
-              <div>
-                <dt className="text-muted-foreground">Modèle</dt>
-                <dd className="text-foreground">{m.version.modele ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Version</dt>
-                <dd className="text-foreground">
-                  {m.version.label ?? `Version ${m.version.numero}`}
-                </dd>
-              </div>
               <div>
                 <dt className="text-muted-foreground">Publiée le</dt>
                 <dd className="text-foreground">

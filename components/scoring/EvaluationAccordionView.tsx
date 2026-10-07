@@ -11,6 +11,7 @@ import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-ser
 import type { AnswerValue } from "./LiveScorePanel";
 import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 import { AggregationEngine } from "@/lib/services/scoring/score-calculator";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface EvaluationAccordionViewProps {
   questionnaire: QuestionnaireNode[];
@@ -35,6 +36,7 @@ function NodeInput({
   /** Même conversion que le moteur : le barème est sur l'échelle du critère, le score sur 0–100. */
   const contribution = (valeur: number) =>
     AggregationEngine.rescaleTo100(valeur, node.scoreMin, node.scoreMax);
+  const voirScores = useVoirScores();
 
   return (
     <div className="space-y-2">
@@ -53,7 +55,7 @@ function NodeInput({
               </option>
             ))}
           </select>
-          {selectedOption && (
+          {selectedOption && voirScores && (
             <div className="flex items-center gap-1.5 mt-1 text-xs text-primary">
               <CheckCircle2 size={11} />
               Score attribué :{" "}
@@ -95,8 +97,8 @@ function NodeInput({
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {r.label || `${r.minValue}–${r.maxValue}`} →{" "}
-                  {contribution(r.score).toFixed(0)} / 100
+                  {r.label || `${r.minValue}–${r.maxValue}`}
+                  {voirScores && <> → {contribution(r.score).toFixed(0)} / 100</>}
                 </span>
               );
             })}

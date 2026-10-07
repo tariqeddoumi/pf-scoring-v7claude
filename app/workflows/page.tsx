@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Note } from "@/components/ui/status-badge";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface Workflow {
   id: string;
@@ -72,6 +73,7 @@ function position(w: Workflow): number {
  * « Total 6 » plutôt que ce qu'il y a à faire.
  */
 export default function WorkflowsPage() {
+  const voirScores = useVoirScores();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -209,7 +211,7 @@ export default function WorkflowsPage() {
                 {[
                   { t: "Dossier", a: "left" },
                   { t: "Montant", a: "right" },
-                  { t: "Note", a: "left" },
+                  { t: voirScores ? "Note" : "", a: "left" },
                   { t: "Étape", a: "left" },
                   { t: "Analyste", a: "left" },
                   { t: "Depuis", a: "left" },

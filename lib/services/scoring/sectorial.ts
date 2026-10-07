@@ -21,8 +21,10 @@ export interface SectorWeighting {
     description: string;
     isNoGo: boolean;
     penalty: number | null;
+    /** Rôle dans la décision : ces alertes n'ont pas de condition paramétrée. */
+    effet: "INFORMATION";
   }>;
-  stressTests: Array<{ code: string; description: string }>;
+  stressTests: Array<{ code: string; description: string; effet: "INFORMATION" }>;
 }
 
 /**
@@ -49,10 +51,14 @@ export function choisirSecteur<T extends { code: string; label: string }>(
   if (candidats.length === 0) return null;
   const t = terme.trim().toLowerCase();
 
+  // Plus de rapprochement partiel : « Eau » appliquait le profil du premier secteur
+  // dont le libellé contient le mot, qui pouvait ne pas être celui du projet. Seuls
+  // le code ou le libellé exacts désignent un profil ; sinon le profil manque, et le
+  // moteur le signale au lieu d'en deviner un.
   return (
     candidats.find((s) => s.code.toLowerCase() === t) ??
     candidats.find((s) => s.label.toLowerCase() === t) ??
-    candidats[0]
+    null
   );
 }
 
@@ -73,7 +79,6 @@ export async function resolveSectorWeighting(
       OR: [
         { code: { equals: term, mode: "insensitive" } },
         { label: { equals: term, mode: "insensitive" } },
-        { label: { contains: term, mode: "insensitive" } },
       ],
     },
     include: {
@@ -98,10 +103,16 @@ export async function resolveSectorWeighting(
       description: f.description,
       isNoGo: f.isNoGo,
       penalty: f.penalty,
+      // Les red flags sectoriels n'ont aucune condition évaluable : ils ne modifient ni
+      // le score ni la décision. Ils sont restitués comme points à vérifier par
+      // l'analyste — y compris ceux marqués NO_GO, qui ne bloquent RIEN tant qu'une
+      // règle du modèle ne les traduit pas en condition.
+      effet: "INFORMATION" as const,
     })),
     stressTests: sector.stressTests.map((s) => ({
       code: s.code,
       description: s.description,
+      effet: "INFORMATION" as const,
     })),
   };
 }

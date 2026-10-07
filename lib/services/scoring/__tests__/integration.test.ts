@@ -107,6 +107,7 @@ describe("Scoring Engine V8 Integration", () => {
         transformType: "NONE" as const,
         bindingMode: "AUTO_READONLY" as const,
         isAvailable: true,
+        valueOrigin: "SOURCE" as const,
       };
 
       // Resolve value with type coercion

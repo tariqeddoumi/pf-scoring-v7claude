@@ -11,6 +11,7 @@ import {
   CheckCircle,
   GitBranch,
   GitCompare,
+  Calculator,
   LineChart,
   ScrollText,
   Search,
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import { useAppConfig } from "@/components/providers/app-config-provider";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface Entree {
   icone: LucideIcon;
@@ -31,6 +33,8 @@ interface Entree {
   compteur?: "alertes" | "aTraiter";
   /** Un compteur d'alerte est rouge ; les autres sont neutres. */
   alerte?: boolean;
+  /** Écran consacré aux scores : masqué pour les rôles qui ne les voient pas. */
+  scores?: boolean;
 }
 
 const GROUPES: { titre: string; entrees: Entree[] }[] = [
@@ -57,7 +61,8 @@ const GROUPES: { titre: string; entrees: Entree[] }[] = [
     entrees: [
       { icone: Search, libelle: "Recherche", href: "/search" },
       { icone: GitCompare, libelle: "Comparaison", href: "/compare" },
-      { icone: LineChart, libelle: "Analytique", href: "/analytics" },
+      { icone: Calculator, libelle: "Simulation des flux", href: "/flux" },
+      { icone: LineChart, libelle: "Analytique", href: "/analytics", scores: true },
       { icone: TrendingUp, libelle: "Monitoring", href: "/monitoring" },
     ],
   },
@@ -93,6 +98,7 @@ export function Sidebar({
   ouvertMobile?: boolean;
   onFermer?: () => void;
 }) {
+  const voirScores = useVoirScores();
   const pathname = usePathname() || "/";
   const { config } = useAppConfig();
   const nomAppli = config.APP_NAME || "Scoring PF";
@@ -161,7 +167,7 @@ export function Sidebar({
             <p className="px-2.5 pb-1.5 pt-4 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
               {groupe.titre}
             </p>
-            {groupe.entrees.map((e) => {
+            {groupe.entrees.filter((e) => voirScores || !e.scores).map((e) => {
               const Icone = e.icone;
               const active = estActive(e.href);
               const n = e.compteur ? compteurs[e.compteur] : 0;

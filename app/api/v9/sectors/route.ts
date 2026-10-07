@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma-client';
+import { withAuth } from '@/lib/auth-middleware';
 
 /**
  * GET /api/v9/sectors
  * Returns all sectors with thresholds, indicators, red flags, and stress tests
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const sectors = await prisma.v9Sector.findMany({
       where: { isActive: true },
@@ -43,4 +44,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Paramétrage du modèle : lisible par les utilisateurs connectés seulement.
+export async function GET(request: NextRequest) {
+  return withAuth(request, (req) => handleGET(req));
 }
