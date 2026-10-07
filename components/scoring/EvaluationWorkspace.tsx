@@ -13,6 +13,7 @@ import {
   RotateCcw,
   LayoutList,
   Columns,
+  FileSearch,
 } from "lucide-react";
 import { DomainSidebar } from "./DomainSidebar";
 import { LiveScorePanel, lireServerScore, type AnswerValue, type ServerScore } from "./LiveScorePanel";
@@ -21,6 +22,8 @@ import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-ser
 import { apiPost, apiPatch, messageErreurApi } from "@/lib/api-client";
 import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 import { AggregationEngine } from "@/lib/services/scoring/score-calculator";
+import { AnalyseDocumentsIA } from "./AnalyseDocumentsIA";
+import { commentaireSource, type Proposition } from "@/lib/services/ia-documents/resultat";
 
 interface EvaluationWorkspaceProps {
   evaluationId: string;
@@ -431,6 +434,7 @@ export function EvaluationWorkspace({
   const [serverScore, setServerScore] = useState<ServerScore | null>(null);
   const [isScoring, setIsScoring] = useState(false);
   const [isStale, setIsStale] = useState(false);
+  const [panneauIA, setPanneauIA] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentDomain = questionnaire.find((d) => d.id === currentDomainId) ?? questionnaire[0];
@@ -464,11 +468,13 @@ export function EvaluationWorkspace({
 
   /* ── Save answers ──────────────────────────────────────── */
   const saveAnswers = useCallback(
-    async (showFeedback = true) => {
+    async (showFeedback = true, source?: Record<string, AnswerValue>) => {
       setIsSaving(true);
       setError(null);
       try {
-        const payload = Object.entries(answers).map(([nodeId, a]) => ({
+        // source : réponses à enregistrer tout de suite, avant que l'état React ne
+        // soit relu (reprise des propositions de l'analyse documentaire).
+        const payload = Object.entries(source ?? answers).map(([nodeId, a]) => ({
           nodeId,
           valueString: a.valueString,
           valueNumber: a.valueNumber,
@@ -524,6 +530,23 @@ export function EvaluationWorkspace({
     setAnswers((prev) => ({ ...prev, [nodeId]: val }));
     setIsStale(true);
     triggerAutoSave();
+  };
+
+  /* ── Analyse documentaire : reprise des propositions validées ── */
+  const appliquerPropositions = async (propositions: Proposition[]) => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    const suivantes = { ...answers };
+    for (const p of propositions) {
+      suivantes[p.nodeId] = {
+        valueString: p.valueString,
+        valueNumber: p.valueNumber,
+        valueBoolean: p.valueBoolean,
+        comment: commentaireSource(p, "l'analyste"),
+      };
+    }
+    setAnswers(suivantes);
+    setIsStale(true);
+    await saveAnswers(false, suivantes);
   };
 
   /* ── Calculate ─────────────────────────────────────────── */
@@ -662,6 +685,13 @@ export function EvaluationWorkspace({
         {/* Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
+            onClick={() => setPanneauIA(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
+          >
+            <FileSearch size={14} />
+            Pièces et IA
+          </button>
+          <button
             onClick={() => saveAnswers(true)}
             disabled={isSaving}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary disabled:opacity-50 text-foreground text-sm rounded-lg transition-all"
@@ -687,6 +717,15 @@ export function EvaluationWorkspace({
           </button>
         </div>
       </div>
+
+      {panneauIA && (
+        <AnalyseDocumentsIA
+          evaluationId={evaluationId}
+          answers={answers}
+          onFermer={() => setPanneauIA(false)}
+          onAppliquer={appliquerPropositions}
+        />
+      )}
 
       {/* ── Main layout ─────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
