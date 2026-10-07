@@ -18,7 +18,7 @@ import { DomainSidebar } from "./DomainSidebar";
 import { LiveScorePanel, type AnswerValue, type ServerScore } from "./LiveScorePanel";
 import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
-import { apiPost, apiPatch } from "@/lib/api-client";
+import { apiPost, apiPatch, messageErreurApi } from "@/lib/api-client";
 import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 import { AggregationEngine } from "@/lib/services/scoring/score-calculator";
 
@@ -592,7 +592,8 @@ export function EvaluationWorkspace({
         `/api/scoring/evaluations/${evaluationId}/submit`,
         { notes: "" }
       );
-      if (!subRes.ok) throw new Error("Soumission échouée");
+      // le serveur dit ce qui manque (donnée obligatoire, règle critique…)
+      if (!subRes.ok) throw new Error(await messageErreurApi(subRes, "Soumission échouée"));
 
       onComplete(evaluationId, data.finalScore, data.rating);
     } catch (e: any) {

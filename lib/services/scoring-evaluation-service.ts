@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma-client";
 import { ScoringEngineV8 } from "./scoring";
-import { motifsRefusDecisionFavorable } from "./scoring/decision-guard";
+import { motifsRefusDecisionFavorable, motifsRefusSoumission } from "./scoring/decision-guard";
 
 export class ScoringEvaluationService {
   /**
@@ -90,7 +90,6 @@ export class ScoringEvaluationService {
           valueNumber: data.valueNumber,
           valueBoolean: data.valueBoolean,
           valueDate: data.valueDate,
-          manualScore: data.manualScore,
           comment: data.comment,
           updatedAt: new Date(),
         },
@@ -106,7 +105,6 @@ export class ScoringEvaluationService {
           valueNumber: data.valueNumber,
           valueBoolean: data.valueBoolean,
           valueDate: data.valueDate,
-          manualScore: data.manualScore,
           comment: data.comment,
         },
       });
@@ -157,8 +155,16 @@ export class ScoringEvaluationService {
       throw new Error("Only draft evaluations can be submitted");
     }
 
-    // Calculate scores
-    await this.calculateScores(evaluationId);
+    // Calcul serveur, puis contrôle des préconditions de soumission
+    await this.calculateScores(evaluationId, submittedBy);
+    const recalcule = await prisma.scoringEvaluation.findUnique({
+      where: { id: evaluationId },
+      select: { summaryJson: true },
+    });
+    const motifs = motifsRefusSoumission(recalcule?.summaryJson ?? null);
+    if (motifs.length > 0) {
+      throw new Error(`Only complete evaluations can be submitted — ${motifs.join(" ")}`);
+    }
 
     const updated = await prisma.scoringEvaluation.update({
       where: { id: evaluationId },
@@ -262,9 +268,9 @@ export class ScoringEvaluationService {
    * rating, les malus, les règles déclenchées et l'éventuel blocage en proviennent,
    * et non plus d'une table de correspondance locale divergente.
    */
-  static async calculateScores(evaluationId: string) {
+  static async calculateScores(evaluationId: string, auteur: string | null = null) {
     const trace = await ScoringEngineV8.scoreEvaluation(evaluationId);
-    await ScoringEngineV8.persistTrace(trace);
+    await ScoringEngineV8.persistTrace(trace, auteur);
 
     return {
       finalScore: trace.finalScore,

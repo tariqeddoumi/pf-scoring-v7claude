@@ -218,6 +218,17 @@ export class ProjectService {
       throw new Error("Project not found");
     }
 
+    // La suppression d'un projet efface ses évaluations en cascade : elle est refusée
+    // dès qu'une évaluation a quitté le brouillon (pièce du dossier de crédit).
+    const evaluationsEngagees = await prisma.scoringEvaluation.count({
+      where: { projectId: id, status: { not: "brouillon" } },
+    });
+    if (evaluationsEngagees > 0) {
+      throw new Error(
+        `Suppression refusée : ${evaluationsEngagees} évaluation(s) soumise(s), validée(s) ou rejetée(s) sont rattachées au projet. Archivez-le plutôt.`
+      );
+    }
+
     await prisma.project.delete({ where: { id } });
 
     // Only log audit if deletedBy is valid

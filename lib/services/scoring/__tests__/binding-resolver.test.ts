@@ -43,6 +43,16 @@ describe("BindingResolver", () => {
 
     expect(result.isAvailable).toBe(false);
     expect(result.resolvedValue).toBe("Default Name");
+    // le repli est tracé comme tel, jamais confondu avec une donnée de la source
+    expect(result.valueOrigin).toBe("FALLBACK");
+  });
+
+  test("resolveOne rend indisponible une transformation non exécutée", () => {
+    const binding = { ...mockBinding, transformType: "FORMULA", fallbackValue: "1.4" };
+    const result = BindingResolver.resolveOne(binding, mockPayloads);
+    expect(result.isAvailable).toBe(false);
+    expect(result.valueOrigin).toBe("NONE");
+    expect(result.resolvedValue).toBeNull();
   });
 
   test("resolveOne applies NORMALIZE transform", () => {

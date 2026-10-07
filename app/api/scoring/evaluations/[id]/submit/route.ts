@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma-client";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
+import { motifsRefusSoumission } from "@/lib/services/scoring/decision-guard";
 
 /**
  * Contrôle d'autorisation du parcours de saisie.
@@ -79,6 +80,16 @@ async function handlePOST(
           errorCode: "VALIDATION_ERROR",
         },
         { status: 400 }
+      );
+    }
+
+    // Données obligatoires et règles critiques : la soumission attend qu'elles soient
+    // disponibles (l'aperçu provisoire reste consultable pendant la saisie).
+    const motifs = motifsRefusSoumission(evaluation.summaryJson);
+    if (motifs.length > 0) {
+      return NextResponse.json(
+        { success: false, error: motifs.join(" "), errors: motifs, errorCode: "INCOMPLETE" },
+        { status: 409 }
       );
     }
 

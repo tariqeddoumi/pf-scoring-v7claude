@@ -91,6 +91,25 @@ async function handlePATCH(
       );
     }
 
+    // Une note manuelle ou une dérogation ne passe pas par la saisie : le moteur ne
+    // les lisait pas, et une note libre contournerait le barème. Les dérogations
+    // suivent le circuit dédié (proposition, approbateur indépendant, trace).
+    const interdites = answers.filter(
+      (a: Record<string, unknown>) =>
+        a && typeof a === "object" && ("manualScore" in a || "overrideReason" in a || "isOverridden" in a)
+    );
+    if (interdites.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Une note manuelle ou une dérogation ne se saisit pas avec les réponses : proposez une dérogation, qui sera approuvée par un tiers.",
+          errorCode: "VALIDATION_ERROR",
+        },
+        { status: 400 }
+      );
+    }
+
     const nodeIds = answers
       .map((a: { nodeId?: string }) => a?.nodeId)
       .filter((v: unknown): v is string => typeof v === "string");
@@ -101,11 +120,40 @@ async function handlePATCH(
       where: { id: { in: nodeIds }, versionId: evaluation.modelVersionId },
       select: { id: true, answerType: true },
     });
+    // Un critère alimenté par une source verrouillée (AUTO_READONLY, CALCULATED_ONLY)
+    // ne se saisit pas : la saisie serait ignorée par le moteur, ou pire, le
+    // contredirait à l'écran.
+    const verrouilles = new Set(
+      (
+        await prisma.scoringNodeDataBinding.findMany({
+          where: {
+            nodeId: { in: nodes.map((n) => n.id) },
+            isActive: true,
+            bindingMode: { in: ["AUTO_READONLY", "CALCULATED_ONLY"] },
+          },
+          select: { nodeId: true },
+        })
+      ).map((b) => b.nodeId)
+    );
     const answerTypeByNode = new Map<string, string>(
-      nodes.map((n) => [n.id, n.answerType as unknown as string])
+      nodes.filter((n) => !verrouilles.has(n.id)).map((n) => [n.id, n.answerType as unknown as string])
     );
 
-    const { writes, ignored } = normalizeAnswers(answers, answerTypeByNode);
+    // Les entrées des critères verrouillés sont écartées ; seule une tentative de
+    // saisie effective (valeur non vide) est signalée.
+    const ignoresVerrou: Array<{ nodeId: string; reason: string }> = [];
+    const aEcrire = answers.filter((a: Record<string, unknown>) => {
+      const nodeId = typeof a?.nodeId === "string" ? a.nodeId : null;
+      if (!nodeId || !verrouilles.has(nodeId)) return true;
+      const valeurs = [a.value, a.valueString, a.valueNumber, a.valueBoolean, a.valueDate];
+      if (valeurs.some((v) => v !== null && v !== undefined && v !== "")) {
+        ignoresVerrou.push({ nodeId, reason: "donnée automatique verrouillée : la source fait foi" });
+      }
+      return false;
+    });
+    const normalise = normalizeAnswers(aEcrire, answerTypeByNode);
+    const writes = normalise.writes;
+    const ignored = [...normalise.ignored, ...ignoresVerrou];
 
     // Toute modification des réponses invalide le calcul courant : la soumission
     // exige alors un nouveau calcul sur les données à jour.

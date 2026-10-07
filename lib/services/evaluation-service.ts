@@ -8,7 +8,7 @@ import {
 } from "@/lib/validation-schemas";
 import type { z } from "zod";
 import { ScoringEngineV8 } from "@/lib/services/scoring/scoring-engine-v8";
-import { motifsRefusDecisionFavorable } from "@/lib/services/scoring/decision-guard";
+import { motifsRefusDecisionFavorable, motifsRefusSoumission } from "@/lib/services/scoring/decision-guard";
 
 /**
  * Service des évaluations — unifié sur le modèle ScoringEvaluation.
@@ -251,7 +251,9 @@ export class EvaluationService {
 
     // Calcul serveur exclusivement : score, note, malus et trace viennent du moteur.
     const trace = await ScoringEngineV8.scoreEvaluation(id);
-    await ScoringEngineV8.persistTrace(trace);
+    await ScoringEngineV8.persistTrace(trace, submittedBy);
+    const motifs = motifsRefusSoumission(trace.traceJson);
+    if (motifs.length > 0) throw new Error(`Soumission refusée : ${motifs.join(" ")}`);
 
     const evaluation = await prisma.scoringEvaluation.update({
       where: { id },
@@ -486,12 +488,19 @@ export class EvaluationService {
     });
   }
 
+  /**
+   * Suppression physique réservée aux brouillons. Une évaluation soumise, validée ou
+   * rejetée est une pièce du dossier de crédit : elle s'archive, elle ne s'efface pas.
+   */
   static async deleteEvaluation(id: string) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, status: true },
     });
     if (!evaluation) throw new Error("Evaluation not found");
+    if (String(evaluation.status) !== "brouillon") {
+      throw new Error("Seule une évaluation en brouillon peut être supprimée ; archivez les autres.");
+    }
 
     await prisma.scoringEvaluation.delete({ where: { id } });
     return { success: true, id };

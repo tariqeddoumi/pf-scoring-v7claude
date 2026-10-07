@@ -79,7 +79,7 @@ async function handlePOST(
     const trace = await ScoringEngineV8.scoreEvaluation(evaluationId);
 
     if (!apercu) {
-      await ScoringEngineV8.persistTrace(trace);
+      await ScoringEngineV8.persistTrace(trace, user.userId);
     }
 
     return NextResponse.json({
@@ -93,6 +93,13 @@ async function handlePOST(
         malusTotal: trace.malusTotal,
         blocked: trace.blocked,
         blockingRuleCodes: trace.blockingRuleCodes,
+        publicationBlocked: trace.publicationBlocked,
+        incomplet: trace.incomplet,
+        donneesObligatoiresManquantes: trace.donneesObligatoiresManquantes,
+        reglesCritiquesNonEvaluees: trace.reglesCritiquesNonEvaluees,
+        valeursParDefaut: trace.valeursParDefaut,
+        derogations: trace.derogations,
+        ruleDiagnostics: trace.ruleDiagnostics,
         ruleDiagnosticCount: trace.ruleDiagnostics.length,
         triggeredRuleCount: trace.triggeredRuleIds.length,
         domains: trace.rootResults.map((r) => ({

@@ -117,6 +117,7 @@ export class ValueResolver {
           transformType: b.transformType as any,
           bindingMode: b.bindingMode as any,
           isAvailable: true,
+          valueOrigin: "SOURCE",
         };
       }
     }

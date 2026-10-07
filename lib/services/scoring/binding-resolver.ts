@@ -52,9 +52,19 @@ export interface ResolvedValue {
   dataType: string | null;
   transformType: TransformType;
   bindingMode: BindingMode;
+  /** La source a fourni une valeur exploitable (hors défaut et repli). */
   isAvailable: boolean;
+  /** Origine de resolvedValue : la source, la valeur par défaut, le repli, ou rien. */
+  valueOrigin: "SOURCE" | "DEFAULT" | "FALLBACK" | "NONE";
   note?: string;
 }
+
+/**
+ * Transformations déclarées dans le paramétrage mais non exécutées par ce résolveur :
+ * elles renvoyaient la valeur brute comme si elle était transformée. Elles rendent
+ * désormais la donnée indisponible, avec un motif explicite.
+ */
+export const TRANSFORMATIONS_NON_EXECUTEES: TransformType[] = ["LOOKUP", "AGGREGATE", "FORMULA"];
 
 export interface BindingRow {
   id: string;
@@ -121,8 +131,8 @@ function applyTransform(
     case "LOOKUP":
     case "AGGREGATE":
     case "FORMULA":
-      // Reserved for later - handled by specialised services
-      return raw;
+      // non exécutées ici : voir TRANSFORMATIONS_NON_EXECUTEES
+      return undefined;
     default:
       return raw;
   }
@@ -162,12 +172,20 @@ export class BindingResolver {
     const config = parseJson<Record<string, unknown>>(binding.transformConfigJson);
     const transformType = binding.transformType as TransformType;
 
+    const nonExecutee = TRANSFORMATIONS_NON_EXECUTEES.includes(transformType);
     let resolved = applyTransform(raw, transformType, config);
 
+    // Disponibilité calculée APRÈS transformation ; défaut et repli sont tracés à part.
     const isAvailable = resolved != null && resolved !== "";
-    if (!isAvailable) {
-      if (binding.defaultValue != null) resolved = binding.defaultValue;
-      else if (binding.fallbackValue != null) resolved = binding.fallbackValue;
+    let valueOrigin: ResolvedValue["valueOrigin"] = isAvailable ? "SOURCE" : "NONE";
+    if (!isAvailable && !nonExecutee) {
+      if (binding.defaultValue != null) {
+        resolved = binding.defaultValue;
+        valueOrigin = "DEFAULT";
+      } else if (binding.fallbackValue != null) {
+        resolved = binding.fallbackValue;
+        valueOrigin = "FALLBACK";
+      }
     }
 
     return {
@@ -181,7 +199,12 @@ export class BindingResolver {
       transformType,
       bindingMode: binding.bindingMode as BindingMode,
       isAvailable,
-      note: isAvailable ? undefined : binding.fallbackMessage ?? undefined,
+      valueOrigin,
+      note: nonExecutee
+        ? `transformation ${transformType} non exécutée par le moteur : donnée indisponible`
+        : isAvailable
+          ? undefined
+          : binding.fallbackMessage ?? undefined,
     };
   }
 

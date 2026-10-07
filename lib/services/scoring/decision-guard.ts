@@ -20,20 +20,37 @@ export function estFavorable(decision: string | null | undefined): boolean {
 export interface BlocagesTrace {
   blockingRuleCodes: string[];
   publicationBlocked: boolean;
+  /** Critères obligatoires sans donnée réelle. */
+  donneesObligatoiresManquantes: string[];
+  /** Règles bloquantes non évaluables. */
+  reglesCritiquesNonEvaluees: string[];
   /** Trace absente ou illisible : impossible de démontrer l'absence de blocage. */
   traceIlisible: boolean;
 }
 
 /** Lit les blocages consignés dans la trace du dernier calcul (summaryJson). */
 export function lireBlocages(summaryJson: string | null | undefined): BlocagesTrace {
-  if (!summaryJson) return { blockingRuleCodes: [], publicationBlocked: false, traceIlisible: true };
+  const vide: BlocagesTrace = {
+    blockingRuleCodes: [],
+    publicationBlocked: false,
+    donneesObligatoiresManquantes: [],
+    reglesCritiquesNonEvaluees: [],
+    traceIlisible: true,
+  };
+  if (!summaryJson) return vide;
   try {
     const t = JSON.parse(summaryJson);
     if (!t || typeof t !== "object") throw new Error("trace invalide");
-    const codes = Array.isArray(t.blockingRuleCodes) ? t.blockingRuleCodes.map(String).filter(Boolean) : [];
-    return { blockingRuleCodes: codes, publicationBlocked: t.publicationBlocked === true, traceIlisible: false };
+    const liste = (v: unknown) => (Array.isArray(v) ? v.map(String).filter(Boolean) : []);
+    return {
+      blockingRuleCodes: liste(t.blockingRuleCodes),
+      publicationBlocked: t.publicationBlocked === true,
+      donneesObligatoiresManquantes: liste(t.donneesObligatoiresManquantes),
+      reglesCritiquesNonEvaluees: liste(t.reglesCritiquesNonEvaluees),
+      traceIlisible: false,
+    };
   } catch {
-    return { blockingRuleCodes: [], publicationBlocked: false, traceIlisible: true };
+    return vide;
   }
 }
 
@@ -79,6 +96,7 @@ export function motifsRefusDecisionFavorable(ctx: ContexteDecision): string[] {
   if (blocages.publicationBlocked) {
     motifs.push("Une règle interdit la publication de cette évaluation.");
   }
+  motifs.push(...motifsIncompletude(blocages));
   if (evaluation.analystId && evaluation.analystId === decideurId) {
     motifs.push("L'analyste du dossier ne peut pas valider sa propre analyse.");
   }
@@ -86,6 +104,27 @@ export function motifsRefusDecisionFavorable(ctx: ContexteDecision): string[] {
     motifs.push("L'auteur de la soumission ne peut pas rendre la décision.");
   }
   return motifs;
+}
+
+function motifsIncompletude(b: BlocagesTrace): string[] {
+  const motifs: string[] = [];
+  if (b.donneesObligatoiresManquantes.length > 0) {
+    motifs.push(`Donnée(s) obligatoire(s) manquante(s) : ${b.donneesObligatoiresManquantes.join(", ")}.`);
+  }
+  if (b.reglesCritiquesNonEvaluees.length > 0) {
+    motifs.push(`Règle(s) critique(s) non évaluable(s) : ${b.reglesCritiquesNonEvaluees.join(", ")}.`);
+  }
+  return motifs;
+}
+
+/**
+ * Préconditions de soumission : un calcul lisible, aucune donnée obligatoire manquante,
+ * aucune règle critique non évaluée. L'aperçu reste disponible pendant la saisie.
+ */
+export function motifsRefusSoumission(summaryJson: string | null | undefined): string[] {
+  const b = lireBlocages(summaryJson);
+  if (b.traceIlisible) return ["La note n'est pas calculée : relancez le calcul."];
+  return motifsIncompletude(b);
 }
 
 export interface DecisionAnterieure {

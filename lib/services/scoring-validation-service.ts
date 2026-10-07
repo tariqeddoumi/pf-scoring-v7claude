@@ -122,6 +122,37 @@ export class ScoringValidationService {
       }
     }
 
+    // Fonctions paramétrables mais non exécutées de bout en bout : une grille qui les
+    // utilise afficherait un comportement que le moteur ne produit pas.
+    const reglesApplicabilite = version.nodes.flatMap((n) =>
+      n.applicabilityRules.filter((r) => r.isActive !== false).map((r) => ({ r, n }))
+    );
+    for (const { n } of reglesApplicabilite) {
+      errors.push({
+        code: "APPLICABILITY_RULE_NOT_EXECUTED",
+        message: `Le critère '${n.label}' porte une règle d'applicabilité, que le moteur de calcul n'exécute pas : désactivez-la avant publication.`,
+        severity: "ERROR",
+        context: { nodeId: n.id, nodeLabel: n.label },
+      });
+    }
+    const bindingsNonExecutes = await prisma.scoringNodeDataBinding.findMany({
+      where: {
+        nodeId: { in: version.nodes.map((n) => n.id) },
+        isActive: true,
+        transformType: { in: ["LOOKUP", "AGGREGATE", "FORMULA"] },
+      },
+      select: { nodeId: true, transformType: true },
+    });
+    for (const b of bindingsNonExecutes) {
+      const n = version.nodes.find((x) => x.id === b.nodeId);
+      errors.push({
+        code: "BINDING_TRANSFORM_NOT_EXECUTED",
+        message: `La donnée automatique du critère '${n?.label ?? b.nodeId}' utilise la transformation ${b.transformType}, non exécutée par le moteur.`,
+        severity: "ERROR",
+        context: { nodeId: b.nodeId },
+      });
+    }
+
     // Check for blocking rules
     const blockingRules = version.rules.filter(
       (r) => r.ruleType === "HARD_STOP" || r.ruleType === "NO_GO"
