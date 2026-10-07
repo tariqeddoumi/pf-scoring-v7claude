@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth } from '@/lib/auth-middleware';
 import { successResponse, serverError, notFoundError, validationError } from '@/lib/api-response';
 import prisma from '@/lib/prisma-client';
+import { getAppConfigKey } from '@/lib/services/app-config-service';
 import {
   DECISIONS_ADMISES,
+  delegationSuffisante,
+  lireMatriceDelegation,
+  roleRequisPourMontant,
   estFavorable,
   motifRefusDelegation,
   motifsRefusDecisionFavorable,
@@ -47,7 +51,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const workflow = await prisma.scoringWorkflow.findUnique({
         where: { id },
         include: {
-          evaluation: { select: { status: true, finalScore: true, summaryJson: true, analystId: true } },
+          evaluation: {
+            select: { status: true, finalScore: true, summaryJson: true, analystId: true, project: { select: { montant: true } } },
+          },
           decisions: {
             orderBy: { decidedAt: 'desc' },
             take: 1,
@@ -93,7 +99,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         if (motifs.length > 0) return refus(motifs);
       }
 
-      const exigeSuperieur = Boolean(requiresHigherApproval);
+      // Délégation par montant : un décideur sans délégation suffisante rend un avis
+      // favorable, mais le dossier attend l'approbation d'un niveau supérieur.
+      const roleRequis = roleRequisPourMontant(
+        lireMatriceDelegation(await getAppConfigKey('delegation.matrice').catch(() => null)),
+        workflow.evaluation.project?.montant
+      );
+      const horsDelegation = estFavorable(decisionType) && !delegationSuffisante(user.role, roleRequis);
+      const exigeSuperieur = Boolean(requiresHigherApproval) || horsDelegation;
       const newStatus = statutApresDecision(decisionType, exigeSuperieur);
 
       const [decision] = await prisma.$transaction([
@@ -108,6 +121,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             conditionsJson,
             decidedBy: user.userId,
             requiresHigherApproval: exigeSuperieur,
+            escalatedTo: horsDelegation ? roleRequis : undefined,
             decidedAt: new Date()
           },
           include: {

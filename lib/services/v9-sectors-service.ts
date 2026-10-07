@@ -1,3 +1,5 @@
+import { apiGet } from '@/lib/api-client';
+
 // Serialized shapes returned by GET /api/v9/sectors (dates are ISO strings over the wire).
 
 export interface SectorThreshold {
@@ -77,7 +79,8 @@ export async function fetchSectors(): Promise<SectorWithDetails[]> {
   }
 
   try {
-    const res = await fetch('/api/v9/sectors');
+    // apiGet porte le jeton de session : la route n'est plus publique.
+    const res = await apiGet('/api/v9/sectors');
     if (!res.ok) {
       throw new Error(`API error: ${res.status}`);
     }

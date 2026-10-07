@@ -15,7 +15,7 @@ import {
   Columns,
 } from "lucide-react";
 import { DomainSidebar } from "./DomainSidebar";
-import { LiveScorePanel, type AnswerValue, type ServerScore } from "./LiveScorePanel";
+import { LiveScorePanel, lireServerScore, type AnswerValue, type ServerScore } from "./LiveScorePanel";
 import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 import { apiPost, apiPatch, messageErreurApi } from "@/lib/api-client";
@@ -446,14 +446,7 @@ export function EvaluationWorkspace({
       );
       if (!res.ok) return;
       const { data } = await res.json();
-      setServerScore({
-        finalScore: data.finalScore,
-        rating: data.rating,
-        malusTotal: data.malusTotal ?? 0,
-        blocked: !!data.blocked,
-        blockingRuleCodes: data.blockingRuleCodes ?? [],
-        domains: data.domains ?? [],
-      });
+      setServerScore(lireServerScore(data));
       setIsStale(false);
     } catch {
       // Un aperçu qui échoue ne doit pas interrompre la saisie : le panneau
@@ -551,19 +544,14 @@ export function EvaluationWorkspace({
       }
 
       const { data } = await res.json();
-      setServerScore({
-        finalScore: data.finalScore,
-        rating: data.rating,
-        malusTotal: data.malusTotal ?? 0,
-        blocked: !!data.blocked,
-        blockingRuleCodes: data.blockingRuleCodes ?? [],
-        domains: data.domains ?? [],
-      });
+      setServerScore(lireServerScore(data));
       setIsStale(false);
       setSuccessMsg(
         data.blocked
           ? `Calcul effectué — BLOCAGE : ${data.blockingRuleCodes.join(", ")}`
-          : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
+          : data.incomplet
+            ? `Score provisoire : ${data.finalScore.toFixed(1)} pts — compléments obligatoires attendus avant soumission`
+            : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
       );
     } catch (e: any) {
       setError(e.message);

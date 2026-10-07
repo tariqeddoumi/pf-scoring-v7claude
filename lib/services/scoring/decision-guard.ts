@@ -172,3 +172,39 @@ export function statutApresDecision(decision: string, requiertApprobationSuperie
   if (estFavorable(decision)) return requiertApprobationSuperieure ? "REVIEWED" : "APPROVED";
   throw new Error(`Type de décision inconnu : ${decision}`);
 }
+
+/**
+ * Matrice de délégation par montant, paramétrée par la banque (clé de configuration
+ * `delegation.matrice`) : liste de paliers { montantMax (MAD, null = sans limite),
+ * roleMinimum }. Renvoie le rôle minimum exigé pour un montant, ou null si la matrice
+ * est vide ou illisible (aucune contrainte de montant n'est alors inventée).
+ */
+export interface PalierDelegation {
+  montantMax: number | null;
+  roleMinimum: string;
+}
+
+export function lireMatriceDelegation(brut: string | null | undefined): PalierDelegation[] {
+  if (!brut) return [];
+  try {
+    const v = JSON.parse(brut);
+    if (!Array.isArray(v)) return [];
+    return v
+      .filter((p) => p && typeof p.roleMinimum === "string" && p.roleMinimum in ROLE_HIERARCHY)
+      .map((p) => ({ montantMax: typeof p.montantMax === "number" ? p.montantMax : null, roleMinimum: p.roleMinimum }))
+      .sort((a, b) => (a.montantMax ?? Infinity) - (b.montantMax ?? Infinity));
+  } catch {
+    return [];
+  }
+}
+
+export function roleRequisPourMontant(matrice: PalierDelegation[], montant: number | null | undefined): string | null {
+  if (matrice.length === 0 || montant === null || montant === undefined) return null;
+  const palier = matrice.find((p) => p.montantMax === null || montant <= p.montantMax);
+  return palier?.roleMinimum ?? matrice[matrice.length - 1].roleMinimum;
+}
+
+/** Le décideur a-t-il la délégation pour ce montant ? */
+export function delegationSuffisante(roleDecideur: string, roleRequis: string | null): boolean {
+  return roleRequis === null || niveau(roleDecideur) >= niveau(roleRequis);
+}

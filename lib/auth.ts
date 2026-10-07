@@ -23,6 +23,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 
 import { secretJwt } from "./jwt-secret";
+import { roleDuCompteActif } from "./compte-actif";
 
 // La clé de signature est celle du contrôle des appels API (lib/jwt-secret.ts) :
 // plus de clé de repli constante en production.
@@ -87,7 +88,12 @@ export async function verifyToken(token: string): Promise<{
 } | null> {
   try {
     const verified = await jwtVerify(token, secretJwt());
-    return verified.payload as { userId: string; email: string; role: string };
+    const jeton = verified.payload as { userId: string; email: string; role: string };
+    // Compte désactivé ou supprimé : la session cookie est révoquée comme le Bearer.
+    if (!jeton?.userId) return null;
+    const role = await roleDuCompteActif(jeton.userId);
+    if (!role) return null;
+    return { ...jeton, role };
   } catch {
     // Token invalide ou expiré : on retourne null plutôt que de lever une exception
     return null;

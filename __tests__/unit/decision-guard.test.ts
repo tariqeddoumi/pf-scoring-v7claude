@@ -1,5 +1,8 @@
 import {
+  delegationSuffisante,
   lireBlocages,
+  lireMatriceDelegation,
+  roleRequisPourMontant,
   motifsRefusDecisionFavorable,
   motifRefusDelegation,
   statutApresDecision,
@@ -60,5 +63,29 @@ describe("decision-guard", () => {
     expect(motifRefusDelegation(derniere, "rm2", "risk_manager")).not.toBeNull();
     expect(motifRefusDelegation(derniere, "admin", "scoring_admin")).toBeNull();
     expect(motifRefusDelegation(null, "x", "risk_manager")).toBeNull();
+  });
+});
+
+describe("délégation par montant", () => {
+  const matrice = lireMatriceDelegation(
+    JSON.stringify([
+      { montantMax: null, roleMinimum: "system_admin" },
+      { montantMax: 100_000_000, roleMinimum: "risk_manager" },
+      { montantMax: 500_000_000, roleMinimum: "scoring_admin" },
+    ])
+  );
+  it("choisit le premier palier qui couvre le montant", () => {
+    expect(roleRequisPourMontant(matrice, 50_000_000)).toBe("risk_manager");
+    expect(roleRequisPourMontant(matrice, 300_000_000)).toBe("scoring_admin");
+    expect(roleRequisPourMontant(matrice, 2_000_000_000)).toBe("system_admin");
+  });
+  it("sans matrice, aucune contrainte de montant n'est inventée", () => {
+    expect(roleRequisPourMontant([], 1e12)).toBeNull();
+    expect(lireMatriceDelegation("pas du json")).toEqual([]);
+    expect(delegationSuffisante("risk_manager", null)).toBe(true);
+  });
+  it("un rôle inférieur au palier n'a pas la délégation", () => {
+    expect(delegationSuffisante("risk_manager", "scoring_admin")).toBe(false);
+    expect(delegationSuffisante("system_admin", "scoring_admin")).toBe(true);
   });
 });

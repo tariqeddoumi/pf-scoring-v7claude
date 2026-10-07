@@ -18,6 +18,49 @@ export interface ServerScore {
   blocked: boolean;
   blockingRuleCodes: string[];
   domains: Array<{ nodeId: string; code: string; label: string; score: number | null }>;
+  /** Une règle interdit la publication. */
+  publicationBlocked?: boolean;
+  /** Donnée obligatoire ou règle critique indisponible : note provisoire. */
+  incomplet?: boolean;
+  donneesObligatoiresManquantes?: string[];
+  reglesCritiquesNonEvaluees?: string[];
+  /** Critères notés sur une valeur par défaut. */
+  valeursParDefaut?: string[];
+  /** Règles dont la condition n'a pas pu être évaluée. */
+  ruleDiagnosticCount?: number;
+  derogations?: Array<{ nodeCode: string; scoreCalcule: number; scoreRetenu: number }>;
+  recommendation?: string;
+}
+
+/** Lecture tolérante de la réponse du moteur (aperçu ou calcul). */
+export function lireServerScore(data: Record<string, any>): ServerScore {
+  const liste = (v: unknown) => (Array.isArray(v) ? v.map(String) : []);
+  return {
+    finalScore: data.finalScore,
+    rating: data.rating,
+    malusTotal: data.malusTotal ?? 0,
+    blocked: !!data.blocked,
+    blockingRuleCodes: liste(data.blockingRuleCodes),
+    domains: data.domains ?? [],
+    publicationBlocked: !!data.publicationBlocked,
+    incomplet: !!data.incomplet,
+    donneesObligatoiresManquantes: liste(data.donneesObligatoiresManquantes),
+    reglesCritiquesNonEvaluees: liste(data.reglesCritiquesNonEvaluees),
+    valeursParDefaut: liste(data.valeursParDefaut),
+    ruleDiagnosticCount: Number(data.ruleDiagnosticCount ?? 0),
+    derogations: Array.isArray(data.derogations) ? data.derogations : [],
+    recommendation: data.recommendation,
+  };
+}
+
+/** Statut de validité du résultat affiché, du plus restrictif au plus favorable. */
+export function statutValidite(score: ServerScore | null, isStale?: boolean): { libelle: string; ton: "danger" | "alerte" | "ok" | "neutre" } {
+  if (!score) return { libelle: "Non calculé", ton: "neutre" };
+  if (isStale) return { libelle: "Calcul à refaire", ton: "alerte" };
+  if (score.blocked) return { libelle: "Bloqué", ton: "danger" };
+  if (score.incomplet) return { libelle: "Provisoire — incomplet", ton: "alerte" };
+  if (score.publicationBlocked) return { libelle: "Publication bloquée", ton: "alerte" };
+  return { libelle: "Complet", ton: "ok" };
 }
 
 interface LiveScorePanelProps {
@@ -99,6 +142,61 @@ export function LiveScorePanel({
           ) : null}
         </div>
       </div>
+
+      {(() => {
+        const st = statutValidite(score, isStale);
+        const classes = {
+          danger: "bg-destructive/10 text-destructive border-destructive/30",
+          alerte: "bg-warning/10 text-warning border-warning/30",
+          ok: "bg-success/10 text-success border-success/30",
+          neutre: "bg-card text-muted-foreground border-border",
+        }[st.ton];
+        return (
+          <div className={`mx-4 mt-4 rounded-lg border px-3 py-2 text-xs font-semibold ${classes}`}>
+            Statut : {st.libelle}
+          </div>
+        );
+      })()}
+
+      {score?.incomplet && (
+        <div className="mx-4 mt-3 p-3 rounded-lg bg-warning/10 border border-warning/30 text-xs text-foreground space-y-1">
+          {(score.donneesObligatoiresManquantes?.length ?? 0) > 0 && (
+            <p>
+              <span className="font-semibold">Données obligatoires manquantes :</span>{" "}
+              {score.donneesObligatoiresManquantes!.join(", ")}
+            </p>
+          )}
+          {(score.reglesCritiquesNonEvaluees?.length ?? 0) > 0 && (
+            <p>
+              <span className="font-semibold">Règles critiques non évaluables :</span>{" "}
+              {score.reglesCritiquesNonEvaluees!.join(", ")}
+            </p>
+          )}
+          <p className="text-muted-foreground">La soumission attend ces compléments.</p>
+        </div>
+      )}
+
+      {score !== null && ((score.ruleDiagnosticCount ?? 0) > 0 || (score.valeursParDefaut?.length ?? 0) > 0) && (
+        <div className="mx-4 mt-3 space-y-1 text-xs text-muted-foreground">
+          {(score.ruleDiagnosticCount ?? 0) > 0 && (
+            <p>{score.ruleDiagnosticCount} règle(s) non évaluée(s) — voir la trace.</p>
+          )}
+          {(score.valeursParDefaut?.length ?? 0) > 0 && (
+            <p>Valeur par défaut utilisée : {score.valeursParDefaut!.join(", ")}.</p>
+          )}
+        </div>
+      )}
+
+      {(score?.derogations?.length ?? 0) > 0 && (
+        <div className="mx-4 mt-3 text-xs">
+          <p className="font-semibold text-foreground">Dérogations appliquées</p>
+          {score!.derogations!.map((d) => (
+            <p key={d.nodeCode} className="tabular-nums text-muted-foreground">
+              {d.nodeCode} : {d.scoreCalcule.toFixed(1)} → {d.scoreRetenu.toFixed(1)}
+            </p>
+          ))}
+        </div>
+      )}
 
       {score?.blocked && (
         <div className="mx-4 mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30">
