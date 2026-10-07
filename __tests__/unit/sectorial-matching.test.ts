@@ -21,15 +21,13 @@ describe("choisirSecteur", () => {
     expect(choisirSecteur(partiels, "Eau et assainissement")?.code).toBe("EAU");
   });
 
-  test("à défaut, le premier candidat du tri stable est retenu", () => {
-    // Deux libellés contiennent « Eau » : le résultat doit être reproductible,
-    // là où findFirst sans tri pouvait changer d'une requête à l'autre.
+  test("une correspondance partielle ne désigne aucun profil (F15)", () => {
+    // « assainissement » appliquait le premier secteur dont le libellé contenait le mot.
     const partiels = [
       { code: "EAU", label: "Eau et assainissement" },
       { code: "EAU_DESSAL", label: "Eau — dessalement" },
     ];
-    expect(choisirSecteur(partiels, "Eau")?.code).toBe("EAU");
-    expect(choisirSecteur([...partiels], "Eau")?.code).toBe("EAU");
+    expect(choisirSecteur(partiels, "assainissement")).toBeNull();
   });
 
   test("la casse et les espaces autour du terme sont sans effet", () => {

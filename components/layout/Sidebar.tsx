@@ -11,6 +11,7 @@ import {
   CheckCircle,
   GitBranch,
   GitCompare,
+  Calculator,
   LineChart,
   ScrollText,
   Search,
@@ -57,6 +58,7 @@ const GROUPES: { titre: string; entrees: Entree[] }[] = [
     entrees: [
       { icone: Search, libelle: "Recherche", href: "/search" },
       { icone: GitCompare, libelle: "Comparaison", href: "/compare" },
+      { icone: Calculator, libelle: "Simulation des flux", href: "/flux" },
       { icone: LineChart, libelle: "Analytique", href: "/analytics" },
       { icone: TrendingUp, libelle: "Monitoring", href: "/monitoring" },
     ],

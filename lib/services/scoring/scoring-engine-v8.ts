@@ -71,8 +71,9 @@ export interface SectorialTrace {
     description: string;
     isNoGo: boolean;
     penalty: number | null;
+    effet: "INFORMATION";
   }>;
-  stressTests: Array<{ code: string; description: string }>;
+  stressTests: Array<{ code: string; description: string; effet: "INFORMATION" }>;
 }
 
 export interface EvaluationTrace {
@@ -441,6 +442,9 @@ export class ScoringEngineV8 {
     if (sectorialOn) {
       sectorWeighting = await resolveSectorWeighting(evaluation.project?.secteur);
     }
+    // Calibrage sectoriel actif mais aucun profil pour le secteur du projet : la note
+    // n'est pas finalisable (pondération de base appliquée sans le dire auparavant).
+    const profilSectorielManquant = sectorialOn && !sectorWeighting;
     const factorFor = (code: string): number =>
       sectorWeighting?.weightFactors.get(code) ?? 1;
 
@@ -512,13 +516,17 @@ export class ScoringEngineV8 {
     };
 
     const blocked = blockingRuleCodes.length > 0;
-    const incomplet = donneesObligatoiresManquantes.length > 0 || reglesCritiquesNonEvaluees.length > 0;
+    const incomplet =
+      donneesObligatoiresManquantes.length > 0 ||
+      reglesCritiquesNonEvaluees.length > 0 ||
+      profilSectorielManquant;
     const traceJson = JSON.stringify(
       {
         rootResults,
         sectorial,
         blockingRuleCodes,
         incomplet,
+        profilSectorielManquant,
         donneesObligatoiresManquantes,
         reglesCritiquesNonEvaluees,
         valeursParDefaut,

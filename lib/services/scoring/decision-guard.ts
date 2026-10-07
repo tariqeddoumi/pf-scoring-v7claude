@@ -24,6 +24,8 @@ export interface BlocagesTrace {
   donneesObligatoiresManquantes: string[];
   /** Règles bloquantes non évaluables. */
   reglesCritiquesNonEvaluees: string[];
+  /** Calibrage sectoriel actif sans profil pour le secteur du projet. */
+  profilSectorielManquant: boolean;
   /** Trace absente ou illisible : impossible de démontrer l'absence de blocage. */
   traceIlisible: boolean;
 }
@@ -35,6 +37,7 @@ export function lireBlocages(summaryJson: string | null | undefined): BlocagesTr
     publicationBlocked: false,
     donneesObligatoiresManquantes: [],
     reglesCritiquesNonEvaluees: [],
+    profilSectorielManquant: false,
     traceIlisible: true,
   };
   if (!summaryJson) return vide;
@@ -47,6 +50,7 @@ export function lireBlocages(summaryJson: string | null | undefined): BlocagesTr
       publicationBlocked: t.publicationBlocked === true,
       donneesObligatoiresManquantes: liste(t.donneesObligatoiresManquantes),
       reglesCritiquesNonEvaluees: liste(t.reglesCritiquesNonEvaluees),
+      profilSectorielManquant: t.profilSectorielManquant === true,
       traceIlisible: false,
     };
   } catch {
@@ -113,6 +117,9 @@ function motifsIncompletude(b: BlocagesTrace): string[] {
   }
   if (b.reglesCritiquesNonEvaluees.length > 0) {
     motifs.push(`Règle(s) critique(s) non évaluable(s) : ${b.reglesCritiquesNonEvaluees.join(", ")}.`);
+  }
+  if (b.profilSectorielManquant) {
+    motifs.push("Aucun profil sectoriel ne correspond au secteur du projet : choisissez un secteur de la liste.");
   }
   return motifs;
 }
