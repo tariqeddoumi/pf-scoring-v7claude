@@ -52,7 +52,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         where: { id },
         include: {
           evaluation: {
-            select: { status: true, finalScore: true, summaryJson: true, analystId: true, project: { select: { montant: true } } },
+            select: {
+              id: true,
+              projectId: true,
+              status: true,
+              finalScore: true,
+              rating: true,
+              summaryJson: true,
+              analystId: true,
+              project: { select: { montant: true } },
+            },
           },
           decisions: {
             orderBy: { decidedAt: 'desc' },
@@ -147,6 +156,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             rejectedBy: newStatus === 'REJECTED' ? user.userId : undefined
           }
         }),
+        // Une décision finale se propage au dossier dans la même transaction :
+        // sinon l'évaluation restait « soumise » et le projet inchangé, et un autre
+        // chemin de décision pouvait produire un état contradictoire.
+        ...(newStatus === 'APPROVED'
+          ? [
+              prisma.scoringEvaluation.update({
+                where: { id: workflow.evaluation.id },
+                data: { status: 'valide', validatedAt: new Date(), approvedAt: new Date(), recommendation: decisionType },
+              }),
+              prisma.project.update({
+                where: { id: workflow.evaluation.projectId },
+                data: { status: 'approuve', scoreGlobal: workflow.evaluation.finalScore, grade: workflow.evaluation.rating },
+              }),
+            ]
+          : newStatus === 'REJECTED'
+            ? [
+                prisma.scoringEvaluation.update({
+                  where: { id: workflow.evaluation.id },
+                  data: { status: 'rejete', rejectedAt: new Date(), rejectionReason: String(justification).slice(0, 2000) },
+                }),
+                prisma.project.update({ where: { id: workflow.evaluation.projectId }, data: { status: 'rejete' } }),
+              ]
+            : []),
       ]);
 
       return successResponse({ ...decision, workflowStatus: newStatus }, { status: 201 });

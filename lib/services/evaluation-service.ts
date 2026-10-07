@@ -313,9 +313,14 @@ export class EvaluationService {
     if (current.status !== "soumis") {
       throw new Error("Can only validate submitted evaluations");
     }
+    const circuit = await prisma.scoringWorkflow.findUnique({
+      where: { evaluationId: id },
+      select: { submittedBy: true },
+    });
     const motifs = motifsRefusDecisionFavorable({
       evaluation: { ...current, status: String(current.status) },
       decideurId: validatedBy,
+      soumisPar: circuit?.submittedBy,
     });
     if (motifs.length > 0) {
       throw new Error(`Validation refusée : ${motifs.join(" ")}`);
@@ -351,6 +356,11 @@ export class EvaluationService {
         changedBy: validatedBy,
         comment: "Évaluation validée",
       },
+    });
+    // le circuit de validation suit la décision (même état partout)
+    await prisma.scoringWorkflow.updateMany({
+      where: { evaluationId: id, status: { notIn: ["APPROVED", "REJECTED"] } },
+      data: { status: "APPROVED", approvedAt: new Date(), approvedBy: validatedBy },
     });
 
     return evaluation;

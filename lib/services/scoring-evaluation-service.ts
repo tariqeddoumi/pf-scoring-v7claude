@@ -209,6 +209,9 @@ export class ScoringEvaluationService {
         analystId: evaluation.analystId,
       },
       decideurId: approvedBy,
+      soumisPar: (
+        await prisma.scoringWorkflow.findUnique({ where: { evaluationId }, select: { submittedBy: true } })
+      )?.submittedBy,
     });
     if (motifs.length > 0) {
       throw new Error(`Can only approve when allowed — ${motifs.join(" ")}`);
@@ -231,6 +234,11 @@ export class ScoringEvaluationService {
         changedBy: approvedBy,
         comment: "Évaluation approuvée",
       },
+    });
+    // le circuit de validation suit la décision (même état partout)
+    await prisma.scoringWorkflow.updateMany({
+      where: { evaluationId: evaluationId, status: { notIn: ["APPROVED", "REJECTED"] } },
+      data: { status: "APPROVED", approvedAt: new Date(), approvedBy: approvedBy },
     });
 
     return updated;
