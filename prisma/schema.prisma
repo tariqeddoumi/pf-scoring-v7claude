@@ -17,7 +17,7 @@ datasource db {
 
 model User {
   /// User ID (UUID)
-  id            String   @id @default(uuid())
+  id            String   @id @default(uuid()) @db.Uuid
   /// Email unique (login)
   email         String   @unique
   /// Hashed password (null for OAuth users)
@@ -88,11 +88,11 @@ model User {
 /// User audit log for tracking permission changes and sensitive actions
 model UserAuditLog {
   /// Audit log ID
-  id            String   @id @default(uuid())
+  id            String   @id @default(uuid()) @db.Uuid
   /// User being audited
-  userId        String
+  userId        String   @db.Uuid
   /// User performing the action
-  performedById String
+  performedById String   @db.Uuid
   /// Action type: LOGIN, LOGOUT, ROLE_CHANGE, DEACTIVATE, PASSWORD_RESET, PERMISSION_GRANT, PERMISSION_REVOKE
   action        String
   /// Old value (for changes)
@@ -121,7 +121,7 @@ model UserAuditLog {
 }
 
 model Client {
-  id               String    @id @default(uuid())
+  id               String    @id @default(uuid()) @db.Uuid
   nom              String
   email            String?   @unique
   telephone        String?
@@ -160,7 +160,7 @@ model Client {
 }
 
 model Project {
-  id                          String        @id @default(uuid())
+  id                          String        @id @default(uuid()) @db.Uuid
   nom                         String
   description                 String
   secteur                     String
@@ -172,7 +172,7 @@ model Project {
   creePar                     String        @db.Uuid
   countryCode                 String?
   pays                        String?
-  clientId                    String?
+  clientId                    String?       @db.Uuid
   dateCreation                DateTime      @default(now())
   dateMiseAJour               DateTime      @updatedAt
   // Extended fields
@@ -212,8 +212,8 @@ model Project {
 }
 
 model Scoring {
-  id          String   @id @default(uuid())
-  projectId   String
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @db.Uuid
   scoreGlobal Float
   grade       String
   composantes Json
@@ -228,9 +228,9 @@ model Scoring {
 }
 
 model AuditLog {
-  id            String   @id @default(uuid())
-  projectId     String?
-  utilisateurId String
+  id            String   @id @default(uuid()) @db.Uuid
+  projectId     String?  @db.Uuid
+  utilisateurId String   @db.Uuid
   action        String
   details       String
   dateAction    DateTime @default(now())
@@ -246,7 +246,7 @@ model AuditLog {
 
 // Legacy scoring tables (being migrated to new model)
 model ScoreDomain {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   code        String   @unique
   label       String
   description String?
@@ -266,8 +266,8 @@ model ScoreDomain {
 }
 
 model ScoreCriterion {
-  id              String   @id @default(uuid())
-  domainId        String
+  id              String   @id @default(uuid()) @db.Uuid
+  domainId        String   @db.Uuid
   code            String
   label           String
   description     String?
@@ -292,8 +292,8 @@ model ScoreCriterion {
 }
 
 model ScoreOption {
-  id          String   @id @default(uuid())
-  criterionId String
+  id          String   @id @default(uuid()) @db.Uuid
+  criterionId String   @db.Uuid
   label       String
   score       Float
   orderIndex  Int
@@ -307,8 +307,8 @@ model ScoreOption {
 }
 
 model ScoreRange {
-  id          String   @id @default(uuid())
-  criterionId String
+  id          String   @id @default(uuid()) @db.Uuid
+  criterionId String   @db.Uuid
   minValue    Float
   maxValue    Float
   score       Float
@@ -324,7 +324,7 @@ model ScoreRange {
 }
 
 model Country {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   code      String   @unique
   label     String
   riskScore Float    @default(50.0)
@@ -335,7 +335,7 @@ model Country {
 }
 
 model SystemConfig {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   key         String   @unique
   value       String
   description String?
@@ -345,9 +345,9 @@ model SystemConfig {
 }
 
 model EvaluationDomainScore {
-  id        String   @id @default(uuid())
-  domainId  String
-  scoringId String
+  id        String   @id @default(uuid()) @db.Uuid
+  domainId  String   @db.Uuid
+  scoringId String   @db.Uuid
   score     Float
   weight    Float
   createdAt DateTime @default(now())
@@ -362,9 +362,9 @@ model EvaluationDomainScore {
 }
 
 model EvaluationAnswer {
-  id          String   @id @default(uuid())
-  criterionId String
-  scoringId   String
+  id          String   @id @default(uuid()) @db.Uuid
+  criterionId String   @db.Uuid
+  scoringId   String   @db.Uuid
   answerType  String   @default("OPTION")
   optionValue String?
   rangeValue  Float?
@@ -380,9 +380,9 @@ model EvaluationAnswer {
 }
 
 model Evaluation {
-  id                   String           @id @default(uuid())
-  projectId            String
-  analystId            String?
+  id                   String           @id @default(uuid()) @db.Uuid
+  projectId            String           @db.Uuid
+  analystId            String?          @db.Uuid
   scoringResult        Json // ScoringResult object
   stressTestResult     Json? // StressTestResult object (optional)
   rating               String // AAA, AA, A, BBB, BB, B, CCC, D
@@ -412,7 +412,7 @@ model Evaluation {
   // Archiving & Versioning
   isArchived           Boolean          @default(false)
   versionNumber        Int              @default(1)
-  parentEvaluationId   String? // For version history
+  parentEvaluationId   String?          @db.Uuid // For version history
   archivedAt           DateTime?
   archivedBy           String?
   createdAt            DateTime         @default(now())
@@ -435,8 +435,8 @@ model Evaluation {
 }
 
 model StressTestScenarioResult {
-  id           String   @id @default(uuid())
-  evaluationId String
+  id           String   @id @default(uuid()) @db.Uuid
+  evaluationId String   @db.Uuid
   scenarioId   String // REVENUE_DECLINE_10, etc.
   scenarioName String
   dscrBase     Float
@@ -454,9 +454,9 @@ model StressTestScenarioResult {
 }
 
 model ScoringAuditLog {
-  id            String   @id @default(uuid())
-  evaluationId  String
-  userId        String
+  id            String   @id @default(uuid()) @db.Uuid
+  evaluationId  String   @db.Uuid
+  userId        String   @db.Uuid
   action        String // CALCULATE, STRESS_TEST, RECALCULATE
   changes       Json? // What changed
   previousScore Float?
@@ -1372,13 +1372,13 @@ model ScoringWorkflow {
   // Workflow metadata
   requestedAt       DateTime?
   submittedAt       DateTime?
-  submittedBy       String?
+  submittedBy       String?   @db.Uuid
   reviewStartedAt   DateTime?
   reviewCompletedAt DateTime?
   approvedAt        DateTime?
-  approvedBy        String?
+  approvedBy        String?   @db.Uuid
   rejectedAt        DateTime?
-  rejectedBy        String?
+  rejectedBy        String?   @db.Uuid
 
   // Workflow configuration
   requiresCommitteeApproval Boolean @default(false)
@@ -1419,8 +1419,8 @@ model ScoringWorkflowStep {
   dueDate     DateTime?
 
   // Assignee
-  assignedTo String?
-  assignedBy String?
+  assignedTo String? @db.Uuid
+  assignedBy String? @db.Uuid
 
   // Comments & notes
   notes    String?
@@ -1454,12 +1454,12 @@ model ScoringDecision {
   conditionsJson String? // JSON array of conditions
 
   // Decision maker
-  decidedBy String
+  decidedBy String   @db.Uuid
   decidedAt DateTime @default(now())
 
   // Approval chain
   requiresHigherApproval Boolean @default(false)
-  escalatedTo            String?
+  escalatedTo            String? @db.Uuid
 
   // Relationships
   workflow      ScoringWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
@@ -1492,9 +1492,9 @@ model ScoringOverride {
   riskLevel     String // LOW, MEDIUM, HIGH, CRITICAL
 
   // Override metadata
-  overriddenBy String
+  overriddenBy String    @db.Uuid
   overriddenAt DateTime  @default(now())
-  approvedBy   String?
+  approvedBy   String?   @db.Uuid
   approvedAt   DateTime?
 
   // Audit trail
@@ -1537,9 +1537,9 @@ model ScoringDocument {
   isRequired   Boolean @default(false)
 
   // Upload & verification
-  uploadedBy String
+  uploadedBy String    @db.Uuid
   uploadedAt DateTime  @default(now())
-  verifiedBy String?
+  verifiedBy String?   @db.Uuid
   verifiedAt DateTime?
 
   // Audit
@@ -1571,7 +1571,7 @@ model ScoringComment {
   commentType String @default("GENERAL") // GENERAL, QUESTION, ISSUE, SUGGESTION
 
   // Author
-  createdBy String
+  createdBy String   @db.Uuid
   createdAt DateTime @default(now())
 
   // Reply chain
@@ -1581,7 +1581,7 @@ model ScoringComment {
   isInternal Boolean   @default(false) // Internal review comments
   isResolved Boolean   @default(false)
   resolvedAt DateTime?
-  resolvedBy String?
+  resolvedBy String?   @db.Uuid
 
   // Relationships
   workflow      ScoringWorkflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
@@ -1608,7 +1608,7 @@ model ScoringApproval {
 
   // Approver
   requestedFrom String // User role or specific user
-  approvedBy    String?
+  approvedBy    String?   @db.Uuid
   approvedAt    DateTime?
 
   // Decision
@@ -1660,7 +1660,7 @@ model ScoringRatingBucket {
 
 /// Métadonnées du modèle V9 (tool_name PARAMÉTRABLE)
 model V9ScoringModel {
-  id           String   @id @default(uuid())
+  id           String   @id @default(uuid()) @db.Uuid
   version      String   @unique
   toolName     String
   description  String?
@@ -1674,7 +1674,7 @@ model V9ScoringModel {
 
 /// 12 secteurs Project Finance
 model V9Sector {
-  id         String   @id @default(uuid())
+  id         String   @id @default(uuid()) @db.Uuid
   code       String   @unique
   label      String
   orderIndex Int      @default(0)
@@ -1693,8 +1693,8 @@ model V9Sector {
 
 /// Seuils DSCR / LLCR / Leverage différenciés par secteur (12×3×4 = 144)
 model V9SectorThreshold {
-  id        String   @id @default(uuid())
-  sectorId  String
+  id        String   @id @default(uuid()) @db.Uuid
+  sectorId  String   @db.Uuid
   ratioType String
   level     String
   minValue  Float?
@@ -1711,8 +1711,8 @@ model V9SectorThreshold {
 
 /// Poids des 9 domaines ajustés par secteur (12×9 = 108)
 model V9SectorDomainWeight {
-  id             String   @id @default(uuid())
-  sectorId       String
+  id             String   @id @default(uuid()) @db.Uuid
+  sectorId       String   @db.Uuid
   domainCode     String
   weightAdjusted Float
   createdAt      DateTime @default(now())
@@ -1726,8 +1726,8 @@ model V9SectorDomainWeight {
 
 /// Red flags nominatifs (8/secteur = 96)
 model V9RedFlag {
-  id          String   @id @default(uuid())
-  sectorId    String
+  id          String   @id @default(uuid()) @db.Uuid
+  sectorId    String   @db.Uuid
   code        String
   description String
   isNoGo      Boolean  @default(false)
@@ -1744,8 +1744,8 @@ model V9RedFlag {
 
 /// Indicateurs métier sectoriels (6/secteur = 72)
 model V9Indicator {
-  id          String   @id @default(uuid())
-  sectorId    String
+  id          String   @id @default(uuid()) @db.Uuid
+  sectorId    String   @db.Uuid
   code        String
   label       String
   unit        String?
@@ -1763,8 +1763,8 @@ model V9Indicator {
 
 /// Stress tests paramétrés par secteur (24)
 model V9StressTest {
-  id          String   @id @default(uuid())
-  sectorId    String
+  id          String   @id @default(uuid()) @db.Uuid
+  sectorId    String   @db.Uuid
   code        String
   description String
   variable    String?
@@ -1782,7 +1782,7 @@ model V9StressTest {
 
 /// Barème malus-bonus formalisé
 model V9MalusBonus {
-  id            String   @id @default(uuid())
+  id            String   @id @default(uuid()) @db.Uuid
   code          String   @unique
   scope         String
   domainCode    String?
@@ -1801,7 +1801,7 @@ model V9MalusBonus {
 
 /// Matrice anti-double-comptage : 8 facteurs transversaux × 9 domaines (72)
 model V9AntiDoubleCount {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   factorCode  String
   factorLabel String
   domainCode  String
@@ -1835,7 +1835,7 @@ model AppConfiguration {
 }
 
 model AppConfigHistory {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   key       String
   oldValue  String?
   newValue  String
@@ -1846,4 +1846,83 @@ model AppConfigHistory {
 
   @@index([key])
   @@map("BP_PF_app_config_history")
+}
+
+// ============================================================================
+// TABLES DE RÉFÉRENCE DU PARAMÉTRAGE
+// Lues en SQL direct (lib/services/scoring-configuration-service.ts). Elles existaient
+// en base sans figurer ici : une base créée depuis ce schéma en était dépourvue.
+// Définition identique à prisma/migrations/add_scoring_configuration/migration.sql.
+// ============================================================================
+
+model ReferenceAnswerType {
+  id               String    @id @db.VarChar(50)
+  label            String?   @db.VarChar(100)
+  description      String?
+  requiresOptions  Boolean?  @default(false)
+  requiresRanges   Boolean?  @default(false)
+  supportsMultiple Boolean?  @default(false)
+  minValue         Float?
+  maxValue         Float?
+  uiComponent      String?   @db.VarChar(100)
+  isActive         Boolean?  @default(true)
+  displayOrder     Int?      @default(0)
+  createdAt        DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([isActive], map: "idx_answer_types_active")
+  @@map("BP_PF_v7pp_answer_types")
+}
+
+model ReferenceAggregationMethod {
+  id              String    @id @db.VarChar(50)
+  label           String?   @db.VarChar(100)
+  description     String?
+  formula         String?
+  requiresWeights Boolean?  @default(false)
+  isActive        Boolean?  @default(true)
+  displayOrder    Int?      @default(0)
+  createdAt       DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([isActive], map: "idx_aggregation_methods_active")
+  @@map("BP_PF_v7pp_aggregation_methods")
+}
+
+model ReferenceWeightMode {
+  id           String    @id @db.VarChar(50)
+  label        String?   @db.VarChar(100)
+  description  String?
+  isActive     Boolean?  @default(true)
+  displayOrder Int?      @default(0)
+  createdAt    DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([isActive], map: "idx_weight_modes_active")
+  @@map("BP_PF_v7pp_weight_modes")
+}
+
+model ReferenceScoreScale {
+  id           String    @id @db.VarChar(50)
+  label        String?   @db.VarChar(100)
+  description  String?
+  minScore     Float?
+  maxScore     Float?
+  isActive     Boolean?  @default(true)
+  displayOrder Int?      @default(0)
+  createdAt    DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([isActive], map: "idx_score_scales_active")
+  @@map("BP_PF_v7pp_score_scales")
+}
+
+model ReferenceRatingScale {
+  id           String    @id @db.VarChar(50)
+  label        String?   @db.VarChar(10)
+  description  String?
+  minScore     Float?
+  maxScore     Float?
+  color        String?   @db.VarChar(20)
+  displayOrder Int?      @default(0)
+  createdAt    DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([displayOrder], map: "idx_rating_scales_order")
+  @@map("BP_PF_v7pp_rating_scales")
 }

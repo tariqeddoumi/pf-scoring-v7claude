@@ -14,7 +14,6 @@ import {
   X,
 } from "lucide-react";
 import { apiGet, apiPost, apiDelete, messageErreurApi } from "@/lib/api-client";
-import { createClient } from "@/lib/supabase";
 import type { AnswerValue } from "./LiveScorePanel";
 import type { Manquant, Proposition, ResultatAnalyse } from "@/lib/services/ia-documents/resultat";
 
@@ -132,7 +131,6 @@ export function AnalyseDocumentsIA({
   const deposer = async (fichiers: FileList | null) => {
     if (!fichiers || fichiers.length === 0) return;
     setErreur(null);
-    const supabase = createClient();
     for (const f of Array.from(fichiers)) {
       setDepot(`Envoi de « ${f.name} »…`);
       try {
@@ -143,10 +141,11 @@ export function AnalyseDocumentsIA({
         });
         if (!res.ok) throw new Error(await messageErreurApi(res, "Dépôt refusé."));
         const { data } = await res.json();
-        const { error } = await supabase.storage.from(data.compartiment).uploadToSignedUrl(data.chemin, data.token, f);
-        if (error) {
+        // Dépôt direct dans le stockage (Supabase ou S3) par le lien signé du serveur.
+        const envoi = await fetch(data.url, { method: data.methode, headers: data.entetes, body: f }).catch(() => null);
+        if (!envoi || !envoi.ok) {
           await apiDelete(`/api/scoring/evaluations/${evaluationId}/pieces/${data.pieceId}`);
-          throw new Error(`Envoi de « ${f.name} » impossible : ${error.message}`);
+          throw new Error(`Envoi de « ${f.name} » impossible${envoi ? ` (${envoi.status})` : ""}.`);
         }
       } catch (e) {
         setErreur(e instanceof Error ? e.message : "Dépôt impossible.");
