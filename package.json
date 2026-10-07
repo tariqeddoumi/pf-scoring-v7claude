@@ -41,6 +41,8 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
+    "@aws-sdk/client-s3": "^3.1147.0",
+    "@aws-sdk/s3-request-presigner": "^3.1147.0",
     "@hookform/resolvers": "^3.3.4",
     "@prisma/client": "^5.20.0",
     "@radix-ui/react-accordion": "^1.2.20",

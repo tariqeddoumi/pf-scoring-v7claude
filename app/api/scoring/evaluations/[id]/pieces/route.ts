@@ -4,7 +4,7 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import { extensionAcceptee, EXTENSIONS_ACCEPTEES } from "@/lib/services/ia-documents/conversion";
-import { cheminPiece, COMPARTIMENT, lienDepot, stockageConfigure, TAILLE_MAX_FICHIER } from "@/lib/services/ia-documents/stockage";
+import { cheminPiece, lienDepot, stockageConfigure, TAILLE_MAX_FICHIER } from "@/lib/services/ia-documents/stockage";
 import { derniereAnalyse } from "@/lib/services/ia-documents/dossier";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -92,11 +92,11 @@ async function handlePOST(req: NextRequest, { params }: Ctx, user: AuthPayload) 
   });
   const chemin = cheminPiece(id, piece.id, nom);
   try {
-    const lien = await lienDepot(chemin);
+    const lien = await lienDepot(chemin, typeof corps.fileType === "string" && corps.fileType ? corps.fileType : undefined);
     await prisma.scoringDocument.update({ where: { id: piece.id }, data: { storagePath: chemin } });
     return NextResponse.json({
       success: true,
-      data: { pieceId: piece.id, compartiment: COMPARTIMENT, chemin, token: lien.token, url: lien.url },
+      data: { pieceId: piece.id, chemin, url: lien.url, methode: lien.methode, entetes: lien.entetes },
     });
   } catch (e) {
     await prisma.scoringDocument.delete({ where: { id: piece.id } }).catch(() => undefined);
