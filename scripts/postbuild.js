@@ -27,6 +27,8 @@ try {
   execSync("prisma migrate deploy", { stdio: "inherit", timeout: 120000 });
   console.log("✅ Migrations completed successfully");
 } catch (error) {
-  console.warn("⚠️  Migration failed (non-fatal):", error.message);
-  process.exit(0);
+  // Un échec de migration est bloquant : un build « réussi » sur un schéma non
+  // migré déploierait une application incompatible avec sa base.
+  console.error("❌ Migration failed:", error.message);
+  process.exit(1);
 }
