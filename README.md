@@ -38,4 +38,9 @@ npm install && npm run dev
 ✅ Alerts | ✅ Monitoring | ✅ Analytics
 ✅ Benchmarking | ✅ Exports (PDF/Excel/Word) | ✅ GDPR Compliance
 
+## 🗄️ Base de données
+
+Tout PostgreSQL 14+ (Supabase, hébergé par la banque, RDS, Azure…). Pour changer de base ou
+reprendre les données : [docs/changer-de-base.md](docs/changer-de-base.md).
+
 ## 📝 Voir DEPLOY.md pour mise en production
