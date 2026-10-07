@@ -111,7 +111,7 @@ export default function MethodologiePage() {
     <div>
       <PageHeader
         titre="Méthodologie"
-        description={`Modèle appliqué : ${m.version.label ?? `version ${m.version.numero}`}${
+        description={`Modèle de notation Project Finance en vigueur${
           m.version.publieLe ? `, publié le ${formatDate(m.version.publieLe)}` : ""
         }`}
       />
@@ -301,18 +301,10 @@ export default function MethodologiePage() {
             </p>
           </SectionCard>
 
-          <SectionCard titre="Version appliquée">
+          {/* Le nom et le numéro de version du modèle ne figurent que dans les tables
+              de paramétrage (administration). */}
+          <SectionCard titre="Modèle en vigueur">
             <dl className="space-y-2 text-[12.5px]">
-              <div>
-                <dt className="text-muted-foreground">Modèle</dt>
-                <dd className="text-foreground">{m.version.modele ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Version</dt>
-                <dd className="text-foreground">
-                  {m.version.label ?? `Version ${m.version.numero}`}
-                </dd>
-              </div>
               <div>
                 <dt className="text-muted-foreground">Publiée le</dt>
                 <dd className="text-foreground">

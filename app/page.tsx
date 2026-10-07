@@ -10,7 +10,7 @@ export default function HomePage() {
       <section className="pt-8">
         <div className="rounded-2xl bg-gradient-to-br from-background to-background border border-border p-12">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            PF Scoring V7++
+            PF Scoring
           </h1>
           <p className="text-xl text-secondary-foreground mb-8 max-w-2xl">
             Système de scoring Project Finance professionnel. Évaluez les

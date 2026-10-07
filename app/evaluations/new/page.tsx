@@ -280,13 +280,7 @@ export default function NouvelleEvaluationPage() {
             </p>
           </SectionCard>
 
-          <SectionCard
-            titre="Modèle appliqué"
-            description={
-              version?.label ??
-              (version?.versionNumber ? `Version ${version.versionNumber}` : undefined)
-            }
-          >
+          <SectionCard titre="Modèle appliqué" description="Modèle de notation Project Finance en vigueur">
             {questionnaire.length === 0 ? (
               <p className="text-sm text-muted-foreground">Aucun modèle actif.</p>
             ) : (

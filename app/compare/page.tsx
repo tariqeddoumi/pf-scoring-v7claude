@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Note, StatutProjet } from "@/components/ui/status-badge";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 const MAXIMUM = 4;
 
@@ -59,6 +60,7 @@ interface Ligne {
  * un tableau à une colonne.
  */
 export default function ComparaisonPage() {
+  const voirScores = useVoirScores();
   const [projets, setProjets] = useState<Projet[]>([]);
   const [choisis, setChoisis] = useState<string[]>([]);
   const [recherche, setRecherche] = useState("");
@@ -172,7 +174,7 @@ export default function ComparaisonPage() {
     return Math.round((f - d) / (30.44 * 86_400_000));
   };
 
-  const LIGNES: Ligne[] = [
+  const TOUTES_LIGNES: Ligne[] = [
     {
       section: "Dossier",
       libelle: "Client",
@@ -298,6 +300,8 @@ export default function ComparaisonPage() {
     },
   ];
 
+  // La section « Notation » est réservée aux rôles qui voient les scores.
+  const LIGNES = voirScores ? TOUTES_LIGNES : TOUTES_LIGNES.filter((l) => l.section !== "Notation");
   const sections = [...new Set(LIGNES.map((l) => l.section))];
 
   /** Le bouton d'export n'était relié à rien : il produit un vrai fichier. */

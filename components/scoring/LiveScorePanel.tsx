@@ -72,6 +72,8 @@ interface LiveScorePanelProps {
   isStale?: boolean;
   isSaving?: boolean;
   lastSaved?: Date | null;
+  /** Rôle qui ne voit pas les scores : statut et manques seulement, sans note. */
+  masquerScores?: boolean;
 }
 
 export function LiveScorePanel({
@@ -80,6 +82,7 @@ export function LiveScorePanel({
   isStale,
   isSaving,
   lastSaved,
+  masquerScores = false,
 }: LiveScorePanelProps) {
   const total = score?.finalScore ?? null;
   const colors = getScoreColors(total);
@@ -90,7 +93,7 @@ export function LiveScorePanel({
         <div className="flex items-center gap-2 mb-1">
           <TrendingUp size={14} className="text-primary" />
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Score du moteur
+            {masquerScores ? "État du dossier" : "Score du moteur"}
           </h2>
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -103,6 +106,7 @@ export function LiveScorePanel({
         </div>
       </div>
 
+      {!masquerScores && (
       <div className="p-4 border-b border-border text-center">
         <div className={`text-5xl font-bold tabular-nums ${colors.text}`}>
           {total !== null ? total.toFixed(1) : "—"}
@@ -142,6 +146,16 @@ export function LiveScorePanel({
           ) : null}
         </div>
       </div>
+      )}
+      {masquerScores && (
+        <div className="p-4 border-b border-border text-xs leading-relaxed text-muted-foreground">
+          {isScoring
+            ? "Contrôle en cours…"
+            : isStale
+              ? "Réponses non enregistrées."
+              : "La note n'est pas affichée pendant la saisie : elle est calculée par le moteur et communiquée aux décideurs."}
+        </div>
+      )}
 
       {(() => {
         const st = statutValidite(score, isStale);
@@ -187,7 +201,7 @@ export function LiveScorePanel({
         </div>
       )}
 
-      {(score?.derogations?.length ?? 0) > 0 && (
+      {!masquerScores && (score?.derogations?.length ?? 0) > 0 && (
         <div className="mx-4 mt-3 text-xs">
           <p className="font-semibold text-foreground">Dérogations appliquées</p>
           {score!.derogations!.map((d) => (
@@ -211,13 +225,14 @@ export function LiveScorePanel({
         </div>
       )}
 
-      {score !== null && score.malusTotal > 0 && (
+      {!masquerScores && score !== null && score.malusTotal > 0 && (
         <div className="mx-4 mt-3 flex justify-between text-xs">
           <span className="text-muted-foreground">Malus appliqués</span>
           <span className="font-bold text-warning">− {score.malusTotal.toFixed(1)}</span>
         </div>
       )}
 
+      {!masquerScores && (
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Par domaine
@@ -248,11 +263,14 @@ export function LiveScorePanel({
           })
         )}
       </div>
+      )}
+      {masquerScores && <div className="flex-1" />}
 
       <div className="p-4 border-t border-border">
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Score calculé par le moteur sur les réponses enregistrées : poids, malus,
-          règles et calibrage sectoriel compris.
+          {masquerScores
+            ? "Répondez d'après les pièces du dossier : la note est établie par le moteur."
+            : "Score calculé par le moteur sur les réponses enregistrées : poids, malus, règles et calibrage sectoriel compris."}
         </p>
       </div>
     </div>

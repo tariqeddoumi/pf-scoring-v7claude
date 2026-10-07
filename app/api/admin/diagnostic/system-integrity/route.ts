@@ -123,8 +123,8 @@ export async function GET(request: NextRequest) {
         // Le conseil précédent — « remplir les tables V8 » — n'aurait rien changé :
         // le moteur ne les lit pas, et l'activation passe par la configuration.
         modele: sectorialApplied
-          ? "V7++ avec ajustement sectoriel"
-          : "V7++ standard, sans ajustement sectoriel",
+          ? "Modèle avec ajustement sectoriel"
+          : "Modèle standard, sans ajustement sectoriel",
         calibrage_sectoriel_actif: sectorialEnabled,
         recommandation: sectorialApplied
           ? "Les facteurs sectoriels sont appliqués au calcul."

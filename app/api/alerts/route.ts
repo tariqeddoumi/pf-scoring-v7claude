@@ -12,9 +12,10 @@ import prisma from "@/lib/prisma-client";
 import { withAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError } from "@/lib/api-response";
 import { deriverAlertes } from "@/lib/services/alert-derivation";
+import { peutVoirScores } from "@/lib/score-visibility";
 
 export async function GET(req: NextRequest) {
-  return withAuth(req, async () => {
+  return withAuth(req, async (_r, user) => {
     try {
       const evaluations = await prisma.scoringEvaluation.findMany({
         where: { isArchived: false },
@@ -45,7 +46,9 @@ export async function GET(req: NextRequest) {
         }))
       );
 
-      return successResponse(alertes, { count: alertes.length });
+      // Une alerte « score faible » révèle le score : réservée aux rôles qui le voient.
+      const visibles = peutVoirScores(user.role) ? alertes : alertes.filter((a) => a.type !== "score_faible");
+      return successResponse(visibles, { count: visibles.length });
     } catch (error) {
       console.error("[ALERTS] GET error:", error);
       return serverError("Erreur lors de la récupération des alertes");

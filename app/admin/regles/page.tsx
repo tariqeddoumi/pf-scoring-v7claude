@@ -254,7 +254,7 @@ export default function ReglesPage() {
             icone={<Ban size={28} />}
             titre="Aucune règle n'est définie"
             description="Aucun seuil rédhibitoire n'est donc opposable : un dossier ne peut être bloqué que par la décision d'un analyste. Les seuils se créent sur le critère concerné, depuis l'éditeur de grille."
-            action={{ href: "/admin/scoring-grid-v7pp", libelle: "Ouvrir l'éditeur de grille" }}
+            action={{ href: "/admin/grille-scoring", libelle: "Ouvrir l'éditeur de grille" }}
           />
         </SectionCard>
       ) : (
@@ -311,7 +311,7 @@ export default function ReglesPage() {
                         <td className="px-4 py-2.5 text-[12.5px]">
                           {r.node ? (
                             <Link
-                              href={`/admin/scoring-grid-v7pp?nodeId=${r.node.id}&tab=rules`}
+                              href={`/admin/grille-scoring?nodeId=${r.node.id}&tab=rules`}
                               className="text-primary hover:underline"
                             >
                               {r.node.code} — {r.node.label}

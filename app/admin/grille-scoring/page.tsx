@@ -172,7 +172,7 @@ export default function ScoringGridRefactoredPage() {
         <Link href="/admin" className="hover:text-primary transition-colors">
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Paramétrage Grille de Scoring V7++</h1>
+        <h1 className="text-2xl font-bold text-foreground">Paramétrage de la grille de scoring</h1>
       </div>
 
       {/* Error bar */}

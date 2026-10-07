@@ -23,6 +23,7 @@ import { apiPost, apiPatch, messageErreurApi } from "@/lib/api-client";
 import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
 import { AggregationEngine } from "@/lib/services/scoring/score-calculator";
 import { AnalyseDocumentsIA } from "./AnalyseDocumentsIA";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 import { commentaireSource, type Proposition } from "@/lib/services/ia-documents/resultat";
 
 interface EvaluationWorkspaceProps {
@@ -128,6 +129,9 @@ function NodeInput({
    */
   const contribution = (valeur: number) =>
     AggregationEngine.rescaleTo100(valeur, node.scoreMin, node.scoreMax);
+  // Les points de chaque réponse ne s'affichent qu'aux rôles qui voient les scores :
+  // sinon l'analyste choisirait la réponse qui rapporte le plus.
+  const voirScores = useVoirScores();
 
   return (
     <div className="space-y-2">
@@ -165,13 +169,15 @@ function NodeInput({
                       <span className="text-[13.5px] font-semibold text-foreground">
                         {opt.label}
                       </span>
-                      <span
-                        className={`shrink-0 text-[12.5px] font-semibold tabulaire ${
-                          choisie ? "text-primary" : "text-muted-foreground"
-                        }`}
-                      >
-                        {contribution(opt.score).toFixed(0)} / 100
-                      </span>
+                      {voirScores && (
+                        <span
+                          className={`shrink-0 text-[12.5px] font-semibold tabulaire ${
+                            choisie ? "text-primary" : "text-muted-foreground"
+                          }`}
+                        >
+                          {contribution(opt.score).toFixed(0)} / 100
+                        </span>
+                      )}
                     </span>
                     {opt.quandChoisir && (
                       <span className="mt-0.5 block text-[12px] leading-snug text-muted-foreground">
@@ -225,8 +231,8 @@ function NodeInput({
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {r.label || `${r.minValue}–${r.maxValue}`} →{" "}
-                  {contribution(r.score).toFixed(0)} / 100
+                  {r.label || `${r.minValue}–${r.maxValue}`}
+                  {voirScores && <> → {contribution(r.score).toFixed(0)} / 100</>}
                 </span>
               );
             })}
@@ -435,6 +441,7 @@ export function EvaluationWorkspace({
   const [isScoring, setIsScoring] = useState(false);
   const [isStale, setIsStale] = useState(false);
   const [panneauIA, setPanneauIA] = useState(false);
+  const voirScoresPanneau = useVoirScores();
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentDomain = questionnaire.find((d) => d.id === currentDomainId) ?? questionnaire[0];
@@ -572,9 +579,13 @@ export function EvaluationWorkspace({
       setSuccessMsg(
         data.blocked
           ? `Calcul effectué — BLOCAGE : ${data.blockingRuleCodes.join(", ")}`
-          : data.incomplet
-            ? `Score provisoire : ${data.finalScore.toFixed(1)} pts — compléments obligatoires attendus avant soumission`
-            : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
+          : typeof data.finalScore !== "number"
+            ? data.incomplet
+              ? "Calcul effectué — compléments obligatoires attendus avant soumission"
+              : "Calcul effectué."
+            : data.incomplet
+              ? `Score provisoire : ${data.finalScore.toFixed(1)} pts — compléments obligatoires attendus avant soumission`
+              : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
       );
     } catch (e: any) {
       setError(e.message);
@@ -856,6 +867,7 @@ export function EvaluationWorkspace({
         {/* Right: Live score panel */}
         <LiveScorePanel
           score={serverScore}
+          masquerScores={!voirScoresPanneau}
           isScoring={isScoring}
           isStale={isStale}
           isSaving={isSaving}

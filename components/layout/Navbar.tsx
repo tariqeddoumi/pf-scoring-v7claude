@@ -43,7 +43,7 @@ const SEGMENTS: Record<string, string> = {
   diagnostic: "Diagnostic",
   granularity: "Granularité",
   builder: "Constructeur",
-  "scoring-grid-v7pp": "Grille de scoring",
+  "grille-scoring": "Grille de scoring",
   "country-risk": "Risque pays",
   "dynamic-forms": "Formulaires dynamiques",
   "field-management": "Champs de formulaire",

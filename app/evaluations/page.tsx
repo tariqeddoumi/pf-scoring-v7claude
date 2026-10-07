@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Note, StatutEvaluation } from "@/components/ui/status-badge";
 import { DeleteConfirmation } from "@/components/modals/DeleteConfirmation";
 import { usePermission } from "@/lib/hooks/usePermission";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 interface Evaluation {
   id: string;
@@ -85,6 +86,7 @@ function joursDepuis(date: string | null | undefined): number | null {
  * notation omettait CC et C — les dossiers ainsi notés étaient introuvables.
  */
 export default function EvaluationsPage() {
+  const voirScores = useVoirScores();
   const router = useRouter();
   const { can } = usePermission();
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -256,6 +258,7 @@ export default function EvaluationsPage() {
 
         {/* L'échelle complète, CC et C compris : le filtre s'arrêtait à CCC puis sautait
             à D, si bien qu'aucun dossier noté CC ou C ne pouvait être retrouvé. */}
+        {voirScores && (
         <select
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -269,6 +272,7 @@ export default function EvaluationsPage() {
             </option>
           ))}
         </select>
+        )}
 
         {note && (
           <button
@@ -310,7 +314,7 @@ export default function EvaluationsPage() {
                     { t: "Dossier", a: "left" },
                     { t: "Montant", a: "right" },
                     {
-                      t: onglet === "aReprendre" ? "Avancement" : "Note",
+                      t: onglet === "aReprendre" ? "Avancement" : voirScores ? "Note" : "",
                       a: "left",
                     },
                     { t: "Statut", a: "left" },

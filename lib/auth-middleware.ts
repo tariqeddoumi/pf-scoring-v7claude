@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { secretJwt } from "./jwt-secret";
 import { roleDuCompteActif } from "./compte-actif";
+import { masquerScores, peutVoirScores } from "./score-visibility";
 import {
   hasPermission,
   hasMinimumRole,
@@ -78,7 +79,28 @@ export async function withAuth(
       { status: 401 }
     );
   }
-  return handler(request, user);
+  const reponse = await handler(request, user);
+  return filtrerScores(reponse, user.role);
+}
+
+/**
+ * Retire les scores des réponses JSON pour les rôles qui ne doivent pas les voir
+ * (lib/score-visibility.ts). Point de passage unique de toutes les routes protégées :
+ * une route ajoutée plus tard est couverte sans y penser.
+ */
+async function filtrerScores(reponse: NextResponse, role: string): Promise<NextResponse> {
+  if (peutVoirScores(role)) return reponse;
+  const type = reponse.headers.get("content-type") ?? "";
+  if (!type.includes("application/json")) return reponse;
+  let corps: unknown;
+  try {
+    corps = await reponse.clone().json();
+  } catch {
+    return reponse;
+  }
+  const entetes = new Headers(reponse.headers);
+  entetes.delete("content-length");
+  return NextResponse.json(masquerScores(corps), { status: reponse.status, headers: entetes });
 }
 
 /**

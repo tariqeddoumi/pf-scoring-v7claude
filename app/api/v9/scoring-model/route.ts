@@ -14,7 +14,7 @@ async function handleGET(request: NextRequest) {
 
     if (!model) {
       return NextResponse.json(
-        { error: 'No active V9 model found' },
+        { error: 'Aucun modèle actif' },
         { status: 404 }
       );
     }

@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Note } from "@/components/ui/status-badge";
+import { useVoirScores } from "@/components/providers/visibilite-scores";
 
 /** Plancher de couverture du service de la dette, condition rédhibitoire du modèle. */
 const DSCR_PLANCHER = 1.1;
@@ -55,6 +56,7 @@ function avancement(p: Projet): number | null {
  * construction.
  */
 export default function MonitoringPage() {
+  const voirScores = useVoirScores();
   const [projets, setProjets] = useState<Projet[]>([]);
   const [details, setDetails] = useState<Record<string, Projet>>({});
   const [chargement, setChargement] = useState(true);
@@ -170,7 +172,7 @@ export default function MonitoringPage() {
                     {[
                       { t: "Dossier", a: "left" },
                       { t: "Encours", a: "right" },
-                      { t: "Note à l'octroi", a: "left" },
+                      ...(voirScores ? [{ t: "Note à l'octroi", a: "left" }] : []),
                       { t: "DSCR", a: "right" },
                       { t: "Levier", a: "right" },
                       { t: "Construction", a: "left" },
@@ -216,9 +218,11 @@ export default function MonitoringPage() {
                         >
                           {formatMADCompact(p.montant)}
                         </td>
-                        <td className="px-4 py-3">
-                          <Note note={p.grade} score={p.scoreGlobal} />
-                        </td>
+                        {voirScores && (
+                          <td className="px-4 py-3">
+                            <Note note={p.grade} score={p.scoreGlobal} />
+                          </td>
+                        )}
                         {/* Le seuil est celui du modèle, sur la bonne échelle : les
                             couleurs se calaient auparavant sur un score sur 10. */}
                         <td
