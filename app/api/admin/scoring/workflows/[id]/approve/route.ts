@@ -57,7 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           decisions: {
             orderBy: { decidedAt: 'desc' },
             take: 1,
-            select: { decidedBy: true, requiresHigherApproval: true, decidedByUser: { select: { role: true } } },
+            select: { decidedBy: true, decidedAt: true, requiresHigherApproval: true, decidedByUser: { select: { role: true } } },
           },
         },
       });
@@ -75,7 +75,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return refus(['Le circuit est clos : la décision a déjà été rendue.']);
       }
 
-      const derniere = workflow.decisions[0];
+      // Seules comptent les décisions rendues depuis la dernière soumission : un avis
+      // antérieur à une remise en saisie ne porte pas sur les données actuelles.
+      const derniere =
+        workflow.decisions[0] && (!workflow.submittedAt || workflow.decisions[0].decidedAt >= workflow.submittedAt)
+          ? workflow.decisions[0]
+          : undefined;
       const delegation = motifRefusDelegation(
         derniere
           ? { decidedBy: derniere.decidedBy, requiresHigherApproval: derniere.requiresHigherApproval, role: derniere.decidedByUser?.role }

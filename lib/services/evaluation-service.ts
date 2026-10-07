@@ -9,6 +9,7 @@ import {
 import type { z } from "zod";
 import { ScoringEngineV8 } from "@/lib/services/scoring/scoring-engine-v8";
 import { motifsRefusDecisionFavorable, motifsRefusSoumission } from "@/lib/services/scoring/decision-guard";
+import { ouvrirCircuit } from "@/lib/services/scoring/circuit";
 
 /**
  * Service des évaluations — unifié sur le modèle ScoringEvaluation.
@@ -256,15 +257,18 @@ export class EvaluationService {
     const motifs = motifsRefusSoumission(trace.traceJson);
     if (motifs.length > 0) throw new Error(`Soumission refusée : ${motifs.join(" ")}`);
 
-    const evaluation = await prisma.scoringEvaluation.update({
-      where: { id },
-      data: {
-        status: "soumis",
-        submittedAt: new Date(),
-        ...(validated.notes !== undefined ? { notes: validated.notes } : {}),
-      },
-      include: EVALUATION_INCLUDE,
-    });
+    const [evaluation] = await prisma.$transaction([
+      prisma.scoringEvaluation.update({
+        where: { id },
+        data: {
+          status: "soumis",
+          submittedAt: new Date(),
+          ...(validated.notes !== undefined ? { notes: validated.notes } : {}),
+        },
+        include: EVALUATION_INCLUDE,
+      }),
+      ouvrirCircuit(id, submittedBy),
+    ]);
     await prisma.scoringChangeLog.create({
       data: {
         entityType: "ScoringEvaluation",

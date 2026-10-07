@@ -4,6 +4,7 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import { motifsRefusSoumission } from "@/lib/services/scoring/decision-guard";
+import { ouvrirCircuit } from "@/lib/services/scoring/circuit";
 
 /**
  * Contrôle d'autorisation du parcours de saisie.
@@ -94,14 +95,17 @@ async function handlePOST(
     }
 
     // Update status & record submission
-    const updated = await prisma.scoringEvaluation.update({
-      where: { id: evaluationId },
-      data: {
-        status: "soumis",
-        submittedAt: new Date(),
-        notes: notes || evaluation.notes,
-      },
-    });
+    const [updated] = await prisma.$transaction([
+      prisma.scoringEvaluation.update({
+        where: { id: evaluationId },
+        data: {
+          status: "soumis",
+          submittedAt: new Date(),
+          notes: notes || evaluation.notes,
+        },
+      }),
+      ouvrirCircuit(evaluationId, user.userId),
+    ]);
 
     // Le journal porte l'identité de l'auteur de la transition : une trace
     // anonyme ne permet aucune reconstitution en revue.

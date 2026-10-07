@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma-client";
 import { ScoringEngineV8 } from "./scoring";
 import { motifsRefusDecisionFavorable, motifsRefusSoumission } from "./scoring/decision-guard";
+import { ouvrirCircuit } from "./scoring/circuit";
 
 export class ScoringEvaluationService {
   /**
@@ -169,13 +170,16 @@ export class ScoringEvaluationService {
       throw new Error(`Only complete evaluations can be submitted — ${motifs.join(" ")}`);
     }
 
-    const updated = await prisma.scoringEvaluation.update({
-      where: { id: evaluationId },
-      data: {
-        status: "soumis",
-        submittedAt: new Date(),
-      },
-    });
+    const [updated] = await prisma.$transaction([
+      prisma.scoringEvaluation.update({
+        where: { id: evaluationId },
+        data: {
+          status: "soumis",
+          submittedAt: new Date(),
+        },
+      }),
+      ouvrirCircuit(evaluationId, submittedBy),
+    ]);
 
     return updated;
   }
