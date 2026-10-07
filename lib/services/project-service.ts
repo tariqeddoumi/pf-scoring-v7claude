@@ -178,7 +178,7 @@ export class ProjectService {
    */
   static async updateProjectStatus(
     id: string,
-    status: "brouillon" | "en_cours" | "en_revue" | "approuve" | "rejete",
+    status: "brouillon" | "en_cours" | "en_revue",
     updatedBy: string
   ) {
     const project = await prisma.project.update({
