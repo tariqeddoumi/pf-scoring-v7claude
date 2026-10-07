@@ -109,7 +109,8 @@ export class EvaluationService {
         modelVersionId: version.id,
         analystId: createdBy,
         status: "brouillon",
-        finalScore: validated.finalScore ?? null,
+        // le score vient du moteur, jamais de la requête de création
+        finalScore: null,
         malusTotal: 0,
         notes: validated.notes ?? null,
         summaryJson: buildSummaryJson(null, {

@@ -154,6 +154,8 @@ export class ScoringEngineV8 {
     const donneesObligatoiresManquantes: string[] = [];
     const reglesCritiquesNonEvaluees: string[] = [];
     const valeursParDefaut: string[] = [];
+    // Instantané des entrées réellement utilisées : critère, valeur, origine.
+    const entrees: Array<{ code: string; valeur: unknown; origine: OrigineValeur }> = [];
 
     // FIX 1: Load options and ranges for ALL nodes upfront
     const nodeIds = Array.from(tree.nodesById.keys());
@@ -281,6 +283,7 @@ export class ScoringEngineV8 {
       }
 
       if (treatAsLeaf) {
+        entrees.push({ code: node.code, valeur: choix.valeur ?? null, origine });
         // Une donnée obligatoire absente n'est ni un zéro « normal » ni une non-
         // applicabilité : la note devient provisoire et la décision est bloquée.
         if (node.isMandatory && (origine === "AUCUNE" || origine === "DEFAUT")) {
@@ -481,6 +484,33 @@ export class ScoringEngineV8 {
       };
     }
 
+    // Paquet de reproductibilité : paramètres globaux lus pour CE calcul (ils ne sont
+    // pas versionnés avec le modèle) et entrées utilisées, avec leurs empreintes. Deux
+    // calculs aux empreintes identiques doivent donner le même résultat ; une
+    // empreinte différente explique un écart (paramètre modifié, donnée source changée).
+    let bareme: unknown = null;
+    try {
+      bareme = (await getRatingScales()).map((b) => ({ label: b.label, min: b.minScore, max: b.maxScore }));
+    } catch {
+      bareme = "illisible";
+    }
+    const parametres = {
+      modelVersionId: evaluation.modelVersionId,
+      granularite: domainGranularity,
+      sectorielActif: sectorialOn,
+      secteurProjet: evaluation.project?.secteur ?? null,
+      bareme,
+    };
+    const { createHash } = await import("crypto");
+    const empreinte = (v: unknown) => createHash("sha256").update(JSON.stringify(v)).digest("hex");
+    const reproductibilite = {
+      calculeLe: new Date().toISOString(),
+      parametres,
+      empreinteParametres: empreinte(parametres),
+      entrees,
+      empreinteEntrees: empreinte(entrees),
+    };
+
     const blocked = blockingRuleCodes.length > 0;
     const incomplet = donneesObligatoiresManquantes.length > 0 || reglesCritiquesNonEvaluees.length > 0;
     const traceJson = JSON.stringify(
@@ -493,6 +523,7 @@ export class ScoringEngineV8 {
         reglesCritiquesNonEvaluees,
         valeursParDefaut,
         derogations,
+        reproductibilite,
         // conservé dans la trace : les contrôles de décision le relisent
         publicationBlocked,
         ruleDiagnostics,

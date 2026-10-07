@@ -19,6 +19,9 @@ export class ScoringEvaluationService {
     if (!version) {
       throw new Error("Scoring model version not found");
     }
+    if (!version.isPublished || version.modelId !== data.modelId) {
+      throw new Error("Only the published version of this model can be used");
+    }
 
     const evaluation = await prisma.scoringEvaluation.create({
       data: {

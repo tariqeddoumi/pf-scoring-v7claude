@@ -72,6 +72,19 @@ async function handlePOST(
       );
     }
 
+    // Une évaluation se fait sur la version PUBLIÉE du modèle : une version en
+    // brouillon ou archivée n'est pas la référence approuvée.
+    if (!version.isPublished || String(version.status) !== "PUBLISHED") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cette version du modèle n'est pas publiée : seule la version publiée sert à évaluer.",
+          errorCode: "INVALID_STATE",
+        },
+        { status: 409 }
+      );
+    }
+
     // L'évaluation porte l'identité de son auteur : une note de crédit anonyme
     // n'est pas auditable, ce qu'exige le dispositif Bank Al-Maghrib.
     const evaluation = await prisma.scoringEvaluation.create({
@@ -97,7 +110,9 @@ async function handlePOST(
       evaluationId: evaluation.id,
       nodeId: n.id,
       answerType: (n.answerType || "TEXT") as any,
-      valueString: n.defaultValue ?? null,
+      // La valeur par défaut du paramétrage n'est pas une réponse de l'analyste : la
+      // recopier ici la faisait passer pour une donnée saisie.
+      valueString: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     }));
