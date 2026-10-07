@@ -86,7 +86,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           ? { decidedBy: derniere.decidedBy, requiresHigherApproval: derniere.requiresHigherApproval, role: derniere.decidedByUser?.role }
           : null,
         user.userId,
-        user.role
+        user.role,
+        decisionType
       );
       if (delegation) return refus([delegation]);
 

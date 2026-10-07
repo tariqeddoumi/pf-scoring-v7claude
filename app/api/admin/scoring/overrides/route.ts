@@ -104,26 +104,55 @@ export async function POST(request: NextRequest) {
         select: { valueString: true, valueNumber: true, valueBoolean: true },
       });
 
-      const override = await prisma.scoringOverride.create({
+      const proposition = {
+        originalValue:
+          reponse?.valueString ?? (reponse?.valueNumber ?? reponse?.valueBoolean)?.toString() ?? null,
+        originalScore: resultat?.rawScore ?? null,
+        overriddenValue: overriddenValue?.toString() ?? null,
+        overriddenScore,
+        reason,
+        justification,
+        riskLevel,
+        overriddenBy: user.userId,
+        overriddenAt: new Date(),
+        approvedBy: null,
+        approvedAt: null,
+        status: 'PENDING',
+      };
+
+      // Une seule dérogation par critère (contrainte d'unicité) : après un rejet ou
+      // une annulation, une nouvelle proposition reprend la même ligne, en gardant
+      // l'historique dans changeLog. Une dérogation en attente ou approuvée bloque.
+      const existante = await prisma.scoringOverride.findUnique({
+        where: { evaluationId_nodeId: { evaluationId, nodeId } },
+      });
+      if (existante && !['REJECTED', 'REVERTED'].includes(existante.status)) {
+        return validationError([
+          { field: 'nodeId', message: 'Une dérogation en attente ou approuvée existe déjà pour ce critère' }
+        ]);
+      }
+
+      const include = {
+        evaluation: { select: { id: true, finalScore: true } },
+        node: { select: { id: true, label: true } },
+        overriddenByUser: { select: { id: true, email: true, nom: true, prenom: true } }
+      };
+      const override = existante
+        ? await prisma.scoringOverride.update({
+            where: { id: existante.id },
+            data: {
+              ...proposition,
+              changeLog: `${existante.changeLog ? existante.changeLog + '\n' : ''}[${new Date().toISOString()}] nouvelle proposition après ${existante.status} (ancienne note ${existante.overriddenScore ?? '—'}) par ${user.userId}`,
+            },
+            include,
+          })
+        : await prisma.scoringOverride.create({
         data: {
           evaluationId,
           nodeId,
-          originalValue:
-            reponse?.valueString ?? (reponse?.valueNumber ?? reponse?.valueBoolean)?.toString() ?? null,
-          originalScore: resultat?.rawScore ?? null,
-          overriddenValue: overriddenValue?.toString(),
-          overriddenScore,
-          reason,
-          justification,
-          riskLevel,
-          overriddenBy: user.userId,
-          status: 'PENDING'
+          ...proposition,
         },
-        include: {
-          evaluation: { select: { id: true, finalScore: true } },
-          node: { select: { id: true, label: true } },
-          overriddenByUser: { select: { id: true, email: true, nom: true, prenom: true } }
-        }
+        include,
       });
 
       return successResponse(override, { status: 201 });

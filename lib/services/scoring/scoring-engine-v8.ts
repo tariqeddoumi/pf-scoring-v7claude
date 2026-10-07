@@ -157,6 +157,13 @@ export class ScoringEngineV8 {
     const valeursParDefaut: string[] = [];
     // Instantané des entrées réellement utilisées : critère, valeur, origine.
     const entrees: Array<{ code: string; valeur: unknown; origine: OrigineValeur }> = [];
+    // Valeur retenue par critère, la même pour le calcul et pour les conditions des
+    // règles : sinon une règle lisait la ligne de réponse brute pendant que le score
+    // utilisait la donnée automatique.
+    const valeursRetenues = new Map<
+      string,
+      { valueString: string | null; valueNumber: number | null; valueBoolean: boolean | null }
+    >();
 
     // FIX 1: Load options and ranges for ALL nodes upfront
     const nodeIds = Array.from(tree.nodesById.keys());
@@ -222,6 +229,14 @@ export class ScoringEngineV8 {
       // Priorité saisie / donnée automatique selon le mode : voir value-selection.ts.
       const choix = choisirValeur(answer, binding);
       const origine: OrigineValeur = choix.origine;
+      if (origine !== "AUCUNE") {
+        const v = choix.valeur;
+        valeursRetenues.set(node.id, {
+          valueString: typeof v === "string" ? v : v instanceof Date ? v.toISOString() : null,
+          valueNumber: typeof v === "number" ? v : null,
+          valueBoolean: typeof v === "boolean" ? v : null,
+        });
+      }
       let valueSnapshot: ResolvedValueSnapshot | undefined;
       if (origine !== "AUCUNE") {
         valueSnapshot = ValueResolver.resolveValue(choix.valeur, binding);
@@ -365,7 +380,7 @@ export class ScoringEngineV8 {
     const criteres = buildCriteresContext({
       nodes: Array.from(tree.nodesById.values()),
       nodeScores,
-      answersByNode,
+      answersByNode: valeursRetenues,
       optionsByNode,
     });
 
@@ -677,7 +692,17 @@ export class ScoringEngineV8 {
     collectResults(trace.rootResults);
 
     const { createHash } = await import("crypto");
-    const empreinte = createHash("sha256").update(trace.traceJson).digest("hex");
+    // Empreinte stable : sans l'horodatage du calcul, deux calculs identiques ont la
+    // même empreinte.
+    let traceSansDate: unknown = trace.traceJson;
+    try {
+      const t = JSON.parse(trace.traceJson);
+      if (t?.reproductibilite) delete t.reproductibilite.calculeLe;
+      traceSansDate = JSON.stringify(t);
+    } catch {
+      // trace non JSON : empreinte sur le texte brut
+    }
+    const empreinte = createHash("sha256").update(String(traceSansDate)).digest("hex");
 
     await prisma.$transaction([
       prisma.scoringEvaluation.update({

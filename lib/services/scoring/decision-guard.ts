@@ -143,24 +143,32 @@ export interface DecisionAnterieure {
 
 const niveau = (role: string | null | undefined) => ROLE_HIERARCHY[role as UserRole] ?? 0;
 
+const NIVEAU_MAX = Math.max(...Object.values(ROLE_HIERARCHY));
+
 /**
  * Délégation : lorsqu'une décision demande une approbation supérieure, seule une
- * personne distincte, de rang strictement supérieur, peut clore le circuit.
+ * personne distincte peut clore le circuit :
+ * - une décision favorable exige un rang strictement supérieur — ou, si l'avis
+ *   précédent vient déjà du rang le plus élevé, une autre personne de ce rang ;
+ * - un refus exige un rang au moins égal (refuser ne lève aucune exigence).
+ * Sans cette nuance, un administrateur système demandant une approbation supérieure
+ * bloquait le dossier à jamais (personne au-dessus de lui).
  * Renvoie le motif de refus, ou null.
  */
 export function motifRefusDelegation(
   derniere: DecisionAnterieure | null | undefined,
   decideurId: string,
-  decideurRole: string
+  decideurRole: string,
+  decision: string = "APPROVE"
 ): string | null {
   if (!derniere || !derniere.requiresHigherApproval) return null;
   if (derniere.decidedBy === decideurId) {
     return "Une approbation supérieure est demandée : elle ne peut pas venir de l'auteur de l'avis précédent.";
   }
-  if (niveau(decideurRole) <= niveau(derniere.role)) {
-    return "Une approbation supérieure est demandée : votre niveau de délégation ne suffit pas.";
-  }
-  return null;
+  const moi = niveau(decideurRole);
+  const avant = niveau(derniere.role);
+  const suffisant = estFavorable(decision) ? moi > avant || (avant === NIVEAU_MAX && moi === NIVEAU_MAX) : moi >= avant;
+  return suffisant ? null : "Une approbation supérieure est demandée : votre niveau de délégation ne suffit pas.";
 }
 
 /**

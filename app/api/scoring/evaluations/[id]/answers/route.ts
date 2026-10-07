@@ -40,6 +40,8 @@ function refusPermission(action: "create" | "update") {
  * jamais se présenter comme un succès complet.
  */
 
+class ErreurEtat extends Error {}
+
 async function handlePATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -153,57 +155,61 @@ async function handlePATCH(
     });
     const normalise = normalizeAnswers(aEcrire, answerTypeByNode);
     const writes = normalise.writes;
-    const ignored = [...normalise.ignored, ...ignoresVerrou];
+    // Les critères verrouillés ne sont pas des échecs de sauvegarde : ils sont listés
+    // à part, pour ne pas bloquer l'écran sur d'anciennes valeurs par défaut.
+    const ignored = normalise.ignored;
 
     // Toute modification des réponses invalide le calcul courant : la soumission
     // exige alors un nouveau calcul sur les données à jour.
-    const invalidation = prisma.scoringEvaluation.update({
-      where: { id: evaluationId },
-      data: {
-        finalScore: null,
-        rating: null,
-        recommendation: null,
-        probabilityOfDefault: null,
-        malusTotal: 0,
-        triggeredRulesJson: null,
-        summaryJson: null,
-      },
-    });
-
-    const resultats = await prisma.$transaction([
-      ...writes.map((w) =>
-        prisma.scoringEvaluationAnswer.upsert({
-          where: { evaluationId_nodeId: { evaluationId, nodeId: w.nodeId } },
-          create: {
-            evaluationId,
-            nodeId: w.nodeId,
-            answerType: w.answerType as ScoringAnswerType,
-            valueString: w.valueString,
-            valueNumber: w.valueNumber,
-            valueBoolean: w.valueBoolean,
-            valueDate: w.valueDate,
-            comment: w.comment,
-            manualScore: w.manualScore,
-            isOverridden: w.isOverridden,
-            overrideReason: w.overrideReason,
+    // Transaction interactive : le statut est revérifié au moment de l'écriture (une
+    // soumission arrivée entre la lecture ci-dessus et l'écriture ne doit pas laisser
+    // modifier les réponses d'un dossier désormais soumis). L'invalidation du calcul
+    // n'aboutit que si le dossier est toujours au brouillon ; sinon tout est annulé.
+    const results = await prisma.$transaction(async (tx) => {
+      if (writes.length > 0) {
+        const verrou = await tx.scoringEvaluation.updateMany({
+          where: { id: evaluationId, status: "brouillon" },
+          data: {
+            finalScore: null,
+            rating: null,
+            recommendation: null,
+            probabilityOfDefault: null,
+            malusTotal: 0,
+            triggeredRulesJson: null,
+            summaryJson: null,
           },
-          update: {
-            answerType: w.answerType as ScoringAnswerType,
-            valueString: w.valueString,
-            valueNumber: w.valueNumber,
-            valueBoolean: w.valueBoolean,
-            valueDate: w.valueDate,
-            ...(w.touched.comment ? { comment: w.comment } : {}),
-            ...(w.touched.manualScore ? { manualScore: w.manualScore } : {}),
-            isOverridden: w.isOverridden,
-            overrideReason: w.overrideReason,
-            updatedAt: new Date(),
-          },
-        })
-      ),
-      ...(writes.length > 0 ? [invalidation] : []),
-    ]);
-    const results = resultats.slice(0, writes.length);
+        });
+        if (verrou.count === 0) throw new ErreurEtat();
+      }
+      const ecrits = [];
+      for (const w of writes) {
+        ecrits.push(
+          await tx.scoringEvaluationAnswer.upsert({
+            where: { evaluationId_nodeId: { evaluationId, nodeId: w.nodeId } },
+            create: {
+              evaluationId,
+              nodeId: w.nodeId,
+              answerType: w.answerType as ScoringAnswerType,
+              valueString: w.valueString,
+              valueNumber: w.valueNumber,
+              valueBoolean: w.valueBoolean,
+              valueDate: w.valueDate,
+              comment: w.comment,
+            },
+            update: {
+              answerType: w.answerType as ScoringAnswerType,
+              valueString: w.valueString,
+              valueNumber: w.valueNumber,
+              valueBoolean: w.valueBoolean,
+              valueDate: w.valueDate,
+              ...(w.touched.comment ? { comment: w.comment } : {}),
+              updatedAt: new Date(),
+            },
+          })
+        );
+      }
+      return ecrits;
+    }, { timeout: 20000 });
 
     return NextResponse.json({
       success: true,
@@ -211,11 +217,18 @@ async function handlePATCH(
         updatedCount: results.length,
         receivedCount: answers.length,
         ignored,
+        verrouilles: ignoresVerrou,
         // le client sait qu'il doit relancer le calcul avant de soumettre
         calculationInvalidated: writes.length > 0,
       },
     });
   } catch (error) {
+    if (error instanceof ErreurEtat) {
+      return NextResponse.json(
+        { success: false, error: "L'évaluation n'est plus en saisie : réponses non enregistrées.", errorCode: "INVALID_STATE" },
+        { status: 409 }
+      );
+    }
     console.error("PATCH /api/scoring/evaluations/[id]/answers error:", error);
     return NextResponse.json(
       {

@@ -64,6 +64,14 @@ describe("decision-guard", () => {
     expect(motifRefusDelegation(derniere, "admin", "scoring_admin")).toBeNull();
     expect(motifRefusDelegation(null, "x", "risk_manager")).toBeNull();
   });
+
+  it("au rang le plus élevé, une autre personne de ce rang peut clore ; un refus suffit à rang égal", () => {
+    const parAdmin = { decidedBy: "sa1", requiresHigherApproval: true, role: "system_admin" };
+    expect(motifRefusDelegation(parAdmin, "sa2", "system_admin", "APPROVE")).toBeNull();
+    const parManager = { decidedBy: "rm1", requiresHigherApproval: true, role: "risk_manager" };
+    expect(motifRefusDelegation(parManager, "rm2", "risk_manager", "REJECT")).toBeNull();
+    expect(motifRefusDelegation(parManager, "rm2", "risk_manager", "APPROVE")).not.toBeNull();
+  });
 });
 
 describe("délégation par montant", () => {
