@@ -166,18 +166,18 @@ export default function ScoringGridRefactoredPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col min-h-screen md:h-screen bg-background">
       {/* Header */}
-      <div className="bg-background border-b border-border px-6 py-4 flex items-center gap-4">
+      <div className="bg-background border-b border-border px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4">
         <Link href="/admin" className="hover:text-primary transition-colors">
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Paramétrage de la grille de scoring</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Paramétrage de la grille de scoring</h1>
       </div>
 
       {/* Error bar */}
       {error && (
-        <div className="bg-destructive/10 border-b border-destructive/30 px-6 py-3 text-destructive text-sm flex items-center gap-2">
+        <div className="bg-destructive/10 border-b border-destructive/30 px-4 sm:px-6 py-3 text-destructive text-sm flex items-center gap-2">
           <AlertCircle size={16} />
           {error}
           <button onClick={() => setError("")} className="ml-auto text-xs underline">
@@ -199,7 +199,7 @@ export default function ScoringGridRefactoredPage() {
       )}
 
       {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 md:overflow-hidden">
         {nodes.length > 0 && activeVersion && (
           <ScoringGridSplit
             nodes={nodes}

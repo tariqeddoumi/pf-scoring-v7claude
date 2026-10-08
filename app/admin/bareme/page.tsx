@@ -337,6 +337,7 @@ export default function BaremePage() {
         description="Seul le seuil bas se saisit : la borne haute est celle du palier au-dessus, moins un centième."
         sansPadding
       >
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
@@ -400,6 +401,7 @@ export default function BaremePage() {
             ))}
           </tbody>
         </table>
+        </div>
 
         <div className="border-t border-border px-4 py-3">
           <button

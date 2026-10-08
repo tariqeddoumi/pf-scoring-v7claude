@@ -45,9 +45,9 @@ export function ScoringGridSplit({
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden">
-      {/* Left pane: Node Tree */}
-      <div className="w-1/4 bg-background border-r border-border overflow-y-auto">
+    <div className="flex flex-1 flex-col md:flex-row md:overflow-hidden">
+      {/* Left pane: Node Tree (au-dessus du détail sur mobile) */}
+      <div className="w-full md:w-1/4 max-h-72 md:max-h-none bg-background border-b md:border-b-0 md:border-r border-border overflow-y-auto">
         <NodeTree
           nodes={nodes}
           selectedNodeId={selectedNodeId}
@@ -69,7 +69,7 @@ export function ScoringGridSplit({
             onDirtyChange={onDirtyChange}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
+          <div className="flex items-center justify-center h-full p-6 text-center text-muted-foreground">
             <p>Sélectionnez un nœud pour afficher les détails</p>
           </div>
         )}

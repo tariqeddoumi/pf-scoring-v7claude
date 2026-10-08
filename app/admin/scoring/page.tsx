@@ -180,17 +180,17 @@ export default function ScoringAdminPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
         <Link href="/admin" className="p-2 hover:bg-card rounded-lg transition-colors">
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-foreground">Modèle de Scoring</h1>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Modèle de Scoring</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Configuration du modèle actif
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/admin/scoring/builder"
             className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"

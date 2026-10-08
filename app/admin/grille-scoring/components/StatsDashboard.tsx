@@ -23,8 +23,8 @@ export function StatsDashboard({ stats }: StatsDashboardProps) {
   ];
 
   return (
-    <div className="bg-background border-t border-border px-6 py-4">
-      <div className="grid grid-cols-8 gap-4">
+    <div className="bg-background border-t border-border px-4 sm:px-6 py-4">
+      <div className="grid grid-cols-4 md:grid-cols-8 gap-x-3 gap-y-4 md:gap-4">
         {statItems.map((item, i) => (
           <div key={i} className="text-center">
             <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
