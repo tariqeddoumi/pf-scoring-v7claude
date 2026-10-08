@@ -222,6 +222,7 @@ export default function GranularitePage() {
       )}
 
       <SectionCard sansPadding className="mb-4">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
@@ -281,6 +282,7 @@ export default function GranularitePage() {
             })}
           </tbody>
         </table>
+        </div>
       </SectionCard>
 
       <p className="text-[12.5px] text-muted-foreground">

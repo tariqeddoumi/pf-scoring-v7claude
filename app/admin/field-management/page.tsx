@@ -191,7 +191,7 @@ export default function FieldManagementPage() {
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Gestion des Champs
             </h1>
             <p className="text-muted-foreground mt-1">
@@ -202,7 +202,7 @@ export default function FieldManagementPage() {
       </div>
 
       {/* Entity Selector */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {ENTITIES.map((entity) => (
           <button
             key={entity.value}

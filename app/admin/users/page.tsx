@@ -80,7 +80,7 @@ const EMPTY_FORM: UserForm = {
 
 function Badge({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${className}`}>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap ${className}`}>
       {children}
     </span>
   );
@@ -168,7 +168,7 @@ function UserModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-background border border-border rounded-2xl shadow-2xl w-full max-w-lg">
+      <div className="relative bg-background border border-border rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
@@ -234,7 +234,7 @@ function UserModal({
 
           <div>
             <label className="block text-sm font-medium text-secondary-foreground mb-2">Rôle</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {(["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const).map((r) => (
                 <button
                   key={r}
@@ -425,34 +425,34 @@ export default function AdminUsersPage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <div className="border-b border-border bg-background/80 sticky top-0 z-20 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <Link href="/admin" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
               <ArrowLeft size={20} />
             </Link>
             <div>
-              <h1 className="text-xl font-bold flex items-center gap-2">
-                <Shield size={20} className="text-primary" />
+              <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <Shield size={20} className="text-primary shrink-0" />
                 Gestion des Utilisateurs
               </h1>
               <p className="text-sm text-muted-foreground">Gérez les comptes, rôles et accès</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ml-auto">
             <button onClick={fetchUsers} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg" title="Rafraîchir">
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             </button>
             <button onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary text-white rounded-lg text-sm font-medium transition-colors">
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary text-white rounded-lg text-sm font-medium whitespace-nowrap transition-colors">
               <Plus size={16} /> Nouvel utilisateur
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: "Total", value: stats.total, color: "text-foreground", icon: "👥" },
             { label: "Actifs", value: stats.active, color: "text-success", icon: "✅" },
@@ -499,10 +499,10 @@ export default function AdminUsersPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-1 bg-card rounded-lg border border-input p-1">
+          <div className="flex items-center gap-1 bg-card rounded-lg border border-input p-1 max-w-full overflow-x-auto">
             {["ALL", "system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"].map((r) => (
               <button key={r} onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-primary text-white" : "text-muted-foreground hover:text-white"}`}>
+                className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-primary text-white" : "text-muted-foreground hover:text-white"}`}>
                 {r === "ALL" ? "Tous" : ROLE_LABELS[r]}
               </button>
             ))}
@@ -538,7 +538,7 @@ export default function AdminUsersPage() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-2 bg-card/50">
+              <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-2 bg-card/50">
                 <span />
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Utilisateur</span>
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Rôle</span>
@@ -549,12 +549,12 @@ export default function AdminUsersPage() {
 
               {filtered.map((user) => (
                 <div key={user.id}
-                  className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-3 hover:bg-card/30 transition-colors">
+                  className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-x-3 gap-y-2 md:gap-4 px-4 py-3 hover:bg-card/30 transition-colors">
                   <Avatar nom={user.nom} prenom={user.prenom} role={user.role} />
 
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{user.prenom} {user.nom}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-medium text-foreground truncate">{user.prenom} {user.nom}</span>
                       {!user.isActive && (
                         <span className="text-xs bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded">Inactif</span>
                       )}
@@ -562,6 +562,8 @@ export default function AdminUsersPage() {
                     <span className="text-sm text-muted-foreground truncate block">{user.email}</span>
                   </div>
 
+                  {/* Mobile : rôle, statut et connexion passent sous le nom ; écran large : une colonne chacun. */}
+                  <div className="order-2 col-span-3 flex flex-wrap items-center gap-x-3 gap-y-1 pl-12 md:contents">
                   <Badge className={ROLE_COLORS[user.role]}>
                     {ROLE_ICONS[user.role]} {ROLE_LABELS[user.role]}
                   </Badge>
@@ -587,8 +589,9 @@ export default function AdminUsersPage() {
                       formatRelative(user.lastLoginAt)
                     )}
                   </span>
+                  </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="order-1 md:order-none flex items-center gap-1">
                     <button onClick={() => openEdit(user)} title="Modifier"
                       className="p-1.5 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors">
                       <Edit2 size={14} />
@@ -609,7 +612,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-6 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
           {Object.entries(ROLE_LABELS).map(([role, label]) => (
             <span key={role} className="flex items-center gap-1.5">
               <span>{ROLE_ICONS[role]}</span>

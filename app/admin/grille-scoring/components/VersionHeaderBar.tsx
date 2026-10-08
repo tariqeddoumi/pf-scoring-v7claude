@@ -93,8 +93,8 @@ export function VersionHeaderBar({
   };
 
   return (
-    <div className="bg-background border-b border-border px-6 py-3 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-4 flex-1">
+    <div className="bg-background border-b border-border px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4 flex-1">
         <div>
           <p className="text-xs text-muted-foreground">Modèle</p>
           <p className="text-sm font-semibold text-foreground">{model.code}</p>
@@ -107,7 +107,7 @@ export function VersionHeaderBar({
           <div className="relative group">
             <button
               disabled={isLoading}
-              className="flex items-center gap-2 px-3 py-2 bg-card hover:bg-accent disabled:bg-card disabled:opacity-50 rounded border border-input text-sm text-foreground transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-card hover:bg-accent disabled:bg-card disabled:opacity-50 rounded border border-input text-sm text-foreground whitespace-nowrap transition-colors"
             >
               {activeVersion?.label || "Sélectionner"}
               <ChevronDown size={16} />
@@ -145,7 +145,7 @@ export function VersionHeaderBar({
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={handleCreateVersion}
           disabled={isLoading}

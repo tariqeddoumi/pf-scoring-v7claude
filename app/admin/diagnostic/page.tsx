@@ -125,16 +125,16 @@ export default function DiagnosticPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-8 flex flex-wrap items-center gap-3 sm:gap-4">
           <Link href="/admin">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Diagnostic Système</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold">Diagnostic Système</h1>
             <p className="text-muted-foreground">
               Tests de santé et configuration de l&apos;application
             </p>
