@@ -36,7 +36,8 @@ function LoginPageContent() {
         if (data.token) {
           localStorage.setItem("auth_token", data.token);
         }
-        router.push("/dashboard");
+        // Mot de passe provisoire : il doit être remplacé avant tout autre écran.
+        router.push(data.mustChangePassword ? "/changer-mot-de-passe" : "/dashboard");
       } else {
         // Afficher le code d'erreur s'il existe pour plus de détails
         const errorMessage = data.errorCode

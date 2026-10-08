@@ -108,6 +108,8 @@ export async function POST(request: Request) {
           prenom: user.prenom,
           role: user.role,
         },
+        // Mot de passe provisoire : l'écran de connexion envoie vers son remplacement.
+        mustChangePassword: Boolean(user.mustChangePassword),
       },
       { status: 200 }
     );

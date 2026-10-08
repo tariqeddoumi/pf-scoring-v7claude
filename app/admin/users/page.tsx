@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, Trash2, Edit2, Shield, Search, X, RefreshCw,
-  UserCheck, Save, AlertCircle,
+  UserCheck, Save, AlertCircle, KeyRound, Copy,
 } from "lucide-react";
-import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut, apiDelete, messageErreurApi } from "@/lib/api-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +19,8 @@ interface User {
   prenom: string;
   role: UserRole;
   isActive: boolean;
+  /** Mot de passe provisoire pas encore remplacé par l'utilisateur. */
+  mustChangePassword?: boolean;
   lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -306,6 +308,31 @@ export default function AdminUsersPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Mot de passe provisoire : affiché une seule fois (création ou réinitialisation).
+  const [motDePasse, setMotDePasse] = useState<{ email: string; valeur: string } | null>(null);
+  const [copie, setCopie] = useState(false);
+  const [reinitConfirm, setReinitConfirm] = useState<User | null>(null);
+  const [reinitEnCours, setReinitEnCours] = useState(false);
+
+  const reinitialiser = async () => {
+    if (!reinitConfirm) return;
+    setReinitEnCours(true);
+    try {
+      const res = await apiPost(`/api/admin/users/${reinitConfirm.id}/reinitialiser-mot-de-passe`);
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Réinitialisation impossible."));
+      const { data } = await res.json();
+      setMotDePasse({ email: data.email, valeur: data.motDePasseProvisoire });
+      setCopie(false);
+      setReinitConfirm(null);
+      await fetchUsers();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Réinitialisation impossible.");
+      setReinitConfirm(null);
+    } finally {
+      setReinitEnCours(false);
+    }
+  };
+
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [activeFilter, setActiveFilter] = useState<string>("active");
@@ -338,6 +365,11 @@ export default function AdminUsersPage() {
     if (!res.ok) {
       const d = await res.json();
       throw new Error(d.error || "Erreur lors de la création");
+    }
+    const { data } = await res.json();
+    if (data?.motDePasseProvisoire) {
+      setMotDePasse({ email: data.email, valeur: data.motDePasseProvisoire });
+      setCopie(false);
     }
     await fetchUsers();
     showSuccessMsg("Utilisateur créé avec succès");
@@ -547,13 +579,23 @@ export default function AdminUsersPage() {
                   </div>
 
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatRelative(user.lastLoginAt)}
+                    {user.mustChangePassword ? (
+                      <span className="text-warning" title="Mot de passe provisoire à remplacer à la première connexion">
+                        Mot de passe provisoire
+                      </span>
+                    ) : (
+                      formatRelative(user.lastLoginAt)
+                    )}
                   </span>
 
                   <div className="flex items-center gap-1">
                     <button onClick={() => openEdit(user)} title="Modifier"
                       className="p-1.5 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors">
                       <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => setReinitConfirm(user)} title="Réinitialiser le mot de passe"
+                      className="p-1.5 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors">
+                      <KeyRound size={14} />
                     </button>
                     <button onClick={() => setDeleteConfirm(user)} title="Supprimer"
                       className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-accent rounded-lg transition-colors">
@@ -618,6 +660,62 @@ export default function AdminUsersPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {reinitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
+            <h3 className="mb-1 text-lg font-semibold text-foreground">Réinitialiser le mot de passe</h3>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Un mot de passe provisoire sera attribué à{" "}
+              <span className="font-semibold text-foreground">{reinitConfirm.email}</span>. L&apos;ancien ne fonctionnera
+              plus, et l&apos;utilisateur devra choisir le sien à sa prochaine connexion.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setReinitConfirm(null)} className="flex-1 rounded-lg border border-input px-4 py-2 text-sm text-secondary-foreground hover:text-foreground">
+                Annuler
+              </button>
+              <button onClick={reinitialiser} disabled={reinitEnCours} className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
+                {reinitEnCours ? <RefreshCw size={14} className="animate-spin" /> : <KeyRound size={14} />}
+                Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {motDePasse && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-xl border border-border bg-card p-6">
+            <h3 className="mb-1 flex items-center gap-2 text-lg font-semibold text-foreground">
+              <KeyRound size={18} className="text-primary" /> Mot de passe provisoire
+            </h3>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Pour <span className="font-semibold text-foreground">{motDePasse.email}</span>. Il n&apos;est affiché
+              qu&apos;<strong>une seule fois</strong> : transmettez-le à l&apos;utilisateur par un canal sûr. Il devra le
+              remplacer à sa première connexion.
+            </p>
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2">
+              <code className="flex-1 select-all font-mono text-base tracking-wider text-foreground">{motDePasse.valeur}</code>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(motDePasse.valeur);
+                    setCopie(true);
+                  } catch {
+                    setCopie(false);
+                  }
+                }}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground hover:bg-accent"
+              >
+                <Copy size={12} /> {copie ? "Copié" : "Copier"}
+              </button>
+            </div>
+            <button onClick={() => setMotDePasse(null)} className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+              J&apos;ai transmis le mot de passe
+            </button>
           </div>
         </div>
       )}

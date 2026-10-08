@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, LogOut, Settings, Users, BarChart3 } from "lucide-react";
+import { ChevronDown, LogOut, Settings, Users, BarChart3, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { hasMinimumRole } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/ui-constants";
@@ -164,6 +164,16 @@ export function UserProfile() {
               ))}
             </div>
           )}
+
+          <Link
+            href="/changer-mot-de-passe"
+            role="menuitem"
+            onClick={() => setOuvert(false)}
+            className="flex items-center gap-2.5 border-b border-border px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-accent"
+          >
+            <KeyRound size={15} className="text-muted-foreground" />
+            Changer mon mot de passe
+          </Link>
 
           <button
             role="menuitem"

@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import { hashPassword } from "@/lib/auth";
+import { genererMotDePasseProvisoire } from "@/lib/mot-de-passe";
 
 const VALID_ROLES = ["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const;
 const USER_SELECT = {
@@ -11,6 +13,7 @@ const USER_SELECT = {
   prenom: true,
   role: true,
   isActive: true,
+  mustChangePassword: true,
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
@@ -50,7 +53,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return withAdminAuth(request, async () => {
+  return withAdminAuth(request, async (_req, admin) => {
     try {
       const { email, nom, prenom, role } = await request.json();
 
@@ -70,6 +73,10 @@ export async function POST(request: NextRequest) {
       }
       if (errors.length > 0) return validationError(errors);
 
+      // Le compte était créé sans mot de passe : impossible de s'y connecter. Un mot de
+      // passe provisoire est généré, renvoyé UNE fois à l'administrateur, et devra être
+      // remplacé à la première connexion. Seule son empreinte est conservée.
+      const motDePasseProvisoire = genererMotDePasseProvisoire();
       const user = await prisma.user.create({
         data: {
           email,
@@ -77,11 +84,16 @@ export async function POST(request: NextRequest) {
           prenom: prenom || "",
           role: role || "read_only",
           isActive: true,
+          password: await hashPassword(motDePasseProvisoire),
+          mustChangePassword: true,
         },
         select: USER_SELECT,
       });
+      await prisma.userAuditLog
+        .create({ data: { userId: user.id, performedById: admin.userId, action: "CREATE_USER", newValue: user.role } })
+        .catch(() => undefined);
 
-      return successResponse(user, { status: 201 });
+      return successResponse({ ...user, motDePasseProvisoire }, { status: 201 });
     } catch (error: any) {
       console.error("[ADMIN/USERS] POST error:", error);
       return serverError("Erreur lors de la création de l'utilisateur");

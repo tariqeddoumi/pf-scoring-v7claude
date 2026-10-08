@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { secretJwt } from "./jwt-secret";
-import { roleDuCompteActif } from "./compte-actif";
+import { etatDuCompte } from "./compte-actif";
 import { masquerScores, peutVoirScores } from "./score-visibility";
 import {
   hasPermission,
@@ -33,6 +33,8 @@ export interface AuthPayload {
   userId: string;
   email: string;
   role: string;
+  /** Mot de passe provisoire non encore remplacé (lu en base à chaque appel). */
+  mustChangePassword?: boolean;
   iat?: number; // Issued At (timestamp de création du token)
   exp?: number; // Expiration (timestamp d'expiration)
 }
@@ -55,9 +57,9 @@ export async function authenticateRequest(
     const { payload } = await jwtVerify(token, secretJwt());
     const jeton = payload as unknown as AuthPayload;
     if (!jeton?.userId) return null;
-    const role = await roleDuCompteActif(jeton.userId);
-    if (!role) return null;
-    return { ...jeton, role };
+    const etat = await etatDuCompte(jeton.userId);
+    if (!etat.role) return null;
+    return { ...jeton, role: etat.role, mustChangePassword: etat.mustChangePassword };
   } catch {
     // Token invalide, expiré, ou signature incorrecte
     return null;
@@ -68,6 +70,9 @@ export async function authenticateRequest(
  * Wrapper de base : vérifie l'authentification avant d'appeler le handler.
  * Retourne 401 si l'utilisateur n'est pas connecté.
  */
+/** Routes accessibles avec un mot de passe provisoire. */
+const ROUTES_SANS_CHANGEMENT = ["/api/auth/changer-mot-de-passe", "/api/auth/me", "/api/auth/logout"];
+
 export async function withAuth(
   request: NextRequest,
   handler: (request: NextRequest, user: AuthPayload) => Promise<NextResponse>
@@ -77,6 +82,17 @@ export async function withAuth(
     return NextResponse.json(
       { success: false, error: "Non authentifié", errorCode: "ERR_AUTH_401" },
       { status: 401 }
+    );
+  }
+  // Mot de passe provisoire : seul son remplacement est accessible.
+  if (user.mustChangePassword && !ROUTES_SANS_CHANGEMENT.some((r) => request.nextUrl.pathname.startsWith(r))) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Vous devez remplacer votre mot de passe provisoire avant de continuer.",
+        errorCode: "MUST_CHANGE_PASSWORD",
+      },
+      { status: 403 }
     );
   }
   const reponse = await handler(request, user);

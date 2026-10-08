@@ -27,7 +27,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setMenuOuvert(false);
   }, [pathname]);
 
-  if (pathname === "/login") {
+  // Connexion et changement de mot de passe : sans cadre (un compte au mot de passe
+  // provisoire n'a accès à rien d'autre).
+  if (pathname === "/login" || pathname === "/changer-mot-de-passe") {
     return <>{children}</>;
   }
 
