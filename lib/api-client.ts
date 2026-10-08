@@ -21,10 +21,18 @@ export async function apiCall(
     headers.set('Content-Type', 'application/json');
   }
 
-  return fetch(url, {
+  const res = await fetch(url, {
     ...options,
     headers,
   });
+
+  // Mot de passe provisoire non remplacé : le serveur refuse tout le reste ; on
+  // conduit l'utilisateur vers l'écran de changement.
+  if (res.status === 403 && typeof window !== 'undefined' && window.location.pathname !== '/changer-mot-de-passe') {
+    const corps = await res.clone().json().catch(() => null);
+    if (corps?.errorCode === 'MUST_CHANGE_PASSWORD') window.location.assign('/changer-mot-de-passe');
+  }
+  return res;
 }
 
 export async function apiGet(url: string, options?: RequestInit) {
