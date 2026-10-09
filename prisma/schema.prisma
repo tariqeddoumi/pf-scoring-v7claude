@@ -478,20 +478,20 @@ model ScoringAuditLog {
 
 /// ScoringModel represents a family of scoring logic (e.g., PF Standard, PF Renewables)
 model ScoringModel {
-  id              String             @id @default(uuid())
-  code            String             @unique
+  id              String    @id @default(uuid())
+  code            String    @unique
   label           String
   description     String?
   businessSegment String?
   projectType     String?
-  status          ScoringModelStatus @default(DRAFT)
-  isActive        Boolean            @default(true)
-  ownerBusinessId String?            @db.Uuid
-  ownerRiskId     String?            @db.Uuid
+  status          String    @default("DRAFT") /// TEXT en production ; valeurs : enum ScoringModelStatus
+  isActive        Boolean   @default(true)
+  ownerBusinessId String?   @db.Uuid
+  ownerRiskId     String?   @db.Uuid
   effectiveDate   DateTime?
   expiryDate      DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   ownerBusiness User?                 @relation("OwnerBusiness", fields: [ownerBusinessId], references: [id], onDelete: SetNull)
   versions      ScoringModelVersion[]
@@ -503,23 +503,23 @@ model ScoringModel {
 
 /// ScoringModelVersion represents a governed version of a scoring model
 model ScoringModelVersion {
-  id            String        @id @default(uuid())
+  id            String    @id @default(uuid())
   modelId       String
   versionNumber Int
   label         String
-  status        VersionStatus @default(DRAFT)
-  isPublished   Boolean       @default(false)
+  status        String    @default("DRAFT") /// TEXT en production ; valeurs : enum VersionStatus
+  isPublished   Boolean   @default(false)
   effectiveDate DateTime?
   expiryDate    DateTime?
   changeReason  String?
   releaseNotes  String?
-  createdBy     String        @db.Uuid
-  validatedBy   String?       @db.Uuid
-  publishedBy   String?       @db.Uuid
-  createdAt     DateTime      @default(now())
+  createdBy     String    @db.Uuid
+  validatedBy   String?   @db.Uuid
+  publishedBy   String?   @db.Uuid
+  createdAt     DateTime  @default(now())
   validatedAt   DateTime?
   publishedAt   DateTime?
-  updatedAt     DateTime      @updatedAt
+  updatedAt     DateTime  @updatedAt
 
   // Configuration fields (parameterizable)
   aggregationMethod String? @default("WEIGHTED_AVERAGE")
@@ -546,10 +546,10 @@ model ScoringModelVersion {
 /// ScoringNode is the universal hierarchical unit representing any level:
 /// DOMAIN, CRITERION, SUB_CRITERION, SUB_SUB_CRITERION, GROUP, LEAF, BLOCK
 model ScoringNode {
-  id                String             @id @default(uuid())
+  id                String   @id @default(uuid())
   versionId         String
   parentNodeId      String?
-  nodeType          ScoringNodeType
+  nodeType          String /// TEXT en production ; valeurs : enum ScoringNodeType
   code              String
   label             String
   shortLabel        String?
@@ -558,15 +558,15 @@ model ScoringNode {
   displayPath       String?
   depth             Int
   orderIndex        Int
-  isActive          Boolean            @default(true)
-  isTerminal        Boolean            @default(false)
-  isScored          Boolean            @default(false)
-  isMandatory       Boolean            @default(false)
-  allowsChildren    Boolean            @default(true)
+  isActive          Boolean  @default(true)
+  isTerminal        Boolean  @default(false)
+  isScored          Boolean  @default(false)
+  isMandatory       Boolean  @default(false)
+  allowsChildren    Boolean  @default(true)
   weight            Float?
-  weightMode        String?            @default("RELATIVE") // RELATIVE, ABSOLUTE, NONE
+  weightMode        String?  @default("RELATIVE") // RELATIVE, ABSOLUTE, NONE
   aggregationMethod String?
-  answerType        ScoringAnswerType?
+  answerType        String? /// TEXT en production ; valeurs : enum ScoringAnswerType
   scoringMethod     String?
   scoreMin          Float?
   scoreMax          Float?
@@ -576,9 +576,9 @@ model ScoringNode {
   uiSchemaJson      String? // JSON string for UI rendering hints
   metadataJson      String?
   scoreLeafDepth    Int? // Depth at which scoring is captured (0=domain, 1=criterion, 2+=subcriterion). Null = inherited from parent.
-  isScoringLeaf     Boolean            @default(false) // True = this node is a scoring input point
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  isScoringLeaf     Boolean  @default(false) // True = this node is a scoring input point
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   version    ScoringModelVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
   parentNode ScoringNode?        @relation("ChildNodes", fields: [parentNodeId], references: [id], onDelete: Cascade)
@@ -679,7 +679,7 @@ model ScoringNodeRule {
   id                  String   @id @default(uuid())
   nodeId              String?
   versionId           String
-  ruleType            RuleType
+  ruleType            String /// TEXT en production ; valeurs : enum RuleType
   code                String
   label               String
   description         String?
@@ -782,17 +782,17 @@ model ScoringNodeDocumentRequirement {
 
 /// ScoringEvaluation represents the evaluation of a project using a specific model version
 model ScoringEvaluation {
-  id                   String           @id @default(uuid())
-  projectId            String           @db.Uuid
+  id                   String    @id @default(uuid())
+  projectId            String    @db.Uuid
   modelId              String
   modelVersionId       String
-  analystId            String?          @db.Uuid
-  status               EvaluationStatus @default(brouillon)
+  analystId            String?   @db.Uuid
+  status               String    @default("brouillon") /// TEXT en production ; valeurs : enum EvaluationStatus
   finalScore           Float?
   rating               String?
   recommendation       String?
   probabilityOfDefault Float?
-  malusTotal           Float?           @default(0)
+  malusTotal           Float?    @default(0)
   triggeredRulesJson   String? // JSON array of triggered rule IDs
   summaryJson          String? // JSON summary of key scores
   notes                String?
@@ -801,11 +801,11 @@ model ScoringEvaluation {
   approvedAt           DateTime?
   rejectedAt           DateTime?
   rejectionReason      String?
-  isArchived           Boolean          @default(false)
+  isArchived           Boolean   @default(false)
   archivedAt           DateTime?
   archivedBy           String?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   project Project             @relation("ScoringProject", fields: [projectId], references: [id], onDelete: Cascade)
   model   ScoringModel        @relation("ModelUsed", fields: [modelId], references: [id], onDelete: SetNull)
@@ -832,10 +832,10 @@ model ScoringEvaluation {
 
 /// ScoringEvaluationAnswer represents an answer provided by the user for a node
 model ScoringEvaluationAnswer {
-  id               String            @id @default(uuid())
+  id               String    @id @default(uuid())
   evaluationId     String
   nodeId           String
-  answerType       ScoringAnswerType
+  answerType       String /// TEXT en production ; valeurs : enum ScoringAnswerType
   valueString      String?
   valueNumber      Float?
   valueBoolean     Boolean?
