@@ -80,8 +80,10 @@ export function Navbar({ onOuvrirMenu }: { onOuvrirMenu?: () => void }) {
           <span className="font-medium text-foreground">Accueil</span>
         ) : (
           fil.map((f, i) => (
-            <span key={i}>
-              {i > 0 && <span className="mx-1.5 text-muted-foreground">›</span>}
+            // Sur téléphone, seul le dernier élément du fil est affiché : le fil complet
+            // dépassait de l'écran (« Paramétrage › Paramétrage de l'outil »).
+            <span key={i} className={f.dernier ? undefined : "hidden sm:inline"}>
+              {i > 0 && <span className="mx-1.5 hidden text-muted-foreground sm:inline">›</span>}
               <span
                 className={
                   f.dernier ? "font-medium text-foreground" : "text-muted-foreground"

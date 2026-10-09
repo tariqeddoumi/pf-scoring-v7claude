@@ -424,8 +424,10 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <div className="border-b border-border bg-background/80 sticky top-0 z-20 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+      {/* Pas d'en-tête collant : la barre de l'application l'est déjà, et les deux se
+          superposaient au défilement sur téléphone (titre coupé, quart d'écran perdu). */}
+      <div className="border-b border-border bg-background">
+        <div className="max-w-6xl mx-auto px-0 sm:px-6 pb-4 sm:py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <Link href="/admin" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
               <ArrowLeft size={20} />
@@ -450,7 +452,7 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="max-w-6xl mx-auto px-0 sm:px-6 py-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {[
@@ -554,12 +556,12 @@ export default function AdminUsersPage() {
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-medium text-foreground truncate">{user.prenom} {user.nom}</span>
+                      <span className="font-medium text-foreground break-words">{user.prenom} {user.nom}</span>
                       {!user.isActive && (
                         <span className="text-xs bg-destructive/10 text-destructive border border-destructive/20 px-1.5 py-0.5 rounded">Inactif</span>
                       )}
                     </div>
-                    <span className="text-sm text-muted-foreground truncate block">{user.email}</span>
+                    <span className="text-sm text-muted-foreground block break-all">{user.email}</span>
                   </div>
 
                   {/* Mobile : rôle, statut et connexion passent sous le nom ; écran large : une colonne chacun. */}

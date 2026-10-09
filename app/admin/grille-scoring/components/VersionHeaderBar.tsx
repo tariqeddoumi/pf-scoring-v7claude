@@ -103,12 +103,12 @@ export function VersionHeaderBar({
 
         <div className="border-l border-border" />
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <p className="text-xs text-muted-foreground">Version</p>
           <div className="relative group">
             <button
               disabled={isLoading}
-              className="flex items-center gap-2 px-3 py-2 bg-card hover:bg-accent disabled:bg-card disabled:opacity-50 rounded border border-input text-sm text-foreground whitespace-nowrap transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-card hover:bg-accent disabled:bg-card disabled:opacity-50 rounded border border-input text-sm text-foreground max-w-full transition-colors"
             >
               {sansGeneration(activeVersion?.label) || "Sélectionner"}
               <ChevronDown size={16} />
@@ -172,7 +172,7 @@ export function VersionHeaderBar({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-lg border border-border bg-card p-5 shadow-lg">
             <h2 className="text-base font-semibold text-foreground">
-              Publier la version {activeVersion?.label ?? ""} ?
+              Publier la version {sansGeneration(activeVersion?.label)} ?
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               La version publiée devient le modèle appliqué à toutes les évaluations

@@ -146,10 +146,10 @@ export default function ConfigurationPage() {
                 return (
                   <div key={item.key} className="p-5 flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1 min-w-0">
-                      <Label htmlFor={item.key} className="block mb-1">
+                      <Label htmlFor={item.key} className="block mb-1 [overflow-wrap:anywhere]">
                         {sansGeneration(item.description) || item.key}
                       </Label>
-                      <p className="text-xs text-muted-foreground mb-2 font-mono">{item.key}</p>
+                      <p className="text-xs text-muted-foreground mb-2 font-mono break-all">{item.key}</p>
 
                       {options ? (
                         <select
