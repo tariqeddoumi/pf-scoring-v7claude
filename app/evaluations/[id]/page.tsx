@@ -303,8 +303,8 @@ export default function EvaluationDetailPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center space-x-4">
           <Link
             href="/evaluations"
             className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
@@ -312,7 +312,7 @@ export default function EvaluationDetailPage({
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               {evaluation.project?.nom || "Évaluation"}
             </h1>
             <p className="text-muted-foreground mt-1 text-sm">
@@ -320,7 +320,7 @@ export default function EvaluationDetailPage({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href={`/scoring/evaluations/${evalId}/results`}
             className="inline-flex items-center space-x-2 bg-muted hover:bg-secondary text-foreground font-semibold px-4 py-2 rounded-lg transition-all"

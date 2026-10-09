@@ -392,7 +392,7 @@ export function AnalyseDocumentsIA({
 
             {onglet === "propositions" && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex gap-3 text-[12.5px]">
                     <button
                       className="text-primary hover:underline"

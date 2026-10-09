@@ -1,42 +1,84 @@
 import prisma from "@/lib/prisma-client";
-import { ScoringQuestionnaireService, type QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
+import { ModelLoader } from "@/lib/services/scoring";
 import { MODES_VERROUILLES } from "@/lib/services/scoring/value-selection";
 import type { CritereGrille, Manquant, Proposition, ResultatAnalyse } from "./resultat";
 
 export const ACTION_ANALYSE = "ANALYSE_DOCUMENTAIRE_IA";
 
-/** Critères à renseigner : les feuilles du questionnaire de la version du dossier. */
+/**
+ * Critères à renseigner : exactement les champs de l'écran de saisie, c'est-à-dire
+ * les feuilles de l'arbre complet de la version (même chargement que la route
+ * /form). L'ancienne version partait du questionnaire tronqué par la granularité
+ * (niveau 1 par défaut) : l'IA répondait sur des intitulés de regroupement, que la
+ * sauvegarde refusait (« nœud inconnu dans le référentiel »).
+ */
 export async function criteresDuDossier(modelVersionId: string): Promise<CritereGrille[]> {
-  const arbre = await ScoringQuestionnaireService.getQuestionnaire(modelVersionId);
-  const feuilles: QuestionnaireNode[] = [];
-  const parcourir = (n: QuestionnaireNode) => {
-    if (!n.children || n.children.length === 0) feuilles.push(n);
-    else n.children.forEach(parcourir);
+  const arbre = await ModelLoader.loadVersion(modelVersionId);
+
+  // Parcours dans l'ordre de l'écran, en gardant le libellé du parent pour le contexte.
+  const feuilles: Array<{ id: string; parent: string | null }> = [];
+  const parcourir = (id: string, parent: string | null) => {
+    const enfants = arbre.childrenOf.get(id) ?? [];
+    if (enfants.length === 0) {
+      feuilles.push({ id, parent });
+      return;
+    }
+    const libelle = arbre.nodesById.get(id)?.label ?? null;
+    for (const e of enfants) parcourir(e, libelle);
   };
-  arbre.forEach(parcourir);
+  arbre.rootNodeIds.forEach((r) => parcourir(r, null));
 
   const ids = feuilles.map((f) => f.id);
-  const [noeuds, verrous] = await Promise.all([
-    prisma.scoringNode.findMany({ where: { id: { in: ids } }, select: { id: true, isMandatory: true } }),
+  const [options, plages, verrous] = await Promise.all([
+    prisma.scoringNodeOption.findMany({
+      where: { nodeId: { in: ids }, isActive: true },
+      orderBy: { orderIndex: "asc" },
+      select: { nodeId: true, value: true, code: true, label: true, metadataJson: true },
+    }),
+    prisma.scoringNodeRange.findMany({
+      where: { nodeId: { in: ids }, isActive: true },
+      orderBy: { minValue: "asc" },
+      select: { nodeId: true, minValue: true, maxValue: true, label: true },
+    }),
     prisma.scoringNodeDataBinding.findMany({
       where: { nodeId: { in: ids }, isActive: true, bindingMode: { in: MODES_VERROUILLES } },
       select: { nodeId: true },
     }),
   ]);
-  const obligatoire = new Map(noeuds.map((n) => [n.id, n.isMandatory]));
   const verrouille = new Set(verrous.map((v) => v.nodeId));
+  const optionsPar = new Map<string, NonNullable<CritereGrille["options"]>>();
+  for (const o of options) {
+    let quandChoisir: string | undefined;
+    try {
+      quandChoisir = o.metadataJson ? JSON.parse(o.metadataJson)?.when_choose || undefined : undefined;
+    } catch {
+      /* métadonnée illisible : l'option reste décrite par son libellé */
+    }
+    const liste = optionsPar.get(o.nodeId) ?? [];
+    liste.push({ value: o.value ?? o.code ?? o.label, label: o.label, quandChoisir });
+    optionsPar.set(o.nodeId, liste);
+  }
+  const plagesPar = new Map<string, NonNullable<CritereGrille["ranges"]>>();
+  for (const r of plages) {
+    const liste = plagesPar.get(r.nodeId) ?? [];
+    liste.push({ minValue: r.minValue, maxValue: r.maxValue, label: r.label ?? undefined });
+    plagesPar.set(r.nodeId, liste);
+  }
 
-  return feuilles.map((f) => ({
-    id: f.id,
-    code: f.code,
-    label: f.label,
-    description: f.description,
-    answerType: f.answerType,
-    isMandatory: obligatoire.get(f.id) ?? false,
-    options: f.options?.map((o) => ({ value: o.value, label: o.label, quandChoisir: o.quandChoisir })),
-    ranges: f.ranges?.map((r) => ({ minValue: r.minValue, maxValue: r.maxValue, label: r.label })),
-    verrouille: verrouille.has(f.id),
-  }));
+  return feuilles.map(({ id, parent }) => {
+    const n = arbre.nodesById.get(id)!;
+    return {
+      id,
+      code: n.code,
+      label: parent ? `${parent} › ${n.label}` : n.label,
+      description: n.description ?? undefined,
+      answerType: n.answerType ?? undefined,
+      isMandatory: n.isMandatory,
+      options: optionsPar.get(id),
+      ranges: plagesPar.get(id),
+      verrouille: verrouille.has(id),
+    };
+  });
 }
 
 /** Contexte du projet transmis à l'IA (identité, montant, secteur). */
