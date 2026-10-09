@@ -315,7 +315,7 @@ async function seedAppConfiguration() {
       type: "bool",
       category: "scoring",
       description:
-        "Réintégrer le calibrage sectoriel dans le score global (ON = poids sectoriels + red flags/no-go + stress + malus/bonus ; OFF = socle V7++ seul)",
+        "Réintégrer le calibrage sectoriel dans le score global (ON = poids sectoriels + red flags/no-go + stress + malus/bonus ; OFF = socle seul)",
       isPublic: false,
     },
     {

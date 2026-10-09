@@ -8,6 +8,7 @@ import type {
   ScoringModel,
   ScoringModelVersion,
 } from "@/lib/types/scoring-grid";
+import { nomModele, sansGeneration } from "@/lib/libelle-modele";
 
 interface VersionHeaderBarProps {
   model: ScoringModel;
@@ -97,7 +98,7 @@ export function VersionHeaderBar({
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 flex-1">
         <div>
           <p className="text-xs text-muted-foreground">Modèle</p>
-          <p className="text-sm font-semibold text-foreground">{model.code}</p>
+          <p className="text-sm font-semibold text-foreground">{nomModele(model.label)}</p>
         </div>
 
         <div className="border-l border-border" />
@@ -109,7 +110,7 @@ export function VersionHeaderBar({
               disabled={isLoading}
               className="flex items-center gap-2 px-3 py-2 bg-card hover:bg-accent disabled:bg-card disabled:opacity-50 rounded border border-input text-sm text-foreground whitespace-nowrap transition-colors"
             >
-              {activeVersion?.label || "Sélectionner"}
+              {sansGeneration(activeVersion?.label) || "Sélectionner"}
               <ChevronDown size={16} />
             </button>
 
@@ -122,7 +123,7 @@ export function VersionHeaderBar({
                   disabled={isLoading}
                   className="w-full text-left px-4 py-2 hover:bg-accent disabled:opacity-50 text-sm text-foreground border-b border-border last:border-b-0 flex items-center justify-between"
                 >
-                  <span>{v.label}</span>
+                  <span>{sansGeneration(v.label)}</span>
                   <span className={`text-xs px-2 py-1 rounded ${v.isPublished ? "bg-green-900 text-green-200" : "bg-yellow-900 text-yellow-200"}`}>
                     {v.isPublished ? "PUBLISHED" : "DRAFT"}
                   </span>

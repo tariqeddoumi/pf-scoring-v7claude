@@ -538,14 +538,14 @@ async function main() {
     const model = await prisma.scoringModel.upsert({
       where: { code: "PF_V7PP" },
       update: {
-        label: "PF V7++ - Project Finance Standard Model",
+        label: "Modèle de notation Project Finance - standard",
         description: "Comprehensive scoring model for project finance evaluations with 9 domains",
         status: "PUBLISHED",
         isActive: true,
       },
       create: {
         code: "PF_V7PP",
-        label: "PF V7++ - Project Finance Standard Model",
+        label: "Modèle de notation Project Finance - standard",
         description: "Comprehensive scoring model for project finance evaluations with 9 domains",
         businessSegment: "Project Finance",
         projectType: "Standard",

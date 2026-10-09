@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
+import { nomModele } from "@/lib/libelle-modele";
 
 interface ScoringNode {
   id: string;
@@ -227,8 +228,7 @@ export default function ScoringAdminPage() {
         <div className="rounded-xl border border-primary/30 bg-cyan-500/5 p-5 flex flex-wrap items-center gap-6">
           <div>
             <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Modèle actif</div>
-            <div className="text-foreground font-bold text-lg">{modelVersion.modelCode}</div>
-            <div className="text-muted-foreground text-sm">{modelVersion.modelLabel}</div>
+            <div className="text-foreground font-bold text-lg">{nomModele(modelVersion.modelLabel)}</div>
           </div>
           <div className="h-10 w-px bg-muted hidden sm:block" />
           <div className="flex gap-6 flex-wrap">

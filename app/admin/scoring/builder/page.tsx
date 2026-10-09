@@ -19,6 +19,7 @@ import RangeModal from "@/components/scoring/RangeModal";
 import { ModelConfigurationPanel } from "@/components/admin/ModelConfigurationPanel";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
+import { sansGeneration } from "@/lib/libelle-modele";
 
 interface ScoringOption {
   id: string;
@@ -454,7 +455,7 @@ export default function ScoringBuilderPage() {
           <h1 className="text-3xl font-bold text-foreground">Éditeur du modèle</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {modelVersion
-              ? `Version ${modelVersion.label} — ${
+              ? `Version ${sansGeneration(modelVersion.label)} — ${
                   lectureSeule ? "publiée, lecture seule" : "brouillon"
                 }`
               : "Structure des domaines, critères et options"}

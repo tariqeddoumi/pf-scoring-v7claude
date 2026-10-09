@@ -384,8 +384,8 @@ export function EvaluationAccordionView({
   const [expandAll, setExpandAll] = useState(false);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-background">
-      <div className="max-w-4xl mx-auto px-6 py-6">
+    <div className="flex-1 lg:overflow-y-auto bg-background">
+      <div className="max-w-4xl mx-auto px-4 lg:px-6 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>

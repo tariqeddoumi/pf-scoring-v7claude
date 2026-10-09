@@ -642,17 +642,19 @@ export function EvaluationWorkspace({
     }
   }, [successMsg]);
 
+  // Sur mobile, une seule colonne qui défile avec la page (domaines, questions,
+  // score) ; à partir de lg, les trois colonnes à hauteur d'écran.
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-background">
+    <div className="flex flex-col lg:h-[calc(100vh-64px)] bg-background">
       {/* ── Top Header ─────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-6 py-3 bg-background border-b border-border flex-shrink-0">
-        <div>
+      <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 px-4 lg:px-6 py-3 bg-background border-b border-border flex-shrink-0">
+        <div className="min-w-0 flex-1 lg:flex-none">
           <h1 className="text-base font-bold text-foreground">{projectName}</h1>
           <p className="text-xs text-muted-foreground">Évaluation de Scoring — {evaluationId.slice(0, 8)}…</p>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 px-8">
+        {/* Messages (sous les boutons sur mobile) */}
+        <div className="order-last w-full lg:order-none lg:w-auto lg:flex-1 lg:px-8">
           {error && (
             <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 px-3 py-1.5 rounded-lg">
               <AlertCircle size={14} />
@@ -668,7 +670,7 @@ export function EvaluationWorkspace({
         </div>
 
         {/* View mode toggle */}
-        <div className="flex items-center gap-1 bg-card rounded-lg p-1 flex-shrink-0 mr-3">
+        <div className="flex items-center gap-1 bg-card rounded-lg p-1 flex-shrink-0 lg:mr-3">
           <button
             onClick={() => setViewMode("tabbed")}
             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-all ${
@@ -694,7 +696,7 @@ export function EvaluationWorkspace({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex w-full lg:w-auto flex-wrap items-center gap-2 lg:flex-shrink-0">
           <button
             onClick={() => setPanneauIA(true)}
             className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
@@ -739,7 +741,7 @@ export function EvaluationWorkspace({
       )}
 
       {/* ── Main layout ─────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
         {/* Left: Domain sidebar (hidden in accordion mode) */}
         {viewMode === "tabbed" && (
           <DomainSidebar
@@ -752,12 +754,12 @@ export function EvaluationWorkspace({
 
         {/* Centre: Content area */}
         {viewMode === "tabbed" ? (
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 lg:overflow-y-auto">
             {currentDomain && (
-              <div className="max-w-3xl mx-auto px-6 py-6">
+              <div className="max-w-3xl mx-auto px-4 lg:px-6 py-6">
                 {/* Domain header */}
-                <div className="flex items-center justify-between mb-6">
-                  <div>
+                <div className="flex items-start justify-between gap-3 mb-6">
+                  <div className="min-w-0">
                     <div className="flex items-center gap-3 mb-1">
                       <span className="text-xs font-mono px-2 py-0.5 rounded bg-card text-primary border border-border">
                         {currentDomain.code}
@@ -766,14 +768,14 @@ export function EvaluationWorkspace({
                         {currentIndex + 1} / {questionnaire.length}
                       </span>
                     </div>
-                    <h2 className="text-2xl font-bold text-foreground">{currentDomain.label}</h2>
+                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">{currentDomain.label}</h2>
                     {currentDomain.description && (
                       <p className="text-sm text-muted-foreground mt-1">{currentDomain.description}</p>
                     )}
                   </div>
                   <button
                     onClick={() => setExpandAll((v) => !v)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <RotateCcw size={12} />
                     {expandAll ? "Réduire tout" : "Tout ouvrir"}

@@ -40,7 +40,7 @@ INSERT INTO "BP_PF_field_configurations" (id,entity,"sectionId","fieldName",labe
 
 -- ============ APP CONFIGURATION (3 keys) ============
 INSERT INTO "BP_PF_app_configuration" (key,value,type,category,description,"isPublic","updatedAt") VALUES
-('SCORING_SECTORIAL_ENABLED','false','bool','scoring','Réintégrer le calibrage sectoriel dans le score global (ON = poids sectoriels + red flags/no-go + stress + malus/bonus ; OFF = socle V7++ seul)',false,now()),
+('SCORING_SECTORIAL_ENABLED','false','bool','scoring','Réintégrer le calibrage sectoriel dans le score global (ON = poids sectoriels + red flags/no-go + stress + malus/bonus ; OFF = socle seul)',false,now()),
 ('SCORING_DOMAIN_GRANULARITY','{}','json','scoring','Niveau de saisie du score par domaine : map { domainCode: DOMAIN|CRITERION|SUB_CRITERION }. Vide = niveau par défaut du nœud.',false,now()),
 ('SCREENS_DYNAMIC_FORMS_ENABLED','false','bool','screens','Rendre les écrans Signalétique/Projet à partir de la configuration de champs (FieldConfiguration) au lieu du formulaire codé en dur',true,now())
 ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value,type=EXCLUDED.type,category=EXCLUDED.category,description=EXCLUDED.description,"isPublic"=EXCLUDED."isPublic","updatedAt"=now();

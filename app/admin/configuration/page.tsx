@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppConfig } from "@/components/providers/app-config-provider";
+import { sansGeneration } from "@/lib/libelle-modele";
 
 interface ConfigItem {
   key: string;
@@ -146,7 +147,7 @@ export default function ConfigurationPage() {
                   <div key={item.key} className="p-5 flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1 min-w-0">
                       <Label htmlFor={item.key} className="block mb-1">
-                        {item.description || item.key}
+                        {sansGeneration(item.description) || item.key}
                       </Label>
                       <p className="text-xs text-muted-foreground mb-2 font-mono">{item.key}</p>
 

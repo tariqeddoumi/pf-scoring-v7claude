@@ -88,7 +88,7 @@ export function LiveScorePanel({
   const colors = getScoreColors(total);
 
   return (
-    <div className="h-full bg-background border-l border-border flex flex-col w-56 flex-shrink-0">
+    <div className="w-full lg:h-full bg-background border-t lg:border-t-0 lg:border-l border-border flex flex-col lg:w-56 flex-shrink-0">
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2 mb-1">
           <TrendingUp size={14} className="text-primary" />

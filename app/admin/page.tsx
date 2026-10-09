@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { sansGeneration } from "@/lib/libelle-modele";
 
 interface AdminSection {
   id: string;
@@ -224,7 +225,7 @@ export default function AdminPage() {
           const resModele = await apiGet("/api/methodology");
           if (resModele.ok) {
             const m = (await resModele.json()).data;
-            modelVersion = m?.version?.label ?? `Version ${m?.version?.numero ?? "?"}`;
+            modelVersion = sansGeneration(m?.version?.label) || `Version ${m?.version?.numero ?? "?"}`;
             domaines = m?.volumetrie?.domaines ?? null;
             criteres = m?.volumetrie?.criteres ?? null;
           }

@@ -49,7 +49,7 @@ export function DomainSidebar({
   const globalProgress = totalQuestions > 0 ? (totalAnswered / totalQuestions) * 100 : 0;
 
   return (
-    <div className="h-full bg-background border-r border-border flex flex-col w-64 flex-shrink-0">
+    <div className="w-full max-h-72 lg:max-h-none lg:h-full bg-background border-b lg:border-b-0 lg:border-r border-border flex flex-col lg:w-64 flex-shrink-0">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
