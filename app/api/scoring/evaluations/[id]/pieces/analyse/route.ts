@@ -80,7 +80,7 @@ async function handlePOST(_req: NextRequest, { params }: Ctx, user: AuthPayload)
       modele: appel.modele,
       usage: appel.usage,
       pieces: lues,
-      avertissements,
+      avertissements: [...avertissements, ...appel.avertissements],
       resultat: appel.resultat,
       propositions,
       manquants,

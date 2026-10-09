@@ -71,6 +71,12 @@ function valeurActuelle(a: AnswerValue | undefined): string | null {
  * propositions cochées passent par la saisie normale (mêmes contrôles qu'une saisie
  * manuelle) avec un commentaire qui en garde la source.
  */
+/** Taille lisible : « 48 Ko » plutôt que « 0.0 Mo » pour une petite pièce. */
+function taille(octets: number): string {
+  if (octets < 1024 * 1024) return `${Math.max(1, Math.round(octets / 1024))} Ko`;
+  return `${(octets / 1024 / 1024).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo`;
+}
+
 export function AnalyseDocumentsIA({
   evaluationId,
   answers,
@@ -169,6 +175,11 @@ export function AnalyseDocumentsIA({
     setAnalyseEnCours(true);
     try {
       const res = await apiPost(`/api/scoring/evaluations/${evaluationId}/pieces/analyse`, {});
+      if (res.status === 504) {
+        throw new Error(
+          "L'analyse a dépassé la durée maximale autorisée par le serveur. Relancez-la ; si cela se reproduit, retirez les pièces les plus volumineuses et analysez-les séparément."
+        );
+      }
       if (!res.ok) throw new Error(await messageErreurApi(res, "Analyse impossible."));
       const { data } = await res.json();
       setAnalyse(data);
@@ -316,7 +327,7 @@ export function AnalyseDocumentsIA({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm text-foreground">{p.fileName}</p>
                       <p className="text-[12px] text-muted-foreground">
-                        {(p.fileSize / 1024 / 1024).toFixed(1)} Mo
+                        {taille(p.fileSize)}
                         {p.documentType !== "A_ANALYSER" && ` · ${p.documentType}`}
                         {c?.complet === true && <span className="ml-1 text-success">· complète</span>}
                         {c?.complet === false && (
