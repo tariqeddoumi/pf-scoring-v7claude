@@ -22,6 +22,7 @@ import {
 } from "@/lib/services/scoring/condition-evaluator";
 import { champReconnu } from "@/lib/services/scoring/condition-context";
 import { conditionEnFrancais } from "@/lib/services/scoring/condition-phrasing";
+import { sansGeneration } from "@/lib/libelle-modele";
 
 interface Regle {
   id: string;
@@ -210,11 +211,11 @@ export default function ReglesPage() {
                 id="version-regles"
                 value={versionId ?? ""}
                 onChange={(e) => setVersionId(e.target.value)}
-                className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-ring focus:outline-none"
+                className="h-9 max-w-full rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-ring focus:outline-none"
               >
                 {versions.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.label ?? `v${v.versionNumber}`}
+                    {sansGeneration(v.label) || `v${v.versionNumber}`}
                     {v.isPublished ? " — publiée" : ` — ${v.status ?? "brouillon"}`}
                   </option>
                 ))}

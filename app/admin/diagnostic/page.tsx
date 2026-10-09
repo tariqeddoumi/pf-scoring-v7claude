@@ -125,7 +125,7 @@ export default function DiagnosticPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto p-4 sm:p-6">
+      <div className="container mx-auto p-0 sm:p-6">
         {/* Header */}
         <div className="mb-8 flex flex-wrap items-center gap-3 sm:gap-4">
           <Link href="/admin">
