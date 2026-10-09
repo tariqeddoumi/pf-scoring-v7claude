@@ -494,7 +494,7 @@ export function EvaluationWorkspace({
           { answers: payload }
         );
 
-        if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
+        if (!res.ok) throw new Error(await messageErreurApi(res, "Sauvegarde impossible."));
 
         // Une sauvegarde partielle ne doit pas s'annoncer comme un succès.
         const body = await res.json();

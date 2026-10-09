@@ -1,5 +1,4 @@
 import prisma from "@/lib/prisma-client";
-import { ScoringNodeType, ScoringAnswerType } from "@prisma/client";
 
 export class ScoringNodeService {
   /**
@@ -7,14 +6,14 @@ export class ScoringNodeService {
    */
   static async createNode(data: {
     versionId: string;
-    nodeType: ScoringNodeType;
+    nodeType: string;
     code: string;
     label: string;
     description?: string;
     parentNodeId?: string;
     depth?: number;
     weight?: number;
-    answerType?: ScoringAnswerType;
+    answerType?: string;
     scoringMethod?: string;
     aggregationMethod?: string;
     createdBy: string;
@@ -120,7 +119,7 @@ export class ScoringNodeService {
       label?: string;
       description?: string;
       weight?: number;
-      answerType?: ScoringAnswerType;
+      answerType?: string;
       scoringMethod?: string;
       aggregationMethod?: string;
       updatedBy: string;

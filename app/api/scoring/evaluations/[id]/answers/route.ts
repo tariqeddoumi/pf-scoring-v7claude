@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
-import { ScoringAnswerType } from "@prisma/client";
 import { normalizeAnswers } from "@/lib/services/scoring/answer-payload";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
@@ -189,7 +188,7 @@ async function handlePATCH(
             create: {
               evaluationId,
               nodeId: w.nodeId,
-              answerType: w.answerType as ScoringAnswerType,
+              answerType: w.answerType,
               valueString: w.valueString,
               valueNumber: w.valueNumber,
               valueBoolean: w.valueBoolean,
@@ -197,7 +196,7 @@ async function handlePATCH(
               comment: w.comment,
             },
             update: {
-              answerType: w.answerType as ScoringAnswerType,
+              answerType: w.answerType,
               valueString: w.valueString,
               valueNumber: w.valueNumber,
               valueBoolean: w.valueBoolean,
