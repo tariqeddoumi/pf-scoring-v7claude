@@ -8,7 +8,13 @@ import {
   type ResultatAnalyse,
 } from "@/lib/services/ia-documents/resultat";
 import { convertirPiece, extensionAcceptee, valeurCellule } from "@/lib/services/ia-documents/conversion";
-import { consignes, decrireCritere } from "@/lib/services/ia-documents/analyse";
+import {
+  consignes,
+  decrireCritere,
+  demandeLot,
+  fusionnerQuestions,
+  repartirEnLots,
+} from "@/lib/services/ia-documents/analyse";
 
 const grille: CritereGrille[] = [
   {
@@ -153,9 +159,24 @@ describe("ia-documents — consignes", () => {
   it("chaque critère est décrit avec sa forme de réponse", () => {
     expect(decrireCritere(grille[1])).toContain("NEGO = En négociation");
     expect(decrireCritere(grille[0])).toContain("[OBLIGATOIRE]");
-    const texte = consignes(grille, "Projet : Centrale");
+    const texte = consignes("Projet : Centrale");
     expect(texte).toContain("ne JAMAIS inventer");
     expect(texte).toContain("Projet : Centrale");
-    for (const c of grille) expect(texte).toContain(c.code);
+    const lot = demandeLot(grille);
+    for (const c of grille) expect(lot).toContain(c.code);
+  });
+
+  it("la grille est répartie en lots parallèles, 10 au plus", () => {
+    const codes = Array.from({ length: 84 }, (_, i) => i);
+    const lots = repartirEnLots(codes);
+    expect(lots).toHaveLength(7);
+    expect(lots.flat()).toEqual(codes);
+    expect(repartirEnLots(Array.from({ length: 250 }, (_, i) => i))).toHaveLength(10);
+    expect(repartirEnLots([])).toEqual([]);
+  });
+
+  it("les questions des différents lots sont fusionnées sans doublon", () => {
+    const q = (question: string) => ({ question, destinataire: "client" as const, criteres: [], documentAttendu: null });
+    expect(fusionnerQuestions([[q("Fournir le PPA signé")], [q("fournir le  PPA signé"), q("Fournir l'EIES")]])).toHaveLength(2);
   });
 });
