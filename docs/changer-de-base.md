@@ -8,6 +8,34 @@ Le seul réglage est l'adresse de connexion `DATABASE_URL`. Le schéma de réfé
 Les pièces des dossiers (analyse par IA) sont stockées à part, dans Supabase Storage ou dans tout
 stockage compatible S3 (voir la dernière section) : changer de base ne les déplace pas.
 
+## Kit de bascule : une seule commande
+
+Créez une base vide (et un utilisateur propriétaire), puis :
+
+```bash
+# À blanc : vérifie la connexion et la version, affiche le plan, n'écrit rien
+npm run db:basculer -- --cible "postgresql://utilisateur:motdepasse@hote:5432/pfscoring"
+
+# Bascule avec reprise de toutes les données de la base actuelle
+npm run db:basculer -- --cible "postgresql://…nouvelle base…" --source "$DATABASE_URL" --appliquer
+
+# Nouvelle base vierge (référentiels seulement)
+npm run db:basculer -- --cible "postgresql://…nouvelle base…" --appliquer
+```
+
+La commande enchaîne : connexion et contrôle de version (PostgreSQL 14+), création du schéma, copie des
+données (ou installation des référentiels), contrôle de conformité, puis indique la variable à
+changer. Il reste à remplacer `DATABASE_URL` dans l'hébergement (Vercel › Settings › Environment
+Variables) et à redéployer. L'écran **Paramétrage › Base de données** affiche ensuite la base en
+service, son temps de réponse et la conformité du schéma.
+
+Pourquoi pas depuis un écran : l'adresse de la base est un secret d'exploitation. La rendre modifiable
+en ligne permettrait, avec un seul compte administrateur compromis, de rediriger toutes les données
+vers une base tierce. Les bonnes pratiques (OWASP ASVS V14, « Twelve-Factor App ») la placent dans la
+configuration de déploiement, avec redéploiement.
+
+Les sections suivantes détaillent chaque étape, pour les équipes qui préfèrent les exécuter une à une.
+
 ## 1. Préparer la nouvelle base
 
 Créez une base vide et un utilisateur propriétaire, puis créez le schéma, au choix :

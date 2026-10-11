@@ -147,6 +147,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
+    id: "base",
+    famille: "exploitation",
+    title: "Base de données",
+    description: "Base en service, conformité du schéma et kit pour basculer vers un autre PostgreSQL",
+    href: "/admin/base",
+    icon: "🗄️",
+    requiredRole: "system_admin",
+  },
+  {
     id: "users",
     famille: "exploitation",
     title: "Gestion des Utilisateurs",

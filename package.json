@@ -30,7 +30,8 @@
     "db:schema:sql": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script --output prisma/schema-complet.sql",
     "db:reference": "tsx scripts/db/installer-reference.ts",
     "db:copier": "tsx scripts/db/copier-base.ts",
-    "db:verifier": "tsx scripts/db/verifier-base.ts"
+    "db:verifier": "tsx scripts/db/verifier-base.ts",
+    "db:basculer": "tsx scripts/db/basculer.ts"
   },
   "repository": {
     "type": "git",

@@ -40,6 +40,7 @@ const SEGMENTS: Record<string, string> = {
   secteurs: "Calibrage sectoriel",
   users: "Utilisateurs",
   entites: "Banques et filiales",
+  base: "Base de données",
   configuration: "Paramétrage de l'outil",
   diagnostic: "Diagnostic",
   granularity: "Granularité",

@@ -1,3 +1,6 @@
+// Le service des entités charge le client de base de données : inutile ici.
+jest.mock("@/lib/prisma-client", () => ({ prismaSysteme: {} }));
+
 import {
   ascendance,
   calculerPerimetre,
@@ -10,6 +13,7 @@ import {
 } from "@/lib/entites/perimetre";
 import { argumentsFiltres, reference, restreindre } from "@/lib/entites/filtre-prisma";
 import { compteGerable, entiteAttribuable, roleAttribuable } from "@/lib/entites/utilisateurs";
+import { entiteSchema } from "@/lib/entites/service";
 
 /**
  * Groupe type « banque populaire » :
@@ -139,10 +143,6 @@ describe("gestion des comptes dans le périmètre", () => {
 });
 
 describe("saisie d'une entité", () => {
-  // Import tardif : le service charge le client de base de données.
-  jest.mock("@/lib/prisma-client", () => ({ prismaSysteme: {} }));
-  const { entiteSchema } = require("@/lib/entites/service") as typeof import("@/lib/entites/service");
-
   it("une modification partielle n'efface ni ne détache rien", () => {
     const r = entiteSchema.partial().parse({ nomOutil: "Scoring Sénégal" });
     expect(r).toEqual({ nomOutil: "Scoring Sénégal" });
