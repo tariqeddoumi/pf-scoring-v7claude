@@ -2,6 +2,16 @@ import { NextResponse, NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import { oublierCompte } from "@/lib/compte-actif";
+import { PERIMETRE_VIDE, type Perimetre } from "@/lib/entites/perimetre";
+import { compteGerable, entiteAttribuable, PORTEES, roleAttribuable } from "@/lib/entites/utilisateurs";
+
+/** Compte cible s'il est dans le périmètre de l'administrateur, sinon null (404). */
+async function compteDuPerimetre(id: string, p: Perimetre) {
+  const compte = await prisma.user.findUnique({ where: { id }, select: { id: true, entiteId: true, role: true } });
+  return compte && compteGerable(p, compte.entiteId) ? compte : null;
+}
+const introuvable = () => errorResponse("Utilisateur non trouvé", { status: 404, errorCode: "NOT_FOUND" });
 
 const VALID_ROLES = ["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const;
 const USER_SELECT = {
@@ -10,6 +20,9 @@ const USER_SELECT = {
   nom: true,
   prenom: true,
   role: true,
+  entiteId: true,
+  porteeEcriture: true,
+  entite: { select: { id: true, code: true, nom: true } },
   isActive: true,
   lastLoginAt: true,
   createdAt: true,
@@ -20,9 +33,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withAdminAuth(request, async () => {
+  return withAdminAuth(request, async (_req, admin) => {
     try {
       const { id } = await params;
+      if (!(await compteDuPerimetre(id, admin.perimetre ?? PERIMETRE_VIDE))) return introuvable();
       const user = await prisma.user.findUnique({
         where: { id },
         select: USER_SELECT,
@@ -44,11 +58,14 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withAdminAuth(request, async () => {
+  return withAdminAuth(request, async (_req, admin) => {
     try {
       const { id } = await params;
+      const perimetre = admin.perimetre ?? PERIMETRE_VIDE;
+      const cible = await compteDuPerimetre(id, perimetre);
+      if (!cible) return introuvable();
       const body = await request.json();
-      const { email, nom, prenom, role, isActive } = body;
+      const { email, nom, prenom, role, isActive, entiteId, porteeEcriture } = body;
 
       const errors: { field: string; message: string }[] = [];
 
@@ -71,6 +88,14 @@ export async function PUT(
       if (role !== undefined && !VALID_ROLES.includes(role)) {
         errors.push({ field: "role", message: "Rôle invalide" });
       }
+      if (!roleAttribuable(admin.role, role, String(cible.role))) {
+        errors.push({ field: "role", message: "Seul un administrateur système modifie ce compte ou attribue ce rôle" });
+      }
+      const entite = entiteId === undefined ? null : entiteAttribuable(perimetre, entiteId);
+      if (entite && !entite.ok) errors.push({ field: "entiteId", message: entite.motif });
+      if (porteeEcriture !== undefined && !PORTEES.includes(porteeEcriture)) {
+        errors.push({ field: "porteeEcriture", message: "Portée invalide" });
+      }
 
       if (errors.length > 0) return validationError(errors);
 
@@ -82,9 +107,13 @@ export async function PUT(
           ...(prenom !== undefined && { prenom }),
           ...(role !== undefined && { role }),
           ...(isActive !== undefined && { isActive }),
+          ...(entite?.ok && { entiteId: entite.entiteId }),
+          ...(porteeEcriture !== undefined && { porteeEcriture }),
         },
         select: USER_SELECT,
       });
+      // Rôle, entité ou portée changés : effet immédiat, sans attendre le cache.
+      oublierCompte(id);
 
       return successResponse(user);
     } catch (error: any) {
@@ -101,13 +130,18 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withAdminAuth(request, async () => {
+  return withAdminAuth(request, async (_req, admin) => {
     try {
       const { id } = await params;
+      const cible = await compteDuPerimetre(id, admin.perimetre ?? PERIMETRE_VIDE);
+      if (!cible) return introuvable();
       const { role } = await request.json();
 
       if (!VALID_ROLES.includes(role)) {
         return validationError([{ field: "role", message: "Rôle invalide" }]);
+      }
+      if (!roleAttribuable(admin.role, role, String(cible.role))) {
+        return validationError([{ field: "role", message: "Seul un administrateur système attribue ce rôle" }]);
       }
 
       const user = await prisma.user.update({
@@ -115,6 +149,7 @@ export async function PATCH(
         data: { role },
         select: USER_SELECT,
       });
+      oublierCompte(id);
 
       return successResponse(user);
     } catch (error: any) {
@@ -128,9 +163,14 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withAdminAuth(request, async () => {
+  return withAdminAuth(request, async (_req, admin) => {
     try {
       const { id } = await params;
+      const cible = await compteDuPerimetre(id, admin.perimetre ?? PERIMETRE_VIDE);
+      if (!cible) return introuvable();
+      if (!roleAttribuable(admin.role, undefined, String(cible.role))) {
+        return errorResponse("Seul un administrateur système supprime ce compte", { status: 403, errorCode: "FORBIDDEN" });
+      }
 
       const user = await prisma.user.delete({
         where: { id },

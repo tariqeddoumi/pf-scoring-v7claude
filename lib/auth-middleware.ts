@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { secretJwt } from "./jwt-secret";
 import { etatDuCompte } from "./compte-actif";
+import { contexteAcces } from "./entites/contexte";
+import { HorsPerimetreError } from "./entites/filtre-prisma";
+import { calculerPerimetre, chargerArbre, PERIMETRE_VIDE, type Perimetre } from "./entites/perimetre";
 import { masquerScores, peutVoirScores } from "./score-visibility";
 import {
   hasPermission,
@@ -35,6 +38,8 @@ export interface AuthPayload {
   role: string;
   /** Mot de passe provisoire non encore remplacé (lu en base à chaque appel). */
   mustChangePassword?: boolean;
+  /** Périmètre multi-banques du compte (entités visibles et modifiables). */
+  perimetre?: Perimetre;
   iat?: number; // Issued At (timestamp de création du token)
   exp?: number; // Expiration (timestamp d'expiration)
 }
@@ -59,7 +64,8 @@ export async function authenticateRequest(
     if (!jeton?.userId) return null;
     const etat = await etatDuCompte(jeton.userId);
     if (!etat.role) return null;
-    return { ...jeton, role: etat.role, mustChangePassword: etat.mustChangePassword };
+    const perimetre = calculerPerimetre(await chargerArbre(), etat);
+    return { ...jeton, role: etat.role, mustChangePassword: etat.mustChangePassword, perimetre };
   } catch {
     // Token invalide, expiré, ou signature incorrecte
     return null;
@@ -95,8 +101,46 @@ export async function withAuth(
       { status: 403 }
     );
   }
-  const reponse = await handler(request, user);
-  return filtrerScores(reponse, user.role);
+  // Toutes les requêtes Prisma de la route sont filtrées sur ce périmètre.
+  let reponse: NextResponse;
+  try {
+    reponse = await contexteAcces.run(user.perimetre ?? PERIMETRE_VIDE, () => handler(request, user));
+  } catch (e) {
+    if (e instanceof HorsPerimetreError) {
+      return NextResponse.json({ success: false, error: e.message, errorCode: e.code }, { status: 403 });
+    }
+    throw e;
+  }
+  return filtrerScores(await refusDePerimetre(reponse), user.role);
+}
+
+/**
+ * Les routes interceptent souvent leurs erreurs en « 500 ». Un refus de périmètre
+ * (création hors périmètre, ou modification d'un dossier visible en consultation
+ * seulement, que Prisma ne trouve alors pas) est rendu en 403 avec un message clair.
+ */
+async function refusDePerimetre(reponse: NextResponse): Promise<NextResponse> {
+  if (reponse.status !== 500) return reponse;
+  let corps: { error?: unknown } | null = null;
+  try {
+    corps = await reponse.clone().json();
+  } catch {
+    return reponse;
+  }
+  const message = typeof corps?.error === "string" ? corps.error : "";
+  const horsPerimetre = message.includes(new HorsPerimetreError().message);
+  const introuvable = /Record to (update|delete) (does not exist|not found)|No record was found for an? (update|delete)|required but not found/i.test(message);
+  if (!horsPerimetre && !introuvable) return reponse;
+  return NextResponse.json(
+    {
+      success: false,
+      error: horsPerimetre
+        ? new HorsPerimetreError().message
+        : "Dossier introuvable ou en consultation seule dans votre périmètre.",
+      errorCode: "HORS_PERIMETRE",
+    },
+    { status: 403 }
+  );
 }
 
 /**

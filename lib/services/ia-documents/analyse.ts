@@ -1,9 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { natureReponse, resultatSchema, SCHEMA_SORTIE, type CritereGrille, type ResultatAnalyse } from "./resultat";
 import type { PieceConvertie } from "./conversion";
+import { clientIA, type ClientIA, type ReponseIA } from "./fournisseurs";
 
 /**
- * Analyse des pièces d'un dossier de financement de projet par Claude.
+ * Analyse des pièces d'un dossier de financement de projet par l'IA (fournisseur du
+ * paramétrage, Claude par défaut — voir fournisseurs.ts).
  *
  * Double rôle :
  * 1. CONTRÔLE — identifier chaque pièce, vérifier qu'elle est complète et qu'elle
@@ -19,7 +21,6 @@ import type { PieceConvertie } from "./conversion";
  * proposition est revérifiée contre la grille (voir construirePropositions).
  */
 
-export const MODELE_IA = "claude-opus-5-5";
 /** Limite de taille d'une requête à l'API (32 Mo) ; marge pour les consignes. */
 export const TAILLE_MAX_ENVOI = 30 * 1024 * 1024;
 
@@ -121,20 +122,16 @@ export interface ResultatAppel {
 /** Durée maximale d'une demande : la fonction serveur est coupée à 300 s. */
 const DELAI_DEMANDE_MS = 240_000;
 
-function lireReponse(message: Anthropic.Beta.Messages.BetaMessage): ResultatAnalyse {
-  if (message.stop_reason === "refusal") {
+function lireReponse(reponse: ReponseIA): ResultatAnalyse {
+  if (reponse.arret === "refus") {
     throw new Error("L'IA a refusé d'analyser ces pièces. Vérifiez leur contenu ou analysez-les séparément.");
   }
-  if (message.stop_reason === "max_tokens") {
+  if (reponse.arret === "tronque") {
     throw new Error("Réponse de l'IA tronquée : analysez les pièces en plusieurs fois.");
   }
-  const texte = message.content
-    .filter((b): b is Anthropic.Beta.Messages.BetaTextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("");
   let brut: unknown;
   try {
-    brut = JSON.parse(texte);
+    brut = JSON.parse(reponse.texte);
   } catch {
     throw new Error("Réponse de l'IA illisible (JSON invalide).");
   }
@@ -146,6 +143,7 @@ function lireReponse(message: Anthropic.Beta.Messages.BetaMessage): ResultatAnal
 function messageErreur(e: unknown): string {
   if (e instanceof Anthropic.APIConnectionTimeoutError) return "délai dépassé";
   if (e instanceof Anthropic.RateLimitError) return "limite de débit de l'API atteinte";
+  if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) return "délai dépassé";
   return e instanceof Error ? e.message : "erreur inconnue";
 }
 
@@ -153,6 +151,8 @@ export async function analyserPieces(params: {
   pieces: PieceConvertie[];
   criteres: CritereGrille[];
   contexte: string;
+  /** Fournisseur imposé (tests) ; sinon celui du paramétrage. */
+  client?: ClientIA;
 }): Promise<ResultatAppel> {
   const total = params.pieces.reduce((t, p) => t + p.taille, 0);
   if (total > TAILLE_MAX_ENVOI) {
@@ -160,71 +160,46 @@ export async function analyserPieces(params: {
       `Les pièces représentent ${(total / 1024 / 1024).toFixed(1)} Mo une fois converties : au-delà de 30 Mo, analysez-les en plusieurs fois.`
     );
   }
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error("Analyse par IA non configurée : la clé ANTHROPIC_API_KEY est absente.");
-  }
+  const ia = params.client ?? (await clientIA());
+  if (ia.manque) throw new Error(ia.manque);
 
-  const client = new Anthropic();
-  // Pièces communes à toutes les demandes, mises en cache : seules la première demande
-  // les paie en entier, les suivantes les relisent depuis le cache.
-  const blocs: Anthropic.Beta.Messages.BetaContentBlockParam[] = params.pieces.flatMap((p) => p.blocs);
-  const dernier = blocs[blocs.length - 1] as { cache_control?: { type: "ephemeral" } };
-  dernier.cache_control = { type: "ephemeral" };
-  const systeme = consignes(params.contexte);
-
-  // Mêmes réglages pour toutes les demandes : un réglage différent (effort, format)
-  // empêcherait la relecture des pièces en cache.
-  const lancer = (demande: string) =>
-    client.beta.messages.stream(
-      {
-        model: MODELE_IA,
-        max_tokens: 32000,
-        // Repli serveur activé : si le modèle décline la requête, l'API la rejoue sur
-        // un modèle de secours dans le même appel.
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
-        thinking: { type: "adaptive" },
-        output_config: {
-          effort: "medium",
-          format: { type: "json_schema", schema: SCHEMA_SORTIE as unknown as Record<string, unknown> },
-        },
-        system: systeme,
-        messages: [{ role: "user", content: [...blocs, { type: "text", text: demande }] }],
-      },
-      { timeout: DELAI_DEMANDE_MS, maxRetries: 1 }
-    );
+  // Mêmes pièces, même consigne générale et mêmes réglages pour toutes les demandes :
+  // c'est ce qui permet au fournisseur de relire les pièces depuis son cache.
+  const base = {
+    systeme: consignes(params.contexte),
+    blocs: params.pieces.flatMap((p) => p.blocs),
+    schema: SCHEMA_SORTIE as unknown as Record<string, unknown>,
+  };
+  const lancer = (consigne: string) => ia.lancer({ ...base, consigne }, DELAI_DEMANDE_MS);
 
   // Le contrôle part en premier ; les lots attendent qu'il ait commencé à répondre,
   // moment où les pièces sont en cache (des demandes simultanées ne se partagent pas
   // le cache). Attente plafonnée : au pire, les lots paient les pièces en entier.
   const controle = lancer(demandeControle(params.pieces.length));
-  const finControle = controle.finalMessage();
   let minuterie: ReturnType<typeof setTimeout> | undefined;
   await Promise.race([
-    new Promise<void>((ok) => controle.once("streamEvent", () => ok())),
-    finControle.then(() => undefined, () => undefined),
+    controle.premiereReponse,
     new Promise<void>((ok) => (minuterie = setTimeout(ok, 20_000))),
   ]);
   clearTimeout(minuterie);
 
   const lots = repartirEnLots(params.criteres);
   const [rControle, ...rLots] = await Promise.allSettled([
-    finControle,
-    ...lots.map((lot) => lancer(demandeLot(lot)).finalMessage()),
+    controle.fin,
+    ...lots.map((lot) => lancer(demandeLot(lot)).fin),
   ]);
 
   const avertissements: string[] = [];
   const usage = { entree: 0, sortie: 0 };
-  let modele: string = MODELE_IA;
-  const lire = (r: PromiseSettledResult<Anthropic.Beta.Messages.BetaMessage>, quoi: string) => {
+  let modele: string = ia.config.modele;
+  const lire = (r: PromiseSettledResult<ReponseIA>, quoi: string) => {
     if (r.status === "rejected") {
       avertissements.push(`${quoi} : ${messageErreur(r.reason)}.`);
       return null;
     }
-    const u = r.value.usage;
-    usage.entree += u.input_tokens + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0);
-    usage.sortie += u.output_tokens;
-    modele = r.value.model;
+    usage.entree += r.value.usage.entree;
+    usage.sortie += r.value.usage.sortie;
+    modele = r.value.modele;
     try {
       return lireReponse(r.value);
     } catch (e) {

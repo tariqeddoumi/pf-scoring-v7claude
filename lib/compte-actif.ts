@@ -13,6 +13,10 @@ export interface EtatCompte {
   role: string | null;
   /** Mot de passe provisoire à remplacer avant tout autre accès. */
   mustChangePassword: boolean;
+  /** Entité de rattachement (null = tout le périmètre). */
+  entiteId: string | null;
+  /** « entite » ou « groupe » (écriture dans toute la descendance). */
+  porteeEcriture: string;
 }
 
 const cacheComptes = new Map<string, { etat: EtatCompte; expire: number }>();
@@ -20,14 +24,16 @@ const cacheComptes = new Map<string, { etat: EtatCompte; expire: number }>();
 export async function etatDuCompte(userId: string): Promise<EtatCompte> {
   const enCache = cacheComptes.get(userId);
   if (enCache && enCache.expire > Date.now()) return enCache.etat;
-  const { default: prisma } = await import("./prisma-client");
+  const { prismaSysteme: prisma } = await import("./prisma-client");
   const compte = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true, isActive: true, deletedAt: true, mustChangePassword: true },
+    select: { role: true, isActive: true, deletedAt: true, mustChangePassword: true, entiteId: true, porteeEcriture: true },
   });
   const etat: EtatCompte = {
     role: compte && compte.isActive && !compte.deletedAt ? String(compte.role) : null,
     mustChangePassword: Boolean(compte?.mustChangePassword),
+    entiteId: compte?.entiteId ?? null,
+    porteeEcriture: compte?.porteeEcriture ?? "entite",
   };
   cacheComptes.set(userId, { etat, expire: Date.now() + DUREE_CACHE_COMPTE_MS });
   return etat;

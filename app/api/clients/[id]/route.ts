@@ -15,6 +15,7 @@ export async function GET(
       const client = await prisma.client.findUnique({
         where: { id },
         include: {
+          entite: { select: { id: true, code: true, nom: true } },
           // La fiche affiche l'encours demandé et la note de chaque dossier :
           // sans montant ni note, la liste des projets n'apprend rien.
           projects: {
@@ -86,7 +87,8 @@ export async function PUT(
         );
       }
 
-      const { dateRelation, status, ...champs } = validation.data;
+      const { dateRelation, status, entiteId, ...champs } = validation.data;
+      const avant = await prisma.client.findUnique({ where: { id }, select: { entiteId: true } });
 
       const client = await prisma.client.update({
         where: { id },
@@ -96,8 +98,14 @@ export async function PUT(
             dateRelation: dateRelation ? new Date(dateRelation) : null,
           }),
           ...(status !== undefined && status !== null && { status }),
+          // null n'est pas une entité : seul un transfert vers une banque est accepté.
+          ...(entiteId ? { entiteId } : {}),
         },
       });
+      // Transfert du client vers une autre banque : ses projets le suivent.
+      if (entiteId && avant && avant.entiteId !== entiteId) {
+        await prisma.project.updateMany({ where: { clientId: id }, data: { entiteId } });
+      }
 
       return NextResponse.json({ success: true, data: client });
     } catch (error: any) {

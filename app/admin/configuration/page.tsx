@@ -28,9 +28,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   behavior: "Comportement",
   scoring: "Moteur de scoring",
   screens: "Écrans & formulaires",
+  ia: "Intelligence artificielle (analyse des pièces)",
 };
 
-const CATEGORY_ORDER = ["branding", "theme", "behavior", "scoring", "screens"];
+const CATEGORY_ORDER = ["branding", "theme", "behavior", "scoring", "ia", "screens"];
 
 export default function ConfigurationPage() {
   const router = useRouter();

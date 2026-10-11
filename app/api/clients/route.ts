@@ -59,6 +59,7 @@ async function handler(request: NextRequest, user: AuthPayload) {
             raisonSociale: true,
             ville: true,
             projects: { select: { id: true } },
+            entite: { select: { id: true, code: true, nom: true } },
           },
         }),
         prisma.client.count({ where }),

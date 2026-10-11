@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTokenFromCookie, verifyToken, hashPassword } from "@/lib/auth";
+import { etatDuCompte } from "@/lib/compte-actif";
+import { calculerPerimetre, chargerArbre } from "@/lib/entites/perimetre";
+import { compteGerable, filtreComptes } from "@/lib/entites/utilisateurs";
 import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 
@@ -26,7 +29,10 @@ export async function GET(request: NextRequest) {
 
     let users;
     if (isAdmin) {
+      // Un administrateur rattaché à une banque ne liste que les comptes de sa branche.
+      const perimetre = calculerPerimetre(await chargerArbre(), await etatDuCompte(payload.userId));
       users = await prisma.user.findMany({
+        where: filtreComptes(perimetre),
         select: {
           id: true,
           email: true,
@@ -102,7 +108,10 @@ export async function PUT(request: NextRequest) {
       where: { id },
     });
 
-    if (!user) {
+    const horsBranche =
+      user && payload.userId !== id &&
+      !compteGerable(calculerPerimetre(await chargerArbre(), await etatDuCompte(payload.userId)), user.entiteId);
+    if (!user || horsBranche) {
       return NextResponse.json(
         { error: "Utilisateur non trouvé" },
         { status: 404 }
