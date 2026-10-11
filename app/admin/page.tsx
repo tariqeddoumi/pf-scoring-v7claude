@@ -138,6 +138,15 @@ const ADMIN_SECTIONS: AdminSection[] = [
     requiredRole: "system_admin",
   },
   {
+    id: "entites",
+    famille: "exploitation",
+    title: "Banques et filiales",
+    description: "Groupe, banques, banques régionales et filiales : périmètres d'accès, nom et logo de l'outil par entité",
+    href: "/admin/entites",
+    icon: "🏦",
+    requiredRole: "system_admin",
+  },
+  {
     id: "users",
     famille: "exploitation",
     title: "Gestion des Utilisateurs",

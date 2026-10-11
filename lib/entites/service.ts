@@ -13,18 +13,21 @@ import { cheminDe, chargerArbre, descendance, oublierArbre, peutLire, type Perim
 
 export const TYPES_ENTITE = ["GROUPE", "BANQUE", "BANQUE_REGIONALE", "FILIALE"] as const;
 
+// Champ absent = inchangé (undefined) ; champ vidé = effacé (null). Une
+// modification partielle ne doit rien effacer de ce qu'elle ne mentionne pas.
 const texteOptionnel = z
   .string()
   .trim()
   .max(500)
-  .nullish()
-  .transform((v) => (v ? v : null));
+  .nullable()
+  .optional()
+  .transform((v) => (v === "" ? null : v));
 
 export const entiteSchema = z.object({
   code: z.string().trim().min(2).max(30).regex(/^[A-Za-z0-9_-]+$/, "Lettres, chiffres, - et _ uniquement"),
   nom: z.string().trim().min(2).max(200),
   type: z.enum(TYPES_ENTITE),
-  parentId: z.string().uuid().nullish().transform((v) => v ?? null),
+  parentId: z.string().uuid().nullable().optional(),
   pays: texteOptionnel,
   isActive: z.boolean().optional(),
   nomOutil: texteOptionnel,
@@ -63,7 +66,8 @@ function controlerParent(p: Perimetre, parentId: string | null) {
   if (parentId && !peutLire(p, parentId)) throw new ErreurEntite("Entité parente hors de votre périmètre.", 403);
 }
 
-export async function creerEntite(p: Perimetre, saisie: EntiteSaisie) {
+export async function creerEntite(p: Perimetre, entree: EntiteSaisie) {
+  const saisie = { ...entree, parentId: entree.parentId ?? null };
   controlerParent(p, saisie.parentId);
   const arbre = await chargerArbre();
   const parent = saisie.parentId ? arbre.find((e) => e.id === saisie.parentId) : null;

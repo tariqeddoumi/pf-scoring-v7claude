@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       if (!roleAttribuable(admin.role, role)) {
         errors.push({ field: "role", message: "Seul un administrateur système attribue ce rôle" });
       }
-      const entite = entiteAttribuable(perimetre, entiteId);
+      const entite = entiteAttribuable(perimetre, entiteId, role || "read_only");
       if (!entite.ok) errors.push({ field: "entiteId", message: entite.motif });
       if (porteeEcriture !== undefined && !PORTEES.includes(porteeEcriture)) {
         errors.push({ field: "porteeEcriture", message: "Portée invalide" });

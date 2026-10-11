@@ -66,6 +66,14 @@ FROM "BP_PF_clients" c WHERE p."clientId" = c.id AND p."entiteId" IS NULL;
 UPDATE "BP_PF_projects" SET "entiteId" = (SELECT id FROM "BP_PF_entites" WHERE "parentId" IS NULL)
 WHERE "entiteId" IS NULL AND (SELECT count(*) FROM "BP_PF_entites" WHERE "parentId" IS NULL) = 1;
 
+-- Utilisateurs existants : rattachés à la racine avec écriture dans tout le groupe,
+-- ce qui conserve exactement leur accès d'avant. Les administrateurs système restent
+-- sans entité (administration de toute la plateforme). Un compte sans entité qui
+-- n'est pas administrateur système n'a accès à aucun dossier.
+UPDATE "BP_PF_users" SET "entiteId" = (SELECT id FROM "BP_PF_entites" WHERE "parentId" IS NULL), "porteeEcriture" = 'groupe'
+WHERE "entiteId" IS NULL AND "role"::text <> 'system_admin'
+  AND (SELECT count(*) FROM "BP_PF_entites" WHERE "parentId" IS NULL) = 1;
+
 -- Paramètres de l'IA documentaire (les clés d'API restent des variables d'environnement).
 INSERT INTO "BP_PF_app_configuration" ("key", "value", "type", "category", "description", "isPublic", "metadata", "updatedAt")
 VALUES

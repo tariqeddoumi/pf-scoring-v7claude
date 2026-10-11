@@ -39,6 +39,7 @@ const SEGMENTS: Record<string, string> = {
   regles: "Règles et seuils",
   secteurs: "Calibrage sectoriel",
   users: "Utilisateurs",
+  entites: "Banques et filiales",
   configuration: "Paramétrage de l'outil",
   diagnostic: "Diagnostic",
   granularity: "Granularité",

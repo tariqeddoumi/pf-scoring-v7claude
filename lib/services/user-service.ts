@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma-client";
 import {
   createUserSchema,
@@ -12,7 +13,9 @@ export class UserService {
    */
   static async createUser(
     data: z.infer<typeof createUserSchema>,
-    createdBy: string
+    createdBy: string,
+    /** Entité du nouveau compte : celle de l'administrateur (null = tout le périmètre). */
+    entiteId: string | null = null
   ) {
     const validated = createUserSchema.parse(data);
 
@@ -20,6 +23,7 @@ export class UserService {
       data: {
         ...validated,
         role: validated.role || "read_only",
+        entiteId,
       },
     });
 
@@ -56,11 +60,12 @@ export class UserService {
   /**
    * Get all users (paginated)
    */
-  static async getAllUsers(page: number = 1, limit: number = 50) {
+  static async getAllUsers(page: number = 1, limit: number = 50, where: Prisma.UserWhereInput = {}) {
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
@@ -74,7 +79,7 @@ export class UserService {
           createdAt: true,
         },
       }),
-      prisma.user.count(),
+      prisma.user.count({ where }),
     ]);
 
     return {

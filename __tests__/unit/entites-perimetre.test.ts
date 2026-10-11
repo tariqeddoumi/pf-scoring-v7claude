@@ -63,8 +63,11 @@ describe("périmètre multi-banques", () => {
     expect(peutEcrire(grandsComptes, "sn")).toBe(true);
   });
 
-  it("compte sans entité : tout ; entité inconnue ou désactivée (ou ascendante désactivée) : rien", () => {
-    expect(calculerPerimetre(arbre, { entiteId: null }).tout).toBe(true);
+  it("sans entité : tout pour un administrateur système, rien pour les autres ; entité inconnue ou désactivée : rien", () => {
+    expect(calculerPerimetre(arbre, { entiteId: null, role: "system_admin" }).tout).toBe(true);
+    const inscrit = calculerPerimetre(arbre, { entiteId: null, role: "read_only" });
+    expect(inscrit.tout).toBe(false);
+    expect(inscrit.lecture).toEqual([]);
     expect(calculerPerimetre(arbre, { entiteId: "inconnue" }).lecture).toEqual([]);
     const ferme = arbre.map((e) => (e.id === "afrique" ? { ...e, isActive: false } : e));
     expect(calculerPerimetre(ferme, { entiteId: "sn" }).lecture).toEqual([]);
@@ -97,7 +100,7 @@ describe("filtre des requêtes", () => {
   it("modèles non cloisonnés et périmètre total : arguments inchangés", () => {
     const args = { where: { id: "x" } };
     expect(argumentsFiltres("ScoringNode", "findMany", args, p)).toBe(args);
-    expect(argumentsFiltres("Client", "findMany", args, calculerPerimetre(arbre, { entiteId: null }))).toBe(args);
+    expect(argumentsFiltres("Client", "findMany", args, calculerPerimetre(arbre, { entiteId: null, role: "system_admin" }))).toBe(args);
   });
 
   it("conserve un AND existant et lit les références connect", () => {
@@ -109,7 +112,7 @@ describe("filtre des requêtes", () => {
 
 describe("gestion des comptes dans le périmètre", () => {
   const adminAfrique = calculerPerimetre(arbre, { entiteId: "afrique" });
-  const adminGlobal = calculerPerimetre(arbre, { entiteId: null });
+  const adminGlobal = calculerPerimetre(arbre, { entiteId: null, role: "system_admin" });
 
   it("un administrateur de filiale gère sa branche seulement", () => {
     expect(compteGerable(adminAfrique, "sn")).toBe(true);
@@ -123,7 +126,8 @@ describe("gestion des comptes dans le périmètre", () => {
     expect(entiteAttribuable(adminAfrique, "ci")).toEqual({ ok: true, entiteId: "ci" });
     expect(entiteAttribuable(adminAfrique, "bcp").ok).toBe(false);
     expect(entiteAttribuable(adminAfrique, null).ok).toBe(false);
-    expect(entiteAttribuable(adminGlobal, null)).toEqual({ ok: true, entiteId: null });
+    expect(entiteAttribuable(adminGlobal, null, "system_admin")).toEqual({ ok: true, entiteId: null });
+    expect(entiteAttribuable(adminGlobal, null, "risk_analyst").ok).toBe(false);
   });
 
   it("seul un administrateur système touche au rôle d'administrateur système", () => {
@@ -131,5 +135,24 @@ describe("gestion des comptes dans le périmètre", () => {
     expect(roleAttribuable("scoring_admin", "risk_analyst", "system_admin")).toBe(false);
     expect(roleAttribuable("scoring_admin", "risk_analyst", "read_only")).toBe(true);
     expect(roleAttribuable("system_admin", "system_admin")).toBe(true);
+  });
+});
+
+describe("saisie d'une entité", () => {
+  // Import tardif : le service charge le client de base de données.
+  jest.mock("@/lib/prisma-client", () => ({ prismaSysteme: {} }));
+  const { entiteSchema } = require("@/lib/entites/service") as typeof import("@/lib/entites/service");
+
+  it("une modification partielle n'efface ni ne détache rien", () => {
+    const r = entiteSchema.partial().parse({ nomOutil: "Scoring Sénégal" });
+    expect(r).toEqual({ nomOutil: "Scoring Sénégal" });
+    expect("parentId" in r && r.parentId !== undefined).toBe(false);
+  });
+
+  it("un champ vidé est effacé ; logo et couleur contrôlés", () => {
+    expect(entiteSchema.partial().parse({ logoUrl: "" })).toEqual({ logoUrl: null });
+    expect(entiteSchema.partial().safeParse({ logoUrl: "javascript:alert(1)" }).success).toBe(false);
+    expect(entiteSchema.partial().safeParse({ couleurPrimaire: "rouge" }).success).toBe(false);
+    expect(entiteSchema.partial().safeParse({ couleurPrimaire: "#C2410C" }).success).toBe(true);
   });
 });

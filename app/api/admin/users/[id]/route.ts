@@ -91,7 +91,7 @@ export async function PUT(
       if (!roleAttribuable(admin.role, role, String(cible.role))) {
         errors.push({ field: "role", message: "Seul un administrateur système modifie ce compte ou attribue ce rôle" });
       }
-      const entite = entiteId === undefined ? null : entiteAttribuable(perimetre, entiteId);
+      const entite = entiteId === undefined ? null : entiteAttribuable(perimetre, entiteId, role ?? String(cible.role));
       if (entite && !entite.ok) errors.push({ field: "entiteId", message: entite.motif });
       if (porteeEcriture !== undefined && !PORTEES.includes(porteeEcriture)) {
         errors.push({ field: "porteeEcriture", message: "Portée invalide" });

@@ -9,8 +9,9 @@
  * - ÉCRITURE : par défaut, sur sa seule entité (les filiales sont en consultation) ;
  *   avec la portée « groupe » (chargé d'affaires grands comptes, par exemple), sur
  *   toute sa descendance ;
- * - un compte sans entité (administrateurs de la plateforme, comptes antérieurs au
- *   multi-banques) a tout le périmètre.
+ * - un administrateur système sans entité administre toute la plateforme ; tout
+ *   autre compte sans entité (inscription, connexion Google…) ne voit rien tant
+ *   qu'un administrateur ne l'a pas rattaché à une banque (sécurité par défaut).
  * Une entité désactivée ferme l'accès de ses utilisateurs, sans masquer ses dossiers
  * aux entités ascendantes.
  */
@@ -74,9 +75,9 @@ export function ascendance(arbre: EntiteResume[], id: string): EntiteResume[] {
 
 export function calculerPerimetre(
   arbre: EntiteResume[],
-  compte: { entiteId: string | null; porteeEcriture?: string | null }
+  compte: { entiteId: string | null; porteeEcriture?: string | null; role?: string | null }
 ): Perimetre {
-  if (!compte.entiteId) return PERIMETRE_TOTAL;
+  if (!compte.entiteId) return compte.role === "system_admin" ? PERIMETRE_TOTAL : PERIMETRE_VIDE;
   // Entité inconnue ou désactivée (elle ou une ascendante) : aucun accès.
   const chaine = ascendance(arbre, compte.entiteId);
   if (chaine.length === 0 || chaine.some((e) => !e.isActive)) {

@@ -27,11 +27,18 @@ export function compteGerable(p: Perimetre, entiteIdDuCompte: string | null): bo
  */
 export function entiteAttribuable(
   p: Perimetre,
-  demandee: string | null | undefined
+  demandee: string | null | undefined,
+  roleCible?: string
 ): { ok: true; entiteId: string | null } | { ok: false; motif: string } {
   if (demandee === undefined) return { ok: true, entiteId: p.entiteId };
   if (demandee === null) {
-    return p.tout ? { ok: true, entiteId: null } : { ok: false, motif: "Seul un administrateur de toute la plateforme crée un compte sans entité." };
+    if (!p.tout) return { ok: false, motif: "Seul un administrateur de toute la plateforme crée un compte sans banque." };
+    // Sans banque, seul un administrateur système a un accès (à tout) ; un autre
+    // compte n'aurait accès à rien : on exige une banque.
+    if (roleCible !== undefined && roleCible !== "system_admin") {
+      return { ok: false, motif: "Rattachez l'utilisateur à une banque (seul un administrateur système peut n'en avoir aucune)." };
+    }
+    return { ok: true, entiteId: null };
   }
   if (!peutLire(p, demandee)) return { ok: false, motif: "Entité hors de votre périmètre." };
   return { ok: true, entiteId: demandee };
