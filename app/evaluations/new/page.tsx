@@ -231,7 +231,7 @@ export default function NouvelleEvaluationPage() {
                     {brouillon ? (
                       <Link
                         href={`/evaluations/${brouillon.id}/saisie`}
-                        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-primary/40 bg-accent px-3 text-sm font-semibold text-accent-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-primary/40 bg-accent px-3 text-sm font-semibold text-accent-foreground transition-colors hover:bg-primary/90 hover:text-primary-foreground"
                       >
                         Reprendre la saisie
                         {brouillon.avancement?.total ? (

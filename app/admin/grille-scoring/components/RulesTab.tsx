@@ -384,10 +384,10 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
           </div>
 
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">
+            <label htmlFor="rulestab-1" className="block text-xs text-muted-foreground mb-1">
               Condition de déclenchement
             </label>
-            <textarea
+            <textarea id="rulestab-1"
               value={formData.conditionExpression}
               onChange={(e) => maj("conditionExpression", e.target.value)}
               rows={2}
@@ -511,8 +511,8 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Type</label>
-              <select
+              <label htmlFor="rulestab-2" className="block text-xs text-muted-foreground mb-1">Type</label>
+              <select id="rulestab-2"
                 value={formData.ruleType}
                 onChange={(e) => maj("ruleType", e.target.value)}
                 className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
@@ -525,8 +525,8 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Sévérité</label>
-              <select
+              <label htmlFor="rulestab-3" className="block text-xs text-muted-foreground mb-1">Sévérité</label>
+              <select id="rulestab-3"
                 value={formData.severity}
                 onChange={(e) => maj("severity", e.target.value)}
                 className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
@@ -542,8 +542,8 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">Action</label>
-              <select
+              <label htmlFor="rulestab-4" className="block text-xs text-muted-foreground mb-1">Action</label>
+              <select id="rulestab-4"
                 value={formData.actionType}
                 onChange={(e) => maj("actionType", e.target.value)}
                 className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
@@ -556,10 +556,10 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">
+              <label htmlFor="rulestab-5" className="block text-xs text-muted-foreground mb-1">
                 Malus (points)
               </label>
-              <input
+              <input id="rulestab-5"
                 type="number"
                 min={0}
                 max={MALUS_MAX}
@@ -617,7 +617,7 @@ export function RulesTab({ nodeId, versionId }: RulesTabProps) {
             <button
               onClick={enregistrer}
               disabled={!enregistrable}
-              className="flex-1 px-3 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded text-sm font-medium"
+              className="flex-1 px-3 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground rounded text-sm font-medium"
             >
               {editingId ? "Enregistrer" : "Créer"}
             </button>

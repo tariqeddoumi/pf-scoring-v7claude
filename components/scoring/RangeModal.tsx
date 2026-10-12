@@ -59,8 +59,8 @@ export default function RangeModal({
   const isEdit = !!initialData?.id;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card rounded-xl border border-border w-full max-w-md p-6 space-y-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-xl border border-border w-full max-w-md max-h-[90vh] overflow-y-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground">
             {isEdit ? "Modifier plage" : "Ajouter plage"}
@@ -68,7 +68,7 @@ export default function RangeModal({
           <button
             onClick={onClose}
             className="p-1 hover:bg-accent rounded"
-          >
+           aria-label="Fermer">
             <X size={20} className="text-muted-foreground" />
           </button>
         </div>
@@ -84,10 +84,10 @@ export default function RangeModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-1">
+              <label htmlFor="rangemodal-1" className="block text-sm font-medium text-secondary-foreground mb-1">
                 Valeur min
               </label>
-              <input
+              <input id="rangemodal-1"
                 type="number"
                 value={formData.minValue}
                 onChange={(e) => setFormData({ ...formData, minValue: parseFloat(e.target.value) })}
@@ -96,10 +96,10 @@ export default function RangeModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-1">
+              <label htmlFor="rangemodal-2" className="block text-sm font-medium text-secondary-foreground mb-1">
                 Valeur max
               </label>
-              <input
+              <input id="rangemodal-2"
                 type="number"
                 value={formData.maxValue}
                 onChange={(e) => setFormData({ ...formData, maxValue: parseFloat(e.target.value) })}
@@ -110,10 +110,10 @@ export default function RangeModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="rangemodal-3" className="block text-sm font-medium text-secondary-foreground mb-1">
               Score (0-100)
             </label>
-            <input
+            <input id="rangemodal-3"
               type="number"
               value={formData.score}
               onChange={(e) => setFormData({ ...formData, score: parseFloat(e.target.value) })}
@@ -126,10 +126,10 @@ export default function RangeModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="rangemodal-4" className="block text-sm font-medium text-secondary-foreground mb-1">
               Libellé (optionnel)
             </label>
-            <input
+            <input id="rangemodal-4"
               type="text"
               value={formData.label}
               onChange={(e) => setFormData({ ...formData, label: e.target.value })}
@@ -149,7 +149,7 @@ export default function RangeModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors disabled:opacity-50"
               disabled={loading}
             >
               {loading ? "Sauvegarde..." : isEdit ? "Modifier" : "Ajouter"}

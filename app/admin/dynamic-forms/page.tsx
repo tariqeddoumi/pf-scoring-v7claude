@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function DynamicFormsAdmin() {
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,7 @@ export default function DynamicFormsAdmin() {
       );
       setInitialized(projectConfig.success === true);
     } catch (error) {
-      console.error('Error checking status:', error);
+      console.error('[Formulaires dynamiques] statut :', error);
     } finally {
       setCheckingStatus(false);
     }
@@ -46,13 +46,13 @@ export default function DynamicFormsAdmin() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update configuration');
+        throw new Error('Mise à jour du paramètre impossible');
       }
 
       setEnabled(!enabled);
       setMessage({
         type: 'success',
-        text: `Dynamic forms ${!enabled ? 'enabled' : 'disabled'} successfully`,
+        text: `Formulaires dynamiques ${!enabled ? 'activés' : 'désactivés'}.`,
       });
 
       // Reload config after delay
@@ -62,7 +62,7 @@ export default function DynamicFormsAdmin() {
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to update configuration',
+        text: error instanceof Error ? error.message : 'Mise à jour du paramètre impossible',
       });
     } finally {
       setLoading(false);
@@ -78,13 +78,13 @@ export default function DynamicFormsAdmin() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to initialize database');
+        throw new Error(data.error || 'Initialisation impossible');
       }
 
       setInitialized(true);
       setMessage({
         type: 'success',
-        text: 'Database initialized successfully with form configurations',
+        text: 'Configuration des formulaires installée en base.',
       });
 
       // Reload status after delay
@@ -94,7 +94,7 @@ export default function DynamicFormsAdmin() {
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to initialize database',
+        text: error instanceof Error ? error.message : 'Initialisation impossible',
       });
     } finally {
       setLoading(false);
@@ -106,7 +106,7 @@ export default function DynamicFormsAdmin() {
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-4">
           <Loader2 size={40} className="animate-spin text-primary" />
-          <p className="text-muted-foreground">Checking configuration status...</p>
+          <p className="text-muted-foreground">Lecture de la configuration…</p>
         </div>
       </div>
     );
@@ -115,16 +115,11 @@ export default function DynamicFormsAdmin() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Dynamic Forms Management</h1>
-          <p className="text-muted-foreground mt-1">Configure ultra-parametrizable form rendering</p>
-        </div>
-        <Link href="/admin" className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground">
-          <ArrowLeft size={20} />
-          <span>Back to Admin</span>
-        </Link>
-      </div>
+      <PageHeader
+        titre="Formulaires dynamiques"
+        description="Afficher les formulaires de projet à partir de leur configuration en base, modifiable sans développement."
+        retour={{ href: "/admin", libelle: "Paramétrage" }}
+      />
 
       {/* Messages */}
       {message && (
@@ -150,9 +145,9 @@ export default function DynamicFormsAdmin() {
         <div className="bg-card border border-border rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Feature Toggle</h3>
+              <h3 className="text-lg font-semibold text-foreground">Activation</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Enable dynamic form rendering for project screens
+                Formulaires de création et de modification des projets construits depuis la base
               </p>
             </div>
             <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -160,7 +155,7 @@ export default function DynamicFormsAdmin() {
                 ? 'bg-success/15 text-success'
                 : 'bg-warning/15 text-warning'
             }`}>
-              {enabled ? 'Enabled' : 'Disabled'}
+              {enabled ? 'Activés' : 'Désactivés'}
             </div>
           </div>
 
@@ -169,26 +164,26 @@ export default function DynamicFormsAdmin() {
             disabled={loading}
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               enabled
-                ? 'bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-white'
-                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-white'
+                ? 'bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-destructive-foreground'
+                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-primary-foreground'
             }`}
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader2 size={18} className="animate-spin" />
-                Updating...
+                Mise à jour…
               </span>
             ) : (
-              `${enabled ? 'Disable' : 'Enable'} Dynamic Forms`
+              `${enabled ? 'Désactiver' : 'Activer'} les formulaires dynamiques`
             )}
           </button>
 
           <div className="text-xs text-muted-foreground space-y-1 mt-4">
-            <p><strong>When enabled:</strong></p>
+            <p><strong>Une fois activés :</strong></p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Project forms render from database configuration</li>
-              <li>Forms can be customized without code changes</li>
-              <li>Fallback to hardcoded forms if config missing</li>
+              <li>les formulaires de projet suivent la configuration en base ;</li>
+              <li>ils se personnalisent sans développement ;</li>
+              <li>sans configuration, les formulaires standard s&apos;affichent.</li>
             </ul>
           </div>
         </div>
@@ -197,9 +192,9 @@ export default function DynamicFormsAdmin() {
         <div className="bg-card border border-border rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Database Initialization</h3>
+              <h3 className="text-lg font-semibold text-foreground">Installation de la configuration</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Seed database from lib/field-config.ts
+                Champs et sections par défaut des formulaires de projet
               </p>
             </div>
             <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -207,7 +202,7 @@ export default function DynamicFormsAdmin() {
                 ? 'bg-success/15 text-success'
                 : 'bg-warning/15 text-warning'
             }`}>
-              {initialized ? 'Initialized' : 'Pending'}
+              {initialized ? 'Installée' : 'À installer'}
             </div>
           </div>
 
@@ -217,28 +212,28 @@ export default function DynamicFormsAdmin() {
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               initialized
                 ? 'bg-secondary text-muted-foreground cursor-not-allowed'
-                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-white'
+                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-primary-foreground'
             }`}
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader2 size={18} className="animate-spin" />
-                Initializing...
+                Installation…
               </span>
             ) : initialized ? (
-              'Already Initialized'
+              'Déjà installée'
             ) : (
-              'Initialize Database'
+              'Installer la configuration'
             )}
           </button>
 
           <div className="text-xs text-muted-foreground space-y-1 mt-4">
-            <p><strong>This will:</strong></p>
+            <p><strong>Cette opération :</strong></p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Create FormSection records from PROJECT_SECTIONS</li>
-              <li>Create FieldConfiguration records from each field</li>
-              <li>Set up the database schema for dynamic forms</li>
-              <li>Skip if already initialized</li>
+              <li>crée les sections des formulaires de projet ;</li>
+              <li>crée la configuration de chaque champ ;</li>
+              <li>prépare les formulaires dynamiques ;</li>
+              <li>ne fait rien si la configuration existe déjà.</li>
             </ul>
           </div>
         </div>
@@ -246,25 +241,25 @@ export default function DynamicFormsAdmin() {
 
       {/* Documentation */}
       <div className="bg-primary/10 border border-ring/50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-primary mb-4">How It Works</h3>
+        <h3 className="text-lg font-semibold text-primary mb-4">Mode d&apos;emploi</h3>
         <div className="text-secondary-foreground space-y-2 text-sm">
-          <p><strong>Phase 1: Database Initialization</strong></p>
+          <p><strong>1. Installer la configuration</strong></p>
           <ul className="list-disc list-inside ml-2 mb-3">
-            <li>Click &quot;Initialize Database&quot; to seed FormSection and FieldConfiguration tables</li>
+            <li>Cliquer sur « Installer la configuration ».</li>
             <li>This imports field definitions from lib/field-config.ts into the database</li>
           </ul>
 
-          <p><strong>Phase 2: Enable Feature Flag</strong></p>
+          <p><strong>2. Activer</strong></p>
           <ul className="list-disc list-inside ml-2 mb-3">
-            <li>Click &quot;Enable Dynamic Forms&quot; to activate the feature</li>
-            <li>Project screens (new/edit) will then use database configuration</li>
+            <li>Cliquer sur « Activer les formulaires dynamiques ».</li>
+            <li>Les écrans de création et de modification des projets utilisent alors la configuration en base.</li>
           </ul>
 
-          <p><strong>Phase 3: Progressive Enhancement</strong></p>
+          <p><strong>3. Ajuster</strong></p>
           <ul className="list-disc list-inside ml-2">
-            <li>Screens gracefully fall back to hardcoded forms if configuration is missing</li>
-            <li>Non-breaking: existing functionality is preserved</li>
-            <li>Admin can manage fields via database UI (coming soon)</li>
+            <li>Sans configuration, les formulaires standard s&apos;affichent : rien ne casse.</li>
+            <li>Les fonctions existantes sont conservées.</li>
+            <li>Les champs se gèrent dans Paramétrage › Gestion des champs.</li>
           </ul>
         </div>
       </div>

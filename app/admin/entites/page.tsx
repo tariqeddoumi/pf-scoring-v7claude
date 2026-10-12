@@ -215,7 +215,7 @@ export default function EntitesPage() {
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-border bg-card p-5 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-semibold text-foreground">{edition.id ? "Modifier l'entité" : "Nouvelle entité"}</h2>
-              <button onClick={() => setEdition(null)} className="rounded-md p-1 text-muted-foreground hover:bg-accent"><X size={16} /></button>
+              <button onClick={() => setEdition(null)} className="rounded-md p-1 text-muted-foreground hover:bg-accent" aria-label="Fermer"><X size={16} /></button>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="text-[13px] text-foreground">Nom
@@ -260,7 +260,7 @@ export default function EntitesPage() {
               </label>
               <label className="text-[13px] text-foreground">Couleur principale
                 <div className="mt-1 flex items-center gap-2">
-                  <input type="color" value={edition.saisie.couleurPrimaire || "#2563eb"} onChange={(ev) => maj({ couleurPrimaire: ev.target.value })} className="h-9 w-12 rounded border border-border bg-background" />
+                  <input type="color" value={edition.saisie.couleurPrimaire || "#0f766e"} onChange={(ev) => maj({ couleurPrimaire: ev.target.value })} className="h-9 w-12 rounded border border-border bg-background" />
                   <input className={champ} value={edition.saisie.couleurPrimaire} onChange={(ev) => maj({ couleurPrimaire: ev.target.value })} placeholder="#RRGGBB" />
                 </div>
               </label>

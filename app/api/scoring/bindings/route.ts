@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
-import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { withAdminAuth, withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * POST /api/scoring/bindings
@@ -139,7 +139,8 @@ async function handleGET(
 }
 
 export async function POST(req: NextRequest) {
-  return withAuth(req, (r, user) => handlePOST(r, user));
+  // Créer une liaison de la grille : réservé aux administrateurs.
+  return withAdminAuth(req, (r, user) => handlePOST(r, user));
 }
 
 export async function GET(req: NextRequest) {

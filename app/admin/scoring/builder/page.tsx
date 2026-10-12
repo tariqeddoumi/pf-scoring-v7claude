@@ -448,7 +448,7 @@ export default function ScoringBuilderPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/admin/scoring" className="p-2 hover:bg-card rounded-lg transition-colors">
+        <Link href="/admin/scoring" className="p-2 hover:bg-card rounded-lg transition-colors" aria-label="Retour">
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
         <div className="flex-1">
@@ -562,7 +562,7 @@ export default function ScoringBuilderPage() {
                         openEditNodeModal(domain);
                       }}
                       className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                    >
+                     aria-label="Modifier">
                       <Edit2 size={14} />
                     </button>
                     )}
@@ -574,7 +574,7 @@ export default function ScoringBuilderPage() {
                       }}
                       disabled={saving}
                       className="p-1.5 hover:bg-destructive/10 rounded text-destructive hover:text-destructive/80 disabled:opacity-50"
-                    >
+                     aria-label="Supprimer">
                       <Trash2 size={14} />
                     </button>
                     )}
@@ -595,7 +595,7 @@ export default function ScoringBuilderPage() {
                         <button
                           onClick={() => openCreateCriterionModal(domain.id)}
                           disabled={lectureSeule}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary/90 text-white font-medium rounded text-xs transition-colors"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded text-xs transition-colors"
                         >
                           <Plus size={14} />
                           Ajouter Critère
@@ -635,7 +635,7 @@ export default function ScoringBuilderPage() {
                                   openEditNodeModal(criterion);
                                 }}
                                 className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                              >
+                               aria-label="Modifier">
                                 <Edit2 size={14} />
                               </button>
                               )}
@@ -647,7 +647,7 @@ export default function ScoringBuilderPage() {
                                 }}
                                 disabled={saving}
                                 className="p-1.5 hover:bg-destructive/10 rounded text-destructive hover:text-destructive/80 disabled:opacity-50"
-                              >
+                               aria-label="Supprimer">
                                 <Trash2 size={14} />
                               </button>
                               )}
@@ -672,7 +672,7 @@ export default function ScoringBuilderPage() {
                                       onClick={() => openCreateOptionModal(criterion.id, criterion.code)}
                           disabled={lectureSeule}
                                       className="p-1 hover:bg-secondary rounded text-secondary-foreground"
-                                    >
+                                     aria-label="Ajouter">
                                       <Plus size={14} />
                                     </button>
                                   </div>
@@ -693,14 +693,14 @@ export default function ScoringBuilderPage() {
                                             <button
                                               onClick={() => openEditOptionModal(opt, criterion.code)}
                                               className="text-muted-foreground hover:text-foreground"
-                                            >
+                                             aria-label="Modifier">
                                               <Edit2 size={12} />
                                             </button>
                                             <button
                                               onClick={() => handleDeleteOption(opt.id)}
                                               disabled={saving || lectureSeule}
                                               className="text-destructive hover:text-destructive/80 disabled:opacity-50"
-                                            >
+                                             aria-label="Supprimer">
                                               <Trash2 size={12} />
                                             </button>
                                           </td>
@@ -719,7 +719,7 @@ export default function ScoringBuilderPage() {
                                       onClick={() => openCreateRangeModal(criterion.id, criterion.code)}
                           disabled={lectureSeule}
                                       className="p-1 hover:bg-secondary rounded text-secondary-foreground"
-                                    >
+                                     aria-label="Ajouter">
                                       <Plus size={14} />
                                     </button>
                                   </div>
@@ -744,14 +744,14 @@ export default function ScoringBuilderPage() {
                                             <button
                                               onClick={() => openEditRangeModal(r, criterion.code)}
                                               className="text-muted-foreground hover:text-foreground"
-                                            >
+                                             aria-label="Modifier">
                                               <Edit2 size={12} />
                                             </button>
                                             <button
                                               onClick={() => handleDeleteRange(r.id)}
                                               disabled={saving || lectureSeule}
                                               className="text-destructive hover:text-destructive/80 disabled:opacity-50"
-                                            >
+                                             aria-label="Supprimer">
                                               <Trash2 size={12} />
                                             </button>
                                           </td>
@@ -796,7 +796,7 @@ export default function ScoringBuilderPage() {
           <button
             onClick={openCreateDomainModal}
                           disabled={lectureSeule}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <Plus size={16} />
             Ajouter Domaine

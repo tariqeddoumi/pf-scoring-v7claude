@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function Error({
   error,
   reset,
@@ -8,16 +10,24 @@ export default function Error({
   reset: () => void;
 }) {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Error</h1>
-        <p className="text-xl text-secondary-foreground mb-4">{error.message}</p>
-        <button
-          onClick={() => reset()}
-          className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
-        >
-          Try again
-        </button>
+    <div className="flex min-h-[60vh] items-center justify-center p-4">
+      <div className="max-w-md text-center">
+        <h1 className="mb-3 text-2xl font-semibold text-foreground">Une erreur est survenue</h1>
+        <p className="mb-5 text-sm text-muted-foreground">
+          {error.message || "L'écran n'a pas pu s'afficher."}
+          {error.digest && <span className="mt-1 block text-xs">Référence : {error.digest}</span>}
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => reset()}
+            className="h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Réessayer
+          </button>
+          <Link href="/dashboard" className="inline-flex h-9 items-center rounded-md border border-border px-4 text-sm text-foreground hover:bg-accent">
+            Tableau de bord
+          </Link>
+        </div>
       </div>
     </div>
   );

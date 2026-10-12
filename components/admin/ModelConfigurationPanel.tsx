@@ -154,7 +154,7 @@ export function ModelConfigurationPanel({
           onClick={handleSave}
           disabled={saving || chargement || lectureSeule}
           title={lectureSeule ? "Version publiée : configuration figée" : undefined}
-          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors disabled:opacity-50"
+          className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors disabled:opacity-50"
         >
           {saving ? 'Enregistrement…' : 'Enregistrer la configuration'}
         </button>

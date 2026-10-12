@@ -119,7 +119,7 @@ function NodeInput({
                 onClick={() => onChange({ ...answer, valueBoolean: val })}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
                   active
-                    ? "bg-primary border-primary text-white"
+                    ? "bg-primary border-primary text-primary-foreground"
                     : "bg-muted border-input text-muted-foreground hover:border-ring"
                 }`}
               >

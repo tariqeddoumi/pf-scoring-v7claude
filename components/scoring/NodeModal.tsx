@@ -65,14 +65,14 @@ export default function NodeModal({
     : `Créer ${nodeType === "DOMAIN" ? "domaine" : "critère"}`;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card rounded-xl border border-border w-full max-w-md p-6 space-y-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-xl border border-border w-full max-w-md max-h-[90vh] overflow-y-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground">{title}</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-accent rounded"
-          >
+           aria-label="Fermer">
             <X size={20} className="text-muted-foreground" />
           </button>
         </div>
@@ -85,10 +85,10 @@ export default function NodeModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="nodemodal-1" className="block text-sm font-medium text-secondary-foreground mb-1">
               Code
             </label>
-            <input
+            <input id="nodemodal-1"
               type="text"
               value={formData.code}
               onChange={(e) => setFormData({ ...formData, code: e.target.value })}
@@ -100,10 +100,10 @@ export default function NodeModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="nodemodal-2" className="block text-sm font-medium text-secondary-foreground mb-1">
               Libellé
             </label>
-            <input
+            <input id="nodemodal-2"
               type="text"
               value={formData.label}
               onChange={(e) => setFormData({ ...formData, label: e.target.value })}
@@ -114,10 +114,10 @@ export default function NodeModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="nodemodal-3" className="block text-sm font-medium text-secondary-foreground mb-1">
               Libellé court
             </label>
-            <input
+            <input id="nodemodal-3"
               type="text"
               value={formData.shortLabel}
               onChange={(e) => setFormData({ ...formData, shortLabel: e.target.value })}
@@ -127,10 +127,10 @@ export default function NodeModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="nodemodal-4" className="block text-sm font-medium text-secondary-foreground mb-1">
               Description
             </label>
-            <textarea
+            <textarea id="nodemodal-4"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Description optionnelle"
@@ -176,7 +176,7 @@ export default function NodeModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors disabled:opacity-50"
               disabled={loading}
             >
               {loading ? "Sauvegarde..." : isEdit ? "Modifier" : "Créer"}

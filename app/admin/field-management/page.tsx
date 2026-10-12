@@ -98,12 +98,12 @@ export default function FieldManagementPage() {
       const response = await apiGet(
         `/api/admin/field-configurations?entity=${selectedEntity}&type=sections`
       );
-      if (!response.ok) throw new Error('Failed to fetch sections');
+      if (!response.ok) throw new Error('Chargement des sections impossible');
       const data = await response.json();
       setSections(data.data || []);
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to load sections');
+      setError(err.message || 'Chargement des sections impossible');
     } finally {
       setLoading(false);
     }
@@ -121,7 +121,7 @@ export default function FieldManagementPage() {
 
   const handleAddField = async (sectionId: string) => {
     if (!newField.fieldName || !newField.label) {
-      setError('Field name and label are required');
+      setError('Le nom et le libellé du champ sont obligatoires');
       return;
     }
 
@@ -134,9 +134,9 @@ export default function FieldManagementPage() {
         orderIndex: (sections.find((s) => s.id === sectionId)?.fields?.length || 0) + 1,
       });
 
-      if (!response.ok) throw new Error('Failed to add field');
+      if (!response.ok) throw new Error('Ajout du champ impossible');
 
-      setSuccess('Field added successfully');
+      setSuccess('Champ ajouté');
       setShowNewFieldForm(null);
       setNewField({
         fieldName: '',
@@ -148,7 +148,7 @@ export default function FieldManagementPage() {
       });
       fetchSections();
     } catch (err: any) {
-      setError(err.message || 'Failed to add field');
+      setError(err.message || 'Ajout du champ impossible');
     }
   };
 
@@ -156,13 +156,13 @@ export default function FieldManagementPage() {
     try {
       const response = await apiDelete(`/api/admin/field-configurations/${fieldId}`);
 
-      if (!response.ok) throw new Error('Failed to delete field');
+      if (!response.ok) throw new Error('Suppression du champ impossible');
 
-      setSuccess('Field deleted successfully');
+      setSuccess('Champ supprimé');
       setDeleteConfirm(null);
       fetchSections();
     } catch (err: any) {
-      setError(err.message || 'Failed to delete field');
+      setError(err.message || 'Suppression du champ impossible');
     }
   };
 
@@ -170,12 +170,12 @@ export default function FieldManagementPage() {
     try {
       const response = await apiPut(`/api/admin/field-configurations/${fieldId}`, { visible: !visible });
 
-      if (!response.ok) throw new Error('Failed to update field');
+      if (!response.ok) throw new Error('Mise à jour du champ impossible');
 
-      setSuccess('Field visibility updated');
+      setSuccess('Visibilité du champ mise à jour');
       fetchSections();
     } catch (err: any) {
-      setError(err.message || 'Failed to update field');
+      setError(err.message || 'Mise à jour du champ impossible');
     }
   };
 
@@ -187,7 +187,7 @@ export default function FieldManagementPage() {
           <Link
             href="/admin"
             className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-          >
+           aria-label="Retour">
             <ArrowLeft size={20} />
           </Link>
           <div>
@@ -209,8 +209,8 @@ export default function FieldManagementPage() {
             onClick={() => setSelectedEntity(entity.value)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedEntity === entity.value
-                ? 'bg-primary text-white'
-                : 'bg-muted text-muted-foreground hover:text-white'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:text-foreground'
             }`}
           >
             {entity.label}
@@ -312,13 +312,13 @@ export default function FieldManagementPage() {
                         <button
                           onClick={() => setEditingField(field.id)}
                           className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                        >
+                         aria-label="Modifier">
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(field.id)}
                           className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                        >
+                         aria-label="Supprimer">
                           <Trash2 size={18} />
                         </button>
                       </div>
@@ -370,10 +370,10 @@ export default function FieldManagementPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-foreground mb-1">
+                          <label htmlFor="page-1" className="block text-sm font-medium text-foreground mb-1">
                             Type
                           </label>
-                          <select
+                          <select id="page-1"
                             value={newField.fieldType}
                             onChange={(e) =>
                               setNewField({
@@ -412,7 +412,7 @@ export default function FieldManagementPage() {
                       <div className="flex gap-2 pt-2">
                         <button
                           onClick={() => handleAddField(section.id)}
-                          className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                          className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                         >
                           <Plus size={18} />
                           Ajouter
@@ -457,7 +457,7 @@ export default function FieldManagementPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleDeleteField(deleteConfirm)}
-                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg font-medium transition-colors"
               >
                 Supprimer
               </button>

@@ -250,7 +250,7 @@ export default function DashboardConfigPage() {
                           onChange={(e) =>
                             resizeWidget(widget.id, e.target.value as any)
                           }
-                          className="px-2 py-1 bg-card border border-input rounded text-xs text-secondary-foreground focus:border-cyan-600 focus:outline-none"
+                          className="px-2 py-1 bg-card border border-input rounded text-xs text-secondary-foreground focus:border-ring focus:outline-none"
                         >
                           {sizeOptions.map((size) => (
                             <option key={size} value={size}>
@@ -366,7 +366,7 @@ export default function DashboardConfigPage() {
               placeholder="Nom de la configuration"
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border rounded text-foreground focus:border-cyan-600 focus:outline-none"
+              className="w-full px-3 py-2 bg-background border border-border rounded text-foreground focus:border-ring focus:outline-none"
             />
             <div className="flex gap-3">
               <Button

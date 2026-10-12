@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { apiGet, apiPut, messageErreurApi } from "@/lib/api-client";
+import { apiGet, apiPatch, messageErreurApi } from "@/lib/api-client";
 
 interface Country {
   id: string;
@@ -59,7 +59,7 @@ export default function CountryRiskPage() {
   const updateCountryRisk = async (countryId: string, newScore: number) => {
     try {
       setSaving(true);
-      const res = await apiPut(`/api/admin/countries/${countryId}`, { riskScore: newScore });
+      const res = await apiPatch(`/api/admin/countries/${countryId}`, { riskScore: newScore });
 
       // Un refus passait inaperçu : la note restait affichée comme si elle avait
       // été enregistrée.
@@ -83,7 +83,7 @@ export default function CountryRiskPage() {
   const updateMode = async (newMode: "AUTO_ASSIGN" | "MANUAL") => {
     try {
       setSaving(true);
-      const res = await apiPut("/api/admin/config/country-risk-mode", { mode: newMode });
+      const res = await apiPatch("/api/admin/config/country-risk-mode", { mode: newMode });
 
       if (res.ok) {
         setConfig({ mode: newMode });
@@ -125,7 +125,7 @@ export default function CountryRiskPage() {
           <Link
             href="/admin"
             className="text-muted-foreground hover:text-foreground"
-          >
+           aria-label="Retour">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
