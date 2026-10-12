@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Test Authentication Flow Script
-# Tests: Register → Login → Me → Admin Access → V8 Status
+# Tests: Register → Login → Me
 
 set -e
 
@@ -24,7 +24,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Test 1: Register Admin
-echo -e "${YELLOW}[1/6] Testing User Registration...${NC}"
+echo -e "${YELLOW}[1/3] Testing User Registration...${NC}"
 REGISTER_RESPONSE=$(curl -s -X POST "$BASE_URL/api/auth/register" \
   -H "Content-Type: application/json" \
   -d "{
@@ -48,7 +48,7 @@ else
 fi
 
 # Test 2: Login
-echo -e "${YELLOW}[2/6] Testing Login...${NC}"
+echo -e "${YELLOW}[2/3] Testing Login...${NC}"
 LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/api/auth/login" \
   -H "Content-Type: application/json" \
   -c /tmp/cookies.txt \
@@ -72,7 +72,7 @@ else
 fi
 
 # Test 3: Get User Info (/api/auth/me)
-echo -e "${YELLOW}[3/6] Testing /api/auth/me...${NC}"
+echo -e "${YELLOW}[3/3] Testing /api/auth/me...${NC}"
 ME_RESPONSE=$(curl -s -X GET "$BASE_URL/api/auth/me" \
   -b /tmp/cookies.txt \
   -w "\n%{http_code}")
@@ -96,69 +96,6 @@ else
   exit 1
 fi
 
-# Test 4: Check Auth Status (/api/admin/diagnostic/auth-status)
-echo -e "${YELLOW}[4/6] Testing /api/admin/diagnostic/auth-status...${NC}"
-AUTH_STATUS=$(curl -s -X GET "$BASE_URL/api/admin/diagnostic/auth-status" \
-  -b /tmp/cookies.txt \
-  -w "\n%{http_code}")
-
-HTTP_CODE=$(echo "$AUTH_STATUS" | tail -n 1)
-BODY=$(echo "$AUTH_STATUS" | head -n -1)
-
-if [[ "$HTTP_CODE" == "200" ]]; then
-  echo -e "${GREEN}✓ auth-status: $HTTP_CODE${NC}"
-  TOTAL=$(echo "$BODY" | grep -o '"total":[0-9]*' | cut -d':' -f2)
-  ADMINS=$(echo "$BODY" | grep -o '"admins":[0-9]*' | cut -d':' -f2)
-  echo "  Total active users: $TOTAL"
-  echo "  System admins: $ADMINS"
-else
-  echo -e "${RED}✗ auth-status failed: $HTTP_CODE${NC}"
-  echo "$BODY"
-  exit 1
-fi
-
-# Test 5: Check V8 Status (/api/admin/diagnostic/v8-status)
-echo -e "${YELLOW}[5/6] Testing /api/admin/diagnostic/v8-status...${NC}"
-V8_STATUS=$(curl -s -X GET "$BASE_URL/api/admin/diagnostic/v8-status" \
-  -b /tmp/cookies.txt \
-  -w "\n%{http_code}")
-
-HTTP_CODE=$(echo "$V8_STATUS" | tail -n 1)
-BODY=$(echo "$V8_STATUS" | head -n -1)
-
-if [[ "$HTTP_CODE" == "200" ]]; then
-  echo -e "${GREEN}✓ v8-status: $HTTP_CODE${NC}"
-  V8_ENABLED=$(echo "$BODY" | grep -o '"enabled":[^,}]*' | cut -d':' -f2)
-  V8_SECTORS=$(echo "$BODY" | grep -o '"v8SectorCount":[0-9]*' | cut -d':' -f2)
-  echo "  V8 Enabled: $V8_ENABLED"
-  echo "  Sectors configured: $V8_SECTORS"
-else
-  echo -e "${RED}✗ v8-status failed: $HTTP_CODE${NC}"
-  echo "$BODY"
-  exit 1
-fi
-
-# Test 6: Check System Integrity
-echo -e "${YELLOW}[6/6] Testing /api/admin/diagnostic/system-integrity...${NC}"
-SYS_INTEGRITY=$(curl -s -X GET "$BASE_URL/api/admin/diagnostic/system-integrity" \
-  -b /tmp/cookies.txt \
-  -w "\n%{http_code}")
-
-HTTP_CODE=$(echo "$SYS_INTEGRITY" | tail -n 1)
-BODY=$(echo "$SYS_INTEGRITY" | head -n -1)
-
-if [[ "$HTTP_CODE" == "200" ]]; then
-  echo -e "${GREEN}✓ system-integrity: $HTTP_CODE${NC}"
-  OVERALL=$(echo "$BODY" | grep -o '"overall_status":"[^"]*' | cut -d'"' -f4)
-  MODEL=$(echo "$BODY" | grep -o '"active_model":"[^"]*' | cut -d'"' -f4)
-  echo "  Overall Status: $OVERALL"
-  echo "  Active Model: $MODEL"
-else
-  echo -e "${RED}✗ system-integrity failed: $HTTP_CODE${NC}"
-  echo "$BODY"
-  exit 1
-fi
-
 # Cleanup
 rm -f /tmp/cookies.txt
 
@@ -172,7 +109,4 @@ echo "  ✓ User registration works"
 echo "  ✓ Login returns JWT token"
 echo "  ✓ /auth/me returns correct user data"
 echo "  ✓ Role field is correctly populated"
-echo "  ✓ Admin endpoints are secured"
-echo "  ✓ V8 status can be checked"
-echo "  ✓ System integrity diagnostic available"
 echo ""

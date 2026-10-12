@@ -164,7 +164,7 @@ export default function DynamicFormsAdmin() {
             disabled={loading}
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               enabled
-                ? 'bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-primary-foreground'
+                ? 'bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-destructive-foreground'
                 : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-primary-foreground'
             }`}
           >
