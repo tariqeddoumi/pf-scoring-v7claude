@@ -90,7 +90,11 @@ export async function PUT(
       const { dateRelation, status, entiteId, ...champs } = validation.data;
       const avant = await prisma.client.findUnique({ where: { id }, select: { entiteId: true } });
 
-      const client = await prisma.client.update({
+      // Client et projets changent de banque ensemble ou pas du tout : un client
+      // transféré dont les projets resteraient dans l'ancienne banque y exposerait
+      // ses données.
+      const client = await prisma.$transaction(async (tx) => {
+      const maj = await tx.client.update({
         where: { id },
         data: {
           ...champs,
@@ -104,8 +108,10 @@ export async function PUT(
       });
       // Transfert du client vers une autre banque : ses projets le suivent.
       if (entiteId && avant && avant.entiteId !== entiteId) {
-        await prisma.project.updateMany({ where: { clientId: id }, data: { entiteId } });
+        await tx.project.updateMany({ where: { clientId: id }, data: { entiteId } });
       }
+      return maj;
+      });
 
       return NextResponse.json({ success: true, data: client });
     } catch (error: any) {

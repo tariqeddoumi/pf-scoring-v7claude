@@ -19,8 +19,9 @@ npm run db:basculer -- --cible "postgresql://utilisateur:motdepasse@hote:5432/pf
 # Bascule avec reprise de toutes les données de la base actuelle
 npm run db:basculer -- --cible "postgresql://…nouvelle base…" --source "$DATABASE_URL" --appliquer
 
-# Nouvelle base vierge (référentiels seulement)
-npm run db:basculer -- --cible "postgresql://…nouvelle base…" --appliquer
+# Nouvelle base vierge : référentiels, modèle de notation publié et premier administrateur
+# (son mot de passe provisoire s'affiche une fois et se change à la première connexion)
+npm run db:basculer -- --cible "postgresql://…nouvelle base…" --admin prenom.nom@banque.ma --appliquer
 ```
 
 La commande enchaîne : connexion et contrôle de version (PostgreSQL 14+), création du schéma, copie des

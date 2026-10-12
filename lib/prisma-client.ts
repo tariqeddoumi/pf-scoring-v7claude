@@ -20,7 +20,7 @@
 
 import { PrismaClient, Prisma } from "@prisma/client";
 import { perimetreCourant } from "@/lib/entites/contexte";
-import { peutEcrire, type Perimetre } from "@/lib/entites/perimetre";
+import { peutEcrire, peutLire, type Perimetre } from "@/lib/entites/perimetre";
 import {
   argumentsFiltres,
   CREATIONS,
@@ -121,6 +121,11 @@ async function preparerCreation(modele: string, data: Record<string, unknown>, p
     if (!p.tout) verifier(await entiteDeLEvaluation(reference(data, "evaluationId", "evaluation")));
   } else if (ENFANTS_DE_WORKFLOW.has(modele)) {
     if (!p.tout) verifier(await entiteDuWorkflow(reference(data, "workflowId", "workflow")));
+  } else if (modele === "AuditLog") {
+    // Une entrée de journal rattachée à un dossier ne s'écrit que sur un dossier visible :
+    // sinon un utilisateur pourrait inscrire une action dans le journal d'une autre banque.
+    const projectId = reference(data, "projectId", "project");
+    if (projectId && !p.tout && !peutLire(p, await entiteDuProjet(projectId))) throw new HorsPerimetreError();
   }
 }
 
@@ -143,12 +148,18 @@ const prisma = base.$extends({
         } else if (operation === "upsert" && a.create) {
           await preparerCreation(model, a.create as Record<string, unknown>, p);
         }
-        // Transfert d'un client ou d'un projet : l'entité d'arrivée doit aussi être
-        // dans le périmètre d'écriture.
-        if ((operation === "update" || operation === "updateMany" || operation === "upsert") && !p.tout) {
+        if (operation === "update" || operation === "updateMany" || operation === "upsert") {
           const donnees = (operation === "upsert" ? a.update : a.data) as Record<string, unknown> | undefined;
+          // Un projet rattaché à un autre client passe dans la banque de ce client.
+          const clientId = model === "Project" && donnees ? reference(donnees, "clientId", "client") : null;
+          if (clientId && donnees) {
+            const c = await base.client.findUnique({ where: { id: clientId }, select: { entiteId: true } });
+            if (c?.entiteId) donnees.entiteId = c.entiteId;
+          }
+          // Transfert d'un client ou d'un projet : l'entité d'arrivée doit aussi être
+          // dans le périmètre d'écriture.
           const cible = donnees?.entiteId;
-          if (typeof cible === "string" && !peutEcrire(p, cible)) throw new HorsPerimetreError();
+          if (!p.tout && typeof cible === "string" && !peutEcrire(p, cible)) throw new HorsPerimetreError();
         }
         return query(a as typeof args);
       },

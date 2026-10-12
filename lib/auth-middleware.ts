@@ -115,12 +115,12 @@ export async function withAuth(
 }
 
 /**
- * Les routes interceptent souvent leurs erreurs en « 500 ». Un refus de périmètre
+ * Les routes interceptent souvent leurs erreurs en « 500 » (ou « 400 »). Un refus de périmètre
  * (création hors périmètre, ou modification d'un dossier visible en consultation
  * seulement, que Prisma ne trouve alors pas) est rendu en 403 avec un message clair.
  */
 async function refusDePerimetre(reponse: NextResponse): Promise<NextResponse> {
-  if (reponse.status !== 500) return reponse;
+  if (reponse.status !== 500 && reponse.status !== 400) return reponse;
   let corps: { error?: unknown } | null = null;
   try {
     corps = await reponse.clone().json();
@@ -130,7 +130,9 @@ async function refusDePerimetre(reponse: NextResponse): Promise<NextResponse> {
   const message = typeof corps?.error === "string" ? corps.error : "";
   const horsPerimetre = message.includes(new HorsPerimetreError().message);
   const introuvable = /Record to (update|delete) (does not exist|not found)|No record was found for an? (update|delete)|required but not found/i.test(message);
-  if (!horsPerimetre && !introuvable) return reponse;
+  // « introuvable » n'est requalifié que sur une erreur serveur ; un 400 ne l'est que
+  // pour un refus de périmètre explicite.
+  if (!horsPerimetre && !(introuvable && reponse.status === 500)) return reponse;
   return NextResponse.json(
     {
       success: false,

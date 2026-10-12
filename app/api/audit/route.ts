@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
+import { HorsPerimetreError } from "@/lib/entites/filtre-prisma";
 
 /**
  * Journal d'audit.
@@ -84,6 +85,8 @@ async function handlePOST(request: NextRequest, user: AuthPayload) {
 
     return NextResponse.json({ success: true, data: auditLog }, { status: 201 });
   } catch (error) {
+    // Dossier d'une autre banque : refus 403, rendu par withAuth.
+    if (error instanceof HorsPerimetreError) throw error;
     console.error("[AUDIT POST]", error);
     return NextResponse.json(
       { success: false, error: "Erreur lors de l'écriture du journal" },

@@ -2,20 +2,23 @@
  * Kit de bascule vers une autre base PostgreSQL, en une commande.
  *
  *   npm run db:basculer -- --cible "postgresql://u:mdp@hote:5432/pfscoring"            # à blanc
- *   npm run db:basculer -- --cible "postgresql://…" --appliquer                       # nouvelle base vierge
+ *   npm run db:basculer -- --cible "postgresql://…" --admin prenom.nom@banque.ma --appliquer   # base vierge
  *   npm run db:basculer -- --cible "postgresql://…" --source "$DATABASE_URL" --appliquer   # avec reprise des données
  *
  * Étapes : 1. connexion et version de la base cible (PostgreSQL 14+) ;
  *          2. création du schéma (prisma db push) ;
- *          3. reprise des données de la base source (db:copier), ou installation des
- *             référentiels (db:installer-reference) pour une base vierge ;
+ *          3. reprise des données de la base source (db:copier) ; pour une base vierge,
+ *             référentiels, modèle de notation publié et premier administrateur (mot de
+ *             passe provisoire affiché une fois, à changer à la première connexion) ;
  *          4. contrôle de conformité (db:verifier) ;
  *          5. indication de ce qu'il reste à changer (variable DATABASE_URL, redéploiement).
  * Sans --appliquer, rien n'est écrit : seules les vérifications et le plan s'affichent.
  * Les secrets ne sont jamais affichés (identifiants masqués).
  */
 import { spawnSync } from "child_process";
+import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { genererMotDePasseProvisoire } from "../../lib/mot-de-passe";
 
 function argument(nom: string): string | undefined {
   const i = process.argv.indexOf(`--${nom}`);
@@ -47,9 +50,15 @@ function lancer(commande: string, args: string[], env: Record<string, string>): 
 async function main() {
   const cible = argument("cible");
   const source = argument("source");
+  const admin = argument("admin");
   const appliquer = process.argv.includes("--appliquer");
   if (!cible) {
-    console.error('Usage : npm run db:basculer -- --cible "postgresql://…" [--source "postgresql://…"] [--appliquer]');
+    console.error('Usage : npm run db:basculer -- --cible "postgresql://…" [--source "postgresql://…" | --admin email] [--appliquer]');
+    process.exit(2);
+  }
+  // Une base vierge a besoin d'un premier administrateur pour être utilisable.
+  if (!source && !(admin && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(admin))) {
+    console.error("Base vierge : indiquez l'adresse du premier administrateur avec --admin prenom.nom@banque.ma");
     process.exit(2);
   }
   console.log(`Base cible  : ${masquer(cible)}`);
@@ -80,7 +89,11 @@ async function main() {
   if (!appliquer) {
     console.log("\nPlan :");
     console.log("  2. créer le schéma sur la base cible (prisma db push) ;");
-    console.log(source ? "  3. copier toutes les données de la base source (la cible doit être vide) ;" : "  3. installer les référentiels (grille, pays, secteurs…) ;");
+    console.log(
+      source
+        ? "  3. copier toutes les données de la base source (la cible doit être vide) ;"
+        : `  3. installer les référentiels et le modèle de notation publié, créer l'administrateur ${admin} ;`
+    );
     console.log("  4. vérifier la conformité de la base cible ;");
     console.log("  5. vous indiquer la variable à changer.");
     console.log("\nRelancez avec --appliquer pour exécuter.");
@@ -90,9 +103,14 @@ async function main() {
   etape(2, "Création du schéma");
   lancer("npx", ["prisma", "db", "push", "--skip-generate"], { DATABASE_URL: cible });
 
-  etape(3, source ? "Reprise des données" : "Installation des référentiels");
-  if (source) lancer("npx", ["tsx", "scripts/db/copier-base.ts", "--appliquer"], { SOURCE_DATABASE_URL: source, DATABASE_URL: cible });
-  else lancer("npx", ["tsx", "scripts/db/installer-reference.ts"], { DATABASE_URL: cible });
+  etape(3, source ? "Reprise des données" : "Référentiels, modèle de notation et premier administrateur");
+  if (source) {
+    lancer("npx", ["tsx", "scripts/db/copier-base.ts", "--appliquer"], { SOURCE_DATABASE_URL: source, DATABASE_URL: cible });
+  } else {
+    lancer("npx", ["tsx", "scripts/db/installer-reference.ts"], { DATABASE_URL: cible });
+    lancer("npx", ["tsx", "prisma/seed.ts"], { DATABASE_URL: cible });
+    await creerAdministrateur(cible, admin!);
+  }
 
   etape(4, "Contrôle de conformité");
   lancer("npx", ["tsx", "scripts/db/verifier-base.ts"], { DATABASE_URL: cible });
@@ -103,6 +121,32 @@ async function main() {
   console.log("  • Les pièces des dossiers restent dans leur stockage (Supabase Storage ou S3) : rien à déplacer.");
   console.log("  • Garder l'ancienne base en lecture le temps de valider, puis l'archiver.");
   console.log("\n✓ Bascule préparée.");
+}
+
+/** Premier administrateur de la plateforme : mot de passe provisoire affiché une fois. */
+async function creerAdministrateur(url: string, email: string): Promise<void> {
+  const db = new PrismaClient({ datasources: { db: { url } } });
+  try {
+    if (await db.user.findUnique({ where: { email } })) {
+      console.log(`  Le compte ${email} existe déjà : inchangé.`);
+      return;
+    }
+    const provisoire = genererMotDePasseProvisoire();
+    await db.user.create({
+      data: {
+        email,
+        nom: email.split("@")[0],
+        prenom: "",
+        role: "system_admin",
+        password: await bcrypt.hash(provisoire, 10),
+        mustChangePassword: true,
+      },
+    });
+    console.log(`  Administrateur créé : ${email}`);
+    console.log(`  Mot de passe provisoire (affiché une seule fois, à changer à la première connexion) : ${provisoire}`);
+  } finally {
+    await db.$disconnect();
+  }
 }
 
 if (require.main === module) {
