@@ -25,7 +25,7 @@ export function SectionCard({
   return (
     <section className={cn("rounded-lg border border-border bg-card", className)}>
       {(titre || actions) && (
-        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
           <div className="min-w-0">
             {titre && (
               <h2 className="text-[14.5px] font-semibold text-foreground">{titre}</h2>
@@ -37,7 +37,9 @@ export function SectionCard({
           {actions && <div className="shrink-0">{actions}</div>}
         </div>
       )}
-      <div className={sansPadding ? "" : "p-4"}>{children}</div>
+      {/* Sans marge intérieure, le contenu est souvent un tableau : il défile dans la carte
+          au lieu d'élargir la page sur téléphone. */}
+      <div className={sansPadding ? "overflow-x-auto" : "p-4"}>{children}</div>
     </section>
   );
 }

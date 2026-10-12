@@ -51,8 +51,8 @@ export default function OptionModal({
   const isEdit = !!initialData?.id;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card rounded-xl border border-border w-full max-w-md p-6 space-y-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-xl border border-border w-full max-w-md max-h-[90vh] overflow-y-auto p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground">
             {isEdit ? "Modifier option" : "Ajouter option"}
@@ -60,7 +60,7 @@ export default function OptionModal({
           <button
             onClick={onClose}
             className="p-1 hover:bg-accent rounded"
-          >
+           aria-label="Fermer">
             <X size={20} className="text-muted-foreground" />
           </button>
         </div>
@@ -75,10 +75,10 @@ export default function OptionModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="optionmodal-1" className="block text-sm font-medium text-secondary-foreground mb-1">
               Libellé
             </label>
-            <input
+            <input id="optionmodal-1"
               type="text"
               value={formData.label}
               onChange={(e) => setFormData({ ...formData, label: e.target.value })}
@@ -89,10 +89,10 @@ export default function OptionModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="optionmodal-2" className="block text-sm font-medium text-secondary-foreground mb-1">
               Score (0-100)
             </label>
-            <input
+            <input id="optionmodal-2"
               type="number"
               value={formData.score}
               onChange={(e) => setFormData({ ...formData, score: parseFloat(e.target.value) })}
@@ -105,10 +105,10 @@ export default function OptionModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label htmlFor="optionmodal-3" className="block text-sm font-medium text-secondary-foreground mb-1">
               Description (optionnel)
             </label>
-            <input
+            <input id="optionmodal-3"
               type="text"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -128,7 +128,7 @@ export default function OptionModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors disabled:opacity-50"
               disabled={loading}
             >
               {loading ? "Sauvegarde..." : isEdit ? "Modifier" : "Ajouter"}

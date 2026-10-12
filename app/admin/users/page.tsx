@@ -60,25 +60,34 @@ const ROLE_LABELS: Record<string, string> = {
   read_only: "Lecture seule",
 };
 
+// Couleurs du thème (lisibles en clair comme en sombre) ; le libellé porte le sens.
 const ROLE_COLORS: Record<string, string> = {
-  system_admin: "bg-destructive/15 text-red-300 border-destructive/30",
-  scoring_admin: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  risk_manager: "bg-primary/20 text-blue-300 border-ring/30",
-  committee_member: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-  risk_analyst: "bg-success/15 text-green-300 border-success/30",
-  auditor: "bg-warning/15 text-yellow-300 border-warning/30",
-  read_only: "bg-secondary/20 text-muted-foreground border-input/30",
+  system_admin: "bg-destructive-subtle text-destructive border-destructive/30",
+  scoring_admin: "bg-warning-subtle text-warning border-warning/30",
+  risk_manager: "bg-accent text-accent-foreground border-border",
+  committee_member: "bg-accent text-accent-foreground border-border",
+  risk_analyst: "bg-success-subtle text-success border-success/30",
+  auditor: "bg-muted text-foreground border-border",
+  read_only: "bg-muted text-muted-foreground border-border",
 };
 
-const ROLE_ICONS: Record<string, string> = {
-  system_admin: "🔴",
-  scoring_admin: "🟠",
-  risk_manager: "🔵",
-  committee_member: "🟣",
-  risk_analyst: "🟢",
-  auditor: "🟡",
-  read_only: "⚪",
+const POINT: Record<string, string> = {
+  system_admin: "bg-destructive",
+  scoring_admin: "bg-warning",
+  risk_manager: "bg-primary",
+  committee_member: "bg-primary",
+  risk_analyst: "bg-success",
+  auditor: "bg-muted-foreground",
+  read_only: "bg-border",
 };
+
+// Repère visuel du rôle (pastille), toujours accompagné de son libellé.
+const ROLE_ICONS: Record<string, React.ReactNode> = Object.fromEntries(
+  Object.entries(POINT).map(([role, fond]) => [
+    role,
+    <span key={role} aria-hidden className={`inline-block h-2 w-2 rounded-full align-middle ${fond}`} />,
+  ])
+);
 
 const EMPTY_FORM: UserForm = {
   email: "",
@@ -100,19 +109,10 @@ function Badge({ children, className = "" }: { children: React.ReactNode; classN
   );
 }
 
-function Avatar({ nom, prenom, role }: { nom: string; prenom: string; role: string }) {
+function Avatar({ nom, prenom }: { nom: string; prenom: string; role: string }) {
   const initials = `${prenom[0] || ""}${nom[0] || ""}`.toUpperCase() || "?";
-  const bgMap: Record<string, string> = {
-    system_admin: "bg-destructive",
-    scoring_admin: "bg-orange-600",
-    risk_manager: "bg-primary",
-    committee_member: "bg-purple-600",
-    risk_analyst: "bg-success",
-    auditor: "bg-yellow-600",
-    read_only: "bg-secondary",
-  };
   return (
-    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-foreground font-semibold text-sm flex-shrink-0 ${bgMap[role] || "bg-secondary"}`}>
+    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-accent text-accent-foreground font-semibold text-sm flex-shrink-0">
       {initials}
     </div>
   );
@@ -218,7 +218,7 @@ function UserModal({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg">
+          <button onClick={onClose} className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg" aria-label="Fermer">
             <X size={18} />
           </button>
         </div>
@@ -234,45 +234,45 @@ function UserModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-1.5">Prénom</label>
-              <input
+              <label htmlFor="page-1" className="block text-sm font-medium text-secondary-foreground mb-1.5">Prénom</label>
+              <input id="page-1"
                 value={form.prenom}
                 onChange={(e) => setForm({ ...form, prenom: e.target.value })}
                 placeholder="Mohamed"
-                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-blue-400 outline-none transition-colors"
+                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-ring outline-none transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-1.5">Nom *</label>
-              <input
+              <label htmlFor="page-2" className="block text-sm font-medium text-secondary-foreground mb-1.5">Nom *</label>
+              <input id="page-2"
                 value={form.nom}
                 onChange={(e) => setForm({ ...form, nom: e.target.value })}
                 placeholder="Alaoui"
-                className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.nom ? "border-destructive" : "border-input"}`}
+                className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-ring outline-none transition-colors ${fieldErrors.nom ? "border-destructive" : "border-input"}`}
               />
               {fieldErrors.nom && <p className="text-destructive text-xs mt-1">{fieldErrors.nom}</p>}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-foreground mb-1.5">Email *</label>
-            <input
+            <label htmlFor="page-3" className="block text-sm font-medium text-secondary-foreground mb-1.5">Email *</label>
+            <input id="page-3"
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="m.alaoui@banque.ma"
-              className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.email ? "border-destructive" : "border-input"}`}
+              className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-ring outline-none transition-colors ${fieldErrors.email ? "border-destructive" : "border-input"}`}
             />
             {fieldErrors.email && <p className="text-destructive text-xs mt-1">{fieldErrors.email}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Banque de rattachement</label>
-              <select
+              <label htmlFor="page-4" className="block text-sm font-medium text-secondary-foreground mb-2">Banque de rattachement</label>
+              <select id="page-4"
                 value={form.entiteId}
                 onChange={(e) => setForm({ ...form, entiteId: e.target.value })}
-                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-blue-400 outline-none"
+                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-ring outline-none"
               >
                 {toutPerimetre && <option value="">Toutes les banques (administration)</option>}
                 {entites.map((e) => (
@@ -281,11 +281,11 @@ function UserModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-secondary-foreground mb-2">Création et modification</label>
-              <select
+              <label htmlFor="page-5" className="block text-sm font-medium text-secondary-foreground mb-2">Création et modification</label>
+              <select id="page-5"
                 value={form.porteeEcriture}
                 onChange={(e) => setForm({ ...form, porteeEcriture: e.target.value as UserForm["porteeEcriture"] })}
-                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-blue-400 outline-none"
+                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-ring outline-none"
               >
                 <option value="entite">Sa banque (filiales en consultation)</option>
                 <option value="groupe">Sa banque et toutes ses filiales</option>
@@ -345,7 +345,7 @@ function UserModal({
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary disabled:bg-muted text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/90 disabled:bg-muted text-primary-foreground rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
             >
               {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
               {mode === "create" ? "Créer l'utilisateur" : "Enregistrer"}
@@ -493,7 +493,7 @@ export default function AdminUsersPage() {
       <div className="border-b border-border bg-background">
         <div className="max-w-6xl mx-auto px-0 sm:px-6 pb-4 sm:py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-            <Link href="/admin" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
+            <Link href="/admin" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors" aria-label="Retour">
               <ArrowLeft size={20} />
             </Link>
             <div>
@@ -509,7 +509,7 @@ export default function AdminUsersPage() {
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             </button>
             <button onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary text-white rounded-lg text-sm font-medium whitespace-nowrap transition-colors">
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium whitespace-nowrap transition-colors">
               <Plus size={16} /> Nouvel utilisateur
             </button>
           </div>
@@ -520,13 +520,12 @@ export default function AdminUsersPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {[
-            { label: "Total", value: stats.total, color: "text-foreground", icon: "👥" },
-            { label: "Actifs", value: stats.active, color: "text-success", icon: "✅" },
-            { label: "Admins", value: stats.admins, color: "text-destructive", icon: "🔴" },
-            { label: "Analystes", value: stats.analysts, color: "text-success", icon: "🟢" },
+            { label: "Total", value: stats.total, color: "text-foreground" },
+            { label: "Actifs", value: stats.active, color: "text-success" },
+            { label: "Admins", value: stats.admins, color: "text-destructive" },
+            { label: "Analystes", value: stats.analysts, color: "text-success" },
           ].map((s) => (
-            <div key={s.label} className="bg-background border border-border rounded-xl p-4">
-              <div className="text-2xl mb-1">{s.icon}</div>
+            <div key={s.label} className="bg-card border border-border rounded-lg p-4">
               <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
               <div className="text-xs text-muted-foreground">{s.label}</div>
             </div>
@@ -538,7 +537,7 @@ export default function AdminUsersPage() {
           <div className="bg-destructive/10 border border-destructive/40 rounded-xl p-4 flex items-center gap-3 text-destructive">
             <AlertCircle size={18} />
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="ml-auto"><X size={16} /></button>
+            <button onClick={() => setError(null)} className="ml-auto" aria-label="Fermer"><X size={16} /></button>
           </div>
         )}
         {success && (
@@ -556,10 +555,10 @@ export default function AdminUsersPage() {
               placeholder="Rechercher par nom ou email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-card text-foreground text-sm px-4 py-2 pl-9 rounded-lg border border-input focus:border-blue-400 outline-none"
+              className="w-full bg-card text-foreground text-sm px-4 py-2 pl-9 rounded-lg border border-input focus:border-ring outline-none"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground">
+              <button onClick={() => setSearch("")} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground" aria-label="Fermer">
                 <X size={14} />
               </button>
             )}
@@ -568,7 +567,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-1 bg-card rounded-lg border border-input p-1 max-w-full overflow-x-auto">
             {["ALL", "system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"].map((r) => (
               <button key={r} onClick={() => setRoleFilter(r)}
-                className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-primary text-white" : "text-muted-foreground hover:text-white"}`}>
+                className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${roleFilter === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 {r === "ALL" ? "Tous" : ROLE_LABELS[r]}
               </button>
             ))}
@@ -627,7 +626,7 @@ export default function AdminUsersPage() {
                     </div>
                     <span className="text-sm text-muted-foreground block break-all">{user.email}</span>
                     <span className="text-xs text-muted-foreground block">
-                      🏦 {user.entite?.nom ?? "Toutes les banques"}
+                      Banque : {user.entite?.nom ?? "toutes"}
                       {user.porteeEcriture === "groupe" && " · écrit dans toutes ses filiales"}
                     </span>
                   </div>
@@ -726,7 +725,7 @@ export default function AdminUsersPage() {
                     Annuler
                   </button>
                   <button onClick={handleDelete} disabled={deleting}
-                    className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive disabled:bg-muted text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    className="flex-1 px-4 py-2 bg-destructive hover:bg-destructive/90 disabled:bg-muted text-destructive-foreground rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
                     {deleting ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
                     Supprimer
                   </button>

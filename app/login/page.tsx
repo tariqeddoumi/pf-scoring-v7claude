@@ -125,7 +125,7 @@ function LoginPageContent() {
             <button
               onClick={() => handleOAuthLogin("microsoft")}
               disabled={loading}
-              className="w-full px-4 py-3 bg-primary text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>⊞</span>
               Continuer avec Microsoft
@@ -156,7 +156,7 @@ function LoginPageContent() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@pf-scoring.ma"
+                placeholder="prenom.nom@banque.ma"
                 disabled={loading}
                 className="w-full px-4 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring disabled:opacity-50"
               />
@@ -183,23 +183,12 @@ function LoginPageContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Connexion..." : "Se connecter"}
             </button>
           </form>
 
-          {/* Demo Info */}
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-input">
-            <p className="text-sm text-secondary-foreground mb-2">
-              <span className="font-medium">Compte de test :</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              📧 admin@pf-scoring.ma
-              <br />
-              🔑 Admin123!
-            </p>
-          </div>
 
         </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { apiGet } from '@/lib/api-client';
 import {
   Select,
   SelectContent,
@@ -31,7 +32,7 @@ export function ConfigurationDropdown({
   value,
   onChange,
   configType,
-  placeholder = `Select ${label}...`,
+  placeholder = `Choisir…`,
   disabled = false,
   error,
 }: ConfigurationDropdownProps) {
@@ -45,12 +46,12 @@ export function ConfigurationDropdown({
         setLoading(true);
         setFetchError(null);
 
-        const response = await fetch(
-          `/api/admin/scoring/configuration?type=${configType}`
-        );
+        // apiGet joint le jeton de session : un fetch nu était refusé (401) et la
+        // liste restait vide (« Failed to load … options »).
+        const response = await apiGet(`/api/admin/scoring/configuration?type=${configType}`);
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch ${configType}`);
+          throw new Error(`Chargement impossible (${response.status})`);
         }
 
         const data = await response.json();
@@ -58,11 +59,11 @@ export function ConfigurationDropdown({
         if (data.success) {
           setOptions(data.data || []);
         } else {
-          setFetchError(data.error || 'Failed to load options');
+          setFetchError(data.error || 'Liste indisponible');
         }
       } catch (error) {
         console.error(`Error fetching ${configType}:`, error);
-        setFetchError(`Failed to load ${label} options`);
+        setFetchError(`Liste « ${label} » indisponible`);
       } finally {
         setLoading(false);
       }
@@ -91,7 +92,7 @@ export function ConfigurationDropdown({
           ))}
         </SelectContent>
       </Select>
-      {loading && <p className="text-xs text-muted-foreground">Loading...</p>}
+      {loading && <p className="text-xs text-muted-foreground">Chargement…</p>}
       {error && <p className="text-xs text-destructive">{error}</p>}
       {fetchError && <p className="text-xs text-destructive">{fetchError}</p>}
     </div>

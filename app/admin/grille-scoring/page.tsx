@@ -169,7 +169,7 @@ export default function ScoringGridRefactoredPage() {
     <div className="flex flex-col min-h-screen md:h-screen bg-background">
       {/* Header */}
       <div className="bg-background border-b border-border px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4">
-        <Link href="/admin" className="hover:text-primary transition-colors">
+        <Link href="/admin" className="hover:text-primary transition-colors" aria-label="Retour">
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Paramétrage de la grille de scoring</h1>

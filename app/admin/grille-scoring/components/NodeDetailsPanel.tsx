@@ -36,7 +36,7 @@ export function NodeDetailsPanel({
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab
-                  ? "border-cyan-400 text-primary"
+                  ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -100,8 +100,8 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-secondary-foreground mb-2">Code</label>
-        <input
+        <label htmlFor="nodedetailspanel-1" className="block text-sm font-medium text-secondary-foreground mb-2">Code</label>
+        <input id="nodedetailspanel-1"
           type="text"
           value={formData.code}
           onChange={(e) => handleChange("code", e.target.value)}
@@ -110,8 +110,8 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary-foreground mb-2">Label</label>
-        <input
+        <label htmlFor="nodedetailspanel-2" className="block text-sm font-medium text-secondary-foreground mb-2">Libellé</label>
+        <input id="nodedetailspanel-2"
           type="text"
           value={formData.label}
           onChange={(e) => handleChange("label", e.target.value)}
@@ -120,8 +120,8 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary-foreground mb-2">Short Label</label>
-        <input
+        <label htmlFor="nodedetailspanel-3" className="block text-sm font-medium text-secondary-foreground mb-2">Libellé court</label>
+        <input id="nodedetailspanel-3"
           type="text"
           value={formData.shortLabel || ""}
           onChange={(e) => handleChange("shortLabel", e.target.value)}
@@ -130,8 +130,8 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-secondary-foreground mb-2">Description</label>
-        <textarea
+        <label htmlFor="nodedetailspanel-4" className="block text-sm font-medium text-secondary-foreground mb-2">Description</label>
+        <textarea id="nodedetailspanel-4"
           value={formData.description || ""}
           onChange={(e) => handleChange("description", e.target.value)}
           rows={4}
@@ -141,8 +141,8 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
 
       {formData.weight !== null && formData.weight !== undefined && (
         <div>
-          <label className="block text-sm font-medium text-secondary-foreground mb-2">Weight (%)</label>
-          <input
+          <label htmlFor="nodedetailspanel-5" className="block text-sm font-medium text-secondary-foreground mb-2">Poids (%)</label>
+          <input id="nodedetailspanel-5"
             type="number"
             value={formData.weight}
             onChange={(e) => handleChange("weight", parseFloat(e.target.value))}
@@ -154,8 +154,8 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
       {/* Always shown so a domain/criterion node (answerType=null by default)
           can be made scoreable — required for DOMAIN-level granularity. */}
       <div>
-        <label className="block text-sm font-medium text-secondary-foreground mb-2">Answer Type</label>
-        <select
+        <label htmlFor="nodedetailspanel-6" className="block text-sm font-medium text-secondary-foreground mb-2">Type de réponse</label>
+        <select id="nodedetailspanel-6"
           value={formData.answerType ?? ""}
           onChange={(e) =>
             handleChange("answerType", e.target.value === "" ? null : e.target.value)
@@ -174,7 +174,7 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
 
       <button
         onClick={handleSave}
-        className="w-full px-4 py-2 bg-success hover:bg-green-700 rounded text-white text-sm font-medium"
+        className="w-full px-4 py-2 bg-success hover:bg-success/90 rounded text-success-foreground text-sm font-medium"
       >
         Sauvegarder
       </button>
@@ -238,7 +238,7 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
               <button
                 onClick={() => handleDeleteOption(option.id)}
                 className="p-1 hover:bg-accent rounded text-destructive"
-              >
+               aria-label="Supprimer">
                 <Trash2 size={16} />
               </button>
             </div>
@@ -251,7 +251,7 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
         <div className="space-y-2">
           <input
             type="text"
-            placeholder="Label"
+            placeholder="Libellé"
             value={newOption.label || ""}
             onChange={(e) => setNewOption({ ...newOption, label: e.target.value })}
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
@@ -279,7 +279,7 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
           />
           <button
             onClick={handleAddOption}
-            className="w-full px-3 py-2 bg-primary hover:bg-primary/90 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 bg-primary hover:bg-primary/90 rounded text-primary-foreground text-sm font-medium flex items-center justify-center gap-2"
           >
             <Plus size={16} />
             Ajouter
@@ -346,7 +346,7 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
               <button
                 onClick={() => handleDeleteRange(range.id)}
                 className="p-1 hover:bg-accent rounded text-destructive"
-              >
+               aria-label="Supprimer">
                 <Trash2 size={16} />
               </button>
             </div>
@@ -359,7 +359,7 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
         <div className="space-y-2">
           <input
             type="text"
-            placeholder="Label"
+            placeholder="Libellé"
             value={newRange.label || ""}
             onChange={(e) => setNewRange({ ...newRange, label: e.target.value })}
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
@@ -389,7 +389,7 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
           />
           <button
             onClick={handleAddRange}
-            className="w-full px-3 py-2 bg-primary hover:bg-primary/90 rounded text-white text-sm font-medium flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 bg-primary hover:bg-primary/90 rounded text-primary-foreground text-sm font-medium flex items-center justify-center gap-2"
           >
             <Plus size={16} />
             Ajouter
@@ -429,7 +429,7 @@ function ValidationTab({ node, versionId }: ValidationTabProps) {
       <button
         onClick={validateNode}
         disabled={loading}
-        className="w-full px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 rounded text-white text-sm font-medium"
+        className="w-full px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 rounded text-primary-foreground text-sm font-medium"
       >
         {loading ? "Validation en cours..." : "Valider le nœud"}
       </button>
@@ -443,12 +443,12 @@ function ValidationTab({ node, versionId }: ValidationTabProps) {
                 key={i}
                 className={`p-3 rounded text-sm ${
                   error.severity === "error"
-                    ? "bg-red-900/20 border border-red-600 text-red-300"
-                    : "bg-yellow-900/20 border border-yellow-600 text-yellow-300"
+                    ? "bg-destructive-subtle border border-destructive/40 text-destructive"
+                    : "bg-warning-subtle border border-warning/40 text-warning"
                 }`}
               >
                 <p className="font-medium">{error.message}</p>
-                <p className="text-xs text-muted-foreground">Field: {error.field}</p>
+                <p className="text-xs text-muted-foreground">Champ : {error.field}</p>
               </div>
             ))}
         </div>

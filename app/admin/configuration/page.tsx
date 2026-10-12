@@ -113,7 +113,7 @@ export default function ConfigurationPage() {
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="mb-8 flex items-center gap-4">
-        <Link href="/admin" className="text-muted-foreground hover:text-foreground">
+        <Link href="/admin" className="text-muted-foreground hover:text-foreground" aria-label="Retour">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>

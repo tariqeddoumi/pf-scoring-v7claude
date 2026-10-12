@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAppConfig } from './app-config-provider';
+import { texteSur } from '@/lib/couleurs';
 
 /**
  * ThemeWrapper applies app configuration to the DOM
@@ -16,12 +17,17 @@ export function ThemeWrapper({ children }: { children: React.ReactNode }) {
     const root = document.documentElement;
     const style = root.style;
 
-    // Apply colors (oklch format)
+    // Couleur principale (paramétrage général ou banque de l'utilisateur) : le texte
+    // posé dessus et l'anneau de focus suivent. SECONDARY_COLOR n'est plus écrite dans
+    // --secondary, qui sert de fond neutre (puces, boutons secondaires).
     if (config.PRIMARY_COLOR) {
       style.setProperty('--primary', config.PRIMARY_COLOR);
-    }
-    if (config.SECONDARY_COLOR) {
-      style.setProperty('--secondary', config.SECONDARY_COLOR);
+      style.setProperty('--ring', config.PRIMARY_COLOR);
+      const texte = texteSur(config.PRIMARY_COLOR);
+      if (texte) style.setProperty('--primary-foreground', texte);
+      else style.removeProperty('--primary-foreground');
+    } else {
+      for (const p of ['--primary', '--ring', '--primary-foreground']) style.removeProperty(p);
     }
 
     // Apply font family

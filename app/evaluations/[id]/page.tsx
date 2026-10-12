@@ -18,6 +18,7 @@ import { apiGet, apiPost, messageErreurApi } from "@/lib/api-client";
 import { usePermission } from "@/lib/hooks/usePermission";
 import { scoreBarClass, scoreTextClass } from "@/lib/score-colors";
 import { useVoirScores } from "@/components/providers/visibilite-scores";
+import { Note, StatutEvaluation } from "@/components/ui/status-badge";
 
 interface Evaluation {
   id: string;
@@ -149,12 +150,12 @@ export default function EvaluationDetailPage({
         const { id } = await params;
         setEvalId(id);
         const response = await apiGet(`/api/evaluations/${id}`);
-        if (!response.ok) throw new Error("Failed to fetch evaluation");
+        if (!response.ok) throw new Error("Chargement de l'évaluation impossible");
         const data = await response.json();
         setEvaluation(data.data || data);
         setError(null);
       } catch (err: any) {
-        setError(err.message || "Failed to load evaluation");
+        setError(err.message || "Chargement de l'évaluation impossible");
         setEvaluation(null);
       } finally {
         setLoading(false);
@@ -165,7 +166,7 @@ export default function EvaluationDetailPage({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="animate-spin text-primary" size={40} />
       </div>
     );
@@ -185,26 +186,6 @@ export default function EvaluationDetailPage({
     );
   }
 
-  const ratingColors: Record<string, string> = {
-    AAA: "from-green-600 to-green-700",
-    AA: "from-green-500 to-green-600",
-    A: "from-blue-500 to-blue-600",
-    BBB: "from-cyan-500 to-cyan-600",
-    BB: "from-yellow-500 to-yellow-600",
-    B: "from-orange-500 to-orange-600",
-    CCC: "from-red-500 to-red-600",
-    D: "from-red-700 to-red-800",
-  };
-
-  const statusColors: Record<string, string> = {
-    brouillon: "bg-secondary/20 text-muted-foreground",
-    soumis: "bg-warning/15 text-warning",
-    valide: "bg-success/15 text-success",
-    rejete: "bg-destructive/15 text-destructive",
-  };
-
-  const ratingColor = ratingColors[evaluation.rating || ""] || "from-secondary to-muted";
-
   const tabs = [
     {
       id: "general",
@@ -216,9 +197,7 @@ export default function EvaluationDetailPage({
             <Field label="Projet" value={evaluation.project?.nom} />
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Statut</label>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm ${statusColors[evaluation.status] || "bg-secondary/20 text-muted-foreground"}`}>
-                {evaluation.status}
-              </span>
+              <StatutEvaluation statut={evaluation.status} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Recommandation</label>
@@ -231,7 +210,12 @@ export default function EvaluationDetailPage({
                 {evaluation.recommendation || "Non calculée"}
               </span>
             </div>
-            <Field label="Rating" value={evaluation.rating} />
+            {voirScores && (
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Note</label>
+                <Note note={evaluation.rating} />
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Notes</label>
@@ -252,12 +236,12 @@ export default function EvaluationDetailPage({
             <div className="md:col-span-2 grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground uppercase mb-1">Score final</p>
-                <p className="text-3xl font-bold text-foreground">{evaluation.finalScore?.toFixed(2) ?? "—"}</p>
+                <p className="text-3xl font-bold text-foreground">{evaluation.finalScore != null ? evaluation.finalScore.toFixed(1).replace(".", ",") : "—"}</p>
                 <p className="text-xs text-muted-foreground">sur 100</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground uppercase mb-1">Probabilité de défaut</p>
-                <p className="text-3xl font-bold text-foreground">{evaluation.probabilityOfDefault?.toFixed(2) ?? "—"}</p>
+                <p className="text-3xl font-bold text-foreground">{evaluation.probabilityOfDefault != null ? evaluation.probabilityOfDefault.toFixed(2).replace(".", ",") : "—"}</p>
                 <p className="text-xs text-muted-foreground">%</p>
               </div>
             </div>
@@ -273,7 +257,7 @@ export default function EvaluationDetailPage({
               </p>
             )}
           </div>
-          <Field label="Total malus" value={evaluation.malusTotal?.toFixed(2)} />
+          <Field label="Total malus" value={evaluation.malusTotal != null ? evaluation.malusTotal.toFixed(2).replace(".", ",") : null} />
         </div>
       ),
     },
@@ -308,7 +292,7 @@ export default function EvaluationDetailPage({
           <Link
             href="/evaluations"
             className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-          >
+           aria-label="Retour">
             <ArrowLeft size={20} />
           </Link>
           <div>
@@ -331,7 +315,7 @@ export default function EvaluationDetailPage({
           {evaluation.status === "brouillon" && (
             <button
               onClick={() => evalId && router.push(`/evaluations/${evalId}/saisie`)}
-              className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-all"
+              className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-lg transition-all"
             >
               <Edit2 size={20} />
               <span>Reprendre la saisie</span>
@@ -387,27 +371,28 @@ export default function EvaluationDetailPage({
       )}
 
       {/* Score Card */}
-      {evaluation.finalScore !== undefined && evaluation.finalScore !== null && (
-        <div className={`rounded-lg bg-gradient-to-br ${ratingColor} p-6 text-white`}>
+      {/* Réservé aux rôles qui voient les scores : ailleurs, ni score ni note. */}
+      {voirScores && evaluation.finalScore !== undefined && evaluation.finalScore !== null && (
+        <div className="rounded-lg border border-border bg-card p-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <p className="text-sm opacity-80 mb-1">Score Global</p>
-              <p className="text-3xl font-bold">{evaluation.finalScore.toFixed(2)}</p>
-              <p className="text-xs opacity-60">sur 100</p>
-            </div>
-            <div>
-              <p className="text-sm opacity-80 mb-1">Rating</p>
-              <p className="text-3xl font-bold">{evaluation.rating || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-sm opacity-80 mb-1">Statut</p>
-              <p className="text-lg font-semibold">{evaluation.status}</p>
-            </div>
-            <div>
-              <p className="text-sm opacity-80 mb-1">Recommandation</p>
-              <p className="text-lg font-semibold">
-                {evaluation.recommendation || "Non calculée"}
+              <p className="text-xs uppercase text-muted-foreground mb-1">Score final</p>
+              <p className={`text-3xl font-bold tabulaire ${scoreTextClass(evaluation.finalScore)}`}>
+                {evaluation.finalScore.toFixed(1).replace(".", ",")}
               </p>
+              <p className="text-xs text-muted-foreground">sur 100</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase text-muted-foreground mb-1">Note</p>
+              <Note note={evaluation.rating} taille="grande" />
+            </div>
+            <div>
+              <p className="text-xs uppercase text-muted-foreground mb-1">Statut</p>
+              <StatutEvaluation statut={evaluation.status} />
+            </div>
+            <div>
+              <p className="text-xs uppercase text-muted-foreground mb-1">Recommandation</p>
+              <p className="text-sm font-semibold text-foreground">{evaluation.recommendation || "Non calculée"}</p>
             </div>
           </div>
         </div>

@@ -253,7 +253,7 @@ function NodeInput({
                 onClick={() => onChange({ ...answer, valueBoolean: val })}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
                   active
-                    ? "bg-primary border-primary text-white"
+                    ? "bg-primary border-primary text-primary-foreground"
                     : "bg-muted border-input text-muted-foreground hover:border-ring"
                 }`}
               >
@@ -645,16 +645,16 @@ export function EvaluationWorkspace({
   // Sur mobile, une seule colonne qui défile avec la page (domaines, questions,
   // score) ; à partir de lg, les trois colonnes à hauteur d'écran.
   return (
-    <div className="flex flex-col lg:h-[calc(100vh-64px)] bg-background">
+    <div className="flex flex-col lg:h-[calc(100vh-7rem)] bg-background">
       {/* ── Top Header ─────────────────────────────────────── */}
-      <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 px-4 lg:px-6 py-3 bg-background border-b border-border flex-shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 lg:px-6 py-3 bg-background border-b border-border flex-shrink-0">
         <div className="min-w-0 flex-1 lg:flex-none">
           <h1 className="text-base font-bold text-foreground">{projectName}</h1>
           <p className="text-xs text-muted-foreground">Évaluation de Scoring — {evaluationId.slice(0, 8)}…</p>
         </div>
 
         {/* Messages (sous les boutons sur mobile) */}
-        <div className="order-last w-full lg:order-none lg:w-auto lg:flex-1 lg:px-8">
+        <div className="order-last w-full empty:hidden">
           {error && (
             <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/30 px-3 py-1.5 rounded-lg">
               <AlertCircle size={14} />
@@ -696,7 +696,7 @@ export function EvaluationWorkspace({
         </div>
 
         {/* Actions */}
-        <div className="flex w-full lg:w-auto flex-wrap items-center gap-2 lg:flex-shrink-0">
+        <div className="flex w-full sm:w-auto flex-wrap items-center gap-2">
           <button
             onClick={() => setPanneauIA(true)}
             className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
@@ -723,7 +723,7 @@ export function EvaluationWorkspace({
           <button
             onClick={handleSubmit}
             disabled={isCalculating}
-            className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
+            className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground text-sm font-semibold rounded-lg transition-all"
           >
             <Send size={14} />
             Soumettre

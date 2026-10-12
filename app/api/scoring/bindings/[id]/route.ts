@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
-import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { withAdminAuth, withAuth, type AuthPayload } from "@/lib/auth-middleware";
 
 /**
  * GET /api/scoring/bindings/[id]
@@ -45,6 +45,12 @@ async function handleGET(
  * PUT /api/scoring/bindings/[id]
  * Update a binding.
  */
+const CHAMPS_MODIFIABLES = new Set([
+  "sourceEntity", "sourceField", "sourcePath", "bindingMode", "dataType", "transformType",
+  "defaultValue", "fallbackValue", "fallbackMessage", "isRequired", "isReadOnly", "allowOverride",
+  "overrideRequiresReason", "priority", "isActive", "description",
+]);
+
 async function handlePUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -57,7 +63,10 @@ async function handlePUT(
     const binding = await prisma.scoringNodeDataBinding.update({
       where: { id: id },
       data: {
-        ...body,
+        // Seuls les champs modifiables d'une liaison : ni identifiant, ni nœud, ni dates.
+        ...Object.fromEntries(
+          Object.entries(body).filter(([cle]) => CHAMPS_MODIFIABLES.has(cle))
+        ),
         transformConfigJson: body.transformConfigJson
           ? JSON.stringify(body.transformConfigJson)
           : null,
@@ -137,12 +146,14 @@ export async function PUT(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  return withAuth(req, (r, user) => handlePUT(r, ctx, user));
+  // Modifier une liaison de la grille change la notation de toutes les banques :
+  // réservé aux administrateurs (n'importe quel compte connecté le pouvait).
+  return withAdminAuth(req, (r, user) => handlePUT(r, ctx, user));
 }
 
 export async function DELETE(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  return withAuth(req, (r, user) => handleDELETE(r, ctx, user));
+  return withAdminAuth(req, (r, user) => handleDELETE(r, ctx, user));
 }

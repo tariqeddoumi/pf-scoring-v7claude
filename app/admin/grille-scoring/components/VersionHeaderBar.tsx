@@ -10,6 +10,18 @@ import type {
 } from "@/lib/types/scoring-grid";
 import { nomModele, sansGeneration } from "@/lib/libelle-modele";
 
+function PastilleStatut({ publiee }: { publiee: boolean }) {
+  return (
+    <span
+      className={`shrink-0 rounded px-2 py-1 text-xs font-medium ${
+        publiee ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning"
+      }`}
+    >
+      {publiee ? "Publiée" : "Brouillon"}
+    </span>
+  );
+}
+
 interface VersionHeaderBarProps {
   model: ScoringModel;
   versions: ScoringModelVersion[];
@@ -29,6 +41,7 @@ export function VersionHeaderBar({
 }: VersionHeaderBarProps) {
   const activeVersion = versions.find((v) => v.id === activeVersionId);
   const [isLoading, setIsLoading] = useState(false);
+  const [menuOuvert, setMenuOuvert] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
   const [validation, setValidation] = useState<{
     valid: boolean;
@@ -105,43 +118,42 @@ export function VersionHeaderBar({
 
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <p className="text-xs text-muted-foreground">Version</p>
-          <div className="relative group">
+          <div className="relative">
+            {/* Menu ouvert au clic (et non au survol) : utilisable au doigt et au clavier. */}
             <button
               disabled={isLoading}
+              onClick={() => setMenuOuvert((o) => !o)}
+              aria-haspopup="listbox"
+              aria-expanded={menuOuvert}
               className="flex items-center gap-2 px-3 py-2 bg-card hover:bg-accent disabled:bg-card disabled:opacity-50 rounded border border-input text-sm text-foreground max-w-full transition-colors"
             >
               {sansGeneration(activeVersion?.label) || "Sélectionner"}
               <ChevronDown size={16} />
             </button>
 
-            {/* Version dropdown */}
-            <div className="absolute left-0 mt-1 w-48 bg-card border border-input rounded shadow-lg hidden group-hover:block z-50">
-              {versions.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => handleVersionChange(v.id)}
-                  disabled={isLoading}
-                  className="w-full text-left px-4 py-2 hover:bg-accent disabled:opacity-50 text-sm text-foreground border-b border-border last:border-b-0 flex items-center justify-between"
-                >
-                  <span>{sansGeneration(v.label)}</span>
-                  <span className={`text-xs px-2 py-1 rounded ${v.isPublished ? "bg-green-900 text-green-200" : "bg-yellow-900 text-yellow-200"}`}>
-                    {v.isPublished ? "PUBLISHED" : "DRAFT"}
-                  </span>
-                </button>
-              ))}
-            </div>
+            {menuOuvert && (
+              <div role="listbox" className="absolute left-0 z-50 mt-1 w-64 max-w-[80vw] rounded border border-input bg-card shadow-lg">
+                {versions.map((v) => (
+                  <button
+                    key={v.id}
+                    role="option"
+                    aria-selected={v.id === activeVersion?.id}
+                    onClick={() => {
+                      setMenuOuvert(false);
+                      handleVersionChange(v.id);
+                    }}
+                    disabled={isLoading}
+                    className="flex w-full items-center justify-between gap-2 border-b border-border px-4 py-2 text-left text-sm text-foreground last:border-b-0 hover:bg-accent disabled:opacity-50"
+                  >
+                    <span className="min-w-0 truncate">{sansGeneration(v.label)}</span>
+                    <PastilleStatut publiee={v.isPublished} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Version badge */}
-          {activeVersion && (
-            <span
-              className={`text-xs px-2 py-1 rounded ${
-                activeVersion.isPublished ? "bg-green-900 text-green-200" : "bg-yellow-900 text-yellow-200"
-              }`}
-            >
-              {activeVersion.isPublished ? "PUBLISHED" : "DRAFT"}
-            </span>
-          )}
+          {activeVersion && <PastilleStatut publiee={activeVersion.isPublished} />}
         </div>
       </div>
 
@@ -150,17 +162,17 @@ export function VersionHeaderBar({
         <button
           onClick={handleCreateVersion}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary disabled:opacity-50 rounded text-sm text-white transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary disabled:opacity-50 rounded text-sm text-primary-foreground transition-colors"
         >
           {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-          Nouvelle Version
+          Nouvelle version
         </button>
 
         {activeVersion && !activeVersion.isPublished && (
           <button
             onClick={ouvrirPublication}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 bg-success hover:bg-green-700 disabled:bg-success disabled:opacity-50 rounded text-sm text-white transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-success hover:bg-success/90 disabled:bg-success disabled:opacity-50 rounded text-sm text-success-foreground transition-colors"
           >
             {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
             Publier

@@ -100,7 +100,7 @@ export default function DiagnosticPage() {
       case "success":
         return <CheckCircle2 className="h-5 w-5 text-success" />;
       case "warning":
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+        return <AlertCircle className="h-5 w-5 text-warning" />;
       case "error":
         return <XCircle className="h-5 w-5 text-destructive" />;
       default:
@@ -248,31 +248,30 @@ export default function DiagnosticPage() {
         </Card>
 
         {/* Summary */}
-        <div className="mt-6 grid grid-cols-4 gap-4">
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             {
               label: "Succès",
               count: tests.filter((t) => t.status === "success").length,
-              color: "green",
+              ton: "border-success/40 bg-success-subtle text-success",
             },
             {
               label: "Avertissements",
               count: tests.filter((t) => t.status === "warning").length,
-              color: "yellow",
+              ton: "border-warning/40 bg-warning-subtle text-warning",
             },
             {
               label: "Erreurs",
               count: tests.filter((t) => t.status === "error").length,
-              color: "red",
+              ton: "border-destructive/40 bg-destructive-subtle text-destructive",
             },
-            { label: "Total", count: tests.length, color: "blue" },
+            { label: "Total", count: tests.length, ton: "border-border bg-card text-muted-foreground" },
           ].map((item) => (
-            <Card
-              key={item.label}
-              className={`border-${item.color}-500/30 bg-${item.color}-500/5 p-4`}
-            >
-              <p className={`text-sm text-${item.color}-400`}>{item.label}</p>
-              <p className="text-2xl font-bold">{item.count}</p>
+            // Classes écrites en entier : Tailwind ne génère pas les classes composées
+            // à l'exécution (`text-${couleur}-400`), les cartes restaient sans couleur.
+            <Card key={item.label} className={`${item.ton} p-4`}>
+              <p className="text-sm">{item.label}</p>
+              <p className="text-2xl font-bold text-foreground">{item.count}</p>
             </Card>
           ))}
         </div>

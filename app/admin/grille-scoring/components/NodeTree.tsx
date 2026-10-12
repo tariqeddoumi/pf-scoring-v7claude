@@ -109,7 +109,7 @@ function NodeTreeItem({
 
         {node.weight !== null && node.weight !== undefined && (
           <span
-            className="ml-auto text-xs text-warning"
+            className="ml-auto shrink-0 whitespace-nowrap text-xs text-warning"
             title={formatPoidsDetail(node.weight, sommeNiveau)}
           >
             {formatPart(node.weight, sommeNiveau) ?? `poids ${node.weight}`}

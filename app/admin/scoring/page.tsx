@@ -182,7 +182,7 @@ export default function ScoringAdminPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-        <Link href="/admin" className="p-2 hover:bg-card rounded-lg transition-colors">
+        <Link href="/admin" className="p-2 hover:bg-card rounded-lg transition-colors" aria-label="Retour">
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
         <div className="flex-1 min-w-0">
@@ -194,14 +194,14 @@ export default function ScoringAdminPage() {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/admin/scoring/builder"
-            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 border border-border bg-card hover:bg-accent text-foreground font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <Settings size={16} />
             Paramétrer
           </Link>
           <Link
             href="/evaluations/new"
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <BarChart3 size={16} />
             Nouvelle Évaluation
