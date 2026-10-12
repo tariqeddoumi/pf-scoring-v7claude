@@ -4,6 +4,8 @@ import { successResponse, serverError, validationError, errorResponse } from "@/
 import prisma from "@/lib/prisma-client";
 import { hashPassword } from "@/lib/auth";
 import { genererMotDePasseProvisoire } from "@/lib/mot-de-passe";
+import { PERIMETRE_VIDE } from "@/lib/entites/perimetre";
+import { entiteAttribuable, filtreComptes, PORTEES, roleAttribuable } from "@/lib/entites/utilisateurs";
 
 const VALID_ROLES = ["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const;
 const USER_SELECT = {
@@ -12,6 +14,9 @@ const USER_SELECT = {
   nom: true,
   prenom: true,
   role: true,
+  entiteId: true,
+  porteeEcriture: true,
+  entite: { select: { id: true, code: true, nom: true } },
   isActive: true,
   mustChangePassword: true,
   lastLoginAt: true,
@@ -20,7 +25,7 @@ const USER_SELECT = {
 };
 
 export async function GET(request: NextRequest) {
-  return withAdminAuth(request, async () => {
+  return withAdminAuth(request, async (_req, admin) => {
     try {
       const { searchParams } = new URL(request.url);
       const role = searchParams.get("role");
@@ -30,6 +35,7 @@ export async function GET(request: NextRequest) {
       const users = await prisma.user.findMany({
         where: {
           deletedAt: null,
+          ...filtreComptes(admin.perimetre ?? PERIMETRE_VIDE),
           ...(activeOnly && { isActive: true }),
           ...(role && { role: role as any }),
           ...(search && {
@@ -55,7 +61,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return withAdminAuth(request, async (_req, admin) => {
     try {
-      const { email, nom, prenom, role } = await request.json();
+      const { email, nom, prenom, role, entiteId, porteeEcriture } = await request.json();
+      const perimetre = admin.perimetre ?? PERIMETRE_VIDE;
 
       const errors: { field: string; message: string }[] = [];
       if (!email) errors.push({ field: "email", message: "Email requis" });
@@ -71,7 +78,15 @@ export async function POST(request: NextRequest) {
       if (role && !VALID_ROLES.includes(role)) {
         errors.push({ field: "role", message: "Rôle invalide" });
       }
-      if (errors.length > 0) return validationError(errors);
+      if (!roleAttribuable(admin.role, role)) {
+        errors.push({ field: "role", message: "Seul un administrateur système attribue ce rôle" });
+      }
+      const entite = entiteAttribuable(perimetre, entiteId, role || "read_only");
+      if (!entite.ok) errors.push({ field: "entiteId", message: entite.motif });
+      if (porteeEcriture !== undefined && !PORTEES.includes(porteeEcriture)) {
+        errors.push({ field: "porteeEcriture", message: "Portée invalide" });
+      }
+      if (errors.length > 0 || !entite.ok) return validationError(errors);
 
       // Le compte était créé sans mot de passe : impossible de s'y connecter. Un mot de
       // passe provisoire est généré, renvoyé UNE fois à l'administrateur, et devra être
@@ -83,6 +98,8 @@ export async function POST(request: NextRequest) {
           nom,
           prenom: prenom || "",
           role: role || "read_only",
+          entiteId: entite.entiteId,
+          porteeEcriture: porteeEcriture ?? "entite",
           isActive: true,
           password: await hashPassword(motDePasseProvisoire),
           mustChangePassword: true,

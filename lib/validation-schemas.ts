@@ -222,6 +222,9 @@ export const createClientSchema = z.object({
   statusKYC: z.string().max(50).nullable().optional(),
   statusConformite: z.string().max(50).nullable().optional(),
   status: z.string().max(50).nullable().optional(),
+  // Banque qui porte la relation ; vide = celle de l'utilisateur. Le contrôle de
+  // périmètre est fait par le client de base de données.
+  entiteId: z.string().uuid().nullable().optional(),
 });
 
 export const updateClientSchema = createClientSchema.partial();

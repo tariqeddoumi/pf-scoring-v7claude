@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
 import { UserService } from "@/lib/services/user-service";
 import { lirePagination } from "@/lib/validation-schemas";
+import { PERIMETRE_VIDE } from "@/lib/entites/perimetre";
+import { filtreComptes } from "@/lib/entites/utilisateurs";
 
 /**
  * GET /api/users - List all users (paginated)
@@ -17,10 +19,8 @@ async function handleGET(request: NextRequest, user: any) {
     // liste répondait 400 et l'écran affichait « Chargement impossible ».
     const { page, limit } = lirePagination(searchParams, 50);
 
-    const result = await UserService.getAllUsers(
-      page,
-      limit
-    );
+    // Comptes de la branche de l'utilisateur seulement (gestionnaires proposés à la saisie).
+    const result = await UserService.getAllUsers(page, limit, filtreComptes(user.perimetre ?? PERIMETRE_VIDE));
 
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
@@ -46,7 +46,10 @@ async function handlePOST(request: NextRequest, user: any) {
     }
 
     const body = await request.json();
-    const newUser = await UserService.createUser(body, user.userId);
+    // Le nouveau compte est rattaché à l'entité de l'administrateur : un administrateur
+    // de filiale ne peut pas créer un compte qui verrait tout le groupe.
+    const perimetre = user.perimetre ?? PERIMETRE_VIDE;
+    const newUser = await UserService.createUser(body, user.userId, perimetre.tout ? null : perimetre.entiteId);
 
     return NextResponse.json(
       {

@@ -100,8 +100,10 @@ export function Sidebar({
 }) {
   const voirScores = useVoirScores();
   const pathname = usePathname() || "/";
-  const { config } = useAppConfig();
+  const { config, entite } = useAppConfig();
   const nomAppli = config.APP_NAME || "Scoring PF";
+  // Logo et nom de la banque de l'utilisateur (ou de son entité mère), sinon ceux du paramétrage.
+  const logo = config.APP_LOGO_URL || "";
   const [compteurs, setCompteurs] = useState<{ alertes: number; aTraiter: number }>({
     alertes: 0,
     aTraiter: 0,
@@ -144,12 +146,18 @@ export function Sidebar({
   const contenu = (
     <>
       <div className="flex h-14 items-center gap-2.5 px-4">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <span className="grid h-7 w-7 place-items-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
-            {nomAppli.slice(0, 2).toUpperCase()}
-          </span>
-          <span className="text-[15px] font-semibold text-sidebar-accent-foreground">
-            {nomAppli}
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5">
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt="" className="h-8 w-8 shrink-0 rounded-md bg-white object-contain p-0.5" />
+          ) : (
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
+              {nomAppli.slice(0, 2).toUpperCase()}
+            </span>
+          )}
+          <span className="min-w-0">
+            <span className="block truncate text-[15px] font-semibold text-sidebar-accent-foreground">{nomAppli}</span>
+            {entite && <span className="block truncate text-[11px] text-sidebar-foreground">{entite}</span>}
           </span>
         </Link>
         <button

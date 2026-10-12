@@ -35,6 +35,14 @@ model User {
   /// Avatar URL
   avatar        String?
 
+  /// Entité (banque, filiale, groupe) de rattachement ; null = tout le périmètre
+  /// (administrateurs de la plateforme, comptes antérieurs au multi-banques)
+  entiteId       String? @db.Uuid
+  /// Portée d'écriture : « entite » (sa banque seulement, consultation des filiales)
+  /// ou « groupe » (création et supervision dans toute sa branche)
+  porteeEcriture String  @default("entite")
+  entite         Entite? @relation("EntiteUtilisateurs", fields: [entiteId], references: [id], onDelete: SetNull)
+
   /// Account status: true = active, false = soft deleted
   isActive           Boolean   @default(true)
   /// Force password change on next login
@@ -82,6 +90,7 @@ model User {
   @@index([role])
   @@index([createdAt])
   @@index([deletedAt])
+  @@index([entiteId])
   @@map("BP_PF_users")
 }
 
@@ -151,11 +160,15 @@ model Client {
   gestionnaire     String?
   dateRelation     DateTime?
   exposition       Float?
+  /// Banque (entité) qui porte la relation client
+  entiteId         String?   @db.Uuid
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   projects Project[]
+  entite   Entite?   @relation("EntiteClients", fields: [entiteId], references: [id], onDelete: Restrict)
 
+  @@index([entiteId])
   @@map("BP_PF_clients")
 }
 
@@ -196,8 +209,11 @@ model Project {
   periodeRemboursement        Int?
   tauxCouverture              Float?
   ratio                       Float?
+  /// Banque (entité) qui porte le dossier — celle du client
+  entiteId                    String?       @db.Uuid
 
   user        User         @relation(fields: [creePar], references: [id], onDelete: Cascade)
+  entite      Entite?      @relation("EntiteProjets", fields: [entiteId], references: [id], onDelete: Restrict)
   client      Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   scorings    Scoring[]
   auditLogs   AuditLog[]
@@ -208,6 +224,7 @@ model Project {
 
   @@index([creePar])
   @@index([clientId])
+  @@index([entiteId])
   @@map("BP_PF_projects")
 }
 
@@ -1925,4 +1942,41 @@ model ReferenceRatingScale {
 
   @@index([displayOrder], map: "idx_rating_scales_order")
   @@map("BP_PF_v7pp_rating_scales")
+}
+
+/// Banque, filiale ou groupe. Arbre de profondeur quelconque : un groupe a des
+/// filiales, qui peuvent être elles-mêmes des groupes (banques régionales, filiales
+/// à l'étranger…). Un utilisateur voit son entité et toute sa descendance, jamais
+/// les entités sœurs ni ses ascendantes.
+model Entite {
+  id              String   @id @default(uuid()) @db.Uuid
+  /// Code court unique (ex. « BCP », « BP-CASA »)
+  code            String   @unique
+  nom             String
+  /// GROUPE, BANQUE, BANQUE_REGIONALE, FILIALE
+  type            String   @default("BANQUE")
+  parentId        String?  @db.Uuid
+  /// Chemin matérialisé « /id-racine/…/id/ » : la descendance d'une entité est
+  /// l'ensemble des entités dont le chemin commence par le sien
+  chemin          String
+  niveau          Int      @default(0)
+  pays            String?
+  isActive        Boolean  @default(true)
+  /// Habillage propre à l'entité ; vide = hérité de l'entité parente, puis du
+  /// paramétrage général
+  nomOutil        String?
+  logoUrl         String?
+  couleurPrimaire String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  parent       Entite?   @relation("EntiteArbre", fields: [parentId], references: [id], onDelete: Restrict)
+  enfants      Entite[]  @relation("EntiteArbre")
+  utilisateurs User[]    @relation("EntiteUtilisateurs")
+  clients      Client[]  @relation("EntiteClients")
+  projets      Project[] @relation("EntiteProjets")
+
+  @@index([parentId])
+  @@index([chemin])
+  @@map("BP_PF_entites")
 }

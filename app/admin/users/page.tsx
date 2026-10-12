@@ -19,6 +19,9 @@ interface User {
   prenom: string;
   role: UserRole;
   isActive: boolean;
+  entiteId?: string | null;
+  porteeEcriture?: string;
+  entite?: { id: string; code: string; nom: string } | null;
   /** Mot de passe provisoire pas encore remplacé par l'utilisateur. */
   mustChangePassword?: boolean;
   lastLoginAt: string | null;
@@ -34,6 +37,15 @@ interface UserForm {
   prenom: string;
   role: UserRole;
   isActive: boolean;
+  /** "" = tout le périmètre (administrateur de la plateforme). */
+  entiteId: string;
+  porteeEcriture: "entite" | "groupe";
+}
+
+interface EntiteChoix {
+  id: string;
+  nom: string;
+  niveau: number;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -74,6 +86,8 @@ const EMPTY_FORM: UserForm = {
   prenom: "",
   role: "risk_analyst",
   isActive: true,
+  entiteId: "",
+  porteeEcriture: "entite",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -134,9 +148,29 @@ function UserModal({
 }) {
   const [form, setForm] = useState<UserForm>(
     user
-      ? { email: user.email, nom: user.nom, prenom: user.prenom, role: user.role, isActive: user.isActive }
+      ? {
+          email: user.email, nom: user.nom, prenom: user.prenom, role: user.role, isActive: user.isActive,
+          entiteId: user.entiteId ?? "", porteeEcriture: user.porteeEcriture === "groupe" ? "groupe" : "entite",
+        }
       : EMPTY_FORM
   );
+  // Banques du périmètre de l'administrateur : un compte ne peut être rattaché qu'à l'une d'elles.
+  const [entites, setEntites] = useState<EntiteChoix[]>([]);
+  const [toutPerimetre, setToutPerimetre] = useState(false);
+  useEffect(() => {
+    apiGet("/api/admin/entites")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((corps) => {
+        if (!corps) return;
+        setEntites(corps.data ?? []);
+        setToutPerimetre(Boolean(corps.perimetre?.tout));
+        if (!user && !corps.perimetre?.tout && corps.perimetre?.entiteId) {
+          setForm((f) => ({ ...f, entiteId: corps.perimetre.entiteId }));
+        }
+      })
+      .catch(() => undefined);
+  }, [user]);
+  const minNiveau = Math.min(...entites.map((e) => e.niveau), 0);
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof UserForm | "global", string>>>({});
 
@@ -230,6 +264,36 @@ function UserModal({
               className={`w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border focus:border-blue-400 outline-none transition-colors ${fieldErrors.email ? "border-destructive" : "border-input"}`}
             />
             {fieldErrors.email && <p className="text-destructive text-xs mt-1">{fieldErrors.email}</p>}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">Banque de rattachement</label>
+              <select
+                value={form.entiteId}
+                onChange={(e) => setForm({ ...form, entiteId: e.target.value })}
+                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-blue-400 outline-none"
+              >
+                {toutPerimetre && <option value="">Toutes les banques (administration)</option>}
+                {entites.map((e) => (
+                  <option key={e.id} value={e.id}>{"\u00a0\u00a0".repeat(Math.max(0, e.niveau - minNiveau))}{e.nom}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary-foreground mb-2">Création et modification</label>
+              <select
+                value={form.porteeEcriture}
+                onChange={(e) => setForm({ ...form, porteeEcriture: e.target.value as UserForm["porteeEcriture"] })}
+                className="w-full bg-card text-foreground text-sm px-3 py-2 rounded-lg border border-input focus:border-blue-400 outline-none"
+              >
+                <option value="entite">Sa banque (filiales en consultation)</option>
+                <option value="groupe">Sa banque et toutes ses filiales</option>
+              </select>
+            </div>
+            <p className="sm:col-span-2 text-xs text-muted-foreground">
+              L&apos;utilisateur voit les dossiers de sa banque et de ses filiales, jamais ceux de la maison mère ni des banques sœurs.
+            </p>
           </div>
 
           <div>
@@ -361,10 +425,10 @@ export default function AdminUsersPage() {
   };
 
   const handleCreate = async (form: UserForm) => {
-    const res = await apiPost("/api/admin/users", form);
+    const res = await apiPost("/api/admin/users", { ...form, entiteId: form.entiteId || null });
     if (!res.ok) {
       const d = await res.json();
-      throw new Error(d.error || "Erreur lors de la création");
+      throw new Error(d.errors?.map((x: { message: string }) => x.message).join(" ; ") || d.error || "Erreur lors de la création");
     }
     const { data } = await res.json();
     if (data?.motDePasseProvisoire) {
@@ -377,10 +441,10 @@ export default function AdminUsersPage() {
 
   const handleEdit = async (form: UserForm) => {
     if (!modalUser) return;
-    const res = await apiPut(`/api/admin/users/${modalUser.id}`, form);
+    const res = await apiPut(`/api/admin/users/${modalUser.id}`, { ...form, entiteId: form.entiteId || null });
     if (!res.ok) {
       const d = await res.json();
-      throw new Error(d.error || "Erreur lors de la mise à jour");
+      throw new Error(d.errors?.map((x: { message: string }) => x.message).join(" ; ") || d.error || "Erreur lors de la mise à jour");
     }
     await fetchUsers();
     showSuccessMsg("Utilisateur mis à jour");
@@ -562,6 +626,10 @@ export default function AdminUsersPage() {
                       )}
                     </div>
                     <span className="text-sm text-muted-foreground block break-all">{user.email}</span>
+                    <span className="text-xs text-muted-foreground block">
+                      🏦 {user.entite?.nom ?? "Toutes les banques"}
+                      {user.porteeEcriture === "groupe" && " · écrit dans toutes ses filiales"}
+                    </span>
                   </div>
 
                   {/* Mobile : rôle, statut et connexion passent sous le nom ; écran large : une colonne chacun. */}

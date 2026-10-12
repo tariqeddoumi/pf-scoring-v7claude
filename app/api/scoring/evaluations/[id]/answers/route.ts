@@ -223,6 +223,16 @@ async function handlePATCH(
     });
   } catch (error) {
     if (error instanceof ErreurEtat) {
+      // Dossier encore au brouillon mais verrou refusé : il est visible en
+      // consultation seulement (filiale vue depuis le groupe).
+      const { id } = await params;
+      const ev = await prisma.scoringEvaluation.findUnique({ where: { id }, select: { status: true } });
+      if (ev && String(ev.status) === "brouillon") {
+        return NextResponse.json(
+          { success: false, error: "Ce dossier est en consultation seule dans votre périmètre.", errorCode: "HORS_PERIMETRE" },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         { success: false, error: "L'évaluation n'est plus en saisie : réponses non enregistrées.", errorCode: "INVALID_STATE" },
         { status: 409 }

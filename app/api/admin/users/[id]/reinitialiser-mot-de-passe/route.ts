@@ -4,6 +4,8 @@ import { withAdminAuth } from "@/lib/auth-middleware";
 import { hashPassword } from "@/lib/auth";
 import { genererMotDePasseProvisoire } from "@/lib/mot-de-passe";
 import { oublierCompte } from "@/lib/compte-actif";
+import { PERIMETRE_VIDE } from "@/lib/entites/perimetre";
+import { compteGerable } from "@/lib/entites/utilisateurs";
 
 /**
  * POST /api/admin/users/[id]/reinitialiser-mot-de-passe
@@ -21,9 +23,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { id } = await params;
     const cible = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, role: true, isActive: true, deletedAt: true },
+      select: { id: true, email: true, role: true, isActive: true, deletedAt: true, entiteId: true },
     });
-    if (!cible) return NextResponse.json({ success: false, error: "Utilisateur introuvable" }, { status: 404 });
+    if (!cible || !compteGerable(admin.perimetre ?? PERIMETRE_VIDE, cible.entiteId)) {
+      return NextResponse.json({ success: false, error: "Utilisateur introuvable" }, { status: 404 });
+    }
     if (cible.id === admin.userId) {
       return NextResponse.json(
         { success: false, error: "Changez votre propre mot de passe depuis votre profil." },

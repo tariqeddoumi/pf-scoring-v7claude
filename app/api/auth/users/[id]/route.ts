@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTokenFromCookie, verifyToken } from "@/lib/auth";
 import prisma from "@/lib/prisma-client";
+import { etatDuCompte } from "@/lib/compte-actif";
+import { calculerPerimetre, chargerArbre } from "@/lib/entites/perimetre";
+import { compteGerable } from "@/lib/entites/utilisateurs";
 
 export async function DELETE(
   request: NextRequest,
@@ -32,8 +35,10 @@ export async function DELETE(
     const user = await prisma.user.findUnique({
       where: { id },
     });
+    const horsBranche =
+      user && !compteGerable(calculerPerimetre(await chargerArbre(), await etatDuCompte(payload.userId)), user.entiteId);
 
-    if (!user) {
+    if (!user || horsBranche) {
       return NextResponse.json(
         { error: "Utilisateur non trouvé" },
         { status: 404 }

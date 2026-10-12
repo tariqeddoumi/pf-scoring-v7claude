@@ -57,6 +57,8 @@ export interface ValeursClient {
   statusKYC: string;
   statusConformite: string;
   status: string;
+  /** Banque qui porte la relation ("" = celle de l'utilisateur). */
+  entiteId: string;
 }
 
 export const VALEURS_CLIENT_VIDES: ValeursClient = {
@@ -87,6 +89,7 @@ export const VALEURS_CLIENT_VIDES: ValeursClient = {
   statusKYC: "",
   statusConformite: "",
   status: "Actif",
+  entiteId: "",
 };
 
 /** Convertit une fiche renvoyée par l'API en valeurs de formulaire. */
@@ -165,6 +168,8 @@ export function ClientForm({
     useState<Record<string, OptionReferentiel[]>>(REFERENTIELS_CLIENT as unknown as Record<string, OptionReferentiel[]>);
   const [secteurs, setSecteurs] = useState<{ code: string; label: string }[]>([]);
   const [gestionnaires, setGestionnaires] = useState<string[]>([]);
+  // Banques où l'utilisateur peut créer : le choix n'apparaît que s'il en a plusieurs.
+  const [banques, setBanques] = useState<{ id: string; nom: string; niveau: number }[]>([]);
   const [homonymes, setHomonymes] = useState<{ id: string; nom: string }[]>([]);
   const initiales = useRef(valeursInitiales);
 
@@ -175,11 +180,18 @@ export function ClientForm({
 
   useEffect(() => {
     (async () => {
-      const [resListes, resSecteurs, resUsers] = await Promise.all([
+      const [resListes, resSecteurs, resUsers, resEntites] = await Promise.all([
         apiGet("/api/reference/lists"),
         apiGet("/api/reference/sectors"),
         apiGet("/api/users?limit=200"),
+        apiGet("/api/admin/entites"),
       ]);
+      if (resEntites.ok) {
+        const d = await resEntites.json();
+        const ecriture: string[] = d.perimetre?.ecriture ?? [];
+        const toutes: { id: string; nom: string; niveau: number }[] = d.data ?? [];
+        setBanques(d.perimetre?.tout ? toutes : toutes.filter((e) => ecriture.includes(e.id)));
+      }
       if (resListes.ok) {
         const d = await resListes.json();
         if (d?.data) setListes(d.data);
@@ -284,6 +296,27 @@ export function ClientForm({
       <div className="space-y-4">
         <SectionCard titre="Identité" description="Ce qui désigne la contrepartie dans les actes.">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {banques.length > 1 && (
+              <label className="md:col-span-2 block text-sm font-medium text-foreground">
+                Banque qui porte la relation
+                <select
+                  value={v.entiteId}
+                  onChange={(e) => setV((p) => ({ ...p, entiteId: e.target.value }))}
+                  className="mt-1.5 h-9 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-ring focus:outline-none"
+                >
+                  <option value="">Ma banque</option>
+                  {banques.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {"\u00a0\u00a0".repeat(Math.max(0, b.niveau - Math.min(...banques.map((x) => x.niveau))))}
+                      {b.nom}
+                    </option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                  Le client et ses projets ne sont visibles que de cette banque et de ses entités mères.
+                </span>
+              </label>
+            )}
             <Champ
               cle="nom"
               libelle="Nom usuel"
