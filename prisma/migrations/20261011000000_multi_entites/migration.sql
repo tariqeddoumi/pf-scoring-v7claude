@@ -74,6 +74,16 @@ UPDATE "BP_PF_users" SET "entiteId" = (SELECT id FROM "BP_PF_entites" WHERE "par
 WHERE "entiteId" IS NULL AND "role"::text <> 'system_admin'
   AND (SELECT count(*) FROM "BP_PF_entites" WHERE "parentId" IS NULL) = 1;
 
+-- Catégorie « ia » des paramètres : certaines bases (dont la production historique)
+-- limitent les catégories par une contrainte ; elle est étendue si elle existe.
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'BP_PF_app_configuration_category_check') THEN
+    ALTER TABLE "BP_PF_app_configuration" DROP CONSTRAINT "BP_PF_app_configuration_category_check";
+    ALTER TABLE "BP_PF_app_configuration" ADD CONSTRAINT "BP_PF_app_configuration_category_check"
+      CHECK (category = ANY (ARRAY['branding'::text, 'theme'::text, 'behavior'::text, 'scoring'::text, 'screens'::text, 'ia'::text]));
+  END IF;
+END $$;
+
 -- Paramètres de l'IA documentaire (les clés d'API restent des variables d'environnement).
 INSERT INTO "BP_PF_app_configuration" ("key", "value", "type", "category", "description", "isPublic", "metadata", "updatedAt")
 VALUES
