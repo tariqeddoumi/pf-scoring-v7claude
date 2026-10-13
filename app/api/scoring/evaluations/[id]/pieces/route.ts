@@ -6,6 +6,7 @@ import type { UserRole } from "@/lib/permissions";
 import { extensionAcceptee, EXTENSIONS_ACCEPTEES } from "@/lib/services/ia-documents/conversion";
 import { cheminPiece, lienDepot, stockageConfigure, TAILLE_MAX_FICHIER } from "@/lib/services/ia-documents/stockage";
 import { derniereAnalyse } from "@/lib/services/ia-documents/dossier";
+import { messagePublic } from "@/lib/erreur-publique";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -100,7 +101,7 @@ async function handlePOST(req: NextRequest, { params }: Ctx, user: AuthPayload) 
     });
   } catch (e) {
     await prisma.scoringDocument.delete({ where: { id: piece.id } }).catch(() => undefined);
-    return refus(502, e instanceof Error ? e.message : "Lien de dépôt impossible", "STORAGE_ERROR");
+    return refus(502, messagePublic(e, "Lien de dépôt impossible"), "STORAGE_ERROR");
   }
 }
 

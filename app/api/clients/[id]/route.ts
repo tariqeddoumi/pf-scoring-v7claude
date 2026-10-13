@@ -13,6 +13,7 @@ import {
   resoudreGroupe,
 } from "@/lib/clients/enregistrement";
 import { lireAttestation } from "@/lib/services/t24/attestation";
+import { messagePublic } from "@/lib/erreur-publique";
 
 export async function GET(
   request: NextRequest,
@@ -100,7 +101,7 @@ export async function GET(
     } catch (error: any) {
       console.error(`[Client ${id} GET]`, error);
       return NextResponse.json(
-        { success: false, error: error.message || "Erreur serveur" },
+        { success: false, error: messagePublic(error, "Erreur serveur") },
         { status: 500 }
       );
     }
@@ -270,7 +271,7 @@ export async function PUT(
       }
       console.error(`[Client ${id} PUT]`, error);
       return NextResponse.json(
-        { success: false, error: error.message || "Erreur serveur" },
+        { success: false, error: messagePublic(error, "Erreur serveur") },
         { status: 500 }
       );
     }
@@ -296,9 +297,16 @@ export async function DELETE(
       await prisma.client.delete({ where: { id } });
       return NextResponse.json({ success: true, message: "Client supprimé" });
     } catch (error: any) {
+      // Client absent, ou visible en consultation seule depuis cette banque.
+      if (error?.code === "P2025") {
+        return NextResponse.json(
+          { success: false, error: "Client introuvable ou en consultation seule depuis votre banque." },
+          { status: 404 }
+        );
+      }
       console.error(`[Client ${id} DELETE]`, error);
       return NextResponse.json(
-        { success: false, error: error.message || "Erreur serveur" },
+        { success: false, error: messagePublic(error, "Erreur serveur") },
         { status: 500 }
       );
     }

@@ -4,6 +4,7 @@ import { UserService } from "@/lib/services/user-service";
 import { lirePagination } from "@/lib/validation-schemas";
 import { PERIMETRE_VIDE } from "@/lib/entites/perimetre";
 import { filtreComptes } from "@/lib/entites/utilisateurs";
+import { messagePublic } from "@/lib/erreur-publique";
 
 /**
  * GET /api/users - List all users (paginated)
@@ -63,7 +64,7 @@ async function handlePOST(request: NextRequest, user: any) {
       { status: 201 }
     );
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
   }
 }
 

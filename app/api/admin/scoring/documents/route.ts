@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth } from '@/lib/auth-middleware';
 import { successResponse, serverError, validationError } from '@/lib/api-response';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// Client cloisonné par banque : un client Prisma créé ici contournait le filtre
+// d'entité et exposait les dossiers des autres banques.
+import prisma from '@/lib/prisma-client';
 
 export async function GET(request: NextRequest) {
   return withAdminAuth(request, async () => {

@@ -3,6 +3,7 @@ import { withAuth } from "@/lib/auth-middleware";
 import { ScoringQuestionnaireService } from "@/lib/services/scoring-questionnaire-service";
 import { hasMinimumRole } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
+import { messagePublic } from "@/lib/erreur-publique";
 
 /**
  * GET /api/scoring/questionnaire - Get questionnaire nodes for default model
@@ -59,7 +60,7 @@ async function handleGET(request: NextRequest, user: any) {
     );
   } catch (error: any) {
     console.error("Error fetching questionnaire:", error);
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
   }
 }
 

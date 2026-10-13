@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { messagePublic } from "@/lib/erreur-publique";
 
 /**
  * GET /api/scoring/evaluations/[id]/trace
@@ -77,7 +78,7 @@ async function handleGET(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
+        error: messagePublic(error, "Internal server error"),
         errorCode: "INTERNAL_ERROR",
       },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { ScoringEvaluationService } from "@/lib/services/scoring-evaluation-service";
+import { messagePublic } from "@/lib/erreur-publique";
 
 async function handler(
   request: NextRequest,
@@ -79,13 +80,13 @@ async function handler(
     } catch (error: any) {
       console.error("[Evaluation POST]", error);
       if (error.message.includes("not found")) {
-        return NextResponse.json({ error: error.message }, { status: 404 });
+        return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 404 });
       }
       if (
         error.message.includes("Can only") ||
         error.message.includes("Only")
       ) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
       }
       return NextResponse.json(
         { error: "Failed to process evaluation action" },

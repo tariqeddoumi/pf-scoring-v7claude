@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import { initializeFieldConfigurationsFromCode } from "@/lib/services/field-config-service";
+import { messagePublic } from "@/lib/erreur-publique";
 
 export async function POST(request: NextRequest) {
-  return withAuth(request, async (user: any) => {
+  // withAuth passe (requête, utilisateur) : le rôle était lu sur la requête et la
+  // route refusait tout le monde.
+  return withAuth(request, async (_req, user) => {
     try {
-      if (user?.role !== "system_admin") {
+      if (user.role !== "system_admin") {
         return NextResponse.json(
-          { success: false, error: "Unauthorized" },
+          { success: false, error: "Réservé à l'administrateur système" },
           { status: 403 }
         );
       }
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : "Initialization failed",
+          error: messagePublic(error, "Initialization failed"),
         },
         { status: 500 }
       );

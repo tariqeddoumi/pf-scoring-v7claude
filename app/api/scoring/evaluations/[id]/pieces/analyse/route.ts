@@ -13,6 +13,7 @@ import {
   criteresDuDossier,
   type AnalyseEnregistree,
 } from "@/lib/services/ia-documents/dossier";
+import { messagePublic } from "@/lib/erreur-publique";
 
 // L'analyse de plusieurs pièces peut prendre quelques minutes.
 export const maxDuration = 300;
@@ -57,7 +58,7 @@ async function handlePOST(_req: NextRequest, { params }: Ctx, user: AuthPayload)
       pieces.push(convertie);
       lues.push({ id: d.id, nom: d.fileName });
     } catch (e) {
-      avertissements.push(`« ${d.fileName} » non analysée : ${e instanceof Error ? e.message : "lecture impossible"}`);
+      avertissements.push(`« ${d.fileName} » non analysée : ${messagePublic(e, "lecture impossible")}`);
     }
   }
   if (pieces.length === 0) {
@@ -120,7 +121,7 @@ async function handlePOST(_req: NextRequest, { params }: Ctx, user: AuthPayload)
   } catch (e) {
     console.error("[ANALYSE IA]", e instanceof Error ? e.message : e);
     return NextResponse.json(
-      { success: false, error: e instanceof Error ? e.message : "Analyse impossible", details: avertissements },
+      { success: false, error: messagePublic(e, "Analyse impossible"), details: avertissements },
       { status: 502 }
     );
   }

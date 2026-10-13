@@ -6,6 +6,7 @@ import {
   createFieldConfig,
   createFormSection,
 } from '@/lib/services/field-config-service';
+import { messagePublic } from '@/lib/erreur-publique';
 
 async function handler(request: NextRequest, user: any) {
   // GET - List field configurations for an entity
@@ -36,7 +37,7 @@ async function handler(request: NextRequest, user: any) {
     } catch (error: any) {
       console.error('[Field Config GET]', error);
       return NextResponse.json(
-        { error: error.message || 'Failed to fetch field configurations' },
+        { error: messagePublic(error, 'Failed to fetch field configurations') },
         { status: 500 }
       );
     }
@@ -92,7 +93,7 @@ async function handler(request: NextRequest, user: any) {
     } catch (error: any) {
       console.error('[Field Config POST]', error);
       return NextResponse.json(
-        { error: error.message || 'Failed to create field configuration' },
+        { error: messagePublic(error, 'Failed to create field configuration') },
         { status: 500 }
       );
     }

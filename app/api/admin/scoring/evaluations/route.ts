@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { ScoringEvaluationService } from "@/lib/services/scoring-evaluation-service";
+import { messagePublic } from "@/lib/erreur-publique";
 
 async function handler(request: NextRequest, user: any) {
   if (request.method === "POST") {
@@ -41,7 +42,7 @@ async function handler(request: NextRequest, user: any) {
     } catch (error: any) {
       console.error("[Evaluations POST]", error);
       if (error.message.includes("not found")) {
-        return NextResponse.json({ error: error.message }, { status: 404 });
+        return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 404 });
       }
       return NextResponse.json(
         { error: "Failed to create evaluation" },

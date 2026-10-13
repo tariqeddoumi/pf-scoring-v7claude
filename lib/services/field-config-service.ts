@@ -367,12 +367,15 @@ export const deleteFormPreset = async (id: string): Promise<void> => {
  */
 export const initializeFieldConfigurationsFromCode = async (): Promise<void> => {
   try {
-    // Check if already initialized by seeing if client sections exist
-    const existingClientSections = await prisma.formSection.findMany({
-      where: { entity: 'client' },
-    });
+    // Chaque entité est initialisée une seule fois : le contrôle portait sur les seuls
+    // clients, et une base où les sections « projet » existaient déjà faisait échouer
+    // l'initialisation sur la contrainte d'unicité (entité, titre).
+    const [sectionsClient, sectionsProjet] = await Promise.all([
+      prisma.formSection.count({ where: { entity: 'client' } }),
+      prisma.formSection.count({ where: { entity: 'project' } }),
+    ]);
 
-    if (existingClientSections.length > 0) {
+    if (sectionsClient > 0 && sectionsProjet > 0) {
       console.log(
         'Field configurations already initialized in database, skipping...'
       );
@@ -389,7 +392,7 @@ export const initializeFieldConfigurationsFromCode = async (): Promise<void> => 
     );
 
     // Seed client sections and fields
-    for (const section of CLIENT_SECTIONS) {
+    for (const section of sectionsClient > 0 ? [] : CLIENT_SECTIONS) {
       const createdSection = await prisma.formSection.create({
         data: {
           id: randomUUID(),
@@ -431,7 +434,7 @@ export const initializeFieldConfigurationsFromCode = async (): Promise<void> => 
     }
 
     // Seed project sections and fields
-    for (const section of PROJECT_SECTIONS) {
+    for (const section of sectionsProjet > 0 ? [] : PROJECT_SECTIONS) {
       const createdSection = await prisma.formSection.create({
         data: {
           id: randomUUID(),

@@ -8,6 +8,7 @@ import {
   deleteFormSection,
 } from '@/lib/services/field-config-service';
 import prisma from '@/lib/prisma';
+import { messagePublic } from '@/lib/erreur-publique';
 
 async function handler(
   request: NextRequest,
@@ -95,7 +96,7 @@ async function handler(
     } catch (error: any) {
       console.error('[Field Config PUT]', error);
       return NextResponse.json(
-        { error: error.message || 'Failed to update field configuration' },
+        { error: messagePublic(error, 'Failed to update field configuration') },
         { status: 500 }
       );
     }
@@ -133,7 +134,7 @@ async function handler(
     } catch (error: any) {
       console.error('[Field Config DELETE]', error);
       return NextResponse.json(
-        { error: error.message || 'Failed to delete field configuration' },
+        { error: messagePublic(error, 'Failed to delete field configuration') },
         { status: 500 }
       );
     }
