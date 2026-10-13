@@ -136,7 +136,6 @@ export function ClientForm({
   // ─── T24 ───
   const [t24, setT24] = useState<StatutT24 | null>(null);
   const [champsT24, setChampsT24] = useState<string[]>(champsT24Initiaux);
-  const champsT24Initiaux_ = useRef(champsT24Initiaux);
   const [actionnaires, setActionnaires] =
     useState<LigneActionnaire[]>(actionnairesInitiaux);
   const actionnairesInitiaux_ = useRef(
@@ -145,7 +144,11 @@ export function ClientForm({
   const [erreurActionnaires, setErreurActionnaires] = useState<
     string | undefined
   >();
-  const [importT24, setImportT24] = useState(false);
+  // Attestations signées des lectures T24 : seules elles font foi côté serveur.
+  const [attestationT24, setAttestationT24] = useState<string | null>(null);
+  const [attestationGroupeT24, setAttestationGroupeT24] = useState<
+    string | null
+  >(null);
   const [lectureT24, setLectureT24] = useState<"client" | "groupe" | null>(
     null
   );
@@ -247,9 +250,6 @@ export function ClientForm({
     return d;
   }, [v]);
 
-  const champsT24Modifies =
-    [...champsT24].sort().join("|") !==
-    [...champsT24Initiaux_.current].sort().join("|");
   const chargeActionnaires = useMemo(
     () => versPayloadActionnaires(actionnaires),
     [actionnaires]
@@ -317,7 +317,7 @@ export function ClientForm({
         ...(fiche.groupe?.nom ? ["groupeNom"] : []),
       ];
       setChampsT24(marques);
-      setImportT24(true);
+      setAttestationT24(corps.attestation ?? null);
       setErreurs({});
       const existant = corps.existant as { id: string; nom: string } | null;
       if (existant && existant.id !== clientId) {
@@ -371,7 +371,7 @@ export function ClientForm({
       if (nom) {
         setV((p) => ({ ...p, groupeNom: nom }));
         setChampsT24((p) => [...new Set([...p, "groupeCode", "groupeNom"])]);
-        setImportT24(true);
+        setAttestationGroupeT24(corps.attestation ?? null);
       }
       setErreurs((e) => ({
         ...e,
@@ -409,15 +409,17 @@ export function ClientForm({
 
   const soumettre = (e: React.FormEvent) => {
     e.preventDefault();
+    const attestations = {
+      ...(attestationT24 ? { attestationT24 } : {}),
+      ...(attestationGroupeT24 ? { attestationGroupeT24 } : {}),
+    };
     const extras = {
-      ...(champsT24Modifies || importT24 ? { champsT24 } : {}),
-      ...(importT24 ? { importT24: true } : {}),
+      ...attestations,
       ...(actionnairesModifies ? { actionnaires: chargeActionnaires } : {}),
     };
     const complet = {
       ...versPayloadClient(v),
-      champsT24,
-      ...(importT24 ? { importT24: true } : {}),
+      ...attestations,
       actionnaires: chargeActionnaires,
     };
     // Le schéma Zod de l'API est aussi celui du formulaire : l'erreur s'affiche sous
@@ -456,6 +458,11 @@ export function ClientForm({
     setErreurActionnaires(undefined);
     // Le groupe part entier (code et nom) dès que l'un des deux change.
     const aEnvoyer: Partial<ValeursClient> = { ...modifies };
+    // Après un rapatriement, les champs repris partent aussi (même inchangés) : le
+    // serveur les compare à l'attestation pour les marquer comme venant de T24.
+    if (attestationT24) {
+      for (const c of champsT24) if (c in v) aEnvoyer[c as Cle] = v[c as Cle];
+    }
     if (GROUPE.some((g) => g in modifies)) {
       aEnvoyer.groupeCode = v.groupeCode;
       aEnvoyer.groupeNom = v.groupeNom;

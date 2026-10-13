@@ -20,8 +20,14 @@ import { createClientSchema } from "@/lib/validation-schemas";
 import {
   donneesClient,
   ecritureActionnaires,
+  provenanceT24,
   resoudreGroupe,
 } from "@/lib/clients/enregistrement";
+import {
+  lireAttestation,
+  signerAttestation,
+  type AttestationClient,
+} from "@/lib/services/t24/attestation";
 import {
   VALEURS_CLIENT_VIDES,
   controlesActionnariat,
@@ -279,59 +285,175 @@ describe("saisie de la signalétique", () => {
     });
   });
 
-  it("provenance : T24 si des champs repris restent, date de synchro seulement sur rapatriement", () => {
+  it("données : dates converties, groupe et attestations écartés", () => {
     const d = donneesClient({
       nom: "A",
-      champsT24: ["nom", "nom", "ice"],
-      importT24: true,
       dateRevueKYC: "2026-02-01",
+      groupe: { code: "G1", nom: "Groupe" },
+      attestationT24: "x.y",
     });
-    expect(d.sourceDonnees).toBe("T24");
-    expect(d.champsT24).toEqual(["nom", "ice"]);
-    expect(d.dateSynchroT24).toBeInstanceOf(Date);
     expect(d.dateRevueKYC).toEqual(new Date("2026-02-01"));
     expect(d).not.toHaveProperty("groupe");
-    expect(d).not.toHaveProperty("importT24");
-    const manuel = donneesClient({ champsT24: [] });
-    expect(manuel.sourceDonnees).toBe("MANUELLE");
-    expect(manuel).not.toHaveProperty("dateSynchroT24");
+    expect(d).not.toHaveProperty("attestationT24");
+    expect(d).not.toHaveProperty("champsT24");
   });
 
-  it("groupe : retrouvé par code, sinon par nom, sinon créé dans la banque du client", async () => {
+  it("attestation T24 : signée par le serveur, liée à l'utilisateur, infalsifiable", () => {
+    process.env.JWT_SECRET = "secret-de-test-local-32-caracteres-min";
+    const jeton = signerAttestation<AttestationClient>({
+      t: "client",
+      u: "user-1",
+      c: "100",
+      v: { nom: "Atlas", exposition: "5000" },
+      g: { code: "G1", nom: "Groupe Atlas" },
+    })!;
+    expect(lireAttestation(jeton, "client", "user-1")?.v.nom).toBe("Atlas");
+    expect(lireAttestation(jeton, "client", "user-2")).toBeNull();
+    expect(lireAttestation(jeton, "groupe", "user-1")).toBeNull();
+    const [corps, sig] = jeton.split(".");
+    const falsifie = Buffer.from(
+      Buffer.from(corps, "base64url").toString().replace("Atlas", "Autre")
+    ).toString("base64url");
+    expect(
+      lireAttestation(`${falsifie}.${sig}`, "client", "user-1")
+    ).toBeNull();
+    expect(lireAttestation("n'importe.quoi", "client", "user-1")).toBeNull();
+  });
+
+  it("provenance : seuls les champs identiques aux valeurs attestées sont marqués T24", () => {
+    const att: AttestationClient = {
+      t: "client",
+      u: "u",
+      c: "100",
+      v: { nom: "Atlas", exposition: "5000", ville: "Rabat" },
+      g: { code: "G1", nom: "Groupe Atlas" },
+      exp: Date.now() + 1000,
+    };
+    const p = provenanceT24(
+      {
+        nom: "Atlas",
+        exposition: 5000,
+        ville: "Casablanca",
+        codeClientT24: "100",
+        groupe: { code: "G1", nom: "Groupe Atlas" },
+      },
+      att,
+      null
+    )!;
+    expect(p.champsT24.sort()).toEqual([
+      "codeClientT24",
+      "exposition",
+      "groupeCode",
+      "groupeNom",
+      "nom",
+    ]);
+    expect(p.sourceDonnees).toBe("T24");
+    expect(p.dateSynchroT24).toBeInstanceOf(Date);
+    // Sans attestation, rien ne peut être déclaré T24 (création).
+    expect(provenanceT24({ nom: "Atlas" }, null, null)).toEqual({
+      champsT24: [],
+      sourceDonnees: "MANUELLE",
+    });
+  });
+
+  it("provenance en modification : une retouche retire la marque, le reste est conservé", () => {
+    const p = provenanceT24({ nom: "Retouché" }, null, [
+      "nom",
+      "ice",
+      "groupeNom",
+    ])!;
+    expect(p.champsT24).toEqual(["ice", "groupeNom"]);
+    expect(p).not.toHaveProperty("dateSynchroT24");
+    expect(
+      provenanceT24({ groupe: null }, null, ["groupeNom", "ice"])!.champsT24
+    ).toEqual(["ice"]);
+    // Aucun champ repris touché, pas de rapatriement : rien à écrire.
+    expect(provenanceT24({ telephone: "1" }, null, ["ice"])).toBeNull();
+  });
+
+  it("groupe : cherché et créé dans la banque du client uniquement", async () => {
     const findFirst = jest.fn();
     const create = jest.fn().mockResolvedValue({ id: "nouveau" });
-    const db = { groupeAffaires: { findFirst, create } };
+    const update = jest.fn().mockResolvedValue({ id: "g1" });
+    const db = { groupeAffaires: { findFirst, create, update } };
 
     findFirst.mockResolvedValueOnce({ id: "g1" });
     expect(
       await resoudreGroupe(db, { code: "G1", nom: "Atlas" }, { entiteId: "e1" })
     ).toBe("g1");
+    expect(findFirst).toHaveBeenCalledTimes(1);
     expect(findFirst.mock.calls[0][0].where).toEqual({
       code: "G1",
       entiteId: "e1",
     });
+    expect(update).not.toHaveBeenCalled();
 
+    // Absent de la banque du client : créé là, jamais emprunté à une autre banque.
     findFirst.mockReset().mockResolvedValue(null);
     expect(
-      await resoudreGroupe(
-        db,
-        { code: null, nom: "Sahara" },
-        { entiteId: "e1", depuisT24: true }
-      )
+      await resoudreGroupe(db, { code: "G1", nom: "Atlas" }, { entiteId: "e2" })
     ).toBe("nouveau");
-    expect(findFirst.mock.calls[0][0].where.nom).toEqual({
-      equals: "Sahara",
-      mode: "insensitive",
-    });
+    expect(findFirst).toHaveBeenCalledTimes(1);
     expect(create.mock.calls[0][0].data).toMatchObject({
-      code: null,
-      nom: "Sahara",
-      entiteId: "e1",
+      code: "G1",
+      entiteId: "e2",
       sourceDonnees: "MANUELLE",
     });
 
-    expect(await resoudreGroupe(db, undefined, {})).toBeUndefined();
-    expect(await resoudreGroupe(db, null, {})).toBeNull();
+    findFirst.mockReset().mockResolvedValue(null);
+    await resoudreGroupe(db, { code: null, nom: "Sahara" }, { entiteId: "e1" });
+    expect(findFirst.mock.calls[0][0].where).toEqual({
+      nom: { equals: "Sahara", mode: "insensitive" },
+      entiteId: "e1",
+    });
+
+    expect(
+      await resoudreGroupe(db, undefined, { entiteId: "e1" })
+    ).toBeUndefined();
+    expect(await resoudreGroupe(db, null, { entiteId: "e1" })).toBeNull();
+  });
+
+  it("groupe lu dans T24 : pays, secteur et notation enregistrés ou mis à jour", async () => {
+    const fiche = {
+      code: "G1",
+      nom: "Groupe Atlas",
+      paysSiege: "Maroc",
+      secteurPrincipal: "Industrie",
+      ratingGroupe: "BBB",
+    };
+    const create = jest.fn().mockResolvedValue({ id: "nouveau" });
+    const update = jest.fn().mockResolvedValue({ id: "g1" });
+    const findFirst = jest.fn().mockResolvedValue(null);
+    const db = { groupeAffaires: { findFirst, create, update } };
+    await resoudreGroupe(
+      db,
+      { code: "G1", nom: "Groupe Atlas" },
+      { entiteId: "e1", ficheT24: fiche }
+    );
+    expect(create.mock.calls[0][0].data).toMatchObject({
+      paysSiege: "Maroc",
+      secteurPrincipal: "Industrie",
+      ratingGroupe: "BBB",
+      sourceDonnees: "T24",
+    });
+    findFirst.mockResolvedValue({ id: "g1" });
+    await resoudreGroupe(
+      db,
+      { code: "G1", nom: "Groupe Atlas" },
+      { entiteId: "e1", ficheT24: fiche }
+    );
+    expect(update.mock.calls[0][0]).toMatchObject({
+      where: { id: "g1" },
+      data: { ratingGroupe: "BBB", sourceDonnees: "T24" },
+    });
+    // Fiche d'un autre groupe : ignorée.
+    update.mockClear();
+    await resoudreGroupe(
+      db,
+      { code: "G2", nom: "Autre" },
+      { entiteId: "e1", ficheT24: fiche }
+    );
+    expect(update).not.toHaveBeenCalled();
   });
 });
 
@@ -437,6 +559,17 @@ describe("actionnariat et bénéficiaires effectifs", () => {
     expect(createClientSchema.safeParse(deux(60, 40)).success).toBe(true);
     expect(createClientSchema.safeParse(deux(60, 41)).success).toBe(false);
     expect(createClientSchema.safeParse(deux(120, 0)).success).toBe(false);
+    const morale = createClientSchema.safeParse({
+      nom: "Client",
+      actionnaires: [
+        {
+          nom: "Holding SA",
+          typePersonne: "Personne morale",
+          beneficiaireEffectif: true,
+        },
+      ],
+    });
+    expect(morale.success).toBe(false);
   });
 
   it("enregistrement : liste remplacée dans l'ordre saisi ; undefined ne touche à rien", () => {

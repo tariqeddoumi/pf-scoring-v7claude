@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { withAuth } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { updateClientSchema } from "@/lib/validation-schemas";
-import { donneesClient, ecritureActionnaires, messageConflit, resoudreGroupe } from "@/lib/clients/enregistrement";
+import {
+  donneesClient,
+  ecritureActionnaires,
+  messageConflit,
+  provenanceT24,
+  resoudreGroupe,
+} from "@/lib/clients/enregistrement";
+import { lireAttestation } from "@/lib/services/t24/attestation";
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +27,15 @@ export async function GET(
           entite: { select: { id: true, code: true, nom: true } },
           actionnaires: { orderBy: { ordre: "asc" } },
           groupeAffaires: {
-            select: { id: true, code: true, nom: true, paysSiege: true, secteurPrincipal: true, ratingGroupe: true, sourceDonnees: true },
+            select: {
+              id: true,
+              code: true,
+              nom: true,
+              paysSiege: true,
+              secteurPrincipal: true,
+              ratingGroupe: true,
+              sourceDonnees: true,
+            },
           },
           // La fiche affiche l'encours demandé et la note de chaque dossier :
           // sans montant ni note, la liste des projets n'apprend rien.
@@ -64,16 +79,24 @@ export async function GET(
           })
         : [];
       // Exposition consolidée du groupe (périmètre visible) : repère de division des risques.
-      const expositions = [client, ...membres].map((c) => c.exposition).filter((e): e is number => e != null);
+      const expositions = [client, ...membres]
+        .map((c) => c.exposition)
+        .filter((e): e is number => e != null);
       const groupe = client.groupeAffaires
         ? {
             ...client.groupeAffaires,
             membres,
-            expositionConsolidee: expositions.length > 0 ? expositions.reduce((a, b) => a + b, 0) : null,
+            expositionConsolidee:
+              expositions.length > 0
+                ? expositions.reduce((a, b) => a + b, 0)
+                : null,
           }
         : null;
 
-      return NextResponse.json({ success: true, data: { ...client, groupeAffaires: groupe } });
+      return NextResponse.json({
+        success: true,
+        data: { ...client, groupeAffaires: groupe },
+      });
     } catch (error: any) {
       console.error(`[Client ${id} GET]`, error);
       return NextResponse.json(
@@ -93,7 +116,10 @@ export async function PUT(
     // modifier la signalétique d'une contrepartie, notation interne comprise.
     if (!hasPermission(user.role as UserRole, "client", "update")) {
       return NextResponse.json(
-        { success: false, error: "Vos droits ne permettent pas de modifier ce client" },
+        {
+          success: false,
+          error: "Vos droits ne permettent pas de modifier ce client",
+        },
         { status: 403 }
       );
     }
@@ -121,19 +147,68 @@ export async function PUT(
         );
       }
 
-      const { groupe, entiteId, ...saisie } = validation.data;
-      const avant = await prisma.client.findUnique({ where: { id }, select: { entiteId: true } });
+      const {
+        groupe,
+        entiteId,
+        attestationT24,
+        attestationGroupeT24,
+        ...saisie
+      } = validation.data;
+      const attClient = lireAttestation(attestationT24, "client", user.userId);
+      const attGroupe = lireAttestation(
+        attestationGroupeT24,
+        "groupe",
+        user.userId
+      );
+      const avant = await prisma.client.findUnique({
+        where: { id },
+        select: {
+          entiteId: true,
+          champsT24: true,
+          groupeAffaires: { select: { code: true, nom: true, entiteId: true } },
+        },
+      });
       if (!avant) {
-        return NextResponse.json({ success: false, error: "Client non trouvé" }, { status: 404 });
+        return NextResponse.json(
+          { success: false, error: "Client non trouvé" },
+          { status: 404 }
+        );
       }
+      const banque = entiteId || avant.entiteId;
+      const transfert = Boolean(entiteId && entiteId !== avant.entiteId);
+
+      // Un client transféré ne peut pas rester rattaché au groupe d'une autre banque :
+      // le groupe est retrouvé ou recréé (même code, même nom) dans la banque d'arrivée.
+      let groupeCible = groupe;
+      if (
+        groupe === undefined &&
+        transfert &&
+        avant.groupeAffaires &&
+        avant.groupeAffaires.entiteId !== banque
+      ) {
+        groupeCible = {
+          code: avant.groupeAffaires.code,
+          nom: avant.groupeAffaires.nom,
+        };
+      }
+
+      const existants = Array.isArray(avant.champsT24)
+        ? avant.champsT24.filter((c): c is string => typeof c === "string")
+        : [];
+      const provenance = provenanceT24(
+        { ...saisie, ...(groupe !== undefined ? { groupe } : {}) },
+        attClient,
+        existants
+      );
 
       // Client et projets changent de banque ensemble ou pas du tout : un client
       // transféré dont les projets resteraient dans l'ancienne banque y exposerait
       // ses données.
       const client = await prisma.$transaction(async (tx) => {
-        const groupeAffairesId = await resoudreGroupe(tx, groupe, {
-          entiteId: entiteId || avant.entiteId,
-          depuisT24: saisie.importT24,
+        const groupeAffairesId = await resoudreGroupe(tx, groupeCible, {
+          entiteId: banque,
+          ficheT24: attGroupe?.g ?? null,
+          codeAtteste: attClient?.g?.code ?? null,
         });
         const maj = await tx.client.update({
           where: { id },
@@ -141,15 +216,35 @@ export async function PUT(
             ...(donneesClient(saisie) as Prisma.ClientUncheckedUpdateInput),
             ...(groupeAffairesId !== undefined ? { groupeAffairesId } : {}),
             ...(saisie.actionnaires !== undefined
-              ? { actionnaires: ecritureActionnaires(saisie.actionnaires, "modification") }
+              ? {
+                  actionnaires: ecritureActionnaires(
+                    saisie.actionnaires,
+                    "modification"
+                  ),
+                }
+              : {}),
+            ...(provenance
+              ? {
+                  champsT24:
+                    provenance.champsT24.length > 0
+                      ? provenance.champsT24
+                      : Prisma.DbNull,
+                  sourceDonnees: provenance.sourceDonnees,
+                  ...(provenance.dateSynchroT24
+                    ? { dateSynchroT24: provenance.dateSynchroT24 }
+                    : {}),
+                }
               : {}),
             // null n'est pas une entité : seul un transfert vers une banque est accepté.
             ...(entiteId ? { entiteId } : {}),
           },
         });
         // Transfert du client vers une autre banque : ses projets le suivent.
-        if (entiteId && avant.entiteId !== entiteId) {
-          await tx.project.updateMany({ where: { clientId: id }, data: { entiteId } });
+        if (transfert) {
+          await tx.project.updateMany({
+            where: { clientId: id },
+            data: { entiteId: entiteId! },
+          });
         }
         return maj;
       });
@@ -158,12 +253,18 @@ export async function PUT(
     } catch (error: any) {
       const conflit = messageConflit(error);
       if (conflit) {
-        return NextResponse.json({ success: false, error: conflit }, { status: 409 });
+        return NextResponse.json(
+          { success: false, error: conflit },
+          { status: 409 }
+        );
       }
       // Client visible en consultation (banque mère) mais hors du périmètre d'écriture.
       if (error?.code === "P2025") {
         return NextResponse.json(
-          { success: false, error: "Ce client est en consultation seule depuis votre banque." },
+          {
+            success: false,
+            error: "Ce client est en consultation seule depuis votre banque.",
+          },
           { status: 403 }
         );
       }
@@ -183,7 +284,10 @@ export async function DELETE(
   return withAuth(request, async (req, user) => {
     if (!hasPermission(user.role as UserRole, "client", "delete")) {
       return NextResponse.json(
-        { success: false, error: "Vos droits ne permettent pas de supprimer ce client" },
+        {
+          success: false,
+          error: "Vos droits ne permettent pas de supprimer ce client",
+        },
         { status: 403 }
       );
     }

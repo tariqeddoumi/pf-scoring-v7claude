@@ -3,6 +3,10 @@ import { withAuth } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
 import { lireGroupeT24 } from "@/lib/services/t24/connecteur";
 import {
+  signerAttestation,
+  type AttestationGroupe,
+} from "@/lib/services/t24/attestation";
+import {
   refusSansDroitDeSaisie,
   reponseErreurT24,
   tracer,
@@ -28,11 +32,18 @@ export async function GET(
         "T24_RAPATRIEMENT_GROUPE",
         `Lecture du groupe T24 ${fiche.code}${simulation ? " (simulation)" : ""}`
       );
+      const attestation = signerAttestation<AttestationGroupe>({
+        t: "groupe",
+        u: user.userId,
+        c: fiche.code,
+        g: fiche,
+      });
       return NextResponse.json({
         success: true,
         data: fiche,
         simulation,
         existant,
+        attestation,
       });
     } catch (e) {
       return reponseErreurT24(e, "T24 groupe");

@@ -5,7 +5,14 @@ import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { createClientSchema } from "@/lib/validation-schemas";
-import { donneesClient, ecritureActionnaires, messageConflit, resoudreGroupe } from "@/lib/clients/enregistrement";
+import {
+  donneesClient,
+  ecritureActionnaires,
+  messageConflit,
+  provenanceT24,
+  resoudreGroupe,
+} from "@/lib/clients/enregistrement";
+import { lireAttestation } from "@/lib/services/t24/attestation";
 
 async function handler(request: NextRequest, user: AuthPayload) {
   // GET - List clients
@@ -26,12 +33,26 @@ async function handler(request: NextRequest, user: AuthPayload) {
         ? {
             OR: [
               { nom: { contains: search, mode: "insensitive" as const } },
-              { raisonSociale: { contains: search, mode: "insensitive" as const } },
+              {
+                raisonSociale: {
+                  contains: search,
+                  mode: "insensitive" as const,
+                },
+              },
               { email: { contains: search, mode: "insensitive" as const } },
               // Le chargé d'affaires retrouve un client par son code T24 ou son ICE.
-              { codeClientT24: { equals: search.trim(), mode: "insensitive" as const } },
+              {
+                codeClientT24: {
+                  equals: search.trim(),
+                  mode: "insensitive" as const,
+                },
+              },
               { ice: { equals: search.trim() } },
-              { groupeAffaires: { nom: { contains: search, mode: "insensitive" as const } } },
+              {
+                groupeAffaires: {
+                  nom: { contains: search, mode: "insensitive" as const },
+                },
+              },
             ],
           }
         : {};
@@ -99,7 +120,10 @@ async function handler(request: NextRequest, user: AuthPayload) {
       // compte en lecture seule ou un auditeur, pouvait créer une contrepartie.
       if (!hasPermission(user.role as UserRole, "client", "create")) {
         return NextResponse.json(
-          { success: false, error: "Vos droits ne permettent pas de créer un client" },
+          {
+            success: false,
+            error: "Vos droits ne permettent pas de créer un client",
+          },
           { status: 403 }
         );
       }
@@ -125,13 +149,22 @@ async function handler(request: NextRequest, user: AuthPayload) {
         );
       }
 
-      const { groupe, ...saisie } = validation.data;
+      const { groupe, attestationT24, attestationGroupeT24, ...saisie } =
+        validation.data;
+      const attClient = lireAttestation(attestationT24, "client", user.userId);
+      const attGroupe = lireAttestation(
+        attestationGroupeT24,
+        "groupe",
+        user.userId
+      );
 
-      // Un même client T24 saisi deux fois ferait deux dossiers de crédit sur la même
-      // contrepartie : la fiche existante est signalée plutôt que dupliquée.
-      if (saisie.codeClientT24) {
+      // Un même client T24 saisi deux fois dans une banque ferait deux dossiers de
+      // crédit sur la même contrepartie : la fiche existante est signalée. Le contrôle
+      // porte sur la banque cible seulement (le code est unique par banque).
+      const banqueCible = saisie.entiteId ?? user.perimetre?.entiteId ?? null;
+      if (saisie.codeClientT24 && banqueCible) {
         const existant = await prisma.client.findFirst({
-          where: { codeClientT24: saisie.codeClientT24 },
+          where: { codeClientT24: saisie.codeClientT24, entiteId: banqueCible },
           select: { id: true, nom: true },
         });
         if (existant) {
@@ -146,27 +179,50 @@ async function handler(request: NextRequest, user: AuthPayload) {
         }
       }
 
+      const provenance = provenanceT24(
+        { ...saisie, ...(groupe ? { groupe } : {}) },
+        attClient,
+        null
+      );
       const client = await prisma.$transaction(async (tx) => {
-        const groupeAffairesId = await resoudreGroupe(tx, groupe, {
-          entiteId: saisie.entiteId,
-          depuisT24: saisie.importT24,
-        });
-        const actionnaires = ecritureActionnaires(saisie.actionnaires, "creation");
-        return tx.client.create({
+        const actionnaires = ecritureActionnaires(
+          saisie.actionnaires,
+          "creation"
+        );
+        const cree = await tx.client.create({
           data: {
             ...(donneesClient(saisie) as Prisma.ClientUncheckedCreateInput),
             nom: saisie.nom,
             ...(saisie.entiteId ? { entiteId: saisie.entiteId } : {}),
-            ...(groupeAffairesId ? { groupeAffairesId } : {}),
             type: saisie.type || "Entreprise",
             typeClient: saisie.typeClient || "Entreprise",
             statusKYC: saisie.statusKYC || "En attente",
             statusConformite: saisie.statusConformite || "En attente",
             // status n'est pas nullable en base et vaut « Actif » par défaut.
             status: saisie.status || "Actif",
+            ...(provenance && provenance.champsT24.length > 0
+              ? {
+                  champsT24: provenance.champsT24,
+                  sourceDonnees: provenance.sourceDonnees,
+                  dateSynchroT24: provenance.dateSynchroT24,
+                }
+              : {}),
             ...(actionnaires ? { actionnaires } : {}),
           },
         });
+        // Le groupe est cherché ou créé dans la banque effective du client, connue
+        // une fois la fiche créée (banque choisie ou celle de l'utilisateur).
+        const groupeAffairesId = await resoudreGroupe(tx, groupe, {
+          entiteId: cree.entiteId,
+          ficheT24: attGroupe?.g ?? null,
+          codeAtteste: attClient?.g?.code ?? null,
+        });
+        return groupeAffairesId
+          ? tx.client.update({
+              where: { id: cree.id },
+              data: { groupeAffairesId },
+            })
+          : cree;
       });
 
       return NextResponse.json(
@@ -176,7 +232,10 @@ async function handler(request: NextRequest, user: AuthPayload) {
     } catch (error: any) {
       const conflit = messageConflit(error);
       if (conflit) {
-        return NextResponse.json({ success: false, error: conflit }, { status: 409 });
+        return NextResponse.json(
+          { success: false, error: conflit },
+          { status: 409 }
+        );
       }
       console.error("[Clients POST]", error);
       return NextResponse.json(

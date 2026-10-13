@@ -230,6 +230,9 @@ export const actionnaireSchema = z.object({
     .optional(),
   beneficiaireEffectif: z.boolean().default(false),
   ppe: z.boolean().default(false),
+}).refine((a) => !(a.typePersonne === "Personne morale" && a.beneficiaireEffectif), {
+  message: "Une personne morale ne peut pas être bénéficiaire effectif : déclarez les personnes physiques qui la détiennent",
+  path: ["beneficiaireEffectif"],
 });
 
 export const createClientSchema = z.object({
@@ -318,10 +321,12 @@ export const createClientSchema = z.object({
   niveauRisqueLBC: z.string().max(20).nullable().optional(),
   ppe: z.boolean().nullable().optional(),
   dateRevueKYC: dateSaisie.nullable().optional(),
-  /** Champs dont la valeur vient du dernier rapatriement T24 (non retouchés depuis). */
-  champsT24: z.array(z.string().max(50)).max(80).nullable().optional(),
-  /** Vrai quand la saisie part d'un rapatriement T24 : date de synchronisation posée. */
-  importT24: z.boolean().optional(),
+  /**
+   * Attestations signées par le serveur des lectures T24 (client, groupe) : seules
+   * elles établissent la provenance T24 des champs. Voir lib/services/t24/attestation.ts.
+   */
+  attestationT24: z.string().max(20000).nullable().optional(),
+  attestationGroupeT24: z.string().max(5000).nullable().optional(),
   /** Liste complète des actionnaires et dirigeants (remplace la précédente). */
   actionnaires: z
     .array(actionnaireSchema)
