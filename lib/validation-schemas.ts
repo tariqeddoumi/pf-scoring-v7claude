@@ -175,6 +175,66 @@ export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 // CLIENT SCHEMAS
 // ============================================================================
 
+/** Code client ou groupe T24 : alphanumérique, sans caractère de chemin. */
+export const codeT24 = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z0-9._-]{1,35}$/, {
+    message: "Code T24 invalide (lettres, chiffres, point, tiret ; 35 caractères au plus)",
+  });
+
+const dateSaisie = z
+  .string()
+  .refine((v) => !Number.isNaN(Date.parse(v)), { message: "Date invalide" });
+
+/** Nombre saisi (chaîne vide = absent) ; les fonds propres peuvent être négatifs. */
+function nombreSaisi() {
+  return z
+    .union([
+      z.number(),
+      z.string().transform((v) => (v === "" ? null : Number(v))).pipe(z.number().nullable()),
+    ])
+    .nullable()
+    .optional();
+}
+
+function entierSaisi(min: number, max: number, message: string) {
+  return z
+    .union([
+      z.number().int().min(min, { message }).max(max, { message }),
+      z
+        .string()
+        .transform((v) => (v === "" ? null : Number(v)))
+        .pipe(z.number().int().min(min, { message }).max(max, { message }).nullable()),
+    ])
+    .nullable()
+    .optional();
+}
+
+/** Actionnaire, dirigeant ou bénéficiaire effectif d'un client. */
+export const actionnaireSchema = z.object({
+  typePersonne: z.enum(["Personne physique", "Personne morale"]).default("Personne physique"),
+  nom: z
+    .string()
+    .trim()
+    .min(2, { message: "Nom de l'actionnaire trop court" })
+    .max(200),
+  qualite: z.enum(["Actionnaire", "Dirigeant", "Actionnaire et dirigeant"]).default("Actionnaire"),
+  pays: z.string().trim().max(100).nullable().optional(),
+  identifiant: z.string().trim().max(60).nullable().optional(),
+  pourcentageDetention: z
+    .number()
+    .min(0, { message: "Pourcentage entre 0 et 100" })
+    .max(100, { message: "Pourcentage entre 0 et 100" })
+    .nullable()
+    .optional(),
+  beneficiaireEffectif: z.boolean().default(false),
+  ppe: z.boolean().default(false),
+}).refine((a) => !(a.typePersonne === "Personne morale" && a.beneficiaireEffectif), {
+  message: "Une personne morale ne peut pas être bénéficiaire effectif : déclarez les personnes physiques qui la détiennent",
+  path: ["beneficiaireEffectif"],
+});
+
 export const createClientSchema = z.object({
   nom: z
     .string()
@@ -225,6 +285,56 @@ export const createClientSchema = z.object({
   // Banque qui porte la relation ; vide = celle de l'utilisateur. Le contrôle de
   // périmètre est fait par le client de base de données.
   entiteId: z.string().uuid().nullable().optional(),
+
+  // Signalétique project finance
+  codeClientT24: codeT24.nullable().optional(),
+  ice: z
+    .string()
+    .trim()
+    .regex(/^\d{15}$/, { message: "L'ICE compte 15 chiffres" })
+    .nullable()
+    .optional(),
+  registreCommerce: z.string().trim().max(100).nullable().optional(),
+  identifiantFiscal: z
+    .string()
+    .trim()
+    .regex(/^\d{1,15}$/, { message: "L'identifiant fiscal ne contient que des chiffres" })
+    .nullable()
+    .optional(),
+  dateCreationSociete: dateSaisie.nullable().optional(),
+  /** Groupe d'affaires : retrouvé par son code (ou son nom), créé s'il est nouveau. */
+  groupe: z
+    .object({
+      code: codeT24.nullable().optional(),
+      nom: z.string().trim().min(2, { message: "Nom du groupe trop court" }).max(200),
+    })
+    .nullable()
+    .optional(),
+  roleGroupe: z.string().max(50).nullable().optional(),
+  fondsPropres: nombreSaisi(),
+  exerciceReference: entierSaisi(1950, 2100, "Exercice entre 1950 et 2100"),
+  experienceSecteurAnnees: entierSaisi(0, 150, "Nombre d'années invalide"),
+  projetsSimilaires: entierSaisi(0, 10000, "Nombre de projets invalide"),
+  notationExterne: z.string().trim().max(20).nullable().optional(),
+  agenceNotation: z.string().max(50).nullable().optional(),
+  classificationBAM: z.string().max(50).nullable().optional(),
+  niveauRisqueLBC: z.string().max(20).nullable().optional(),
+  ppe: z.boolean().nullable().optional(),
+  dateRevueKYC: dateSaisie.nullable().optional(),
+  /**
+   * Attestations signées par le serveur des lectures T24 (client, groupe) : seules
+   * elles établissent la provenance T24 des champs. Voir lib/services/t24/attestation.ts.
+   */
+  attestationT24: z.string().max(20000).nullable().optional(),
+  attestationGroupeT24: z.string().max(5000).nullable().optional(),
+  /** Liste complète des actionnaires et dirigeants (remplace la précédente). */
+  actionnaires: z
+    .array(actionnaireSchema)
+    .max(50, { message: "50 actionnaires au plus" })
+    .refine((l) => l.reduce((s, a) => s + (a.pourcentageDetention ?? 0), 0) <= 100.0001, {
+      message: "La somme des détentions dépasse 100 %",
+    })
+    .optional(),
 });
 
 export const updateClientSchema = createClientSchema.partial();
@@ -234,6 +344,7 @@ export const clientListQuerySchema = paginationSchema.extend({
   status: z.string().optional(),
 });
 
+export type ActionnaireInput = z.infer<typeof actionnaireSchema>;
 export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type UpdateClientInput = z.infer<typeof updateClientSchema>;
 

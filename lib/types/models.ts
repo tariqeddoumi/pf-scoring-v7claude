@@ -39,6 +39,53 @@ export interface Client {
   exposition?: number;
   statusKYC?: string;
   statusConformite?: string;
+  // Signalétique project finance
+  codeClientT24?: string;
+  ice?: string;
+  registreCommerce?: string;
+  identifiantFiscal?: string;
+  dateCreationSociete?: string;
+  groupeAffairesId?: string;
+  roleGroupe?: string;
+  fondsPropres?: number;
+  exerciceReference?: number;
+  experienceSecteurAnnees?: number;
+  projetsSimilaires?: number;
+  notationExterne?: string;
+  agenceNotation?: string;
+  classificationBAM?: string;
+  niveauRisqueLBC?: string;
+  ppe?: boolean;
+  dateRevueKYC?: string;
+  sourceDonnees?: "MANUELLE" | "T24";
+  champsT24?: string[];
+  dateSynchroT24?: string;
+}
+
+/** Actionnaire, dirigeant ou bénéficiaire effectif d'un client (KYC, LBC/FT). */
+export interface ActionnaireClient {
+  id: string;
+  clientId: string;
+  typePersonne: "Personne physique" | "Personne morale";
+  nom: string;
+  qualite: "Actionnaire" | "Dirigeant" | "Actionnaire et dirigeant";
+  pays?: string | null;
+  identifiant?: string | null;
+  pourcentageDetention?: number | null;
+  beneficiaireEffectif: boolean;
+  ppe: boolean;
+  ordre: number;
+}
+
+/** Groupe d'affaires (exposition consolidée, soutien du groupe). */
+export interface GroupeAffaires {
+  id: string;
+  code?: string | null;
+  nom: string;
+  paysSiege?: string | null;
+  secteurPrincipal?: string | null;
+  ratingGroupe?: string | null;
+  sourceDonnees: "MANUELLE" | "T24";
 }
 
 // Project

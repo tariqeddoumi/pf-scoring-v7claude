@@ -20,25 +20,40 @@ export function Etiquette({
   cle,
   libelle,
   obligatoire,
+  provenance,
 }: {
   cle: string;
   libelle: string;
   obligatoire?: boolean;
+  /** Système d'où vient la valeur (« T24 ») : signalé à côté du libellé. */
+  provenance?: string;
 }) {
   return (
     <label
       htmlFor={`champ-${cle}`}
-      className="mb-1 block text-[12.5px] font-medium text-foreground"
+      className="mb-1 flex items-center gap-1.5 text-[12.5px] font-medium text-foreground"
     >
-      {libelle}
-      {obligatoire && <span className="ml-0.5 text-destructive">*</span>}
+      <span>
+        {libelle}
+        {obligatoire && <span className="ml-0.5 text-destructive">*</span>}
+      </span>
+      {provenance && (
+        <span
+          title={`Valeur reprise de ${provenance}`}
+          className="rounded bg-accent px-1.5 py-px text-[10.5px] font-semibold text-accent-foreground"
+        >
+          {provenance}
+        </span>
+      )}
     </label>
   );
 }
 
 export function Aide({ texte, erreur }: { texte?: string; erreur?: string }) {
-  if (erreur) return <p className="mt-1 text-[12px] text-destructive">{erreur}</p>;
-  if (texte) return <p className="mt-1 text-[12px] text-muted-foreground">{texte}</p>;
+  if (erreur)
+    return <p className="mt-1 text-[12px] text-destructive">{erreur}</p>;
+  if (texte)
+    return <p className="mt-1 text-[12px] text-muted-foreground">{texte}</p>;
   return null;
 }
 
@@ -55,6 +70,7 @@ export function Champ({
   multiligne,
   lignes = 3,
   suffixe,
+  provenance,
 }: {
   cle: string;
   libelle: string;
@@ -69,10 +85,16 @@ export function Champ({
   lignes?: number;
   /** Unité affichée dans le champ : ans, %, x, MW… */
   suffixe?: string;
+  provenance?: string;
 }) {
   return (
     <div>
-      <Etiquette cle={cle} libelle={libelle} obligatoire={obligatoire} />
+      <Etiquette
+        cle={cle}
+        libelle={libelle}
+        obligatoire={obligatoire}
+        provenance={provenance}
+      />
       {multiligne ? (
         <textarea
           id={`champ-${cle}`}
@@ -119,6 +141,7 @@ export function ChampMontant({
   erreur,
   devise = "MAD",
   aide,
+  provenance,
 }: {
   cle: string;
   libelle: string;
@@ -127,6 +150,7 @@ export function ChampMontant({
   erreur?: string;
   devise?: string;
   aide?: string;
+  provenance?: string;
 }) {
   const nombre = valeur.trim() === "" ? null : Number(valeur);
   const lisible =
@@ -139,7 +163,11 @@ export function ChampMontant({
     <div>
       {/* L'unité suit la devise du projet : le libellé « (MAD) » était codé en dur,
           y compris sur un financement en euros. */}
-      <Etiquette cle={cle} libelle={`${libelle} (${devise})`} />
+      <Etiquette
+        cle={cle}
+        libelle={`${libelle} (${devise})`}
+        provenance={provenance}
+      />
       <input
         id={`champ-${cle}`}
         type="number"
@@ -172,6 +200,7 @@ export function Selecteur({
   obligatoire,
   erreur,
   sansVide,
+  provenance,
 }: {
   cle: string;
   libelle: string;
@@ -183,6 +212,7 @@ export function Selecteur({
   erreur?: string;
   /** Pour un champ que le serveur refuse vide, comme la devise. */
   sansVide?: boolean;
+  provenance?: string;
 }) {
   // Une valeur héritée absente du référentiel reste proposée : sinon la fiche
   // afficherait « Sélectionner » et un simple enregistrement l'effacerait.
@@ -190,7 +220,12 @@ export function Selecteur({
   const aideOption = options.find((o) => o.valeur === valeur)?.aide;
   return (
     <div>
-      <Etiquette cle={cle} libelle={libelle} obligatoire={obligatoire} />
+      <Etiquette
+        cle={cle}
+        libelle={libelle}
+        obligatoire={obligatoire}
+        provenance={provenance}
+      />
       <select
         id={`champ-${cle}`}
         value={valeur}
@@ -198,7 +233,9 @@ export function Selecteur({
         className={`${CLASSE_CHAMP} ${erreur ? "border-destructive" : ""}`}
       >
         {!sansVide && <option value="">— Non renseigné —</option>}
-        {inconnue && <option value={valeur}>{valeur} (hors référentiel)</option>}
+        {inconnue && (
+          <option value={valeur}>{valeur} (hors référentiel)</option>
+        )}
         {options.map((o) => (
           <option key={o.valeur} value={o.valeur}>
             {o.libelle}
@@ -218,6 +255,7 @@ export function SelecteurLibre({
   onChange,
   options,
   aide,
+  provenance,
 }: {
   cle: string;
   libelle: string;
@@ -225,10 +263,11 @@ export function SelecteurLibre({
   onChange: (v: string) => void;
   options: OptionChoix[];
   aide?: string;
+  provenance?: string;
 }) {
   return (
     <div>
-      <Etiquette cle={cle} libelle={libelle} />
+      <Etiquette cle={cle} libelle={libelle} provenance={provenance} />
       <input
         id={`champ-${cle}`}
         list={`liste-${cle}`}
@@ -290,7 +329,11 @@ export function BarreActions({
         }
         className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {enCours ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+        {enCours ? (
+          <Loader2 size={15} className="animate-spin" />
+        ) : (
+          <Save size={15} />
+        )}
         {libelleAction}
       </button>
     </div>

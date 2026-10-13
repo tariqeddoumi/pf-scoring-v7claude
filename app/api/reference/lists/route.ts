@@ -105,6 +105,10 @@ export async function GET(request: NextRequest) {
         statusKYC: statusKYC.options,
         statusConformite: statusConformite.options,
         status: [...REFERENTIELS_CLIENT.status],
+        roleGroupe: [...REFERENTIELS_CLIENT.roleGroupe],
+        classificationBAM: [...REFERENTIELS_CLIENT.classificationBAM],
+        niveauRisqueLBC: [...REFERENTIELS_CLIENT.niveauRisqueLBC],
+        agenceNotation: [...REFERENTIELS_CLIENT.agenceNotation],
       };
 
       return NextResponse.json({
@@ -119,6 +123,10 @@ export async function GET(request: NextRequest) {
           statusKYC: statusKYC.source,
           statusConformite: statusConformite.source,
           status: "defaut",
+          roleGroupe: "defaut",
+          classificationBAM: "defaut",
+          niveauRisqueLBC: "defaut",
+          agenceNotation: "defaut",
         },
       });
     } catch (error) {

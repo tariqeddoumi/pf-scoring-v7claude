@@ -162,14 +162,102 @@ model Client {
   exposition       Float?
   /// Banque (entité) qui porte la relation client
   entiteId         String?   @db.Uuid
+
+  // ─── Signalétique project finance (identification, groupe, solidité, risque) ───
+  /// Code client dans le système central (Temenos T24 / Transact, application CUSTOMER)
+  codeClientT24           String?
+  /// Identifiant Commun de l'Entreprise (Maroc, 15 chiffres)
+  ice                     String?
+  /// Numéro et tribunal du registre du commerce
+  registreCommerce        String?
+  identifiantFiscal       String?
+  dateCreationSociete     DateTime?
+  groupeAffairesId        String?   @db.Uuid
+  /// Place dans le groupe : tête de groupe, filiale, société sœur, participation
+  roleGroupe              String?
+  /// Solidité financière (sponsor / emprunteur) — exercice de référence des chiffres
+  fondsPropres            Float?
+  exerciceReference       Int?
+  /// Expérience du sponsor : années dans le secteur, projets comparables réalisés
+  experienceSecteurAnnees Int?
+  projetsSimilaires       Int?
+  notationExterne         String?
+  agenceNotation          String?
+  /// Classification des créances (Bank Al-Maghrib) : saine, sensible, pré-douteuse…
+  classificationBAM       String?
+  /// Risque LBC/FT (approche par les risques) et personne politiquement exposée
+  niveauRisqueLBC         String?
+  ppe                     Boolean?
+  dateRevueKYC            DateTime?
+  /// Provenance de la fiche : MANUELLE ou T24 ; champs repris de T24 au dernier rapatriement
+  sourceDonnees           String    @default("MANUELLE")
+  champsT24               Json?
+  dateSynchroT24          DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects       Project[]
+  actionnaires   ActionnaireClient[]
+  entite         Entite?             @relation("EntiteClients", fields: [entiteId], references: [id], onDelete: Restrict)
+  groupeAffaires GroupeAffaires?     @relation(fields: [groupeAffairesId], references: [id], onDelete: SetNull)
+
+  @@unique([entiteId, codeClientT24])
+  @@index([entiteId])
+  @@index([groupeAffairesId])
+  @@map("BP_PF_clients")
+}
+
+/// Actionnaires, dirigeants et bénéficiaires effectifs d'un client (KYC, LBC/FT) :
+/// identification des personnes qui détiennent ou contrôlent la contrepartie.
+model ActionnaireClient {
+  id                   String   @id @default(uuid()) @db.Uuid
+  clientId             String   @db.Uuid
+  /// Personne physique ou personne morale
+  typePersonne         String   @default("Personne physique")
+  nom                  String
+  /// Actionnaire, dirigeant, ou les deux
+  qualite              String   @default("Actionnaire")
+  /// Pays de résidence (personne physique) ou d'immatriculation (personne morale)
+  pays                 String?
+  /// Pièce d'identité, RC ou ICE
+  identifiant          String?
+  /// Part du capital ou des droits de vote détenue (directement ou indirectement)
+  pourcentageDetention Float?
+  beneficiaireEffectif Boolean  @default(false)
+  ppe                  Boolean  @default(false)
+  ordre                Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("BP_PF_client_actionnaires")
+}
+
+/// Groupe d'affaires : ensemble de contreparties liées, suivi pour l'exposition
+/// consolidée (division des risques, Bank Al-Maghrib) et le soutien du groupe.
+model GroupeAffaires {
+  id               String    @id @default(uuid()) @db.Uuid
+  /// Code du groupe dans T24 (ou code interne)
+  code             String?
+  nom              String
+  paysSiege        String?
+  secteurPrincipal String?
+  ratingGroupe     String?
+  entiteId         String?   @db.Uuid
+  sourceDonnees    String    @default("MANUELLE")
+  dateSynchroT24   DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  projects Project[]
-  entite   Entite?   @relation("EntiteClients", fields: [entiteId], references: [id], onDelete: Restrict)
+  clients Client[]
+  entite  Entite?  @relation("EntiteGroupesAffaires", fields: [entiteId], references: [id], onDelete: Restrict)
 
+  @@unique([entiteId, code])
   @@index([entiteId])
-  @@map("BP_PF_clients")
+  @@map("BP_PF_groupes_affaires")
 }
 
 model Project {
@@ -1970,11 +2058,12 @@ model Entite {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  parent       Entite?   @relation("EntiteArbre", fields: [parentId], references: [id], onDelete: Restrict)
-  enfants      Entite[]  @relation("EntiteArbre")
-  utilisateurs User[]    @relation("EntiteUtilisateurs")
-  clients      Client[]  @relation("EntiteClients")
-  projets      Project[] @relation("EntiteProjets")
+  parent          Entite?          @relation("EntiteArbre", fields: [parentId], references: [id], onDelete: Restrict)
+  enfants         Entite[]         @relation("EntiteArbre")
+  utilisateurs    User[]           @relation("EntiteUtilisateurs")
+  clients         Client[]         @relation("EntiteClients")
+  groupesAffaires GroupeAffaires[] @relation("EntiteGroupesAffaires")
+  projets         Project[]        @relation("EntiteProjets")
 
   @@index([parentId])
   @@index([chemin])

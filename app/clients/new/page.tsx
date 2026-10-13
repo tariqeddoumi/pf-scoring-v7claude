@@ -4,12 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiPost } from "@/lib/api-client";
 import { PageHeader } from "@/components/ui/page-header";
-import {
-  ClientForm,
-  VALEURS_CLIENT_VIDES,
-  versPayloadClient,
-  type ValeursClient,
-} from "@/components/client/ClientForm";
+import { ClientForm, VALEURS_CLIENT_VIDES } from "@/components/client/ClientForm";
 
 /**
  * Création d'une contrepartie.
@@ -23,11 +18,11 @@ export default function NouveauClientPage() {
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  const creer = async (valeurs: ValeursClient) => {
+  const creer = async (charge: Record<string, unknown>) => {
     setEnCours(true);
     setErreur(null);
     try {
-      const res = await apiPost("/api/clients", versPayloadClient(valeurs));
+      const res = await apiPost("/api/clients", charge);
       const corps = await res.json().catch(() => ({}));
       if (!res.ok) {
         const details: string | undefined = corps.errors
@@ -48,7 +43,7 @@ export default function NouveauClientPage() {
     <div>
       <PageHeader
         titre="Nouveau client"
-        description="Le nom suffit pour créer la fiche ; le reste peut être complété ensuite."
+        description="Rapatriez la signalétique depuis T24 par le code client, ou saisissez-la. Le nom suffit pour créer la fiche."
         retour={{ href: "/clients", libelle: "Clients" }}
       />
       <ClientForm
