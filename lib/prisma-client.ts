@@ -103,7 +103,7 @@ async function preparerCreation(modele: string, data: Record<string, unknown>, p
   const verifier = (entiteId: string | null) => {
     if (!p.tout && !peutEcrire(p, entiteId)) throw new HorsPerimetreError();
   };
-  if (modele === "Client") {
+  if (modele === "Client" || modele === "GroupeAffaires") {
     if (!data.entiteId) data.entiteId = p.entiteId ?? (await racineUnique());
     verifier(data.entiteId as string | null);
   } else if (modele === "Project") {

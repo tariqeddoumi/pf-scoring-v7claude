@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { createClientSchema } from "@/lib/validation-schemas";
+import { donneesClient, messageConflit, resoudreGroupe } from "@/lib/clients/enregistrement";
 
 async function handler(request: NextRequest, user: AuthPayload) {
   // GET - List clients
@@ -24,7 +26,12 @@ async function handler(request: NextRequest, user: AuthPayload) {
         ? {
             OR: [
               { nom: { contains: search, mode: "insensitive" as const } },
+              { raisonSociale: { contains: search, mode: "insensitive" as const } },
               { email: { contains: search, mode: "insensitive" as const } },
+              // Le chargé d'affaires retrouve un client par son code T24 ou son ICE.
+              { codeClientT24: { equals: search.trim(), mode: "insensitive" as const } },
+              { ice: { equals: search.trim() } },
+              { groupeAffaires: { nom: { contains: search, mode: "insensitive" as const } } },
             ],
           }
         : {};
@@ -58,6 +65,10 @@ async function handler(request: NextRequest, user: AuthPayload) {
             gestionnaire: true,
             raisonSociale: true,
             ville: true,
+            codeClientT24: true,
+            classificationBAM: true,
+            sourceDonnees: true,
+            groupeAffaires: { select: { id: true, code: true, nom: true } },
             projects: { select: { id: true } },
             entite: { select: { id: true, code: true, nom: true } },
           },
@@ -114,21 +125,46 @@ async function handler(request: NextRequest, user: AuthPayload) {
         );
       }
 
-      const { dateRelation, status, ...champs } = validation.data;
+      const { groupe, ...saisie } = validation.data;
 
-      const client = await prisma.client.create({
-        data: {
-          ...champs,
-          type: champs.type || "Entreprise",
-          typeClient: champs.typeClient || "Entreprise",
-          statusKYC: champs.statusKYC || "En attente",
-          statusConformite: champs.statusConformite || "En attente",
-          // status n'est pas nullable en base et vaut « Actif » par défaut.
-          status: status || "Actif",
-          // Le formulaire envoie une date au format AAAA-MM-JJ ; Prisma attend un
-          // objet Date. Une valeur illisible vaut mieux absente qu'incorrecte.
-          dateRelation: dateRelation ? new Date(dateRelation) : null,
-        },
+      // Un même client T24 saisi deux fois ferait deux dossiers de crédit sur la même
+      // contrepartie : la fiche existante est signalée plutôt que dupliquée.
+      if (saisie.codeClientT24) {
+        const existant = await prisma.client.findFirst({
+          where: { codeClientT24: saisie.codeClientT24 },
+          select: { id: true, nom: true },
+        });
+        if (existant) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Le code client T24 ${saisie.codeClientT24} est déjà attribué à « ${existant.nom} ».`,
+              existant,
+            },
+            { status: 409 }
+          );
+        }
+      }
+
+      const client = await prisma.$transaction(async (tx) => {
+        const groupeAffairesId = await resoudreGroupe(tx, groupe, {
+          entiteId: saisie.entiteId,
+          depuisT24: saisie.importT24,
+        });
+        return tx.client.create({
+          data: {
+            ...(donneesClient(saisie) as Prisma.ClientUncheckedCreateInput),
+            nom: saisie.nom,
+            ...(saisie.entiteId ? { entiteId: saisie.entiteId } : {}),
+            ...(groupeAffairesId ? { groupeAffairesId } : {}),
+            type: saisie.type || "Entreprise",
+            typeClient: saisie.typeClient || "Entreprise",
+            statusKYC: saisie.statusKYC || "En attente",
+            statusConformite: saisie.statusConformite || "En attente",
+            // status n'est pas nullable en base et vaut « Actif » par défaut.
+            status: saisie.status || "Actif",
+          },
+        });
       });
 
       return NextResponse.json(
@@ -136,6 +172,10 @@ async function handler(request: NextRequest, user: AuthPayload) {
         { status: 201 }
       );
     } catch (error: any) {
+      const conflit = messageConflit(error);
+      if (conflit) {
+        return NextResponse.json({ success: false, error: conflit }, { status: 409 });
+      }
       console.error("[Clients POST]", error);
       return NextResponse.json(
         { success: false, error: error.message || "Erreur serveur" },

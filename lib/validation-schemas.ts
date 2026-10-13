@@ -175,6 +175,42 @@ export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 // CLIENT SCHEMAS
 // ============================================================================
 
+/** Code client ou groupe T24 : alphanumérique, sans caractère de chemin. */
+export const codeT24 = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z0-9._-]{1,35}$/, {
+    message: "Code T24 invalide (lettres, chiffres, point, tiret ; 35 caractères au plus)",
+  });
+
+const dateSaisie = z
+  .string()
+  .refine((v) => !Number.isNaN(Date.parse(v)), { message: "Date invalide" });
+
+/** Nombre saisi (chaîne vide = absent) ; les fonds propres peuvent être négatifs. */
+function nombreSaisi() {
+  return z
+    .union([
+      z.number(),
+      z.string().transform((v) => (v === "" ? null : Number(v))).pipe(z.number().nullable()),
+    ])
+    .nullable()
+    .optional();
+}
+
+function entierSaisi(min: number, max: number, message: string) {
+  return z
+    .union([
+      z.number().int().min(min, { message }).max(max, { message }),
+      z
+        .string()
+        .transform((v) => (v === "" ? null : Number(v)))
+        .pipe(z.number().int().min(min, { message }).max(max, { message }).nullable()),
+    ])
+    .nullable()
+    .optional();
+}
+
 export const createClientSchema = z.object({
   nom: z
     .string()
@@ -225,6 +261,46 @@ export const createClientSchema = z.object({
   // Banque qui porte la relation ; vide = celle de l'utilisateur. Le contrôle de
   // périmètre est fait par le client de base de données.
   entiteId: z.string().uuid().nullable().optional(),
+
+  // Signalétique project finance
+  codeClientT24: codeT24.nullable().optional(),
+  ice: z
+    .string()
+    .trim()
+    .regex(/^\d{15}$/, { message: "L'ICE compte 15 chiffres" })
+    .nullable()
+    .optional(),
+  registreCommerce: z.string().trim().max(100).nullable().optional(),
+  identifiantFiscal: z
+    .string()
+    .trim()
+    .regex(/^\d{1,15}$/, { message: "L'identifiant fiscal ne contient que des chiffres" })
+    .nullable()
+    .optional(),
+  dateCreationSociete: dateSaisie.nullable().optional(),
+  /** Groupe d'affaires : retrouvé par son code (ou son nom), créé s'il est nouveau. */
+  groupe: z
+    .object({
+      code: codeT24.nullable().optional(),
+      nom: z.string().trim().min(2, { message: "Nom du groupe trop court" }).max(200),
+    })
+    .nullable()
+    .optional(),
+  roleGroupe: z.string().max(50).nullable().optional(),
+  fondsPropres: nombreSaisi(),
+  exerciceReference: entierSaisi(1950, 2100, "Exercice entre 1950 et 2100"),
+  experienceSecteurAnnees: entierSaisi(0, 150, "Nombre d'années invalide"),
+  projetsSimilaires: entierSaisi(0, 10000, "Nombre de projets invalide"),
+  notationExterne: z.string().trim().max(20).nullable().optional(),
+  agenceNotation: z.string().max(50).nullable().optional(),
+  classificationBAM: z.string().max(50).nullable().optional(),
+  niveauRisqueLBC: z.string().max(20).nullable().optional(),
+  ppe: z.boolean().nullable().optional(),
+  dateRevueKYC: dateSaisie.nullable().optional(),
+  /** Champs dont la valeur vient du dernier rapatriement T24 (non retouchés depuis). */
+  champsT24: z.array(z.string().max(50)).max(80).nullable().optional(),
+  /** Vrai quand la saisie part d'un rapatriement T24 : date de synchronisation posée. */
+  importT24: z.boolean().optional(),
 });
 
 export const updateClientSchema = createClientSchema.partial();

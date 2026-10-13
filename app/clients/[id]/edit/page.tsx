@@ -9,6 +9,7 @@ import { formatDateTime } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import {
   ClientForm,
+  champsT24De,
   versValeursClient,
   type ValeursClient,
 } from "@/components/client/ClientForm";
@@ -26,6 +27,7 @@ export default function ModifierClientPage() {
   const params = useParams();
   const id = String(params?.id ?? "");
   const [valeurs, setValeurs] = useState<ValeursClient | null>(null);
+  const [champsT24, setChampsT24] = useState<string[]>([]);
   const [nom, setNom] = useState("");
   const [modifieLe, setModifieLe] = useState<string | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -41,6 +43,7 @@ export default function ModifierClientPage() {
       if (!res.ok) throw new Error("Cette fiche client n'a pas pu être chargée.");
       const client = (await res.json()).data;
       setValeurs(versValeursClient(client));
+      setChampsT24(champsT24De(client));
       setNom(client.nom ?? "");
       setModifieLe(client.updatedAt ?? null);
     } catch (e) {
@@ -58,28 +61,12 @@ export default function ModifierClientPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const enregistrer = async (
-    _valeurs: ValeursClient,
-    modifies: Partial<ValeursClient>
-  ) => {
+  const enregistrer = async (_complet: Record<string, unknown>, charge: Record<string, unknown>) => {
     setEnCours(true);
     setErreur(null);
     try {
       // Seuls les champs modifiés partent : un PUT complet réécrivait des champs
-      // que l'utilisateur n'avait pas touchés, et vidait l'email sur une chaîne vide.
-      const charge: Record<string, unknown> = {};
-      for (const [cle, valeur] of Object.entries(modifies) as [string, string][]) {
-        const vide = valeur.trim() === "";
-        charge[cle] = ["effectifs", "capitalSocial", "chiffreAffaires", "exposition"].includes(
-          cle
-        )
-          ? vide
-            ? null
-            : Number(valeur)
-          : vide
-            ? null
-            : valeur.trim();
-      }
+      // que l'utilisateur n'avait pas touchés.
       const res = await apiPut(`/api/clients/${id}`, charge);
       const corps = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -139,6 +126,7 @@ export default function ModifierClientPage() {
       />
       <ClientForm
         valeursInitiales={valeurs}
+        champsT24Initiaux={champsT24}
         libelleAction="Enregistrer"
         enCours={enCours}
         onSubmit={enregistrer}

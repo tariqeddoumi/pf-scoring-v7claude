@@ -131,9 +131,53 @@ export const STATUTS_CLIENT: OptionReferentiel[] = [
   { valeur: "Suspendu", libelle: "Suspendu" },
 ];
 
+/** Place de la contrepartie dans son groupe d'affaires. */
+export const ROLES_GROUPE: OptionReferentiel[] = [
+  { valeur: "Tête de groupe", libelle: "Tête de groupe", aide: "Société mère ou holding de contrôle" },
+  { valeur: "Filiale", libelle: "Filiale", aide: "Contrôlée par la tête de groupe" },
+  { valeur: "Société sœur", libelle: "Société sœur", aide: "Contrôlée par le même actionnaire" },
+  { valeur: "Participation", libelle: "Participation", aide: "Influence notable, sans contrôle" },
+  { valeur: "SPV / société de projet", libelle: "SPV / société de projet", aide: "Société ad hoc portant le projet" },
+];
+
+/**
+ * Classification des créances selon Bank Al-Maghrib : saines, sensibles (sous
+ * surveillance), puis en souffrance (pré-douteuses, douteuses, compromises).
+ */
+export const CLASSIFICATIONS_BAM: OptionReferentiel[] = [
+  { valeur: "Saine", libelle: "Saine" },
+  {
+    valeur: "Sensible",
+    libelle: "Sensible (sous surveillance)",
+    aide: "Signes de fragilité sans impayé caractérisé",
+    aTraiter: true,
+  },
+  { valeur: "Pré-douteuse", libelle: "Pré-douteuse", aide: "Créance en souffrance", aTraiter: true },
+  { valeur: "Douteuse", libelle: "Douteuse", aide: "Créance en souffrance", aTraiter: true },
+  { valeur: "Compromise", libelle: "Compromise", aide: "Créance en souffrance", aTraiter: true },
+];
+
+/** Niveau de risque LBC/FT issu de l'approche par les risques de la conformité. */
+export const NIVEAUX_RISQUE_LBC: OptionReferentiel[] = [
+  { valeur: "Faible", libelle: "Faible", aide: "Vigilance simplifiée" },
+  { valeur: "Moyen", libelle: "Moyen", aide: "Vigilance standard" },
+  { valeur: "Élevé", libelle: "Élevé", aide: "Vigilance renforcée", aTraiter: true },
+];
+
+export const AGENCES_NOTATION: OptionReferentiel[] = [
+  { valeur: "S&P", libelle: "S&P Global Ratings" },
+  { valeur: "Moody's", libelle: "Moody's" },
+  { valeur: "Fitch", libelle: "Fitch Ratings" },
+  { valeur: "Fitch Maroc", libelle: "Fitch Ratings (échelle nationale)" },
+  { valeur: "Autre", libelle: "Autre agence" },
+];
+
 /** Valeurs qui appellent une action, dérivées des référentiels eux-mêmes. */
 export const KYC_A_TRAITER = STATUTS_KYC.filter((o) => o.aTraiter).map((o) => o.valeur);
 export const CONFORMITE_A_TRAITER = STATUTS_CONFORMITE.filter((o) => o.aTraiter).map(
+  (o) => o.valeur
+);
+export const CLASSIFICATION_A_TRAITER = CLASSIFICATIONS_BAM.filter((o) => o.aTraiter).map(
   (o) => o.valeur
 );
 
@@ -146,6 +190,10 @@ export const REFERENTIELS_CLIENT = {
   statusKYC: STATUTS_KYC,
   statusConformite: STATUTS_CONFORMITE,
   status: STATUTS_CLIENT,
+  roleGroupe: ROLES_GROUPE,
+  classificationBAM: CLASSIFICATIONS_BAM,
+  niveauRisqueLBC: NIVEAUX_RISQUE_LBC,
+  agenceNotation: AGENCES_NOTATION,
 } as const;
 
 export type CleReferentielClient = keyof typeof REFERENTIELS_CLIENT;

@@ -29,9 +29,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   scoring: "Moteur de scoring",
   screens: "Écrans & formulaires",
   ia: "Intelligence artificielle (analyse des pièces)",
+  t24: "Système central T24 (rapatriement de la signalétique)",
 };
 
-const CATEGORY_ORDER = ["branding", "theme", "behavior", "scoring", "ia", "screens"];
+const CATEGORY_ORDER = ["branding", "theme", "behavior", "scoring", "ia", "t24", "screens"];
 
 export default function ConfigurationPage() {
   const router = useRouter();

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { withAuth } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { updateClientSchema } from "@/lib/validation-schemas";
+import { donneesClient, messageConflit, resoudreGroupe } from "@/lib/clients/enregistrement";
 
 export async function GET(
   request: NextRequest,
@@ -16,6 +18,9 @@ export async function GET(
         where: { id },
         include: {
           entite: { select: { id: true, code: true, nom: true } },
+          groupeAffaires: {
+            select: { id: true, code: true, nom: true, paysSiege: true, secteurPrincipal: true, ratingGroupe: true, sourceDonnees: true },
+          },
           // La fiche affiche l'encours demandé et la note de chaque dossier :
           // sans montant ni note, la liste des projets n'apprend rien.
           projects: {
@@ -39,7 +44,35 @@ export async function GET(
         );
       }
 
-      return NextResponse.json({ success: true, data: client });
+      // Sociétés du même groupe, lues par une requête cloisonnée : une inclusion
+      // imbriquée échapperait au filtre d'entité et montrerait les clients d'une
+      // autre banque du groupe.
+      const membres = client.groupeAffairesId
+        ? await prisma.client.findMany({
+            where: { groupeAffairesId: client.groupeAffairesId, NOT: { id } },
+            select: {
+              id: true,
+              nom: true,
+              raisonSociale: true,
+              codeClientT24: true,
+              roleGroupe: true,
+              ratingInterne: true,
+              exposition: true,
+            },
+            orderBy: { nom: "asc" },
+          })
+        : [];
+      // Exposition consolidée du groupe (périmètre visible) : repère de division des risques.
+      const expositions = [client, ...membres].map((c) => c.exposition).filter((e): e is number => e != null);
+      const groupe = client.groupeAffaires
+        ? {
+            ...client.groupeAffaires,
+            membres,
+            expositionConsolidee: expositions.length > 0 ? expositions.reduce((a, b) => a + b, 0) : null,
+          }
+        : null;
+
+      return NextResponse.json({ success: true, data: { ...client, groupeAffaires: groupe } });
     } catch (error: any) {
       console.error(`[Client ${id} GET]`, error);
       return NextResponse.json(
@@ -87,34 +120,42 @@ export async function PUT(
         );
       }
 
-      const { dateRelation, status, entiteId, ...champs } = validation.data;
+      const { groupe, entiteId, ...saisie } = validation.data;
       const avant = await prisma.client.findUnique({ where: { id }, select: { entiteId: true } });
+      if (!avant) {
+        return NextResponse.json({ success: false, error: "Client non trouvé" }, { status: 404 });
+      }
 
       // Client et projets changent de banque ensemble ou pas du tout : un client
       // transféré dont les projets resteraient dans l'ancienne banque y exposerait
       // ses données.
       const client = await prisma.$transaction(async (tx) => {
-      const maj = await tx.client.update({
-        where: { id },
-        data: {
-          ...champs,
-          ...(dateRelation !== undefined && {
-            dateRelation: dateRelation ? new Date(dateRelation) : null,
-          }),
-          ...(status !== undefined && status !== null && { status }),
-          // null n'est pas une entité : seul un transfert vers une banque est accepté.
-          ...(entiteId ? { entiteId } : {}),
-        },
-      });
-      // Transfert du client vers une autre banque : ses projets le suivent.
-      if (entiteId && avant && avant.entiteId !== entiteId) {
-        await tx.project.updateMany({ where: { clientId: id }, data: { entiteId } });
-      }
-      return maj;
+        const groupeAffairesId = await resoudreGroupe(tx, groupe, {
+          entiteId: entiteId || avant.entiteId,
+          depuisT24: saisie.importT24,
+        });
+        const maj = await tx.client.update({
+          where: { id },
+          data: {
+            ...(donneesClient(saisie) as Prisma.ClientUncheckedUpdateInput),
+            ...(groupeAffairesId !== undefined ? { groupeAffairesId } : {}),
+            // null n'est pas une entité : seul un transfert vers une banque est accepté.
+            ...(entiteId ? { entiteId } : {}),
+          },
+        });
+        // Transfert du client vers une autre banque : ses projets le suivent.
+        if (entiteId && avant.entiteId !== entiteId) {
+          await tx.project.updateMany({ where: { clientId: id }, data: { entiteId } });
+        }
+        return maj;
       });
 
       return NextResponse.json({ success: true, data: client });
     } catch (error: any) {
+      const conflit = messageConflit(error);
+      if (conflit) {
+        return NextResponse.json({ success: false, error: conflit }, { status: 409 });
+      }
       console.error(`[Client ${id} PUT]`, error);
       return NextResponse.json(
         { success: false, error: error.message || "Erreur serveur" },

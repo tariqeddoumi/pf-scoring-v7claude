@@ -30,6 +30,8 @@ interface Client {
   exposition?: number | null;
   gestionnaire?: string | null;
   status?: string | null;
+  codeClientT24?: string | null;
+  groupeAffaires?: { id: string; code: string | null; nom: string } | null;
   projects?: { id: string }[];
 }
 
@@ -104,7 +106,7 @@ export default function ClientsPage() {
     const q = recherche.trim().toLowerCase();
     return clients.filter((c) => {
       const texte =
-        `${c.nom} ${c.raisonSociale ?? ""} ${c.secteur ?? ""} ${c.gestionnaire ?? ""}`.toLowerCase();
+        `${c.nom} ${c.raisonSociale ?? ""} ${c.codeClientT24 ?? ""} ${c.groupeAffaires?.nom ?? ""} ${c.secteur ?? ""} ${c.gestionnaire ?? ""}`.toLowerCase();
       return (!q || texte.includes(q)) && (filtre === "tous" || aTraiter(c));
     });
   }, [clients, recherche, filtre, aTraiter]);
@@ -151,7 +153,7 @@ export default function ClientsPage() {
             type="text"
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
-            placeholder="Rechercher un client, un secteur, un gestionnaire…"
+            placeholder="Rechercher un client, un code T24, un groupe, un gestionnaire…"
             aria-label="Rechercher"
             className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
           />
@@ -210,7 +212,7 @@ export default function ClientsPage() {
                   {[
                     { t: "Client", a: "left" },
                     { t: "Secteur", a: "left" },
-                    { t: "Segment", a: "left" },
+                    { t: "Groupe", a: "left" },
                     { t: "Note interne", a: "left" },
                     { t: "Exposition", a: "right" },
                     { t: "KYC", a: "left" },
@@ -238,9 +240,11 @@ export default function ClientsPage() {
                   >
                     <td className="px-4 py-3">
                       <span className="block font-medium text-foreground">{c.nom}</span>
-                      {c.gestionnaire && (
+                      {(c.codeClientT24 || c.gestionnaire) && (
                         <span className="block text-[11.5px] text-muted-foreground">
-                          {c.gestionnaire}
+                          {[c.codeClientT24 && `T24 ${c.codeClientT24}`, c.gestionnaire]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </span>
                       )}
                     </td>
@@ -248,7 +252,7 @@ export default function ClientsPage() {
                       {c.secteur || "—"}
                     </td>
                     <td className="px-4 py-3 text-[12.5px] text-muted-foreground">
-                      {c.segmentClientele || "—"}
+                      {c.groupeAffaires?.nom || "—"}
                     </td>
                     <td className="px-4 py-3">
                       {c.ratingInterne ? (

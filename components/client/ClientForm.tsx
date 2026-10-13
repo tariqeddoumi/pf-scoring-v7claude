@@ -2,10 +2,25 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle } from "lucide-react";
-import { apiGet } from "@/lib/api-client";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  DownloadCloud,
+  Info,
+  Loader2,
+} from "lucide-react";
+import { apiGet, messageErreurApi } from "@/lib/api-client";
 import { createClientSchema } from "@/lib/validation-schemas";
-import { REFERENTIELS_CLIENT, type OptionReferentiel } from "@/lib/referentiels";
+import {
+  REFERENTIELS_CLIENT,
+  type OptionReferentiel,
+} from "@/lib/referentiels";
+import {
+  GROUPE,
+  versPayloadClient,
+  type Cle,
+  type ValeursClient,
+} from "@/lib/clients/saisie";
 import { SectionCard } from "@/components/ui/section-card";
 import {
   BarreActions,
@@ -16,132 +31,61 @@ import {
 } from "@/components/ui/form-fields";
 
 /**
- * Formulaire de signalétique client, partagé par la création et la modification.
+ * Signalétique client, partagée par la création et la modification.
  *
- * Les deux écrans recopiaient environ 450 lignes de JSX identiques, chacun avec ses
- * propres listes de valeurs — d'où des divergences (« GE » contre « Grande
- * Entreprise ») qui faisaient afficher « Sélectionner » sur des fiches pourtant
- * renseignées. Les vingt-sept champs étaient répartis en six onglets : il fallait six
- * clics pour voir le dossier, sans indication de ce qui restait à remplir ni de ce qui
- * était en erreur. Aucun libellé n'était associé à son champ.
+ * Limitée à ce qui sert l'instruction et la notation d'un financement de projet :
+ * - identification légale (code client T24, ICE, RC, IF) : rapprochement avec le
+ *   système central et les registres, détection des doublons ;
+ * - groupe d'affaires : exposition consolidée (division des risques) et soutien du
+ *   groupe ;
+ * - solidité financière et expérience du sponsor : critères « sponsor » des grilles
+ *   de financement spécialisé (Bâle, approche par classes) ;
+ * - notation, classification Bank Al-Maghrib et exposition ;
+ * - relation bancaire et conformité LBC/FT (KYC, niveau de risque, PPE).
+ * Coordonnées réduites au contact utile ; site, code postal, nom commercial et
+ * effectifs ne sont plus saisis (les valeurs existantes restent en base).
  *
- * Ici : quatre sections empilées, des libellés liés à leurs champs, la validation du
- * schéma Zod qui fait déjà foi côté API, et une barre d'actions qui suit le défilement.
+ * Le chargé de saisie rapatrie la fiche depuis T24 par le code client lorsque le
+ * connecteur est actif ; sinon, ou en complément, il saisit. Les champs repris de
+ * T24 sont marqués ; une retouche manuelle retire la marque.
  */
 
-export interface ValeursClient {
-  nom: string;
-  raisonSociale: string;
-  nomCommercial: string;
-  typeClient: string;
-  formeJuridique: string;
-  segmentClientele: string;
-  secteur: string;
-  effectifs: string;
-  capitalSocial: string;
-  chiffreAffaires: string;
-  description: string;
-  email: string;
-  telephone: string;
-  website: string;
-  adresse: string;
-  codePostal: string;
-  ville: string;
-  pays: string;
-  gestionnaire: string;
-  centreAffaires: string;
-  statutBancaire: string;
-  ratingInterne: string;
-  exposition: string;
-  dateRelation: string;
-  statusKYC: string;
-  statusConformite: string;
-  status: string;
-  /** Banque qui porte la relation ("" = celle de l'utilisateur). */
-  entiteId: string;
-}
+export {
+  VALEURS_CLIENT_VIDES,
+  champsT24De,
+  versPayloadClient,
+  versValeursClient,
+  type ValeursClient,
+} from "@/lib/clients/saisie";
 
-export const VALEURS_CLIENT_VIDES: ValeursClient = {
-  nom: "",
-  raisonSociale: "",
-  nomCommercial: "",
-  typeClient: "",
-  formeJuridique: "",
-  segmentClientele: "",
-  secteur: "",
-  effectifs: "",
-  capitalSocial: "",
-  chiffreAffaires: "",
-  description: "",
-  email: "",
-  telephone: "",
-  website: "",
-  adresse: "",
-  codePostal: "",
-  ville: "",
-  pays: "Maroc",
-  gestionnaire: "",
-  centreAffaires: "",
-  statutBancaire: "",
-  ratingInterne: "",
-  exposition: "",
-  dateRelation: "",
-  statusKYC: "",
-  statusConformite: "",
-  status: "Actif",
-  entiteId: "",
-};
-
-/** Convertit une fiche renvoyée par l'API en valeurs de formulaire. */
-export function versValeursClient(c: Record<string, unknown>): ValeursClient {
-  const texte = (v: unknown) =>
-    v === null || v === undefined ? "" : String(v);
-  return {
-    ...VALEURS_CLIENT_VIDES,
-    ...Object.fromEntries(
-      Object.keys(VALEURS_CLIENT_VIDES).map((k) => [k, texte(c[k])])
-    ),
-    dateRelation: c.dateRelation ? String(c.dateRelation).slice(0, 10) : "",
-  } as ValeursClient;
-}
-
-type Erreurs = Partial<Record<keyof ValeursClient, string>>;
+type Erreurs = Partial<Record<Cle, string>>;
 
 /** Comparaison de raisons sociales : la casse et les accents ne font pas la différence. */
 function normaliser(texte: string): string {
   return texte
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
 
-const CHAMPS_NUMERIQUES: (keyof ValeursClient)[] = [
-  "effectifs",
-  "capitalSocial",
-  "chiffreAffaires",
-  "exposition",
-];
+interface StatutT24 {
+  actif: boolean;
+  mode: string;
+  message: string | null;
+}
 
-/** Ce que l'API attend : chaînes vides converties en null, nombres en nombres. */
-export function versPayloadClient(v: ValeursClient): Record<string, unknown> {
-  const sortie: Record<string, unknown> = {};
-  for (const [cle, valeur] of Object.entries(v) as [keyof ValeursClient, string][]) {
-    const vide = valeur.trim() === "";
-    if (CHAMPS_NUMERIQUES.includes(cle)) {
-      sortie[cle] = vide ? null : Number(valeur);
-    } else {
-      sortie[cle] = vide ? null : valeur.trim();
-    }
-  }
-  // Le nom est obligatoire : il ne peut pas partir à null.
-  sortie.nom = v.nom.trim();
-  return sortie;
+interface GroupeConnu {
+  id: string;
+  code: string | null;
+  nom: string;
+  nbClients: number;
 }
 
 export function ClientForm({
   valeursInitiales,
+  champsT24Initiaux = [],
   libelleAction,
   enCours,
   onSubmit,
@@ -151,27 +95,51 @@ export function ClientForm({
   clientId,
 }: {
   valeursInitiales: ValeursClient;
+  champsT24Initiaux?: string[];
   libelleAction: string;
   enCours: boolean;
-  /** Reçoit les valeurs complètes et, en modification, les seuls champs modifiés. */
-  onSubmit: (valeurs: ValeursClient, modifies: Partial<ValeursClient>) => void;
+  /** Reçoit la charge complète et, en modification, celle des seuls champs modifiés. */
+  onSubmit: (
+    complet: Record<string, unknown>,
+    modifies: Record<string, unknown>
+  ) => void;
   hrefAnnuler: string;
   erreurGlobale?: string | null;
   /** En création, le bouton reste actif : il n'y a pas de valeur de départ à modifier. */
   creation?: boolean;
-  /** En modification : pour exclure la fiche courante de la détection de doublon. */
+  /** En modification : pour exclure la fiche courante des contrôles de doublon. */
   clientId?: string;
 }) {
   const [v, setV] = useState<ValeursClient>(valeursInitiales);
   const [erreurs, setErreurs] = useState<Erreurs>({});
-  const [listes, setListes] =
-    useState<Record<string, OptionReferentiel[]>>(REFERENTIELS_CLIENT as unknown as Record<string, OptionReferentiel[]>);
-  const [secteurs, setSecteurs] = useState<{ code: string; label: string }[]>([]);
+  const [listes, setListes] = useState<Record<string, OptionReferentiel[]>>(
+    REFERENTIELS_CLIENT as unknown as Record<string, OptionReferentiel[]>
+  );
+  const [secteurs, setSecteurs] = useState<{ code: string; label: string }[]>(
+    []
+  );
   const [gestionnaires, setGestionnaires] = useState<string[]>([]);
   // Banques où l'utilisateur peut créer : le choix n'apparaît que s'il en a plusieurs.
-  const [banques, setBanques] = useState<{ id: string; nom: string; niveau: number }[]>([]);
+  const [banques, setBanques] = useState<
+    { id: string; nom: string; niveau: number }[]
+  >([]);
+  const [groupes, setGroupes] = useState<GroupeConnu[]>([]);
   const [homonymes, setHomonymes] = useState<{ id: string; nom: string }[]>([]);
   const initiales = useRef(valeursInitiales);
+
+  // ─── T24 ───
+  const [t24, setT24] = useState<StatutT24 | null>(null);
+  const [champsT24, setChampsT24] = useState<string[]>(champsT24Initiaux);
+  const champsT24Initiaux_ = useRef(champsT24Initiaux);
+  const [importT24, setImportT24] = useState(false);
+  const [lectureT24, setLectureT24] = useState<"client" | "groupe" | null>(
+    null
+  );
+  const [retourT24, setRetourT24] = useState<{
+    type: "ok" | "erreur" | "alerte";
+    texte: string;
+    lien?: { href: string; libelle: string };
+  } | null>(null);
 
   useEffect(() => {
     setV(valeursInitiales);
@@ -180,28 +148,39 @@ export function ClientForm({
 
   useEffect(() => {
     (async () => {
-      const [resListes, resSecteurs, resUsers, resEntites] = await Promise.all([
-        apiGet("/api/reference/lists"),
-        apiGet("/api/reference/sectors"),
-        apiGet("/api/users?limit=200"),
-        apiGet("/api/admin/entites"),
-      ]);
+      const [resListes, resSecteurs, resUsers, resEntites, resT24, resGroupes] =
+        await Promise.all([
+          apiGet("/api/reference/lists"),
+          apiGet("/api/reference/sectors"),
+          apiGet("/api/users?limit=200"),
+          apiGet("/api/admin/entites"),
+          apiGet("/api/t24/statut"),
+          apiGet("/api/groupes-affaires"),
+        ]);
       if (resEntites.ok) {
         const d = await resEntites.json();
         const ecriture: string[] = d.perimetre?.ecriture ?? [];
-        const toutes: { id: string; nom: string; niveau: number }[] = d.data ?? [];
-        setBanques(d.perimetre?.tout ? toutes : toutes.filter((e) => ecriture.includes(e.id)));
+        const toutes: { id: string; nom: string; niveau: number }[] =
+          d.data ?? [];
+        setBanques(
+          d.perimetre?.tout
+            ? toutes
+            : toutes.filter((e) => ecriture.includes(e.id))
+        );
       }
       if (resListes.ok) {
         const d = await resListes.json();
-        if (d?.data) setListes(d.data);
+        if (d?.data) setListes((prec) => ({ ...prec, ...d.data }));
       }
       if (resSecteurs.ok) setSecteurs((await resSecteurs.json()).data ?? []);
+      if (resT24.ok) setT24((await resT24.json()).data ?? null);
+      if (resGroupes.ok) setGroupes((await resGroupes.json()).data ?? []);
       // La liste des utilisateurs est réservée aux responsables : un analyste reçoit
       // un 403, auquel cas le gestionnaire reste en saisie libre.
       if (resUsers.ok) {
         const d = await resUsers.json();
-        const liste: { nom?: string; prenom?: string }[] = d.data ?? d.users ?? [];
+        const liste: { nom?: string; prenom?: string }[] =
+          d.data ?? d.users ?? [];
         setGestionnaires(
           liste
             .map((u) => `${u.prenom ?? ""} ${u.nom ?? ""}`.trim())
@@ -212,10 +191,8 @@ export function ClientForm({
     })();
   }, []);
 
-  // Détection de doublon : un même nom saisi deux fois crée deux dossiers de crédit
-  // sur la même contrepartie, ce que rien ne signalait. Le rapprochement est refait
-  // ici : la recherche de l'API est large, et une liste de tous les clients à chaque
-  // frappe serait du bruit plutôt qu'une alerte.
+  // Détection de doublon sur le nom : un même nom saisi deux fois crée deux dossiers
+  // de crédit sur la même contrepartie.
   const chercherHomonymes = useCallback(
     async (nom: string) => {
       if (nom.trim().length < 3) return setHomonymes([]);
@@ -224,7 +201,8 @@ export function ClientForm({
           `/api/clients?take=5&search=${encodeURIComponent(nom.trim())}`
         );
         if (!res.ok) return;
-        const liste: { id: string; nom: string }[] = (await res.json()).data ?? [];
+        const liste: { id: string; nom: string }[] =
+          (await res.json()).data ?? [];
         const cible = normaliser(nom);
         setHomonymes(
           liste
@@ -249,41 +227,203 @@ export function ClientForm({
 
   const modifies = useMemo(() => {
     const d: Partial<ValeursClient> = {};
-    for (const cle of Object.keys(v) as (keyof ValeursClient)[]) {
+    for (const cle of Object.keys(v) as Cle[]) {
       if (v[cle] !== initiales.current[cle]) d[cle] = v[cle];
     }
     return d;
   }, [v]);
 
+  const champsT24Modifies =
+    [...champsT24].sort().join("|") !==
+    [...champsT24Initiaux_.current].sort().join("|");
   const nbModifies = Object.keys(modifies).length;
 
-  const set = (cle: keyof ValeursClient) => (valeur: string) =>
+  /** Saisie manuelle : la valeur n'est plus celle de T24. */
+  const set = (cle: Cle) => (valeur: string) => {
     setV((prec) => ({ ...prec, [cle]: valeur }));
+    setChampsT24((prec) =>
+      prec.includes(cle) ? prec.filter((c) => c !== cle) : prec
+    );
+  };
+
+  const provenance = (cle: Cle) =>
+    champsT24.includes(cle) ? "T24" : undefined;
+  const options = (cle: string) => listes[cle] ?? [];
+
+  // ─── Rapatriement T24 ───
+  const rapatrierClient = async () => {
+    const code = v.codeClientT24.trim();
+    if (!code) {
+      setErreurs((e) => ({
+        ...e,
+        codeClientT24: "Saisissez le code client T24 à rapatrier.",
+      }));
+      return;
+    }
+    setLectureT24("client");
+    setRetourT24(null);
+    try {
+      const res = await apiGet(`/api/t24/clients/${encodeURIComponent(code)}`);
+      if (!res.ok)
+        throw new Error(await messageErreurApi(res, "Lecture T24 impossible."));
+      const corps = await res.json();
+      const fiche = corps.data as {
+        codeClientT24: string;
+        champs: Record<string, string | number>;
+        groupe: { code: string | null; nom: string | null } | null;
+      };
+      const repris: string[] = Object.keys(fiche.champs);
+      setV((prec) => {
+        const suite = { ...prec, codeClientT24: fiche.codeClientT24 };
+        for (const [cle, valeur] of Object.entries(fiche.champs)) {
+          if (cle in suite)
+            (suite as Record<string, string>)[cle] = String(valeur);
+        }
+        if (fiche.groupe?.nom || fiche.groupe?.code) {
+          const connu = groupes.find(
+            (g) => fiche.groupe?.code && g.code === fiche.groupe.code
+          );
+          suite.groupeCode = fiche.groupe.code ?? "";
+          suite.groupeNom = fiche.groupe.nom ?? connu?.nom ?? suite.groupeNom;
+        }
+        return suite;
+      });
+      const marques = [
+        "codeClientT24",
+        ...repris,
+        ...(fiche.groupe?.code ? ["groupeCode"] : []),
+        ...(fiche.groupe?.nom ? ["groupeNom"] : []),
+      ];
+      setChampsT24(marques);
+      setImportT24(true);
+      setErreurs({});
+      const existant = corps.existant as { id: string; nom: string } | null;
+      if (existant && existant.id !== clientId) {
+        setRetourT24({
+          type: "alerte",
+          texte: `Ce code client T24 est déjà attribué à « ${existant.nom} » : complétez cette fiche plutôt que d'en créer une seconde.`,
+          lien: {
+            href: `/clients/${existant.id}`,
+            libelle: "Ouvrir la fiche existante",
+          },
+        });
+      } else {
+        setRetourT24({
+          type: corps.simulation ? "alerte" : "ok",
+          texte: `${repris.length} champ${repris.length > 1 ? "s" : ""} repris de T24${
+            corps.simulation
+              ? " — données de démonstration (mode simulation)"
+              : ""
+          }. Relisez, complétez les éléments propres au financement, puis enregistrez.`,
+        });
+      }
+    } catch (e) {
+      setRetourT24({
+        type: "erreur",
+        texte: `${e instanceof Error ? e.message : "Lecture T24 impossible."} La saisie manuelle reste possible.`,
+      });
+    } finally {
+      setLectureT24(null);
+    }
+  };
+
+  const rapatrierGroupe = async () => {
+    const code = v.groupeCode.trim();
+    if (!code) {
+      setErreurs((e) => ({
+        ...e,
+        groupeCode: "Saisissez le code du groupe dans T24.",
+      }));
+      return;
+    }
+    setLectureT24("groupe");
+    setRetourT24(null);
+    try {
+      const res = await apiGet(`/api/t24/groupes/${encodeURIComponent(code)}`);
+      if (!res.ok)
+        throw new Error(
+          await messageErreurApi(res, "Lecture du groupe T24 impossible.")
+        );
+      const corps = await res.json();
+      const nom: string | null = corps.existant?.nom ?? corps.data?.nom ?? null;
+      if (nom) {
+        setV((p) => ({ ...p, groupeNom: nom }));
+        setChampsT24((p) => [...new Set([...p, "groupeCode", "groupeNom"])]);
+        setImportT24(true);
+      }
+      setErreurs((e) => ({
+        ...e,
+        groupeCode: undefined,
+        groupeNom: undefined,
+      }));
+      setRetourT24({
+        type: corps.simulation ? "alerte" : "ok",
+        texte: nom
+          ? `Groupe « ${nom} » repris de T24${corps.simulation ? " (démonstration)" : ""}.`
+          : "T24 ne renvoie pas le nom de ce groupe : saisissez-le.",
+      });
+    } catch (e) {
+      setRetourT24({
+        type: "erreur",
+        texte: `${e instanceof Error ? e.message : "Lecture T24 impossible."} Saisissez le groupe manuellement.`,
+      });
+    } finally {
+      setLectureT24(null);
+    }
+  };
+
+  /** Choix d'un groupe déjà connu par son nom : son code suit. */
+  const choisirGroupe = (nom: string) => {
+    const connu = groupes.find((g) => g.nom === nom);
+    setV((p) => ({
+      ...p,
+      groupeNom: nom,
+      ...(connu ? { groupeCode: connu.code ?? "" } : {}),
+    }));
+    setChampsT24((p) =>
+      p.filter((c) => c !== "groupeNom" && (!connu || c !== "groupeCode"))
+    );
+  };
 
   const soumettre = (e: React.FormEvent) => {
     e.preventDefault();
-    // Le schéma Zod de l'API est aussi celui du formulaire : les deux ne peuvent
-    // plus diverger, et l'erreur s'affiche sous le champ plutôt qu'en bandeau.
-    const resultat = createClientSchema.safeParse(versPayloadClient(v));
+    const extras = {
+      ...(champsT24Modifies || importT24 ? { champsT24 } : {}),
+      ...(importT24 ? { importT24: true } : {}),
+    };
+    const complet = {
+      ...versPayloadClient(v),
+      champsT24,
+      ...(importT24 ? { importT24: true } : {}),
+    };
+    // Le schéma Zod de l'API est aussi celui du formulaire : l'erreur s'affiche sous
+    // le champ plutôt qu'en bandeau.
+    const resultat = createClientSchema.safeParse(complet);
     if (!resultat.success) {
       const e2: Erreurs = {};
       for (const issue of resultat.error.issues) {
-        const champ = issue.path[0] as keyof ValeursClient;
-        if (champ && !e2[champ]) e2[champ] = issue.message;
+        let champ = issue.path[0] as string;
+        if (champ === "groupe")
+          champ = issue.path[1] === "code" ? "groupeCode" : "groupeNom";
+        if (champ && !e2[champ as Cle]) e2[champ as Cle] = issue.message;
       }
       setErreurs(e2);
-      const premier = document.getElementById(
-        `champ-${Object.keys(e2)[0]}`
-      );
+      const premier = document.getElementById(`champ-${Object.keys(e2)[0]}`);
       premier?.scrollIntoView({ behavior: "smooth", block: "center" });
       premier?.focus({ preventScroll: true });
       return;
     }
     setErreurs({});
-    onSubmit(v, modifies);
+    // Le groupe part entier (code et nom) dès que l'un des deux change.
+    const aEnvoyer: Partial<ValeursClient> = { ...modifies };
+    if (GROUPE.some((g) => g in modifies)) {
+      aEnvoyer.groupeCode = v.groupeCode;
+      aEnvoyer.groupeNom = v.groupeNom;
+    }
+    onSubmit(complet, { ...versPayloadClient(aEnvoyer), ...extras });
   };
 
-  const options = (cle: string) => listes[cle] ?? [];
+  const groupeConnu = groupes.find((g) => g.nom === v.groupeNom);
 
   return (
     <form onSubmit={soumettre} className="pb-20">
@@ -294,26 +434,109 @@ export function ClientForm({
       )}
 
       <div className="space-y-4">
-        <SectionCard titre="Identité" description="Ce qui désigne la contrepartie dans les actes.">
+        <SectionCard
+          titre="Identification"
+          description="Code client T24 et identifiants légaux : rapprochement avec le système central et les registres."
+        >
+          {/* Rapatriement T24 : en tête, c'est le point de départ de la saisie. */}
+          <div className="mb-4 rounded-lg border border-border bg-surface p-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="min-w-[200px] flex-1">
+                <Champ
+                  cle="codeClientT24"
+                  libelle="Code client T24"
+                  provenance={provenance("codeClientT24")}
+                  valeur={v.codeClientT24}
+                  onChange={(x) => {
+                    set("codeClientT24")(x);
+                    setErreurs((e) => ({ ...e, codeClientT24: undefined }));
+                  }}
+                  erreur={erreurs.codeClientT24}
+                  placeholder="100234"
+                />
+              </div>
+              {t24?.actif && (
+                <button
+                  type="button"
+                  onClick={rapatrierClient}
+                  disabled={lectureT24 !== null}
+                  className="mb-[2px] inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  {lectureT24 === "client" ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <DownloadCloud size={15} />
+                  )}
+                  {creation ? "Rapatrier depuis T24" : "Actualiser depuis T24"}
+                </button>
+              )}
+            </div>
+            <p className="mt-2 flex items-start gap-1.5 text-[12px] text-muted-foreground">
+              <Info size={13} className="mt-[2px] shrink-0" />
+              {t24 === null
+                ? "Vérification du connecteur T24…"
+                : t24.actif
+                  ? t24.mode === "simulation"
+                    ? "Connecteur T24 en mode simulation : les données rapatriées sont fictives."
+                    : "Saisissez le code client puis rapatriez : identité, identifiants légaux, relation et groupe sont repris de T24. Le reste se complète à la main."
+                  : `${t24.message ?? "Rapatriement T24 indisponible."} Le code client T24 peut tout de même être renseigné.`}
+            </p>
+            {retourT24 && (
+              <div
+                role="status"
+                className={`mt-2 flex flex-wrap items-start gap-2 rounded-md px-3 py-2 text-[12.5px] ${
+                  retourT24.type === "ok"
+                    ? "bg-success-subtle text-success"
+                    : retourT24.type === "alerte"
+                      ? "bg-warning-subtle text-warning"
+                      : "bg-destructive-subtle text-destructive"
+                }`}
+              >
+                {retourT24.type === "ok" ? (
+                  <CheckCircle2 size={14} className="mt-[2px] shrink-0" />
+                ) : (
+                  <AlertTriangle size={14} className="mt-[2px] shrink-0" />
+                )}
+                <span className="flex-1">{retourT24.texte}</span>
+                {retourT24.lien && (
+                  <Link
+                    href={retourT24.lien.href}
+                    className="font-semibold underline"
+                  >
+                    {retourT24.lien.libelle}
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {banques.length > 1 && (
               <label className="md:col-span-2 block text-sm font-medium text-foreground">
                 Banque qui porte la relation
                 <select
                   value={v.entiteId}
-                  onChange={(e) => setV((p) => ({ ...p, entiteId: e.target.value }))}
+                  onChange={(e) =>
+                    setV((p) => ({ ...p, entiteId: e.target.value }))
+                  }
                   className="mt-1.5 h-9 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-ring focus:outline-none"
                 >
                   <option value="">Ma banque</option>
                   {banques.map((b) => (
                     <option key={b.id} value={b.id}>
-                      {"\u00a0\u00a0".repeat(Math.max(0, b.niveau - Math.min(...banques.map((x) => x.niveau))))}
+                      {"  ".repeat(
+                        Math.max(
+                          0,
+                          b.niveau - Math.min(...banques.map((x) => x.niveau))
+                        )
+                      )}
                       {b.nom}
                     </option>
                   ))}
                 </select>
                 <span className="mt-1 block text-xs font-normal text-muted-foreground">
-                  Le client et ses projets ne sont visibles que de cette banque et de ses entités mères.
+                  Le client et ses projets ne sont visibles que de cette banque
+                  et de ses entités mères.
                 </span>
               </label>
             )}
@@ -321,6 +544,7 @@ export function ClientForm({
               cle="nom"
               libelle="Nom usuel"
               obligatoire
+              provenance={provenance("nom")}
               aide="Le nom sous lequel la banque désigne le client au quotidien."
               valeur={v.nom}
               onChange={set("nom")}
@@ -330,40 +554,92 @@ export function ClientForm({
             <Champ
               cle="raisonSociale"
               libelle="Raison sociale"
-              aide="La dénomination exacte figurant au registre du commerce."
+              provenance={provenance("raisonSociale")}
+              aide="Dénomination exacte au registre du commerce."
               valeur={v.raisonSociale}
               onChange={set("raisonSociale")}
               erreur={erreurs.raisonSociale}
               placeholder="ATLAS ENERGIE HOLDING S.A."
             />
-            <Champ
-              cle="nomCommercial"
-              libelle="Nom commercial"
-              valeur={v.nomCommercial}
-              onChange={set("nomCommercial")}
-              erreur={erreurs.nomCommercial}
-            />
-            <Selecteur
-              cle="typeClient"
-              libelle="Type de client"
-              valeur={v.typeClient}
-              onChange={set("typeClient")}
-              options={options("typeClient")}
-            />
             <Selecteur
               cle="formeJuridique"
               libelle="Forme juridique"
+              provenance={provenance("formeJuridique")}
               valeur={v.formeJuridique}
               onChange={set("formeJuridique")}
               options={options("formeJuridique")}
             />
             <Selecteur
-              cle="segmentClientele"
-              libelle="Segment de clientèle"
-              valeur={v.segmentClientele}
-              onChange={set("segmentClientele")}
-              options={options("segmentClientele")}
+              cle="typeClient"
+              libelle="Type de contrepartie"
+              valeur={v.typeClient}
+              onChange={set("typeClient")}
+              options={options("typeClient")}
             />
+            <Champ
+              cle="ice"
+              libelle="ICE"
+              provenance={provenance("ice")}
+              aide="Identifiant Commun de l'Entreprise, 15 chiffres."
+              valeur={v.ice}
+              onChange={set("ice")}
+              erreur={erreurs.ice}
+              placeholder="001234567000089"
+            />
+            <Champ
+              cle="registreCommerce"
+              libelle="Registre du commerce"
+              provenance={provenance("registreCommerce")}
+              valeur={v.registreCommerce}
+              onChange={set("registreCommerce")}
+              erreur={erreurs.registreCommerce}
+              placeholder="RC 123456 Casablanca"
+            />
+            <Champ
+              cle="identifiantFiscal"
+              libelle="Identifiant fiscal (IF)"
+              provenance={provenance("identifiantFiscal")}
+              valeur={v.identifiantFiscal}
+              onChange={set("identifiantFiscal")}
+              erreur={erreurs.identifiantFiscal}
+            />
+            <Champ
+              cle="dateCreationSociete"
+              libelle="Date de création"
+              type="date"
+              provenance={provenance("dateCreationSociete")}
+              valeur={v.dateCreationSociete}
+              onChange={set("dateCreationSociete")}
+              erreur={erreurs.dateCreationSociete}
+            />
+            <Champ
+              cle="pays"
+              libelle="Pays de résidence"
+              provenance={provenance("pays")}
+              aide="Détermine le risque pays (Bank Al-Maghrib)."
+              valeur={v.pays}
+              onChange={set("pays")}
+              erreur={erreurs.pays}
+            />
+            <Champ
+              cle="ville"
+              libelle="Ville du siège"
+              provenance={provenance("ville")}
+              valeur={v.ville}
+              onChange={set("ville")}
+              erreur={erreurs.ville}
+              placeholder="Casablanca"
+            />
+            <div className="md:col-span-2">
+              <Champ
+                cle="adresse"
+                libelle="Adresse du siège"
+                provenance={provenance("adresse")}
+                valeur={v.adresse}
+                onChange={set("adresse")}
+                erreur={erreurs.adresse}
+              />
+            </div>
           </div>
 
           {homonymes.length > 0 && (
@@ -385,126 +661,220 @@ export function ClientForm({
           )}
         </SectionCard>
 
-        <SectionCard titre="Activité et chiffres" description="Le secteur sert au rapprochement sectoriel du moteur de notation.">
+        <SectionCard
+          titre="Groupe d'affaires"
+          description="Les engagements sur les sociétés d'un même groupe s'additionnent pour la division des risques ; le soutien du groupe pèse dans l'appréciation du sponsor."
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Champ
+                  cle="groupeCode"
+                  libelle="Code groupe T24"
+                  provenance={provenance("groupeCode")}
+                  valeur={v.groupeCode}
+                  onChange={(x) => {
+                    set("groupeCode")(x);
+                    setErreurs((e) => ({ ...e, groupeCode: undefined }));
+                  }}
+                  erreur={erreurs.groupeCode}
+                />
+              </div>
+              {t24?.actif && (
+                <button
+                  type="button"
+                  onClick={rapatrierGroupe}
+                  disabled={lectureT24 !== null}
+                  aria-label="Rapatrier le groupe depuis T24"
+                  title="Rapatrier le groupe depuis T24"
+                  className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50 ${
+                    erreurs.groupeCode ? "mb-[22px]" : "mb-[2px]"
+                  }`}
+                >
+                  {lectureT24 === "groupe" ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <DownloadCloud size={14} />
+                  )}
+                  T24
+                </button>
+              )}
+            </div>
+            <div>
+              <SelecteurLibre
+                cle="groupeNom"
+                libelle="Nom du groupe"
+                provenance={provenance("groupeNom")}
+                valeur={v.groupeNom}
+                onChange={choisirGroupe}
+                options={groupes.map((g) => ({
+                  valeur: g.nom,
+                  libelle: `${g.code ? `${g.code} — ` : ""}${g.nbClients} société${g.nbClients > 1 ? "s" : ""}`,
+                }))}
+                aide={
+                  erreurs.groupeNom ??
+                  (v.groupeNom.trim() && !groupeConnu
+                    ? "Nouveau groupe : il sera créé à l'enregistrement."
+                    : "Vide si la contrepartie n'appartient à aucun groupe.")
+                }
+              />
+            </div>
+            <Selecteur
+              cle="roleGroupe"
+              libelle="Place dans le groupe"
+              valeur={v.roleGroupe}
+              onChange={set("roleGroupe")}
+              options={options("roleGroupe")}
+            />
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          titre="Activité, solidité financière et expérience"
+          description="Critères « sponsor » des grilles de financement spécialisé : capacité à soutenir le projet et savoir-faire dans le secteur."
+        >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SelecteurLibre
               cle="secteur"
-              libelle="Secteur"
+              libelle="Secteur d'activité"
+              provenance={provenance("secteur")}
               valeur={v.secteur}
               onChange={set("secteur")}
               options={secteurs.map((s) => ({
                 valeur: s.label,
                 libelle: `${s.code} — ${s.label}`,
               }))}
-              aide="Choisissez dans le référentiel : « Énergie » et « ENR » saisis librement ne se rapprochent pas."
+              aide="Choisissez dans le référentiel : il sert au rapprochement sectoriel du moteur de notation."
+            />
+            <Selecteur
+              cle="segmentClientele"
+              libelle="Segment"
+              valeur={v.segmentClientele}
+              onChange={set("segmentClientele")}
+              options={options("segmentClientele")}
             />
             <Champ
-              cle="effectifs"
-              libelle="Effectifs"
+              cle="exerciceReference"
+              libelle="Exercice de référence"
               type="number"
-              valeur={v.effectifs}
-              onChange={set("effectifs")}
-              erreur={erreurs.effectifs}
-              placeholder="450"
-            />
-            <ChampMontant
-              cle="capitalSocial"
-              libelle="Capital social"
-              valeur={v.capitalSocial}
-              onChange={set("capitalSocial")}
-              erreur={erreurs.capitalSocial}
+              valeur={v.exerciceReference}
+              onChange={set("exerciceReference")}
+              erreur={erreurs.exerciceReference}
+              placeholder={String(new Date().getFullYear() - 1)}
+              aide="Année des états financiers retenus ci-dessous."
             />
             <ChampMontant
               cle="chiffreAffaires"
               libelle="Chiffre d'affaires"
+              provenance={provenance("chiffreAffaires")}
               valeur={v.chiffreAffaires}
               onChange={set("chiffreAffaires")}
               erreur={erreurs.chiffreAffaires}
+            />
+            <Champ
+              cle="fondsPropres"
+              libelle="Fonds propres (MAD)"
+              type="number"
+              provenance={provenance("fondsPropres")}
+              valeur={v.fondsPropres}
+              onChange={set("fondsPropres")}
+              erreur={erreurs.fondsPropres}
+              aide="Capacité à apporter et à soutenir les fonds propres du projet ; négatifs possibles."
+            />
+            <ChampMontant
+              cle="capitalSocial"
+              libelle="Capital social"
+              provenance={provenance("capitalSocial")}
+              valeur={v.capitalSocial}
+              onChange={set("capitalSocial")}
+              erreur={erreurs.capitalSocial}
+            />
+            <Champ
+              cle="experienceSecteurAnnees"
+              libelle="Expérience dans le secteur"
+              type="number"
+              suffixe="ans"
+              valeur={v.experienceSecteurAnnees}
+              onChange={set("experienceSecteurAnnees")}
+              erreur={erreurs.experienceSecteurAnnees}
+            />
+            <Champ
+              cle="projetsSimilaires"
+              libelle="Projets comparables réalisés"
+              type="number"
+              valeur={v.projetsSimilaires}
+              onChange={set("projetsSimilaires")}
+              erreur={erreurs.projetsSimilaires}
+              aide="Projets de taille et de technologie comparables développés ou exploités."
             />
           </div>
           <div className="mt-4">
             <Champ
               cle="description"
-              libelle="Description"
+              libelle="Activité principale"
               multiligne
               valeur={v.description}
               onChange={set("description")}
               erreur={erreurs.description}
-              placeholder="Activité, filiales, position sur le marché…"
-            />
-          </div>
-        </SectionCard>
-
-        <SectionCard titre="Coordonnées">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Champ
-              cle="email"
-              libelle="Courriel"
-              type="email"
-              valeur={v.email}
-              onChange={set("email")}
-              erreur={erreurs.email}
-              placeholder="financement@exemple.ma"
-            />
-            <Champ
-              cle="telephone"
-              libelle="Téléphone"
-              valeur={v.telephone}
-              onChange={set("telephone")}
-              erreur={erreurs.telephone}
-              placeholder="+212 5 22 00 00 00"
-            />
-            {/* Champ en texte simple : le type url du navigateur rejetait
-                « www.exemple.ma » sans rien expliquer. */}
-            <Champ
-              cle="website"
-              libelle="Site web"
-              valeur={v.website}
-              onChange={set("website")}
-              erreur={erreurs.website}
-              placeholder="www.exemple.ma"
-            />
-            <Champ
-              cle="ville"
-              libelle="Ville"
-              valeur={v.ville}
-              onChange={set("ville")}
-              erreur={erreurs.ville}
-              placeholder="Casablanca"
-            />
-            <Champ
-              cle="adresse"
-              libelle="Adresse"
-              valeur={v.adresse}
-              onChange={set("adresse")}
-              erreur={erreurs.adresse}
-            />
-            <Champ
-              cle="codePostal"
-              libelle="Code postal"
-              valeur={v.codePostal}
-              onChange={set("codePostal")}
-              erreur={erreurs.codePostal}
-              placeholder="20050"
-            />
-            <Champ
-              cle="pays"
-              libelle="Pays"
-              valeur={v.pays}
-              onChange={set("pays")}
-              erreur={erreurs.pays}
+              placeholder="Métiers, actifs exploités, références, position sur le marché…"
             />
           </div>
         </SectionCard>
 
         <SectionCard
-          titre="Relation bancaire et conformité"
-          description="Ces éléments conditionnent l'octroi : ils étaient relégués au dernier onglet."
+          titre="Notation et risque"
+          description="Ces éléments conditionnent l'octroi et la tarification."
         >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Selecteur
+              cle="ratingInterne"
+              libelle="Notation interne"
+              provenance={provenance("ratingInterne")}
+              valeur={v.ratingInterne}
+              onChange={set("ratingInterne")}
+              options={options("ratingInterne")}
+            />
+            <Selecteur
+              cle="classificationBAM"
+              libelle="Classification Bank Al-Maghrib"
+              provenance={provenance("classificationBAM")}
+              valeur={v.classificationBAM}
+              onChange={set("classificationBAM")}
+              options={options("classificationBAM")}
+            />
+            <Selecteur
+              cle="agenceNotation"
+              libelle="Agence de notation externe"
+              valeur={v.agenceNotation}
+              onChange={set("agenceNotation")}
+              options={options("agenceNotation")}
+            />
+            <Champ
+              cle="notationExterne"
+              libelle="Notation externe"
+              valeur={v.notationExterne}
+              onChange={set("notationExterne")}
+              erreur={erreurs.notationExterne}
+              placeholder="BBB-"
+            />
+            <ChampMontant
+              cle="exposition"
+              libelle="Engagements actuels"
+              provenance={provenance("exposition")}
+              valeur={v.exposition}
+              onChange={set("exposition")}
+              erreur={erreurs.exposition}
+              aide="Encours bilan et hors bilan de la contrepartie dans la banque."
+            />
+          </div>
+        </SectionCard>
+
+        <SectionCard titre="Relation bancaire">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SelecteurLibre
               cle="gestionnaire"
-              libelle="Gestionnaire"
+              libelle="Chargé d'affaires"
+              provenance={provenance("gestionnaire")}
               valeur={v.gestionnaire}
               onChange={set("gestionnaire")}
               options={gestionnaires.map((g) => ({ valeur: g, libelle: g }))}
@@ -512,60 +882,113 @@ export function ClientForm({
             <Champ
               cle="centreAffaires"
               libelle="Centre d'affaires"
+              provenance={provenance("centreAffaires")}
               valeur={v.centreAffaires}
               onChange={set("centreAffaires")}
               erreur={erreurs.centreAffaires}
               placeholder="Casablanca Grandes Entreprises"
             />
-            <Selecteur
-              cle="statutBancaire"
-              libelle="Statut bancaire"
-              valeur={v.statutBancaire}
-              onChange={set("statutBancaire")}
-              options={options("statutBancaire")}
-            />
-            <Selecteur
-              cle="ratingInterne"
-              libelle="Notation interne"
-              valeur={v.ratingInterne}
-              onChange={set("ratingInterne")}
-              options={options("ratingInterne")}
-            />
-            <ChampMontant
-              cle="exposition"
-              libelle="Exposition"
-              valeur={v.exposition}
-              onChange={set("exposition")}
-              erreur={erreurs.exposition}
-            />
             <Champ
               cle="dateRelation"
               libelle="Entrée en relation"
               type="date"
+              provenance={provenance("dateRelation")}
               valeur={v.dateRelation}
               onChange={set("dateRelation")}
               erreur={erreurs.dateRelation}
             />
             <Selecteur
+              cle="statutBancaire"
+              libelle="Statut de la relation"
+              valeur={v.statutBancaire}
+              onChange={set("statutBancaire")}
+              options={options("statutBancaire")}
+            />
+            <Selecteur
+              cle="status"
+              libelle="Statut de la fiche"
+              valeur={v.status}
+              onChange={set("status")}
+              options={options("status")}
+              sansVide
+            />
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          titre="Conformité LBC/FT"
+          description="Connaissance du client et approche par les risques : un dossier non conforme ne peut pas être engagé."
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Selecteur
               cle="statusKYC"
               libelle="KYC"
+              provenance={provenance("statusKYC")}
               valeur={v.statusKYC}
               onChange={set("statusKYC")}
               options={options("statusKYC")}
             />
+            <Champ
+              cle="dateRevueKYC"
+              libelle="Dernière revue KYC"
+              type="date"
+              valeur={v.dateRevueKYC}
+              onChange={set("dateRevueKYC")}
+              erreur={erreurs.dateRevueKYC}
+            />
+            <Selecteur
+              cle="niveauRisqueLBC"
+              libelle="Niveau de risque LBC/FT"
+              provenance={provenance("niveauRisqueLBC")}
+              valeur={v.niveauRisqueLBC}
+              onChange={set("niveauRisqueLBC")}
+              options={options("niveauRisqueLBC")}
+            />
+            <Selecteur
+              cle="ppe"
+              libelle="Personne politiquement exposée"
+              valeur={v.ppe}
+              onChange={set("ppe")}
+              options={[
+                { valeur: "non", libelle: "Non" },
+                {
+                  valeur: "oui",
+                  libelle: "Oui",
+                  aide: "Un dirigeant ou un bénéficiaire effectif est PPE : vigilance renforcée.",
+                },
+              ]}
+              aide="Dirigeants et bénéficiaires effectifs."
+            />
             <Selecteur
               cle="statusConformite"
-              libelle="Conformité"
+              libelle="Filtrage sanctions et conformité"
               valeur={v.statusConformite}
               onChange={set("statusConformite")}
               options={options("statusConformite")}
             />
-            <Selecteur
-              cle="status"
-              libelle="Statut du client"
-              valeur={v.status}
-              onChange={set("status")}
-              options={options("status")}
+          </div>
+        </SectionCard>
+
+        <SectionCard titre="Contact">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Champ
+              cle="telephone"
+              libelle="Téléphone"
+              provenance={provenance("telephone")}
+              valeur={v.telephone}
+              onChange={set("telephone")}
+              erreur={erreurs.telephone}
+              placeholder="+212 5 22 00 00 00"
+            />
+            <Champ
+              cle="email"
+              libelle="Courriel"
+              type="email"
+              provenance={provenance("email")}
+              valeur={v.email}
+              onChange={set("email")}
+              erreur={erreurs.email}
+              placeholder="financement@exemple.ma"
             />
           </div>
         </SectionCard>
