@@ -37,6 +37,7 @@ export function donneesClient(
   // Le groupe est résolu à part ; l'entité ne change que par un transfert explicite.
   delete data.groupe;
   delete data.entiteId;
+  delete data.actionnaires;
   for (const champ of DATES) {
     const v = saisie[champ];
     if (v !== undefined) data[champ] = v ? new Date(v) : null;
@@ -96,6 +97,30 @@ export async function resoudreGroupe(
     select: { id: true },
   });
   return cree.id;
+}
+
+/**
+ * Écriture imbriquée de l'actionnariat dans la création ou la modification du
+ * client (undefined : inchangé). Imbriquée, elle suit le contrôle de périmètre du
+ * client lui-même et la même transaction.
+ */
+export function ecritureActionnaires(
+  actionnaires: UpdateClientInput["actionnaires"],
+  mode: "creation" | "modification"
+) {
+  if (actionnaires === undefined) return undefined;
+  const create = actionnaires.map((a, ordre) => ({
+    ordre,
+    typePersonne: a.typePersonne,
+    nom: a.nom,
+    qualite: a.qualite,
+    pays: a.pays || null,
+    identifiant: a.identifiant || null,
+    pourcentageDetention: a.pourcentageDetention ?? null,
+    beneficiaireEffectif: a.beneficiaireEffectif,
+    ppe: a.ppe,
+  }));
+  return mode === "creation" ? { create } : { deleteMany: {}, create };
 }
 
 /** Message d'un conflit d'unicité (code T24 ou courriel déjà attribués), sinon null. */

@@ -211,6 +211,27 @@ function entierSaisi(min: number, max: number, message: string) {
     .optional();
 }
 
+/** Actionnaire, dirigeant ou bénéficiaire effectif d'un client. */
+export const actionnaireSchema = z.object({
+  typePersonne: z.enum(["Personne physique", "Personne morale"]).default("Personne physique"),
+  nom: z
+    .string()
+    .trim()
+    .min(2, { message: "Nom de l'actionnaire trop court" })
+    .max(200),
+  qualite: z.enum(["Actionnaire", "Dirigeant", "Actionnaire et dirigeant"]).default("Actionnaire"),
+  pays: z.string().trim().max(100).nullable().optional(),
+  identifiant: z.string().trim().max(60).nullable().optional(),
+  pourcentageDetention: z
+    .number()
+    .min(0, { message: "Pourcentage entre 0 et 100" })
+    .max(100, { message: "Pourcentage entre 0 et 100" })
+    .nullable()
+    .optional(),
+  beneficiaireEffectif: z.boolean().default(false),
+  ppe: z.boolean().default(false),
+});
+
 export const createClientSchema = z.object({
   nom: z
     .string()
@@ -301,6 +322,14 @@ export const createClientSchema = z.object({
   champsT24: z.array(z.string().max(50)).max(80).nullable().optional(),
   /** Vrai quand la saisie part d'un rapatriement T24 : date de synchronisation posée. */
   importT24: z.boolean().optional(),
+  /** Liste complète des actionnaires et dirigeants (remplace la précédente). */
+  actionnaires: z
+    .array(actionnaireSchema)
+    .max(50, { message: "50 actionnaires au plus" })
+    .refine((l) => l.reduce((s, a) => s + (a.pourcentageDetention ?? 0), 0) <= 100.0001, {
+      message: "La somme des détentions dépasse 100 %",
+    })
+    .optional(),
 });
 
 export const updateClientSchema = createClientSchema.partial();
@@ -310,6 +339,7 @@ export const clientListQuerySchema = paginationSchema.extend({
   status: z.string().optional(),
 });
 
+export type ActionnaireInput = z.infer<typeof actionnaireSchema>;
 export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type UpdateClientInput = z.infer<typeof updateClientSchema>;
 

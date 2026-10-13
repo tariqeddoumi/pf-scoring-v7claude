@@ -5,7 +5,7 @@ import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { updateClientSchema } from "@/lib/validation-schemas";
-import { donneesClient, messageConflit, resoudreGroupe } from "@/lib/clients/enregistrement";
+import { donneesClient, ecritureActionnaires, messageConflit, resoudreGroupe } from "@/lib/clients/enregistrement";
 
 export async function GET(
   request: NextRequest,
@@ -18,6 +18,7 @@ export async function GET(
         where: { id },
         include: {
           entite: { select: { id: true, code: true, nom: true } },
+          actionnaires: { orderBy: { ordre: "asc" } },
           groupeAffaires: {
             select: { id: true, code: true, nom: true, paysSiege: true, secteurPrincipal: true, ratingGroupe: true, sourceDonnees: true },
           },
@@ -139,6 +140,9 @@ export async function PUT(
           data: {
             ...(donneesClient(saisie) as Prisma.ClientUncheckedUpdateInput),
             ...(groupeAffairesId !== undefined ? { groupeAffairesId } : {}),
+            ...(saisie.actionnaires !== undefined
+              ? { actionnaires: ecritureActionnaires(saisie.actionnaires, "modification") }
+              : {}),
             // null n'est pas une entité : seul un transfert vers une banque est accepté.
             ...(entiteId ? { entiteId } : {}),
           },
@@ -155,6 +159,13 @@ export async function PUT(
       const conflit = messageConflit(error);
       if (conflit) {
         return NextResponse.json({ success: false, error: conflit }, { status: 409 });
+      }
+      // Client visible en consultation (banque mère) mais hors du périmètre d'écriture.
+      if (error?.code === "P2025") {
+        return NextResponse.json(
+          { success: false, error: "Ce client est en consultation seule depuis votre banque." },
+          { status: 403 }
+        );
       }
       console.error(`[Client ${id} PUT]`, error);
       return NextResponse.json(

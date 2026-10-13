@@ -5,7 +5,7 @@ import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { createClientSchema } from "@/lib/validation-schemas";
-import { donneesClient, messageConflit, resoudreGroupe } from "@/lib/clients/enregistrement";
+import { donneesClient, ecritureActionnaires, messageConflit, resoudreGroupe } from "@/lib/clients/enregistrement";
 
 async function handler(request: NextRequest, user: AuthPayload) {
   // GET - List clients
@@ -151,6 +151,7 @@ async function handler(request: NextRequest, user: AuthPayload) {
           entiteId: saisie.entiteId,
           depuisT24: saisie.importT24,
         });
+        const actionnaires = ecritureActionnaires(saisie.actionnaires, "creation");
         return tx.client.create({
           data: {
             ...(donneesClient(saisie) as Prisma.ClientUncheckedCreateInput),
@@ -163,6 +164,7 @@ async function handler(request: NextRequest, user: AuthPayload) {
             statusConformite: saisie.statusConformite || "En attente",
             // status n'est pas nullable en base et vaut « Actif » par défaut.
             status: saisie.status || "Actif",
+            ...(actionnaires ? { actionnaires } : {}),
           },
         });
       });

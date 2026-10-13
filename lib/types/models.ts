@@ -62,6 +62,21 @@ export interface Client {
   dateSynchroT24?: string;
 }
 
+/** Actionnaire, dirigeant ou bénéficiaire effectif d'un client (KYC, LBC/FT). */
+export interface ActionnaireClient {
+  id: string;
+  clientId: string;
+  typePersonne: "Personne physique" | "Personne morale";
+  nom: string;
+  qualite: "Actionnaire" | "Dirigeant" | "Actionnaire et dirigeant";
+  pays?: string | null;
+  identifiant?: string | null;
+  pourcentageDetention?: number | null;
+  beneficiaireEffectif: boolean;
+  ppe: boolean;
+  ordre: number;
+}
+
 /** Groupe d'affaires (exposition consolidée, soutien du groupe). */
 export interface GroupeAffaires {
   id: string;

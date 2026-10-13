@@ -25,6 +25,7 @@ const parWorkflow: Filtre = (ids) => ({ workflow: { evaluation: { project: { ent
 export const FILTRES: Record<string, Filtre> = {
   Client: (ids) => ({ entiteId: { in: ids } }),
   GroupeAffaires: (ids) => ({ entiteId: { in: ids } }),
+  ActionnaireClient: (ids) => ({ client: { entiteId: { in: ids } } }),
   Project: (ids) => ({ entiteId: { in: ids } }),
   ScoringEvaluation: parProjet,
   Evaluation: parProjet,

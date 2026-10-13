@@ -172,6 +172,24 @@ export const AGENCES_NOTATION: OptionReferentiel[] = [
   { valeur: "Autre", libelle: "Autre agence" },
 ];
 
+export const TYPES_PERSONNE: OptionReferentiel[] = [
+  { valeur: "Personne physique", libelle: "Personne physique" },
+  { valeur: "Personne morale", libelle: "Personne morale" },
+];
+
+export const QUALITES_ACTIONNAIRE: OptionReferentiel[] = [
+  { valeur: "Actionnaire", libelle: "Actionnaire" },
+  { valeur: "Dirigeant", libelle: "Dirigeant" },
+  { valeur: "Actionnaire et dirigeant", libelle: "Actionnaire et dirigeant" },
+];
+
+/**
+ * Seuil de détention au-delà duquel une personne physique est présumée bénéficiaire
+ * effectif (25 % du capital ou des droits de vote, seuil usuel des dispositifs LBC/FT).
+ * À défaut de détenteur au-delà du seuil, le dirigeant est retenu.
+ */
+export const SEUIL_BENEFICIAIRE_EFFECTIF = 25;
+
 /** Valeurs qui appellent une action, dérivées des référentiels eux-mêmes. */
 export const KYC_A_TRAITER = STATUTS_KYC.filter((o) => o.aTraiter).map((o) => o.valeur);
 export const CONFORMITE_A_TRAITER = STATUTS_CONFORMITE.filter((o) => o.aTraiter).map(

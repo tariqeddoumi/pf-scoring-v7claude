@@ -10,9 +10,11 @@ import { PageHeader } from "@/components/ui/page-header";
 import {
   ClientForm,
   champsT24De,
+  versLignesActionnaires,
   versValeursClient,
   type ValeursClient,
 } from "@/components/client/ClientForm";
+import type { LigneActionnaire } from "@/lib/clients/saisie";
 
 /**
  * Modification d'une contrepartie.
@@ -28,6 +30,7 @@ export default function ModifierClientPage() {
   const id = String(params?.id ?? "");
   const [valeurs, setValeurs] = useState<ValeursClient | null>(null);
   const [champsT24, setChampsT24] = useState<string[]>([]);
+  const [actionnaires, setActionnaires] = useState<LigneActionnaire[]>([]);
   const [nom, setNom] = useState("");
   const [modifieLe, setModifieLe] = useState<string | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -44,6 +47,7 @@ export default function ModifierClientPage() {
       const client = (await res.json()).data;
       setValeurs(versValeursClient(client));
       setChampsT24(champsT24De(client));
+      setActionnaires(versLignesActionnaires(client.actionnaires));
       setNom(client.nom ?? "");
       setModifieLe(client.updatedAt ?? null);
     } catch (e) {
@@ -127,6 +131,7 @@ export default function ModifierClientPage() {
       <ClientForm
         valeursInitiales={valeurs}
         champsT24Initiaux={champsT24}
+        actionnairesInitiaux={actionnaires}
         libelleAction="Enregistrer"
         enCours={enCours}
         onSubmit={enregistrer}

@@ -17,10 +17,13 @@ import {
 } from "@/lib/referentiels";
 import {
   GROUPE,
+  versPayloadActionnaires,
   versPayloadClient,
   type Cle,
+  type LigneActionnaire,
   type ValeursClient,
 } from "@/lib/clients/saisie";
+import { ActionnairesEditeur } from "@/components/client/ActionnairesEditeur";
 import { SectionCard } from "@/components/ui/section-card";
 import {
   BarreActions,
@@ -53,6 +56,7 @@ import {
 export {
   VALEURS_CLIENT_VIDES,
   champsT24De,
+  versLignesActionnaires,
   versPayloadClient,
   versValeursClient,
   type ValeursClient,
@@ -86,6 +90,7 @@ interface GroupeConnu {
 export function ClientForm({
   valeursInitiales,
   champsT24Initiaux = [],
+  actionnairesInitiaux = [],
   libelleAction,
   enCours,
   onSubmit,
@@ -96,6 +101,7 @@ export function ClientForm({
 }: {
   valeursInitiales: ValeursClient;
   champsT24Initiaux?: string[];
+  actionnairesInitiaux?: LigneActionnaire[];
   libelleAction: string;
   enCours: boolean;
   /** Reçoit la charge complète et, en modification, celle des seuls champs modifiés. */
@@ -131,6 +137,14 @@ export function ClientForm({
   const [t24, setT24] = useState<StatutT24 | null>(null);
   const [champsT24, setChampsT24] = useState<string[]>(champsT24Initiaux);
   const champsT24Initiaux_ = useRef(champsT24Initiaux);
+  const [actionnaires, setActionnaires] =
+    useState<LigneActionnaire[]>(actionnairesInitiaux);
+  const actionnairesInitiaux_ = useRef(
+    JSON.stringify(versPayloadActionnaires(actionnairesInitiaux))
+  );
+  const [erreurActionnaires, setErreurActionnaires] = useState<
+    string | undefined
+  >();
   const [importT24, setImportT24] = useState(false);
   const [lectureT24, setLectureT24] = useState<"client" | "groupe" | null>(
     null
@@ -236,7 +250,15 @@ export function ClientForm({
   const champsT24Modifies =
     [...champsT24].sort().join("|") !==
     [...champsT24Initiaux_.current].sort().join("|");
-  const nbModifies = Object.keys(modifies).length;
+  const chargeActionnaires = useMemo(
+    () => versPayloadActionnaires(actionnaires),
+    [actionnaires]
+  );
+  const actionnairesModifies =
+    JSON.stringify(chargeActionnaires) !== actionnairesInitiaux_.current;
+  const nbModifies =
+    Object.keys(modifies).length + (actionnairesModifies ? 1 : 0);
+  const actionnairePPE = chargeActionnaires.some((a) => a.ppe === true);
 
   /** Saisie manuelle : la valeur n'est plus celle de T24. */
   const set = (cle: Cle) => (valeur: string) => {
@@ -390,30 +412,48 @@ export function ClientForm({
     const extras = {
       ...(champsT24Modifies || importT24 ? { champsT24 } : {}),
       ...(importT24 ? { importT24: true } : {}),
+      ...(actionnairesModifies ? { actionnaires: chargeActionnaires } : {}),
     };
     const complet = {
       ...versPayloadClient(v),
       champsT24,
       ...(importT24 ? { importT24: true } : {}),
+      actionnaires: chargeActionnaires,
     };
     // Le schéma Zod de l'API est aussi celui du formulaire : l'erreur s'affiche sous
     // le champ plutôt qu'en bandeau.
     const resultat = createClientSchema.safeParse(complet);
     if (!resultat.success) {
       const e2: Erreurs = {};
+      const issueActionnaires = resultat.error.issues.find(
+        (i) => i.path[0] === "actionnaires"
+      );
+      setErreurActionnaires(
+        issueActionnaires
+          ? typeof issueActionnaires.path[1] === "number"
+            ? `Ligne ${issueActionnaires.path[1] + 1} : ${issueActionnaires.message}`
+            : issueActionnaires.message
+          : undefined
+      );
       for (const issue of resultat.error.issues) {
+        if (issue.path[0] === "actionnaires") continue;
         let champ = issue.path[0] as string;
         if (champ === "groupe")
           champ = issue.path[1] === "code" ? "groupeCode" : "groupeNom";
         if (champ && !e2[champ as Cle]) e2[champ as Cle] = issue.message;
       }
       setErreurs(e2);
-      const premier = document.getElementById(`champ-${Object.keys(e2)[0]}`);
+      const premier =
+        document.getElementById(`champ-${Object.keys(e2)[0]}`) ??
+        (issueActionnaires
+          ? document.getElementById("section-actionnaires")
+          : null);
       premier?.scrollIntoView({ behavior: "smooth", block: "center" });
       premier?.focus({ preventScroll: true });
       return;
     }
     setErreurs({});
+    setErreurActionnaires(undefined);
     // Le groupe part entier (code et nom) dès que l'un des deux change.
     const aEnvoyer: Partial<ValeursClient> = { ...modifies };
     if (GROUPE.some((g) => g in modifies)) {
@@ -957,7 +997,11 @@ export function ClientForm({
                   aide: "Un dirigeant ou un bénéficiaire effectif est PPE : vigilance renforcée.",
                 },
               ]}
-              aide="Dirigeants et bénéficiaires effectifs."
+              aide={
+                actionnairePPE && v.ppe !== "oui"
+                  ? "Un actionnaire ou dirigeant déclaré PPE : la contrepartie relève de la vigilance renforcée."
+                  : "Dirigeants et bénéficiaires effectifs."
+              }
             />
             <Selecteur
               cle="statusConformite"
@@ -968,6 +1012,22 @@ export function ClientForm({
             />
           </div>
         </SectionCard>
+
+        <div id="section-actionnaires" tabIndex={-1}>
+          <SectionCard
+            titre="Actionnariat et bénéficiaires effectifs"
+            description="Qui détient et qui contrôle la contrepartie : connaissance du client (LBC/FT) et appréciation du sponsor."
+          >
+            <ActionnairesEditeur
+              lignes={actionnaires}
+              onChange={(l) => {
+                setActionnaires(l);
+                setErreurActionnaires(undefined);
+              }}
+              erreur={erreurActionnaires}
+            />
+          </SectionCard>
+        </div>
 
         <SectionCard titre="Contact">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

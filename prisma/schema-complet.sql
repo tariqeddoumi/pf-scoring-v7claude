@@ -120,6 +120,25 @@ CREATE TABLE "BP_PF_clients" (
 );
 
 -- CreateTable
+CREATE TABLE "BP_PF_client_actionnaires" (
+    "id" UUID NOT NULL,
+    "clientId" UUID NOT NULL,
+    "typePersonne" TEXT NOT NULL DEFAULT 'Personne physique',
+    "nom" TEXT NOT NULL,
+    "qualite" TEXT NOT NULL DEFAULT 'Actionnaire',
+    "pays" TEXT,
+    "identifiant" TEXT,
+    "pourcentageDetention" DOUBLE PRECISION,
+    "beneficiaireEffectif" BOOLEAN NOT NULL DEFAULT false,
+    "ppe" BOOLEAN NOT NULL DEFAULT false,
+    "ordre" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BP_PF_client_actionnaires_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "BP_PF_groupes_affaires" (
     "id" UUID NOT NULL,
     "code" TEXT,
@@ -1446,6 +1465,9 @@ CREATE INDEX "BP_PF_clients_groupeAffairesId_idx" ON "BP_PF_clients"("groupeAffa
 CREATE UNIQUE INDEX "BP_PF_clients_entiteId_codeClientT24_key" ON "BP_PF_clients"("entiteId", "codeClientT24");
 
 -- CreateIndex
+CREATE INDEX "BP_PF_client_actionnaires_clientId_idx" ON "BP_PF_client_actionnaires"("clientId");
+
+-- CreateIndex
 CREATE INDEX "BP_PF_groupes_affaires_entiteId_idx" ON "BP_PF_groupes_affaires"("entiteId");
 
 -- CreateIndex
@@ -1987,6 +2009,9 @@ ALTER TABLE "BP_PF_clients" ADD CONSTRAINT "BP_PF_clients_entiteId_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "BP_PF_clients" ADD CONSTRAINT "BP_PF_clients_groupeAffairesId_fkey" FOREIGN KEY ("groupeAffairesId") REFERENCES "BP_PF_groupes_affaires"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BP_PF_client_actionnaires" ADD CONSTRAINT "BP_PF_client_actionnaires_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "BP_PF_clients"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BP_PF_groupes_affaires" ADD CONSTRAINT "BP_PF_groupes_affaires_entiteId_fkey" FOREIGN KEY ("entiteId") REFERENCES "BP_PF_entites"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

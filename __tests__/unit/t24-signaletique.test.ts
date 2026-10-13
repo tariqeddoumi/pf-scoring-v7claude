@@ -17,9 +17,17 @@ import {
 } from "@/lib/services/t24/normalisation";
 import { clientDeDemonstration } from "@/lib/services/t24/simulation";
 import { createClientSchema } from "@/lib/validation-schemas";
-import { donneesClient, resoudreGroupe } from "@/lib/clients/enregistrement";
+import {
+  donneesClient,
+  ecritureActionnaires,
+  resoudreGroupe,
+} from "@/lib/clients/enregistrement";
 import {
   VALEURS_CLIENT_VIDES,
+  controlesActionnariat,
+  nouvelleLigneActionnaire,
+  versLignesActionnaires,
+  versPayloadActionnaires,
   versPayloadClient,
   versValeursClient,
 } from "@/lib/clients/saisie";
@@ -324,5 +332,146 @@ describe("saisie de la signalétique", () => {
 
     expect(await resoudreGroupe(db, undefined, {})).toBeUndefined();
     expect(await resoudreGroupe(db, null, {})).toBeNull();
+  });
+});
+
+describe("actionnariat et bénéficiaires effectifs", () => {
+  const ligne = (
+    champs: Partial<ReturnType<typeof nouvelleLigneActionnaire>>
+  ) => ({
+    ...nouvelleLigneActionnaire(),
+    ...champs,
+  });
+
+  it("lignes → charge : lignes vides ignorées, pourcentage à virgule lu", () => {
+    const charge = versPayloadActionnaires([
+      ligne({
+        nom: " Karim Alaoui ",
+        pourcentage: "40,5",
+        beneficiaireEffectif: true,
+      }),
+      ligne({}),
+      ligne({
+        nom: "Atlas Holding",
+        typePersonne: "Personne morale",
+        pourcentage: "",
+      }),
+    ]);
+    expect(charge).toEqual([
+      expect.objectContaining({
+        nom: "Karim Alaoui",
+        pourcentageDetention: 40.5,
+        beneficiaireEffectif: true,
+        pays: null,
+      }),
+      expect.objectContaining({
+        nom: "Atlas Holding",
+        typePersonne: "Personne morale",
+        pourcentageDetention: null,
+      }),
+    ]);
+    expect(
+      createClientSchema.safeParse({ nom: "Client", actionnaires: charge })
+        .success
+    ).toBe(true);
+  });
+
+  it("API → lignes : valeurs inconnues ramenées aux valeurs par défaut", () => {
+    const [l] = versLignesActionnaires([
+      {
+        nom: "X",
+        typePersonne: "?",
+        qualite: "?",
+        pourcentageDetention: 30,
+        ppe: true,
+      },
+    ]);
+    expect(l).toMatchObject({
+      nom: "X",
+      typePersonne: "Personne physique",
+      qualite: "Actionnaire",
+      pourcentage: "30",
+      ppe: true,
+    });
+    expect(versLignesActionnaires(null)).toEqual([]);
+  });
+
+  it("contrôles : total > 100 %, détenteur au-delà du seuil non déclaré, aucun bénéficiaire, PPE", () => {
+    const c = controlesActionnariat(
+      [
+        ligne({ nom: "A", pourcentage: "60" }),
+        ligne({ nom: "B", pourcentage: "45", ppe: true }),
+      ],
+      25
+    );
+    expect(c).toMatchObject({
+      total: 105,
+      depasse: true,
+      aucunBeneficiaire: true,
+      aDeclarer: ["A", "B"],
+      ppe: true,
+    });
+    // Une personne morale au-delà du seuil n'est pas un bénéficiaire effectif : on remonte la chaîne.
+    expect(
+      controlesActionnariat(
+        [
+          ligne({
+            nom: "H",
+            typePersonne: "Personne morale",
+            pourcentage: "80",
+          }),
+        ],
+        25
+      ).aDeclarer
+    ).toEqual([]);
+  });
+
+  it("schéma : somme des détentions limitée à 100 %, pourcentage borné", () => {
+    const deux = (p1: number, p2: number) => ({
+      nom: "Client",
+      actionnaires: [
+        { nom: "Aaa", pourcentageDetention: p1 },
+        { nom: "Bbb", pourcentageDetention: p2 },
+      ],
+    });
+    expect(createClientSchema.safeParse(deux(60, 40)).success).toBe(true);
+    expect(createClientSchema.safeParse(deux(60, 41)).success).toBe(false);
+    expect(createClientSchema.safeParse(deux(120, 0)).success).toBe(false);
+  });
+
+  it("enregistrement : liste remplacée dans l'ordre saisi ; undefined ne touche à rien", () => {
+    expect(ecritureActionnaires(undefined, "modification")).toBeUndefined();
+    const liste = [
+      {
+        typePersonne: "Personne physique" as const,
+        nom: "A",
+        qualite: "Dirigeant" as const,
+        beneficiaireEffectif: true,
+        ppe: false,
+      },
+      {
+        typePersonne: "Personne morale" as const,
+        nom: "B",
+        qualite: "Actionnaire" as const,
+        beneficiaireEffectif: false,
+        ppe: false,
+        pourcentageDetention: 70,
+      },
+    ];
+    const maj = ecritureActionnaires(liste, "modification")!;
+    expect(maj).toHaveProperty("deleteMany", {});
+    expect(
+      maj.create.map((d) => [d.nom, d.ordre, d.pourcentageDetention])
+    ).toEqual([
+      ["A", 0, null],
+      ["B", 1, 70],
+    ]);
+    expect(ecritureActionnaires(liste, "creation")).not.toHaveProperty(
+      "deleteMany"
+    );
+    expect(ecritureActionnaires([], "modification")).toEqual({
+      deleteMany: {},
+      create: [],
+    });
   });
 });

@@ -198,13 +198,42 @@ model Client {
   updatedAt DateTime @updatedAt
 
   projects       Project[]
-  entite         Entite?         @relation("EntiteClients", fields: [entiteId], references: [id], onDelete: Restrict)
-  groupeAffaires GroupeAffaires? @relation(fields: [groupeAffairesId], references: [id], onDelete: SetNull)
+  actionnaires   ActionnaireClient[]
+  entite         Entite?             @relation("EntiteClients", fields: [entiteId], references: [id], onDelete: Restrict)
+  groupeAffaires GroupeAffaires?     @relation(fields: [groupeAffairesId], references: [id], onDelete: SetNull)
 
   @@unique([entiteId, codeClientT24])
   @@index([entiteId])
   @@index([groupeAffairesId])
   @@map("BP_PF_clients")
+}
+
+/// Actionnaires, dirigeants et bénéficiaires effectifs d'un client (KYC, LBC/FT) :
+/// identification des personnes qui détiennent ou contrôlent la contrepartie.
+model ActionnaireClient {
+  id                   String   @id @default(uuid()) @db.Uuid
+  clientId             String   @db.Uuid
+  /// Personne physique ou personne morale
+  typePersonne         String   @default("Personne physique")
+  nom                  String
+  /// Actionnaire, dirigeant, ou les deux
+  qualite              String   @default("Actionnaire")
+  /// Pays de résidence (personne physique) ou d'immatriculation (personne morale)
+  pays                 String?
+  /// Pièce d'identité, RC ou ICE
+  identifiant          String?
+  /// Part du capital ou des droits de vote détenue (directement ou indirectement)
+  pourcentageDetention Float?
+  beneficiaireEffectif Boolean  @default(false)
+  ppe                  Boolean  @default(false)
+  ordre                Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("BP_PF_client_actionnaires")
 }
 
 /// Groupe d'affaires : ensemble de contreparties liées, suivi pour l'exposition

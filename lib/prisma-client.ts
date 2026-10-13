@@ -106,6 +106,13 @@ async function preparerCreation(modele: string, data: Record<string, unknown>, p
   if (modele === "Client" || modele === "GroupeAffaires") {
     if (!data.entiteId) data.entiteId = p.entiteId ?? (await racineUnique());
     verifier(data.entiteId as string | null);
+  } else if (modele === "ActionnaireClient") {
+    // L'actionnariat d'un client ne s'écrit que sur un client de son périmètre d'écriture.
+    if (!p.tout) {
+      const clientId = reference(data, "clientId", "client");
+      const c = clientId ? await base.client.findUnique({ where: { id: clientId }, select: { entiteId: true } }) : null;
+      verifier(c?.entiteId ?? null);
+    }
   } else if (modele === "Project") {
     // Un projet est porté par la banque de son client.
     const clientId = reference(data, "clientId", "client");

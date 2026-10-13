@@ -91,7 +91,20 @@ interface Client {
   dateSynchroT24?: string | null;
   entite?: { id: string; code: string; nom: string } | null;
   groupeAffaires?: GroupeDuClient | null;
+  actionnaires?: Actionnaire[];
   projects?: ProjetLie[];
+}
+
+interface Actionnaire {
+  id: string;
+  typePersonne: string;
+  nom: string;
+  qualite: string;
+  pays?: string | null;
+  identifiant?: string | null;
+  pourcentageDetention?: number | null;
+  beneficiaireEffectif: boolean;
+  ppe: boolean;
 }
 
 interface MembreGroupe {
@@ -191,6 +204,10 @@ export default function FicheClientPage({
   const avecMontant = projets.filter((p) => p.montant != null);
   const encours = avecMontant.reduce((s, p) => s + (p.montant ?? 0), 0);
   const groupe = client.groupeAffaires;
+  const actionnaires = client.actionnaires ?? [];
+  const beneficiaires = actionnaires.filter((a) => a.beneficiaireEffectif);
+  // Un actionnaire ou dirigeant PPE place la contrepartie en vigilance renforcée.
+  const ppeLie = !client.ppe && actionnaires.some((a) => a.ppe);
   const depuisT24 = client.sourceDonnees === "T24";
 
   return (
@@ -270,7 +287,8 @@ export default function FicheClientPage({
       {(kycATraiter ||
         conformiteATraiter ||
         classementATraiter ||
-        lbcEleve) && (
+        lbcEleve ||
+        ppeLie) && (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
           <AlertTriangle size={16} className="shrink-0" />
           <span>
@@ -281,6 +299,7 @@ export default function FicheClientPage({
               classementATraiter &&
                 `créance classée ${client.classificationBAM?.toLowerCase()}`,
               lbcEleve && "risque LBC/FT élevé (vigilance renforcée)",
+              ppeLie && "actionnaire ou dirigeant PPE (vigilance renforcée)",
             ]
               .filter(Boolean)
               .join(" · ")}
@@ -434,6 +453,75 @@ export default function FicheClientPage({
               <p className="mt-4 border-t border-border pt-3 text-[13px] leading-relaxed text-muted-foreground">
                 {client.description}
               </p>
+            )}
+          </SectionCard>
+
+          <SectionCard
+            titre="Actionnariat et bénéficiaires effectifs"
+            description={
+              actionnaires.length === 0
+                ? undefined
+                : `${beneficiaires.length} bénéficiaire${beneficiaires.length > 1 ? "s" : ""} effectif${beneficiaires.length > 1 ? "s" : ""} déclaré${beneficiaires.length > 1 ? "s" : ""}`
+            }
+            sansPadding={actionnaires.length > 0}
+          >
+            {actionnaires.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">
+                Aucun actionnaire ni dirigeant renseigné : à compléter pour le
+                KYC.
+              </p>
+            ) : (
+              <table className="w-full min-w-[520px] text-[13px]">
+                <thead>
+                  <tr className="border-b border-border text-left text-[11.5px] text-muted-foreground">
+                    <th className="px-4 py-2 font-medium">Nom</th>
+                    <th className="px-4 py-2 font-medium">Qualité</th>
+                    <th className="px-4 py-2 font-medium">Pays</th>
+                    <th className="px-4 py-2 text-right font-medium">
+                      Détention
+                    </th>
+                    <th className="px-4 py-2 font-medium">Statut</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {actionnaires.map((a) => (
+                    <tr
+                      key={a.id}
+                      className="border-b border-border last:border-b-0"
+                    >
+                      <td className="px-4 py-2.5">
+                        <span className="block font-medium text-foreground">
+                          {a.nom}
+                        </span>
+                        <span className="text-[11.5px] text-muted-foreground">
+                          {[a.typePersonne, a.identifiant]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {a.qualite}
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {a.pays || "—"}
+                      </td>
+                      <td className="tabulaire px-4 py-2.5 text-right text-foreground">
+                        {a.pourcentageDetention != null
+                          ? `${a.pourcentageDetention.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className="flex flex-wrap gap-1">
+                          {a.beneficiaireEffectif && (
+                            <Puce libelle="Bénéficiaire effectif" />
+                          )}
+                          {a.ppe && <Puce libelle="PPE" alerte />}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </SectionCard>
         </div>
