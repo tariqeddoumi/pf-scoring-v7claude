@@ -13,6 +13,7 @@ import {
   resoudreGroupe,
 } from "@/lib/clients/enregistrement";
 import { lireAttestation } from "@/lib/services/t24/attestation";
+import { messagePublic } from "@/lib/erreur-publique";
 
 async function handler(request: NextRequest, user: AuthPayload) {
   // GET - List clients
@@ -107,7 +108,7 @@ async function handler(request: NextRequest, user: AuthPayload) {
     } catch (error: any) {
       console.error("[Clients GET]", error);
       return NextResponse.json(
-        { success: false, error: error.message || "Erreur serveur" },
+        { success: false, error: messagePublic(error, "Erreur serveur") },
         { status: 500 }
       );
     }
@@ -239,7 +240,7 @@ async function handler(request: NextRequest, user: AuthPayload) {
       }
       console.error("[Clients POST]", error);
       return NextResponse.json(
-        { success: false, error: error.message || "Erreur serveur" },
+        { success: false, error: messagePublic(error, "Erreur serveur") },
         { status: 500 }
       );
     }

@@ -11,6 +11,7 @@ import {
   updateScoringOption,
   deleteScoringOption,
 } from '@/lib/services/scoring-criteria-service';
+import { messagePublic } from '@/lib/erreur-publique';
 
 async function handler(
   request: NextRequest,
@@ -61,7 +62,7 @@ async function handler(
     } catch (error: any) {
       console.error('[Scoring Criterion PUT]', error);
       return NextResponse.json(
-        { error: error.message || 'Failed to update criterion' },
+        { error: messagePublic(error, 'Failed to update criterion') },
         { status: 500 }
       );
     }
@@ -79,7 +80,7 @@ async function handler(
     } catch (error: any) {
       console.error('[Scoring Criterion DELETE]', error);
       return NextResponse.json(
-        { error: error.message || 'Failed to delete criterion' },
+        { error: messagePublic(error, 'Failed to delete criterion') },
         { status: 500 }
       );
     }

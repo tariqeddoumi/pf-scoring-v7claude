@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth, withMinimumRole } from '@/lib/auth-middleware';
 import { successResponse, serverError, forbiddenError } from '@/lib/api-response';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// Client cloisonné par banque : un client Prisma créé ici contournait le filtre
+// d'entité et exposait les dossiers des autres banques.
+import prisma from '@/lib/prisma-client';
 
 /**
  * La lecture des circuits était réservée aux administrateurs du modèle : un analyste

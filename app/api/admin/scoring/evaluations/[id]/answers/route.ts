@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth, withAuth } from '@/lib/auth-middleware';
+import { withAuth } from '@/lib/auth-middleware';
+import { hasPermission } from '@/lib/services/permission-service';
+import type { UserRole } from '@/lib/permissions';
 import { ScoringEvaluationService } from '@/lib/services/scoring-evaluation-service';
+import { messagePublic } from '@/lib/erreur-publique';
 
 /**
  * Handler for GET/POST /api/admin/scoring/evaluations/[id]/answers
@@ -29,6 +32,14 @@ async function handleRequest(
   }
 
   if (request.method === 'POST') {
+    // Même règle que la saisie principale : un compte en lecture seule ou un auditeur
+    // ne renseigne pas les réponses d'une évaluation.
+    if (!hasPermission(user.role as UserRole, 'evaluation', 'update')) {
+      return NextResponse.json(
+        { error: 'Vos droits ne permettent pas de saisir les réponses' },
+        { status: 403 }
+      );
+    }
     try {
       const body = await request.json();
       const {
@@ -79,13 +90,13 @@ async function handleRequest(
       console.error('[Answers POST]', error);
       if (error.message.includes('not found')) {
         return NextResponse.json(
-          { error: error.message },
+          { error: messagePublic(error, "Requête refusée") },
           { status: 404 }
         );
       }
       if (error.message.includes('Can only')) {
         return NextResponse.json(
-          { error: error.message },
+          { error: messagePublic(error, "Requête refusée") },
           { status: 400 }
         );
       }

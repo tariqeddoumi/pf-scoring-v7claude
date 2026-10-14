@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma-client";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
+import { messagePublic } from "@/lib/erreur-publique";
 
 /**
  * Contrôle d'autorisation du parcours de saisie.
@@ -134,7 +135,7 @@ async function handlePOST(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
+        error: messagePublic(error, "Internal server error"),
         errorCode: "INTERNAL_ERROR",
       },
       { status: 500 }
@@ -180,7 +181,7 @@ async function handleGET(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
+        error: messagePublic(error, "Internal server error"),
         errorCode: "INTERNAL_ERROR",
       },
       { status: 500 }

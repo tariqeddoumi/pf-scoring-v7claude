@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
 import { ProjectService } from "@/lib/services/project-service";
 import { lirePagination } from "@/lib/validation-schemas";
+import { messagePublic } from "@/lib/erreur-publique";
 
 /**
  * GET /api/projects - List all projects (paginated)
@@ -146,7 +147,7 @@ async function handlePOST(request: NextRequest, user: any) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Erreur lors de la création du projet",
+        error: messagePublic(error, "Erreur lors de la création du projet"),
         errorCode: "ERR_API_001",
         debugInfo:
           process.env.NODE_ENV === "development" ? error.message : undefined,

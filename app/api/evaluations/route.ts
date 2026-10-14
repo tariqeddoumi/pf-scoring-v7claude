@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
 import { EvaluationService } from "@/lib/services/evaluation-service";
 import { lirePagination } from "@/lib/validation-schemas";
+import { messagePublic } from "@/lib/erreur-publique";
 
 /**
  * GET /api/evaluations - List all evaluations (paginated)
@@ -66,7 +67,7 @@ async function handlePOST(request: NextRequest, user: any) {
 
     return NextResponse.json(evaluation, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
   }
 }
 

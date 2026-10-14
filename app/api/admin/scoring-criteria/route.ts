@@ -4,6 +4,7 @@ import {
   getAllScoringCriteria,
   createScoringCriterion,
 } from '@/lib/services/scoring-criteria-service';
+import { messagePublic } from '@/lib/erreur-publique';
 
 async function handler(request: NextRequest, user: any) {
   // GET - List scoring criteria
@@ -21,7 +22,7 @@ async function handler(request: NextRequest, user: any) {
     } catch (error: any) {
       console.error('[Scoring Criteria GET]', error);
       return NextResponse.json(
-        { error: error.message || 'Failed to fetch scoring criteria' },
+        { error: messagePublic(error, 'Failed to fetch scoring criteria') },
         { status: 500 }
       );
     }
@@ -62,7 +63,7 @@ async function handler(request: NextRequest, user: any) {
     } catch (error: any) {
       console.error('[Scoring Criteria POST]', error);
       return NextResponse.json(
-        { error: error.message || 'Failed to create scoring criterion' },
+        { error: messagePublic(error, 'Failed to create scoring criterion') },
         { status: 500 }
       );
     }
