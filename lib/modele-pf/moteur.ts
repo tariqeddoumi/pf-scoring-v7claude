@@ -11,7 +11,8 @@ import {
 } from "./parametres";
 
 export const INFO_INSUFFISANTE = "Info. insuffisante" as const;
-export type Note = 100 | 80 | 50 | 20 | typeof INFO_INSUFFISANTE | null;
+/** Note d'un critère : une ancre (100, 80, 50, 20 par défaut), « Info. insuffisante » ou non saisie. */
+export type Note = number | typeof INFO_INSUFFISANTE | null;
 export type OuiNon = "Oui" | "Non" | null;
 export type QualiteAcheteur = "≥ BBB−" | "< BBB−" | "Non noté" | null;
 export type NatureRessource =

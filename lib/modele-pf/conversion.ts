@@ -3,7 +3,8 @@
  * Python, cf. docs/outil-excel/generateur/cas_tous.py) et le format web `DossierPF`.
  */
 import type { DossierPF, Note, OuiNon, NatureRessource, QualiteAcheteur } from "./moteur";
-import type { CodeRegime, CodePhase, CodeSecteur, DomaineGrille, CodeVerrou } from "./parametres";
+import { PARAMETRES_DEFAUT, DOMAINES_GRILLE, type CodeRegime, type CodePhase, type CodeSecteur, type DomaineGrille, type CodeVerrou } from "./parametres";
+import { saisieSchema, niveauDeLaNote, type SaisiePF } from "./saisie";
 
 /** Le référentiel sectoriel de la base (V9Sector) code l'immobilier de rendement « IMM ». */
 export function secteurDepuisCodeBase(code: string | null | undefined): CodeSecteur | null {
@@ -50,5 +51,39 @@ export function dossierDepuisCasExcel(c: any): DossierPF {
     },
     grille, verrous,
   };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/** Cas d'étude de l'outil Excel → saisie web complète (blocs 1 à 13). */
+export function saisieDepuisCasExcel(c: any): SaisiePF {
+  const d = dossierDepuisCasExcel(c);
+  const grille: Record<string, { niveau: number | null; commentaire: string }> = {};
+  for (const dom of DOMAINES_GRILLE) {
+    PARAMETRES_DEFAUT.sousCriteres[dom].forEach((sc, j) => {
+      const n = niveauDeLaNote(d.grille[dom]?.[j] ?? null);
+      if (n) grille[sc.cle] = { niveau: n, commentaire: c.sc_comm?.[sc.cle] ?? "" };
+    });
+  }
+  const nlib = c.n_lib ?? {};
+  const noyau: Record<string, { niveau: number | null; justification: string }> = {};
+  for (const [k, v] of [["N4", d.n4], ["N5", d.n5], ["N6", d.n6]] as const) noyau[k] = { niveau: niveauDeLaNote(v), justification: nlib[k] ?? "" };
+  const verrous: Record<string, string> = {};
+  for (const v of ["X1", "X2", "X3", "X4", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"]) verrous[v] = c.verrous?.[v] === "Oui" ? "Oui" : "Non";
+  const b = c.bloc13 ?? {};
+  return saisieSchema.parse({
+    regime: d.regime, secteur: d.secteur, phase: d.phase, climatEleve: d.climatEleve,
+    proportionnalite: d.proportionnalite,
+    emplois: d.emplois, ressources: d.ressources, planRemediation: d.planRemediation,
+    donneesSecteur: (c.secteur_vals ?? []).map((v: unknown) => ({ valeur: v ?? null, source: "" })),
+    hypotheses: (c.exploit ?? []).map((h: any[]) => ({ libelle: String(h[0]), valeur: String(h[1]) })),
+    choc: d.choc, descriptionStress: c.stress_lib ?? "",
+    periodes: d.periodes.map((p) => ({ libelle: p.libelle, cfads: p.cfads, service: p.service, cfadsStresse: p.cfadsStresse ?? null })),
+    n3Llcr: d.n3Llcr, noyau,
+    donneesPlafonds: d.donneesPlafonds,
+    grille, commentairesDomaines: c.commentaires ?? {}, verrous,
+    bloc13: { synthese: b.synthese ?? "", forces: b.forces ?? "", faiblesses: b.faiblesses ?? "", conditions: b.conditions ?? "",
+      justification: b.justification ?? "", avis: b.avis ?? null, avisMotif: b.avis_txt ?? "" },
+  });
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */

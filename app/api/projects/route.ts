@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
-import { ProjectService } from "@/lib/services/project-service";
+import { ProjectService, messageConflitProjet } from "@/lib/services/project-service";
 import { lirePagination } from "@/lib/validation-schemas";
 import { messagePublic } from "@/lib/erreur-publique";
 
@@ -110,11 +110,10 @@ async function handlePOST(request: NextRequest, user: any) {
       return NextResponse.json(
         {
           success: false,
-          error: "Un projet avec ce nom existe déjà",
+          error: messageConflitProjet(error) ?? "Un projet portant ces identifiants existe déjà",
           errorCode: "ERR_DUPLICATE",
-          details: error.message,
         },
-        { status: 400 }
+        { status: 409 }
       );
     }
 

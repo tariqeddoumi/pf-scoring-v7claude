@@ -88,6 +88,7 @@ async function handler(request: NextRequest, user: AuthPayload) {
             raisonSociale: true,
             ville: true,
             codeClientT24: true,
+            radical: true,
             classificationBAM: true,
             sourceDonnees: true,
             groupeAffaires: { select: { id: true, code: true, nom: true } },

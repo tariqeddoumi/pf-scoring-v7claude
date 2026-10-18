@@ -55,6 +55,9 @@ export const CLES_SCORE = new Set([
   "ruleImpactJson",
   "ruleImpacts",
   "derogations",
+  // Modèle Project Finance
+  "noteCalculee",
+  "noteApprouvee",
 ]);
 
 /** Copie de la valeur sans les clés de score, à toute profondeur. */

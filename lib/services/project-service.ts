@@ -4,6 +4,16 @@ import {
   updateProjectSchema,
 } from "@/lib/validation-schemas";
 import type { z } from "zod";
+import { Prisma } from "@prisma/client";
+import { proposerCodeProjet } from "@/lib/modele-pf/codes";
+
+/** Message d'un conflit d'unicité sur un projet (code projet déjà attribué), sinon null. */
+export function messageConflitProjet(e: unknown): string | null {
+  if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== "P2002") return null;
+  const cible = JSON.stringify(e.meta?.target ?? "");
+  if (cible.includes("codeProjet")) return "Ce code projet est déjà attribué à un autre projet de la banque.";
+  return "Un projet portant ces identifiants existe déjà.";
+}
 
 export class ProjectService {
   /**
@@ -25,9 +35,30 @@ export class ProjectService {
     if (finConstruction) createData.finConstruction = new Date(finConstruction);
     if (clientId) createData.clientId = clientId;
 
-    const project = await prisma.project.create({
+    let project = await prisma.project.create({
       data: createData,
     });
+
+    // Code projet proposé automatiquement (PF-AAAA-NNNN) quand il n'a pas été saisi :
+    // numéro suivant de l'année dans la banque du projet ; nouvel essai si un autre
+    // projet a pris le même numéro au même moment.
+    if (!project.codeProjet) {
+      for (let essai = 0; essai < 3; essai++) {
+        const existants = await prisma.project.findMany({
+          where: { entiteId: project.entiteId, codeProjet: { startsWith: `PF-${new Date().getFullYear()}-` } },
+          select: { codeProjet: true },
+        });
+        try {
+          project = await prisma.project.update({
+            where: { id: project.id },
+            data: { codeProjet: proposerCodeProjet(existants.map((p) => p.codeProjet)) },
+          });
+          break;
+        } catch (e) {
+          if (!messageConflitProjet(e)) throw e;
+        }
+      }
+    }
 
     // Only log audit if createdBy is valid
     if (createdBy && createdBy.trim()) {
@@ -59,7 +90,7 @@ export class ProjectService {
           select: { id: true, email: true, nom: true, prenom: true },
         },
         client: {
-          select: { id: true, nom: true, email: true, telephone: true },
+          select: { id: true, nom: true, email: true, telephone: true, codeClientT24: true, radical: true },
         },
       },
     });
@@ -109,6 +140,7 @@ export class ProjectService {
           // La recherche transversale porte sur le sponsor : sans ce champ, taper le
           // nom d'un sponsor ne remontait aucun de ses projets.
           sponsorPrincipal: true,
+          codeProjet: true,
           user: {
             select: { nom: true, prenom: true, email: true },
           },
@@ -144,6 +176,8 @@ export class ProjectService {
     // Extract date strings and convert to Date objects; remove undefined fields
     const { debutConstruction, finConstruction, clientId, ...rest } = validated as any;
     const updateData: any = { ...rest, dateMiseAJour: new Date() };
+    // Le code projet se modifie mais ne s'efface pas : un champ vidé le conserve.
+    if (updateData.codeProjet === null) delete updateData.codeProjet;
     if (debutConstruction !== undefined) updateData.debutConstruction = debutConstruction ? new Date(debutConstruction) : null;
     if (finConstruction !== undefined) updateData.finConstruction = finConstruction ? new Date(finConstruction) : null;
     if (clientId !== undefined) updateData.clientId = clientId || null;

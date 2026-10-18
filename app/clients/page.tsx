@@ -31,6 +31,7 @@ interface Client {
   gestionnaire?: string | null;
   status?: string | null;
   codeClientT24?: string | null;
+  radical?: string | null;
   groupeAffaires?: { id: string; code: string | null; nom: string } | null;
   projects?: { id: string }[];
 }
@@ -106,7 +107,7 @@ export default function ClientsPage() {
     const q = recherche.trim().toLowerCase();
     return clients.filter((c) => {
       const texte =
-        `${c.nom} ${c.raisonSociale ?? ""} ${c.codeClientT24 ?? ""} ${c.groupeAffaires?.nom ?? ""} ${c.secteur ?? ""} ${c.gestionnaire ?? ""}`.toLowerCase();
+        `${c.nom} ${c.raisonSociale ?? ""} ${c.codeClientT24 ?? ""} ${c.radical ?? ""} ${c.groupeAffaires?.nom ?? ""} ${c.secteur ?? ""} ${c.gestionnaire ?? ""}`.toLowerCase();
       return (!q || texte.includes(q)) && (filtre === "tous" || aTraiter(c));
     });
   }, [clients, recherche, filtre, aTraiter]);
@@ -240,9 +241,9 @@ export default function ClientsPage() {
                   >
                     <td className="px-4 py-3">
                       <span className="block font-medium text-foreground">{c.nom}</span>
-                      {(c.codeClientT24 || c.gestionnaire) && (
+                      {(c.codeClientT24 || c.radical || c.gestionnaire) && (
                         <span className="block text-[11.5px] text-muted-foreground">
-                          {[c.codeClientT24 && `T24 ${c.codeClientT24}`, c.gestionnaire]
+                          {[c.codeClientT24 && `T24 ${c.codeClientT24}`, c.radical && `Radical ${c.radical}`, c.gestionnaire]
                             .filter(Boolean)
                             .join(" · ")}
                         </span>

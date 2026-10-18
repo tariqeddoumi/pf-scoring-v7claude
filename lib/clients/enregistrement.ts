@@ -210,6 +210,8 @@ export function messageConflit(e: unknown): string | null {
   const cible = JSON.stringify(e.meta?.target ?? "");
   if (cible.includes("codeClientT24"))
     return "Ce code client T24 est déjà attribué à une autre fiche.";
+  if (cible.includes("radical"))
+    return "Ce radical est déjà attribué à une autre fiche client de la banque.";
   if (cible.includes("email"))
     return "Ce courriel est déjà utilisé par une autre fiche client.";
   return "Une fiche portant ces identifiants existe déjà.";

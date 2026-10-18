@@ -28,6 +28,7 @@ import {
 
 export interface ValeursProjet {
   nom: string;
+  codeProjet: string;
   clientId: string;
   secteur: string;
   pays: string;
@@ -59,6 +60,7 @@ export interface ValeursProjet {
 
 export const VALEURS_PROJET_VIDES: ValeursProjet = {
   nom: "",
+  codeProjet: "",
   clientId: "",
   secteur: "",
   pays: "Maroc",
@@ -302,6 +304,15 @@ export function ProjectForm({
               onChange={set("nom")}
               erreur={erreurs.nom}
               placeholder="Parc éolien de Taza — phase 2"
+            />
+            <Champ
+              cle="codeProjet"
+              libelle="Code projet"
+              aide="Format PF-AAAA-NNNN. Laissé vide, il est proposé automatiquement à la création (numéro suivant de l'année) ; il reste modifiable."
+              valeur={v.codeProjet}
+              onChange={set("codeProjet")}
+              erreur={erreurs.codeProjet}
+              placeholder="PF-2026-0001"
             />
             {/* Le client était absent du formulaire : le projet créé n'apparaissait
                 sur aucune fiche client. */}

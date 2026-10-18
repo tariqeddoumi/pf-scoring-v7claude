@@ -3,9 +3,10 @@
  * douze cas sectoriels) doivent donner exactement les résultats du moteur de référence, qui
  * reproduit lui-même l'Excel (vérifié par recalcul du classeur).
  */
-import cas from "../fixtures/cas-pf-18.json";
+import cas from "@/lib/modele-pf/cas-etude.json";
 import { evaluer } from "@/lib/modele-pf/moteur";
-import { dossierDepuisCasExcel } from "@/lib/modele-pf/conversion";
+import { dossierDepuisCasExcel, saisieDepuisCasExcel } from "@/lib/modele-pf/conversion";
+import { calculer } from "@/lib/modele-pf/saisie";
 
 type Cas = (typeof cas)[number];
 
@@ -39,5 +40,17 @@ describe("moteur de scoring Project Finance — concordance avec l'Excel (18 cas
 
   it("couvre les dix-huit cas", () => {
     expect(cas).toHaveLength(18);
+  });
+});
+
+describe("saisie web des 13 blocs — aller-retour avec les cas Excel", () => {
+  it.each(cas.map((c: Cas) => [c.dossier.onglet, c] as const))("%s : même note par la saisie à situations", (_n, c) => {
+    const s = saisieDepuisCasExcel(c.dossier);
+    const { resultat, controles } = calculer(s, undefined, { codeClientT24: c.dossier.code_client, radical: c.dossier.radical, codeProjet: c.dossier.code_projet });
+    expect(resultat.score).toBeCloseTo(c.attendu.score as number, 9);
+    expect(resultat.noteApprouvee).toBe(c.attendu.note_approuvee ?? "—");
+    expect(resultat.plafondsActifs).toEqual(c.attendu.plafonds_actifs);
+    // Les cas de référence sont complets : aucune saisie exigée ne manque (comme dans l'Excel).
+    expect(controles).toEqual([]);
   });
 });

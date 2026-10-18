@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth, hasMinimumRole, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
-import { ProjectService } from "@/lib/services/project-service";
+import { ProjectService, messageConflitProjet } from "@/lib/services/project-service";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -63,6 +63,8 @@ async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: 
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error: unknown) {
+    const conflit = messageConflitProjet(error);
+    if (conflit) return NextResponse.json({ error: conflit }, { status: 409 });
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: message }, { status: 400 });
   }

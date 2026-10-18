@@ -12,6 +12,8 @@ import { KpiCard } from "@/components/ui/kpi-card";
 import { Note, StatutEvaluation, StatutProjet } from "@/components/ui/status-badge";
 import { usePermission } from "@/lib/hooks/usePermission";
 import { useVoirScores } from "@/components/providers/visibilite-scores";
+import { CreditsProjet } from "@/components/project/CreditsProjet";
+import { ScoringsPF } from "@/components/project/ScoringsPF";
 
 interface Projet {
   id: string;
@@ -46,7 +48,9 @@ interface Projet {
   structureCapitalePrincipale?: string;
   scoreGlobal?: number | null;
   grade?: string | null;
-  client?: { id: string; nom: string; email?: string; telephone?: string } | null;
+  codeProjet?: string | null;
+  creePar?: string;
+  client?: { id: string; nom: string; email?: string; telephone?: string; codeClientT24?: string | null; radical?: string | null } | null;
   user?: { nom: string; prenom: string } | null;
 }
 
@@ -162,6 +166,12 @@ export default function ProjectDetailPage() {
         meta={
           <>
             <StatutProjet statut={projet.status} />
+            {projet.codeProjet && (
+              <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-[12px] text-foreground">{projet.codeProjet}</span>
+            )}
+            {projet.client?.radical && (
+              <span className="text-[12.5px] text-muted-foreground">Radical {projet.client.radical}</span>
+            )}
             {secteur && (
               <span className="text-[12.5px] text-muted-foreground">{secteur}</span>
             )}
@@ -264,6 +274,8 @@ export default function ProjectDetailPage() {
             </Grille>
           </SectionCard>
 
+          <CreditsProjet projetId={projet.id} modifiable={can("project", "update")} />
+
           <SectionCard titre="Calendrier">
             <Grille>
               <Champ libelle="Durée du projet" valeur={annees(projet.dureeProjet)} />
@@ -292,6 +304,8 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="space-y-4">
+          <ScoringsPF projetId={projet.id} peutCreer={can("evaluation", "create")} />
+
           <SectionCard
             titre="Évaluations"
             actions={
