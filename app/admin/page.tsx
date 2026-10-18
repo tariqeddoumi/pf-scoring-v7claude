@@ -53,6 +53,16 @@ const FAMILLES: { id: FamilleAdmin; titre: string; sousTitre: string }[] = [
 
 const ADMIN_SECTIONS: AdminSection[] = [
   {
+    id: "modele-pf",
+    famille: "modele",
+    title: "Modèle Project Finance ★",
+    description:
+      "Seuils DSCR par régime, écarts sectoriels, poids des domaines et du noyau, plafonds de note et seuils des règles",
+    href: "/admin/modele-pf",
+    icon: "🏗️",
+    requiredRole: "scoring_admin",
+  },
+  {
     id: "configuration",
     famille: "exploitation",
     title: "Paramétrage de l'outil ★",

@@ -38,6 +38,11 @@ npm install && npm run dev
 ✅ Alerts | ✅ Monitoring | ✅ Analytics
 ✅ Benchmarking | ✅ Exports (PDF/Excel/Word) | ✅ GDPR Compliance
 
+## 🏗️ Modèle Project Finance
+
+Scoring en 13 blocs, aligné sur l'outil Excel (`docs/outil-excel/`) : même moteur, mêmes
+paramètres, mêmes 18 cas d'étude. Description complète : [docs/modele-pf-web.md](docs/modele-pf-web.md).
+
 ## 🗄️ Base de données
 
 Tout PostgreSQL 14+ (Supabase, hébergé par la banque, RDS, Azure…). Pour changer de base ou

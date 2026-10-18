@@ -155,3 +155,19 @@ export function fusionnerParametres(surcharge?: Partiel<ParametresModele> | null
   };
   return fusion(PARAMETRES_DEFAUT, surcharge) as ParametresModele;
 }
+
+/** Contrôle de cohérence d'un jeu de paramètres complet (poids à 100 %, seuils croissants). */
+export function anomaliesParametres(P: ParametresModele): string[] {
+  const a: string[] = [];
+  for (const ph of ["P1", "P2", "P3"] as const) {
+    const t = Object.values(P.poidsDomaines[ph]).reduce((s, x) => s + x, 0);
+    if (Math.abs(t - 1) > 1e-6) a.push(`Poids des domaines en ${ph} : total ${(t * 100).toFixed(1)} % au lieu de 100 %`);
+  }
+  const tn = P.poidsNoyau.reduce((s, x) => s + x, 0);
+  if (Math.abs(tn - 1) > 1e-6) a.push(`Poids du noyau : total ${(tn * 100).toFixed(1)} % au lieu de 100 %`);
+  for (const [r, v] of Object.entries(P.regimes)) {
+    const [c, vg, f] = v.seuils;
+    if (!(c < vg && vg < f)) a.push(`Seuils DSCR de ${r} : ils doivent croître (critique < vigilance < favorable)`);
+  }
+  return a;
+}

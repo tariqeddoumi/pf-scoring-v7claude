@@ -94,6 +94,7 @@ CREATE TABLE "BP_PF_clients" (
     "exposition" DOUBLE PRECISION,
     "entiteId" UUID,
     "codeClientT24" TEXT,
+    "radical" TEXT,
     "ice" TEXT,
     "registreCommerce" TEXT,
     "identifiantFiscal" TEXT,
@@ -192,9 +193,57 @@ CREATE TABLE "BP_PF_projects" (
     "periodeRemboursement" INTEGER,
     "tauxCouverture" DOUBLE PRECISION,
     "ratio" DOUBLE PRECISION,
+    "codeProjet" TEXT,
     "entiteId" UUID,
 
     CONSTRAINT "BP_PF_projects_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BP_PF_project_credits" (
+    "id" UUID NOT NULL,
+    "projectId" UUID NOT NULL,
+    "entiteId" UUID,
+    "numero" TEXT NOT NULL,
+    "nature" TEXT NOT NULL,
+    "montant" DOUBLE PRECISION,
+    "devise" TEXT NOT NULL DEFAULT 'MAD',
+    "dureeAns" DOUBLE PRECISION,
+    "role" TEXT,
+    "commentaire" TEXT,
+    "source" TEXT NOT NULL DEFAULT 'MANUELLE',
+    "ordre" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BP_PF_project_credits_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BP_PF_evaluations_pf" (
+    "id" UUID NOT NULL,
+    "projectId" UUID NOT NULL,
+    "titre" TEXT,
+    "statut" TEXT NOT NULL DEFAULT 'brouillon',
+    "saisie" JSONB NOT NULL,
+    "resultat" JSONB,
+    "parametres" JSONB,
+    "scoreGlobal" DOUBLE PRECISION,
+    "noteCalculee" INTEGER,
+    "noteApprouvee" TEXT,
+    "regimeRetenu" TEXT,
+    "statutNote" TEXT,
+    "pieces" JSONB,
+    "analyseIa" JSONB,
+    "creePar" UUID NOT NULL,
+    "modifiePar" UUID,
+    "soumisLe" TIMESTAMP(3),
+    "validePar" UUID,
+    "valideLe" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BP_PF_evaluations_pf_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -1465,6 +1514,9 @@ CREATE INDEX "BP_PF_clients_groupeAffairesId_idx" ON "BP_PF_clients"("groupeAffa
 CREATE UNIQUE INDEX "BP_PF_clients_entiteId_codeClientT24_key" ON "BP_PF_clients"("entiteId", "codeClientT24");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "BP_PF_clients_entiteId_radical_key" ON "BP_PF_clients"("entiteId", "radical");
+
+-- CreateIndex
 CREATE INDEX "BP_PF_client_actionnaires_clientId_idx" ON "BP_PF_client_actionnaires"("clientId");
 
 -- CreateIndex
@@ -1481,6 +1533,21 @@ CREATE INDEX "BP_PF_projects_clientId_idx" ON "BP_PF_projects"("clientId");
 
 -- CreateIndex
 CREATE INDEX "BP_PF_projects_entiteId_idx" ON "BP_PF_projects"("entiteId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BP_PF_projects_entiteId_codeProjet_key" ON "BP_PF_projects"("entiteId", "codeProjet");
+
+-- CreateIndex
+CREATE INDEX "BP_PF_project_credits_projectId_idx" ON "BP_PF_project_credits"("projectId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BP_PF_project_credits_entiteId_numero_key" ON "BP_PF_project_credits"("entiteId", "numero");
+
+-- CreateIndex
+CREATE INDEX "BP_PF_evaluations_pf_projectId_idx" ON "BP_PF_evaluations_pf"("projectId");
+
+-- CreateIndex
+CREATE INDEX "BP_PF_evaluations_pf_statut_idx" ON "BP_PF_evaluations_pf"("statut");
 
 -- CreateIndex
 CREATE INDEX "BP_PF_audit_logs_projectId_idx" ON "BP_PF_audit_logs"("projectId");
@@ -2026,6 +2093,12 @@ ALTER TABLE "BP_PF_projects" ADD CONSTRAINT "BP_PF_projects_entiteId_fkey" FOREI
 ALTER TABLE "BP_PF_projects" ADD CONSTRAINT "BP_PF_projects_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "BP_PF_clients"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "BP_PF_project_credits" ADD CONSTRAINT "BP_PF_project_credits_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "BP_PF_projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BP_PF_evaluations_pf" ADD CONSTRAINT "BP_PF_evaluations_pf_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "BP_PF_projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "BP_PF_scorings" ADD CONSTRAINT "BP_PF_scorings_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "BP_PF_projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -2240,4 +2313,3 @@ ALTER TABLE "BP_PF_app_config_history" ADD CONSTRAINT "BP_PF_app_config_history_
 
 -- AddForeignKey
 ALTER TABLE "BP_PF_entites" ADD CONSTRAINT "BP_PF_entites_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "BP_PF_entites"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
