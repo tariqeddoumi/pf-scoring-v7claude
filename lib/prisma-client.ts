@@ -122,8 +122,13 @@ async function preparerCreation(modele: string, data: Record<string, unknown>, p
     }
     if (!data.entiteId) data.entiteId = p.entiteId ?? (await racineUnique());
     verifier(data.entiteId as string | null);
-  } else if (modele === "ScoringEvaluation" || modele === "Evaluation") {
+  } else if (modele === "ScoringEvaluation" || modele === "Evaluation" || modele === "EvaluationPF") {
     if (!p.tout) verifier(await entiteDuProjet(reference(data, "projectId", "project")));
+  } else if (modele === "ProjectCredit") {
+    // Un crédit prend la banque de son projet : l'unicité du numéro de dossier est par banque.
+    const entite = await entiteDuProjet(reference(data, "projectId", "project"));
+    data.entiteId = entite;
+    if (!p.tout) verifier(entite);
   } else if (ENFANTS_D_EVALUATION.has(modele)) {
     if (!p.tout) verifier(await entiteDeLEvaluation(reference(data, "evaluationId", "evaluation")));
   } else if (ENFANTS_DE_WORKFLOW.has(modele)) {

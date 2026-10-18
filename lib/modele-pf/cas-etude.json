@@ -1,0 +1,5411 @@
+[
+ {
+  "dossier": {
+   "onglet": "C1",
+   "ref": "CAS 1",
+   "titre": "Centrale solaire photovoltaïque 80 MWc",
+   "spv": "SPV « Solaris Drâa » SA (fictive)",
+   "lieu": "Région de Drâa-Tafilalet",
+   "resume": "Centrale PV vendant sa production à l'acheteur public national sous contrat d'achat de 25 ans à quantité garantie et tarif indexé. Financement en dirhams, EPC clé-en-main forfaitaire.",
+   "regime": "R1",
+   "secteur": "ENR",
+   "phase": "P1",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 465,
+    "mad": "Oui",
+    "duree": 20,
+    "tech_refs": "Oui",
+    "epc": "Non",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Oui",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Contrat EPC (modules, structures, postes)",
+     590
+    ],
+    [
+     "Raccordement au réseau",
+     25
+    ],
+    [
+     "Développement, frais et assurances",
+     20
+    ],
+    [
+     "Contingence",
+     30
+    ],
+    [
+     "Intérêts intercalaires",
+     18
+    ],
+    [
+     "Dotation initiale DSRA",
+     20
+    ],
+    [
+     "BFR de démarrage",
+     4
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (20 ans, 5,5 %)",
+     465,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres et quasi-fonds propres",
+     242,
+     "Quasi-fonds propres"
+    ],
+    [
+     "Engagement sponsor de dépassement (engagé, non tiré)",
+     40,
+     "Engagement sponsor"
+    ]
+   ],
+   "plan_remediation": "Non",
+   "choc": 0.137871,
+   "stress_lib": "Production P90 (− 8 %) et charges d’exploitation + 10 %",
+   "periodes": [
+    [
+     "An 1 · S1",
+     25.9,
+     19.45
+    ],
+    [
+     "An 1 · S2",
+     28.1,
+     19.45
+    ],
+    [
+     "An 10 · S1",
+     25.5,
+     19.45
+    ],
+    [
+     "An 10 · S2",
+     27.7,
+     19.45
+    ],
+    [
+     "An 20 · S1",
+     25.2,
+     19.45
+    ],
+    [
+     "An 20 · S2",
+     27.2,
+     19.45
+    ]
+   ],
+   "n3_llcr": null,
+   "n4": 100,
+   "n5": 100,
+   "n6": 100,
+   "n_lib": {
+    "N3": "Test de financement à terminaison : ressources 747 / besoin 707 = 105,7 %",
+    "N4": "DSRA 6 mois de service, MRA doté, cascade de paiement signée",
+    "N5": "Quote-part de dette 65,8 %, gearing 1,92, fonds propres à risque 34,2 %",
+    "N6": "Intégralement en dirhams, taux fixe, amortissement complet sans ballon"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.36,
+    "dsra": 6.0,
+    "fx": 0.0,
+    "refi": 0.0,
+    "strategie_refi": "",
+    "part_acheteur": 1.0,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 25,
+    "duree_dette": 20,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": null,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     100,
+     80
+    ],
+    "D2": [
+     100,
+     80,
+     80
+    ],
+    "D3": [
+     100,
+     80,
+     80
+    ],
+    "D4": [
+     100,
+     80,
+     100
+    ],
+    "D5": [
+     80,
+     80,
+     80
+    ],
+    "D6": [
+     80,
+     50,
+     100
+    ],
+    "D8": [
+     80,
+     80,
+     100
+    ],
+    "D9": [
+     100,
+     80,
+     80,
+     80
+    ]
+   },
+   "commentaires": {
+    "D1": "Développeur international associé à un institutionnel marocain. Lettre d'engagement de fonds propres et engagement de dépassement signés : l'obligation juridique de soutien est établie, pas seulement la capacité.",
+    "D3": "EPC clé-en-main forfaitaire à prix et délai garantis, pénalités de retard plafonnées à 15 % du contrat. Interface unique restante : le raccordement, porté par un tiers.",
+    "D4": "Contrat de 25 ans couvrant intégralement la durée de la dette (20 ans). Indexation portant sur 70 % du tarif seulement : le mécanisme de prix est noté Favorable et non Très favorable.",
+    "D6": "Acheteur public national, qualité de crédit interne équivalente BBB−, historique de paiement satisfaisant mais délais constatés de 60 à 90 jours. Concentration des fournisseurs de modules notée Vigilance."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20041027",
+   "radical": "0041027",
+   "code_projet": "PF-2026-0001",
+   "credits": [
+    [
+     "CR-26-0101",
+     "Crédit d'investissement (moyen et long terme)",
+     425,
+     "MAD",
+     20
+    ],
+    [
+     "CR-26-0102",
+     "Crédit relais (TVA, subventions)",
+     40,
+     "MAD",
+     2
+    ]
+   ],
+   "secteur_vals": [
+    80,
+    152,
+    140,
+    25,
+    0.48,
+    0.4
+   ],
+   "exploit": [
+    [
+     "Production nette P50",
+     "152 GWh/an"
+    ],
+    [
+     "Tarif du contrat d'achat",
+     "0,48 MAD/kWh, indexé"
+    ],
+    [
+     "Chiffre d'affaires",
+     "73 MMAD/an"
+    ],
+    [
+     "Charges d'exploitation",
+     "11 MMAD/an"
+    ],
+    [
+     "EBITDA",
+     "62 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "54 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "38,9 MMAD/an, semestriel"
+    ]
+   ],
+   "bloc13": {
+    "synthese": "Centrale PV sous contrat d'achat ferme de 25 ans couvrant la dette de 20 ans, financée en dirhams, EPC clé-en-main forfaitaire. Note 9, aucun plafond ni verrou. Régime L par la seule durée du contrat (> 20 ans).",
+    "forces": "Contrat ferme couvrant la dette ; sponsor engagé juridiquement (fonds propres et dépassement) ; EPC forfaitaire avec pénalités ; tout en MAD, taux fixe, sans ballon.",
+    "faiblesses": "Marge de financement à terminaison de 5,7 % seulement (N3 = 80) ; DSCR P90 à 1,12 (Vigilance) ; délais de paiement de l'acheteur de 60 à 90 jours. Mitigants : engagement de dépassement de 40 MMAD, DSRA 6 mois.",
+    "conditions": "Engagement de dépassement maintenu jusqu'à la réception ; DSRA dotée avant le premier tirage ; rapport de l'ingénieur indépendant à chaque tirage.",
+    "justification": "",
+    "avis": "Favorable",
+    "avis_txt": "Profil très solide ; conditions standard de construction."
+   }
+  },
+  "attendu": {
+   "score": 86.25,
+   "note_calculee": 9,
+   "note_approuvee": 9,
+   "plafond": 10,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.2956298200514138,
+   "dscr_min_s": 1.1170000411311054,
+   "couverture": 1.0565770862800565,
+   "quote_part": 0.6577086280056577,
+   "D7": 87.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    100,
+    50,
+    80,
+    100,
+    100,
+    100
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.05,
+    1.15,
+    1.25
+   ],
+   "domaines": {
+    "D1": 87.0,
+    "D2": 87.0,
+    "D3": 88.0,
+    "D4": 94.0,
+    "D5": 80.0,
+    "D6": 80.0,
+    "D8": 85.0,
+    "D9": 86.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "C2",
+   "ref": "CAS 2",
+   "titre": "Usine de dessalement 100 000 m³/jour",
+   "spv": "SPV « Aqua Souss » SA (fictive)",
+   "lieu": "Littoral de Souss-Massa",
+   "resume": "Usine d'osmose inverse rémunérée par une redevance de capacité versée par l'acheteur public, assortie d'une redevance variable répercutant le coût de l'énergie dans une limite plafonnée.",
+   "regime": "R2",
+   "secteur": "EAU",
+   "phase": "P2",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 420,
+    "mad": "Non",
+    "duree": 20,
+    "tech_refs": "Oui",
+    "epc": "Non",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Oui",
+    "contrat_20": "Oui",
+    "nb_cp": 4
+   },
+   "emplois": [
+    [
+     "Contrat EPC (prise d’eau, osmose inverse, rejet)",
+     1780
+    ],
+    [
+     "Canalisations et raccordement électrique",
+     240
+    ],
+    [
+     "Développement, frais et assurances",
+     95
+    ],
+    [
+     "Contingence",
+     110
+    ],
+    [
+     "Intérêts intercalaires",
+     100
+    ],
+    [
+     "Dotation initiale DSRA",
+     50
+    ],
+    [
+     "BFR de démarrage",
+     25
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (20 ans, 6,0 %), dont 35 % en euros",
+     1680,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     720,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": "Non",
+   "choc": 0.109606,
+   "stress_lib": "Coût de l’énergie + 15 % répercuté à 60 % seulement, disponibilité ramenée à 92 %",
+   "periodes": [
+    [
+     "An 1 · S1 (disponibilité 94 %)",
+     90.0,
+     73.25
+    ],
+    [
+     "An 1 · S2 (disponibilité 95 %)",
+     93.0,
+     73.25
+    ],
+    [
+     "An 3 · S1 (régime établi)",
+     97.0,
+     73.25
+    ],
+    [
+     "An 3 · S2 (régime établi)",
+     99.0,
+     73.25
+    ]
+   ],
+   "n3_llcr": 80,
+   "n4": 80,
+   "n5": 80,
+   "n6": 50,
+   "n_lib": {
+    "N3": "LLCR 1,34 — couverture acceptable sur la durée du prêt",
+    "N4": "DSRA 4 mois de service ; pas de ligne de secours dédiée",
+    "N5": "Quote-part de dette 70 %, gearing 2,33",
+    "N6": "35 % de la dette en euros, couverte à 60 % : exposition nette 14 % du service"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.34,
+    "dsra": 4.0,
+    "fx": 0.14,
+    "refi": 0.0,
+    "strategie_refi": "",
+    "part_acheteur": 1.0,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 25,
+    "duree_dette": 20,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": null,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     80
+    ],
+    "D2": [
+     100,
+     50,
+     80
+    ],
+    "D3": [
+     80,
+     50,
+     50
+    ],
+    "D4": [
+     80,
+     50,
+     100
+    ],
+    "D5": [
+     80,
+     50,
+     50
+    ],
+    "D6": [
+     80,
+     50,
+     100
+    ],
+    "D8": [
+     80,
+     50,
+     80
+    ],
+    "D9": [
+     50,
+     80,
+     80,
+     80
+    ]
+   },
+   "commentaires": {
+    "D2": "Technologie d'osmose inverse largement éprouvée, notée Très favorable. Le site concentre le risque : prise d'eau en mer, exutoire de saumure, autorisation d'occupation du domaine public maritime — noté Vigilance.",
+    "D4": "La redevance de capacité couvre 25 ans. Le mécanisme de prix est noté Vigilance : le plafond de répercussion du coût de l'énergie laisse au projet une exposition résiduelle sur son principal poste de charges.",
+    "D5": "Disponibilité constatée de 94 % contre 97 % contractuels : des déductions s'appliquent. En régime R2, la performance technique est portée par le projet, non par l'acheteur.",
+    "D8": "Sûretés constituées, mais la substitution du prêteur dans l'autorisation d'occupation du domaine public maritime reste à confirmer auprès de l'autorité concédante."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20058316",
+   "radical": "0058316",
+   "code_projet": "PF-2026-0002",
+   "credits": [
+    [
+     "CR-26-0201",
+     "Crédit d'investissement (moyen et long terme)",
+     270,
+     "MAD",
+     20
+    ],
+    [
+     "CR-26-0202",
+     "Crédit d'investissement (moyen et long terme)",
+     150,
+     "EUR",
+     20
+    ]
+   ],
+   "secteur_vals": [
+    100000,
+    3.6,
+    83,
+    60,
+    25
+   ],
+   "exploit": [
+    [
+     "Capacité contractuelle",
+     "100 000 m³/jour"
+    ],
+    [
+     "Redevance de capacité",
+     "290 MMAD/an"
+    ],
+    [
+     "Redevance variable énergie",
+     "Répercutée à 60 % seulement au-delà d’un plafond"
+    ],
+    [
+     "Charges hors énergie",
+     "60 MMAD/an"
+    ],
+    [
+     "EBITDA",
+     "230 MMAD/an"
+    ],
+    [
+     "CFADS à régime établi",
+     "196 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "146,5 MMAD/an, semestriel"
+    ]
+   ],
+   "bloc13": {
+    "synthese": "Dessalement rémunéré à la disponibilité, en montée en charge. Le stress énergie fait tomber N2 à 20 et le noyau à 57,5 : note 6 sans plafond. Régime L (CAPEX, consortium, devises, contrat > 20 ans).",
+    "forces": "Redevance de capacité sur 25 ans ; technologie d'osmose inverse éprouvée ; acheteur public de qualité.",
+    "faiblesses": "Disponibilité constatée 94 % contre 97 % ; répercussion plafonnée du coût de l'énergie ; 35 % de la dette en euros couverte à 60 %. Mitigants : DSRA 4 mois, plan d'amélioration de la disponibilité.",
+    "conditions": "Porter la DSRA à 6 mois ; couvrir le change à 80 % au moins ; plan d'action de disponibilité suivi par l'ingénieur des prêteurs.",
+    "justification": "",
+    "avis": "Favorable sous conditions",
+    "avis_txt": "Note 6 : conditions et mitigants à formaliser."
+   }
+  },
+  "attendu": {
+   "score": 67.68,
+   "note_calculee": 6,
+   "note_approuvee": 6,
+   "plafond": 10,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.2286689419795223,
+   "dscr_min_s": 1.0939994539249147,
+   "couverture": 1.0,
+   "quote_part": 0.7,
+   "D7": 57.5,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    50,
+    20,
+    80,
+    80,
+    80,
+    50
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.17,
+    1.27,
+    1.37
+   ],
+   "domaines": {
+    "D1": 80.0,
+    "D2": 75.0,
+    "D3": 62.0,
+    "D4": 76.0,
+    "D5": 60.5,
+    "D6": 80.0,
+    "D8": 68.0,
+    "D9": 71.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "C3",
+   "ref": "CAS 3",
+   "titre": "Hôtel 4 étoiles, 220 clés",
+   "spv": "SPV « Atlas Hospitality » SA (fictive)",
+   "lieu": "Marrakech",
+   "resume": "Hôtel exploité sous contrat de gestion par un groupe international. Aucun contrat de revenus : prix et volume sont intégralement portés par le projet.",
+   "regime": "R4",
+   "secteur": "TOU",
+   "phase": "P2",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 240,
+    "mad": "Oui",
+    "duree": 15,
+    "tech_refs": "Oui",
+    "epc": "Non",
+    "acheteur_unique": "Non",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Construction et second œuvre",
+     330
+    ],
+    [
+     "Terrain",
+     60
+    ],
+    [
+     "Mobilier et équipements",
+     45
+    ],
+    [
+     "Frais, intérêts intercalaires et pré-ouverture",
+     30
+    ],
+    [
+     "Dotation initiale DSRA",
+     15
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (15 ans, 6,5 %)",
+     240,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     240,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": "Non",
+   "choc": 0.289778,
+   "stress_lib": "Occupation ramenée de 65 % à 55 %, soit un chiffre d’affaires en recul de 15 %",
+   "periodes": [
+    [
+     "An 2 · S1 (haute saison)",
+     16.5,
+     12.75
+    ],
+    [
+     "An 2 · S2 (creux estival)",
+     13.5,
+     12.75
+    ],
+    [
+     "An 5 · S1",
+     17.2,
+     12.75
+    ],
+    [
+     "An 5 · S2",
+     14.1,
+     12.75
+    ]
+   ],
+   "n3_llcr": 50,
+   "n4": 80,
+   "n5": 100,
+   "n6": 80,
+   "n_lib": {
+    "N3": "LLCR 1,175 — au-dessus du plancher de 1,10 mais faible",
+    "N4": "DSRA 6 mois de service, pas de ligne saisonnière dédiée",
+    "N5": "Quote-part de dette 50 %, gearing 1,00 — structure très capitalisée",
+    "N6": "Dirhams, taux fixe ; amortissement complet sur 15 ans"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.175,
+    "dsra": 6.0,
+    "fx": 0.0,
+    "refi": 0.0,
+    "strategie_refi": "",
+    "part_acheteur": 0.3,
+    "qualite_acheteur": "Non noté",
+    "duree_contrat": null,
+    "duree_dette": 15,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": null,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     100,
+     100,
+     100
+    ],
+    "D2": [
+     100,
+     100,
+     80
+    ],
+    "D3": [
+     100,
+     80,
+     100
+    ],
+    "D4": [
+     50,
+     50,
+     50
+    ],
+    "D5": [
+     100,
+     80,
+     80
+    ],
+    "D6": [
+     50,
+     80,
+     100
+    ],
+    "D8": [
+     100,
+     100,
+     100
+    ],
+    "D9": [
+     80,
+     100,
+     100,
+     50
+    ]
+   },
+   "commentaires": {
+    "D1": "Sponsor de premier rang, fonds propres intégralement libérés, gouvernance exemplaire : le domaine est noté 100.",
+    "D4": "Aucun contrat de revenus. Prix et volume sont exposés au marché, la concurrence marrakchie est intense : le domaine est noté 50 sur ses trois sous-critères.",
+    "D8": "Documentation, sûretés et autorisations sans réserve : le domaine est noté 100.",
+    "D9": "Consommation d'eau en zone de stress hydrique : le climat résiduel est noté Vigilance malgré un dossier social et environnemental de bonne facture."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20063902",
+   "radical": "0063902",
+   "code_projet": "PF-2026-0003",
+   "credits": [
+    [
+     "CR-26-0301",
+     "Crédit d'investissement (moyen et long terme)",
+     240,
+     "MAD",
+     15
+    ]
+   ],
+   "secteur_vals": [
+    220,
+    65,
+    1350,
+    878,
+    55,
+    "Contrat de gestion, 15 ans"
+   ],
+   "exploit": [
+    [
+     "Taux d’occupation retenu",
+     "65 %"
+    ],
+    [
+     "Prix moyen (ADR)",
+     "1 350 MAD"
+    ],
+    [
+     "Chiffre d’affaires",
+     "98 MMAD/an"
+    ],
+    [
+     "Charges d’exploitation",
+     "62 MMAD/an"
+    ],
+    [
+     "EBITDA (GOP après loyer de gestion)",
+     "36 MMAD/an"
+    ],
+    [
+     "CFADS",
+     "30 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "25,5 MMAD/an, semestriel"
+    ],
+    [
+     "Saisonnalité",
+     "S1 55 % du CFADS annuel, S2 45 %"
+    ]
+   ],
+   "bloc13": {
+    "synthese": "Hôtel de qualité, sponsor et documentation à 100, score 73,7 (note 7). Le DSCR du semestre creux (1,06) est sous le seuil critique R4 × TOU (1,60) et le stress le fait tomber à 0,75 : note ramenée à 4 par C2 et C3.",
+    "forces": "Sponsor solide, documentation et sûretés complètes ; quote-part de dette de 50 %.",
+    "faiblesses": "Saisonnalité forte : semestre creux à 1,06 ; aucune ligne saisonnière ; recettes exposées au marché (R4).",
+    "conditions": "Sculpter l'amortissement sur la saisonnalité ; ligne de trésorerie saisonnière engagée ; DSRA portée à 9 mois tant que le DSCR défavorable reste sous 1,00.",
+    "justification": "Plafonds C2 (DSCR minimum 1,059 < seuil critique 1,60) et C3 (DSCR défavorable 0,752 < 1,00) : la note calculée 7 est ramenée à 4. Aucun mitigant ne lève un plafond sans changement de structure.",
+    "avis": "Réservé",
+    "avis_txt": "Restructuration du service de la dette à examiner avant tout accord."
+   }
+  },
+  "attendu": {
+   "score": 73.705,
+   "note_calculee": 7,
+   "note_approuvee": 4,
+   "plafond": 4,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C2",
+    "C3"
+   ],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.0588235294117647,
+   "dscr_min_s": 0.7519997647058824,
+   "couverture": 1.0,
+   "quote_part": 0.5,
+   "D7": 51.5,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    20,
+    20,
+    50,
+    80,
+    100,
+    80
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Oui",
+    "C3": "Oui",
+    "C4": "Non",
+    "C5": "n.a.",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.6,
+    1.8,
+    2.05
+   ],
+   "domaines": {
+    "D1": 100.0,
+    "D2": 95.0,
+    "D3": 95.0,
+    "D4": 50.0,
+    "D5": 87.0,
+    "D6": 71.0,
+    "D8": 100.0,
+    "D9": 81.5
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "C4A",
+   "ref": "CAS 4 — variante A",
+   "titre": "Unité agro-industrielle de trituration et conditionnement",
+   "spv": "SPV « Doukkala Agro » SA (fictive)",
+   "lieu": "Région de Doukkala-Abda",
+   "resume": "Unité transformant une production agricole locale sous contrats d'enlèvement à prix convenu mais volume exposé. Structure initiale : amortissement semestriel linéaire, change non couvert.",
+   "regime": "R3",
+   "secteur": "AGR",
+   "phase": "P3",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 250,
+    "mad": "Non",
+    "duree": 10,
+    "tech_refs": "Oui",
+    "epc": "Non",
+    "acheteur_unique": "Non",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Ligne de production et bâtiments",
+     300
+    ],
+    [
+     "Stockage et froid",
+     70
+    ],
+    [
+     "Terrain et aménagements",
+     25
+    ],
+    [
+     "Frais et intérêts intercalaires",
+     17
+    ],
+    [
+     "Dotation DSRA",
+     8
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (10 ans, 6,0 %), amortissement linéaire",
+     250,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     170,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": "Non",
+   "choc": 0.3285,
+   "stress_lib": "Récolte en recul de 20 % sous stress hydrique, soit un chiffre d’affaires en baisse de 15 %",
+   "periodes": [
+    [
+     "An 3 · S1 (campagne)",
+     42.0,
+     17.0
+    ],
+    [
+     "An 3 · S2 (intercampagne)",
+     10.0,
+     17.0
+    ],
+    [
+     "An 6 · S1 (campagne)",
+     43.0,
+     17.0
+    ],
+    [
+     "An 6 · S2 (intercampagne)",
+     10.5,
+     17.0
+    ]
+   ],
+   "n3_llcr": 80,
+   "n4": 50,
+   "n5": 100,
+   "n6": 20,
+   "n_lib": {
+    "N3": "LLCR 1,53 — couverture satisfaisante sur la durée du prêt",
+    "N4": "DSRA 3 mois ; aucune ligne de campagne dédiée au creux d’intercampagne",
+    "N5": "Quote-part de dette 59,5 %, gearing 1,47",
+    "N6": "Exposition nette en devises de 45 MMAD non couverte, soit 132 % du service annuel"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.53,
+    "dsra": 3.0,
+    "fx": 1.32,
+    "refi": 0.0,
+    "strategie_refi": "",
+    "part_acheteur": 0.4,
+    "qualite_acheteur": "Non noté",
+    "duree_contrat": 10,
+    "duree_dette": 10,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": null,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     50,
+     80
+    ],
+    "D2": [
+     80,
+     50,
+     80
+    ],
+    "D3": [
+     null,
+     null,
+     null
+    ],
+    "D4": [
+     50,
+     50,
+     50
+    ],
+    "D5": [
+     80,
+     80,
+     50
+    ],
+    "D6": [
+     50,
+     50,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     50,
+     80,
+     50,
+     20
+    ]
+   },
+   "commentaires": {
+    "D4": "Contrats d'enlèvement à prix convenu mais sans quantité garantie : la structure des recettes, le mécanisme de prix et le marché sont tous notés Vigilance.",
+    "D9": "Le climat résiduel est noté Critique : la ressource en eau du bassin conditionne directement le volume d'intrants, sans plan d'adaptation financé."
+   },
+   "sc_comm": {
+    "D9.4": "Exposition aux sécheresses non couverte : aucun plan d'adaptation de l'approvisionnement en olives."
+   },
+   "verrous": {},
+   "code_client": "20077415",
+   "radical": "0077415",
+   "code_projet": "PF-2026-0004",
+   "credits": [
+    [
+     "CR-26-0401",
+     "Crédit d'investissement (moyen et long terme)",
+     250,
+     "MAD",
+     10
+    ]
+   ],
+   "secteur_vals": [
+    60,
+    3.2,
+    70,
+    40
+   ],
+   "exploit": [
+    [
+     "Chiffre d’affaires",
+     "380 MMAD/an"
+    ],
+    [
+     "Charges d’exploitation",
+     "320 MMAD/an"
+    ],
+    [
+     "EBITDA",
+     "60 MMAD/an"
+    ],
+    [
+     "CFADS",
+     "52 MMAD/an"
+    ],
+    [
+     "Saisonnalité",
+     "Campagne concentrée sur le premier semestre : 42 MMAD contre 10 MMAD"
+    ],
+    [
+     "Service de la dette",
+     "34 MMAD/an, soit 17 MMAD par semestre"
+    ],
+    [
+     "Achats importés non couverts",
+     "45 MMAD/an nets des recettes à l’export"
+    ]
+   ],
+   "bloc13": {
+    "synthese": "Le DSCR annuel (1,53) masque un semestre d'intercampagne à 0,59. Quatre plafonds (C1, C2, C3, C6) ramènent la note calculée 5 à 3.",
+    "forces": "Sponsor et site solides ; fonds propres à 40 %.",
+    "faiblesses": "Amortissement linéaire inadapté à la campagne ; achats importés non couverts (132 % du service) ; DSRA de 3 mois seulement.",
+    "conditions": "Sculpter l'amortissement ; ligne de campagne engagée ; couverture de change de 90 % des achats importés.",
+    "justification": "C1 et C2 : DSCR minimum 0,588 ; C3 : DSCR défavorable 0,395 ; C6 : exposition nette en devises 132 % du service. D9.4 noté Critique : risque de sécheresse sans plan d'adaptation.",
+    "avis": "Défavorable",
+    "avis_txt": "Refus en l'état ; voir la structure restructurée (onglet C4B)."
+   }
+  },
+  "attendu": {
+   "score": 58.325,
+   "note_calculee": 5,
+   "note_approuvee": 3,
+   "plafond": 3,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C1",
+    "C2",
+    "C3",
+    "C6"
+   ],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 0.5882352941176471,
+   "dscr_min_s": 0.395,
+   "couverture": 1.0,
+   "quote_part": 0.5952380952380952,
+   "D7": 45.5,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    20,
+    20,
+    80,
+    50,
+    100,
+    20
+   ],
+   "plafonds": {
+    "C1": "Oui",
+    "C2": "Oui",
+    "C3": "Oui",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Oui",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.35,
+    1.5,
+    1.65
+   ],
+   "domaines": {
+    "D1": 69.5,
+    "D2": 68.0,
+    "D3": null,
+    "D4": 50.0,
+    "D5": 72.5,
+    "D6": 59.0,
+    "D8": 80.0,
+    "D9": 51.5
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "C4B",
+   "ref": "CAS 4 — variante B",
+   "titre": "Unité agro-industrielle — structure restructurée",
+   "spv": "SPV « Doukkala Agro » SA (fictive)",
+   "lieu": "Région de Doukkala-Abda",
+   "resume": "Même actif, même marché, même grille qualitative. Trois corrections de montage : amortissement sculpté sur la campagne, apport complémentaire de 40 MMAD, couverture de change portée à 90 %.",
+   "regime": "R3",
+   "secteur": "AGR",
+   "phase": "P3",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 210,
+    "mad": "Non",
+    "duree": 10,
+    "tech_refs": "Oui",
+    "epc": "Non",
+    "acheteur_unique": "Non",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Ligne de production et bâtiments",
+     300
+    ],
+    [
+     "Stockage et froid",
+     70
+    ],
+    [
+     "Terrain et aménagements",
+     25
+    ],
+    [
+     "Frais et intérêts intercalaires",
+     17
+    ],
+    [
+     "Dotation DSRA",
+     8
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (10 ans, 6,0 %), amortissement sculpté",
+     210,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     210,
+     "Fonds propres"
+    ],
+    [
+     "Ligne de campagne dédiée (engagée)",
+     25,
+     "Ligne dédiée engagée"
+    ]
+   ],
+   "plan_remediation": "Non",
+   "choc": 0.32619,
+   "stress_lib": "Même choc : récolte en recul de 20 % sous stress hydrique",
+   "periodes": [
+    [
+     "An 3 · S1 (campagne)",
+     42.0,
+     25.0
+    ],
+    [
+     "An 3 · S2 (intercampagne)",
+     10.0,
+     3.5
+    ],
+    [
+     "An 6 · S1 (campagne)",
+     43.0,
+     25.0
+    ],
+    [
+     "An 6 · S2 (intercampagne)",
+     10.5,
+     3.5
+    ]
+   ],
+   "n3_llcr": 100,
+   "n4": 100,
+   "n5": 100,
+   "n6": 80,
+   "n_lib": {
+    "N3": "LLCR 1,82 — couverture solide après réduction de la dette",
+    "N4": "DSRA 6 mois et ligne de campagne engagée de 25 MMAD",
+    "N5": "Quote-part de dette 50 %, gearing 1,00",
+    "N6": "Couverture de change portée à 90 % : exposition nette ramenée à 16 % du service"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.82,
+    "dsra": 6.0,
+    "fx": 0.16,
+    "refi": 0.0,
+    "strategie_refi": "",
+    "part_acheteur": 0.4,
+    "qualite_acheteur": "Non noté",
+    "duree_contrat": 10,
+    "duree_dette": 10,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": null,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     50,
+     80
+    ],
+    "D2": [
+     80,
+     50,
+     80
+    ],
+    "D3": [
+     null,
+     null,
+     null
+    ],
+    "D4": [
+     50,
+     50,
+     50
+    ],
+    "D5": [
+     80,
+     80,
+     50
+    ],
+    "D6": [
+     50,
+     50,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     50,
+     80,
+     50,
+     20
+    ]
+   },
+   "commentaires": {},
+   "sc_comm": {
+    "D9.4": "Risque de sécheresse inchangé par la restructuration : plan d'adaptation toujours absent."
+   },
+   "verrous": {},
+   "code_client": "20077415",
+   "radical": "0077415",
+   "code_projet": "PF-2026-0004",
+   "credits": [
+    [
+     "CR-26-0402",
+     "Crédit d'investissement (moyen et long terme)",
+     210,
+     "MAD",
+     10
+    ],
+    [
+     "CR-26-0403",
+     "Ligne de fonctionnement (BFR)",
+     25,
+     "MAD",
+     1
+    ]
+   ],
+   "secteur_vals": [
+    60,
+    3.2,
+    70,
+    40
+   ],
+   "exploit": [
+    [
+     "Chiffre d’affaires",
+     "380 MMAD/an — inchangé"
+    ],
+    [
+     "CFADS",
+     "52 MMAD/an — inchangé"
+    ],
+    [
+     "Service sculpté",
+     "25 MMAD en campagne, 3,5 MMAD en intercampagne"
+    ],
+    [
+     "Couverture de change",
+     "90 % des achats importés"
+    ],
+    [
+     "Exposition nette résiduelle",
+     "4,5 MMAD, soit 16 % du service annuel"
+    ]
+   ],
+   "bloc13": {
+    "synthese": "Restructuration de C4A : amortissement sculpté, apport complémentaire, ligne de campagne et couverture de change. Plus aucun plafond : note 6.",
+    "forces": "Service sculpté sur la campagne (DSCR minimum 1,68) ; ligne de campagne engagée ; couverture de change à 90 %.",
+    "faiblesses": "Exposition de change résiduelle de 16 % du service ; climat (D9.4) toujours Critique.",
+    "conditions": "Maintien de la couverture de change ; plan d'adaptation à la sécheresse dans les 12 mois.",
+    "justification": "Aucun plafond actif. D9.4 noté Critique (sécheresse sans plan d'adaptation) : à traiter par la condition ci-dessus.",
+    "avis": "Favorable sous conditions",
+    "avis_txt": "Accord possible sur la structure restructurée."
+   }
+  },
+  "attendu": {
+   "score": 69.275,
+   "note_calculee": 6,
+   "note_approuvee": 6,
+   "plafond": 10,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.68,
+   "dscr_min_s": 1.1320008,
+   "couverture": 1.0595238095238095,
+   "quote_part": 0.5,
+   "D7": 82.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    100,
+    20,
+    100,
+    100,
+    100,
+    80
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.35,
+    1.5,
+    1.65
+   ],
+   "domaines": {
+    "D1": 69.5,
+    "D2": 68.0,
+    "D3": null,
+    "D4": 50.0,
+    "D5": 72.5,
+    "D6": 59.0,
+    "D8": 80.0,
+    "D9": 51.5
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "C5",
+   "ref": "CAS 5",
+   "titre": "Centrale PV d’autoproduction 12 MWc",
+   "spv": "SPV « Gharb Énergie » SARL (fictive)",
+   "lieu": "Zone industrielle de Kénitra",
+   "resume": "Centrale vendant sa production à un industriel privé voisin sous contrat ferme de 15 ans. Petit ticket éligible au régime d'instruction simplifié.",
+   "regime": "R1",
+   "secteur": "ENR",
+   "phase": "P1",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 60,
+    "mad": "Oui",
+    "duree": 12,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 2
+   },
+   "emplois": [
+    [
+     "Contrat EPC clé-en-main",
+     88
+    ],
+    [
+     "Raccordement et poste de livraison",
+     7
+    ],
+    [
+     "Frais et contingence",
+     5
+    ],
+    [
+     "Intérêts intercalaires",
+     2
+    ],
+    [
+     "Dotation DSRA",
+     3.6
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (12 ans, 6,0 %)",
+     60,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     48,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": "Non",
+   "choc": 0.066813,
+   "stress_lib": "Production P90 (− 8 %) et retard de paiement de l’acheteur de 90 jours",
+   "periodes": [
+    [
+     "An 1 · S1",
+     6.3,
+     3.58
+    ],
+    [
+     "An 1 · S2",
+     6.9,
+     3.58
+    ],
+    [
+     "An 12 · S1",
+     6.0,
+     3.58
+    ],
+    [
+     "An 12 · S2",
+     6.6,
+     3.58
+    ]
+   ],
+   "n3_llcr": null,
+   "n4": 100,
+   "n5": 100,
+   "n6": 100,
+   "n_lib": {
+    "N3": "Test de financement à terminaison : ressources 108 / besoin 105,6 = 102,3 %",
+    "N4": "DSRA 6 mois de service",
+    "N5": "Quote-part de dette 56,8 %, gearing 1,25",
+    "N6": "Dirhams, taux fixe, amortissement complet"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.78,
+    "dsra": 6.0,
+    "fx": 0.0,
+    "refi": 0.0,
+    "strategie_refi": "",
+    "part_acheteur": 1.0,
+    "qualite_acheteur": "Non noté",
+    "duree_contrat": 15,
+    "duree_dette": 12,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": null,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     50
+    ],
+    "D2": [
+     100,
+     80,
+     100
+    ],
+    "D3": [
+     80,
+     100,
+     80
+    ],
+    "D4": [
+     80,
+     50,
+     80
+    ],
+    "D5": [
+     80,
+     80,
+     80
+    ],
+    "D6": [
+     50,
+     80,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     100,
+     80,
+     50,
+     80
+    ]
+   },
+   "commentaires": {
+    "D6": "L'acheteur est un industriel privé non noté, qui porte 100 % des recettes du projet. L'analyse interne le situe en catégorie spéculative. Aucun preneur de substitution n'est identifié à ce tarif."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20089133",
+   "radical": "0089133",
+   "code_projet": "PF-2026-0005",
+   "credits": [
+    [
+     "CR-26-0501",
+     "Crédit d'investissement (moyen et long terme)",
+     60,
+     "MAD",
+     12
+    ]
+   ],
+   "secteur_vals": [
+    12,
+    21.6,
+    20.1,
+    15,
+    0.8,
+    0.5
+   ],
+   "exploit": [
+    [
+     "Production nette",
+     "21,6 GWh/an"
+    ],
+    [
+     "Tarif contractuel",
+     "0,80 MAD/kWh"
+    ],
+    [
+     "Chiffre d’affaires",
+     "17,3 MMAD/an"
+    ],
+    [
+     "Charges d’exploitation",
+     "2,3 MMAD/an"
+    ],
+    [
+     "CFADS",
+     "13,2 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "7,16 MMAD/an, semestriel"
+    ]
+   ],
+   "bloc13": {
+    "synthese": "Centrale d'autoproduction de 12 MWc vendant à un industriel unique non noté. Régime S. Noyau à 97, score 83,8 (note 8) plafonné à 6 par C10.",
+    "forces": "Noyau financier excellent (DSCR minimum 1,68) ; EPC court et forfaitaire ; tout en MAD.",
+    "faiblesses": "Acheteur unique portant 100 % des recettes, non noté.",
+    "conditions": "Notation interne de l'acheteur ; garantie de paiement de la maison mère de l'acheteur ou lettre de crédit stand-by de 6 mois de facturation.",
+    "justification": "C10 : acheteur portant 100 % des recettes, non noté (seuil BBB−) : la note 8 est ramenée à 6.",
+    "avis": "Favorable sous conditions",
+    "avis_txt": "La garantie de paiement lèverait le plafond C10."
+   }
+  },
+  "attendu": {
+   "score": 83.825,
+   "note_calculee": 8,
+   "note_approuvee": 6,
+   "plafond": 6,
+   "regime_calcule": "S",
+   "regime_retenu": "S",
+   "plafonds_actifs": [
+    "C10"
+   ],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.675977653631285,
+   "dscr_min_s": 1.5640005586592176,
+   "couverture": 1.0227272727272727,
+   "quote_part": 0.5681818181818182,
+   "D7": 97.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    100,
+    100,
+    80,
+    100,
+    100,
+    100
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Oui",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.05,
+    1.15,
+    1.25
+   ],
+   "domaines": {
+    "D1": 72.5,
+    "D2": 92.0,
+    "D3": 85.0,
+    "D4": 71.0,
+    "D5": 80.0,
+    "D6": 65.0,
+    "D8": 80.0,
+    "D9": 81.5
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "ENR",
+   "ref": "CAS ENR",
+   "titre": "Parc éolien terrestre 140 MW",
+   "spv": "« Rih Atlas » SA (fictive)",
+   "lieu": "Province côtière du Nord",
+   "resume": "Parc de 40 éoliennes vendant toute sa production à l'acheteur public national sous contrat d'achat ferme de 20 ans (quantité garantie, tarif indexé). Financement intégralement en dirhams, EPC clé-en-main.",
+   "regime": "R1",
+   "secteur": "ENR",
+   "phase": "P1",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 470,
+    "mad": "Oui",
+    "duree": 18,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Contrat EPC (turbines, fondations, génie civil)",
+     1180
+    ],
+    [
+     "Poste de livraison et raccordement",
+     70
+    ],
+    [
+     "Développement, études de vent, assurances",
+     45
+    ],
+    [
+     "Contingence",
+     60
+    ],
+    [
+     "Intérêts intercalaires",
+     52
+    ],
+    [
+     "Dotation initiale DSRA",
+     35
+    ],
+    [
+     "BFR de démarrage",
+     8
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (18 ans, 5,2 %)",
+     1000,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     400,
+     "Fonds propres"
+    ],
+    [
+     "Prêt d’actionnaire subordonné",
+     50,
+     "Quasi-fonds propres"
+    ],
+    [
+     "Ligne de dépassement engagée par le sponsor",
+     160,
+     "Engagement sponsor"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.09,
+   "stress_lib": "Production P90 sur un an (− 9,6 %) et charges + 5 %",
+   "periodes": [
+    [
+     "An 1 · S1",
+     84,
+     48
+    ],
+    [
+     "An 1 · S2",
+     88,
+     48
+    ],
+    [
+     "An 2 · S1",
+     86,
+     48
+    ],
+    [
+     "An 2 · S2",
+     90,
+     48
+    ],
+    [
+     "An 3 · S1",
+     85,
+     48
+    ],
+    [
+     "An 3 · S2",
+     89,
+     48
+    ],
+    [
+     "An 4 · S1",
+     87,
+     48
+    ],
+    [
+     "An 4 · S2",
+     91,
+     48
+    ],
+    [
+     "An 5 · S1",
+     86,
+     47
+    ],
+    [
+     "An 5 · S2",
+     90,
+     47
+    ]
+   ],
+   "n3_llcr": null,
+   "n4": 100,
+   "n5": 80,
+   "n6": 100,
+   "n_lib": {
+    "N4": "DSRA 6 mois, compte de réserve de maintenance doté, cascade signée",
+    "N5": "Quote-part de dette 69 % : fonds propres à risque solides mais sous le niveau « très favorable »",
+    "N6": "Intégralement en dirhams, taux fixé par swap sur 100 % de la dette, amortissement complet"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.62,
+    "dsra": 6,
+    "fx": 0,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 1.0,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 20,
+    "duree_dette": 18,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     100,
+     100,
+     80
+    ],
+    "D2": [
+     100,
+     100,
+     80
+    ],
+    "D3": [
+     100,
+     80,
+     100
+    ],
+    "D4": [
+     100,
+     80,
+     100
+    ],
+    "D5": [
+     100,
+     100,
+     80
+    ],
+    "D6": [
+     80,
+     100,
+     100
+    ],
+    "D8": [
+     100,
+     100,
+     100
+    ],
+    "D9": [
+     100,
+     80,
+     100,
+     80
+    ]
+   },
+   "commentaires": {
+    "D1": "Énergéticien international noté BBB+ associé à un fonds d'infrastructure marocain ; engagement de dépassement de 160 MMAD garanti.",
+    "D2": "Turbines d'un fabricant de premier rang, plus de 3 000 machines identiques en exploitation ; mât de mesure de 3 ans sur site.",
+    "D4": "Contrat d'achat de 20 ans couvrant la dette (18 ans) ; indexation limitée à 80 % du tarif : mécanisme de prix noté Favorable.",
+    "D6": "Acheteur public de qualité interne BBB−, historique de paiement régulier ; banques prêteuses de premier rang."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20102256",
+   "radical": "0102256",
+   "code_projet": "PF-2026-0006",
+   "credits": [
+    [
+     "CR-26-0601",
+     "Crédit d'investissement (moyen et long terme)",
+     430,
+     "MAD",
+     18
+    ],
+    [
+     "CR-26-0602",
+     "Crédit relais (TVA, subventions)",
+     40,
+     "MAD",
+     2
+    ]
+   ],
+   "secteur_vals": [
+    140,
+    520,
+    470,
+    20,
+    0.45,
+    0.3
+   ],
+   "exploit": [
+    [
+     "Puissance installée",
+     "140 MW"
+    ],
+    [
+     "Productible P50 / P90 (1 an)",
+     "520 / 470 GWh/an"
+    ],
+    [
+     "Tarif du contrat d'achat",
+     "0,45 MAD/kWh, indexé à 80 %"
+    ],
+    [
+     "Chiffre d'affaires",
+     "234 MMAD/an"
+    ],
+    [
+     "Charges d'exploitation",
+     "46 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "172 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "96 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Contrat d'achat ferme de 20 ans couvrant la dette ; sponsor noté BBB+ ; EPC de premier rang ; tout en MAD, taux fixé par swap.",
+    "faiblesses": "Indexation limitée à 80 % du tarif ; levier de 69 % (N5 = 80).",
+    "justification": "",
+    "avis": "Favorable",
+    "avis_txt": "Profil de référence.",
+    "synthese": "Un dossier de très bonne facture : sponsor solide et engagé juridiquement, technologie éprouvée, contrat d'achat ferme qui couvre toute la durée de la dette, construction confiée à un constructeur unique à prix et délai garantis, financement intégralement en dirhams. Les seules réserves portent sur l'indexation partielle du tarif, la gouvernance actionnariale (pacte récent) et le levier, qui reste dans la norme sans être exceptionnel.",
+    "conditions": "• Vérifier l'ajustement de l'indexation tarifaire lors de la revue annuelle.\n• Suivre la mise en place du mécanisme de réclamation des riverains avant la mise en service."
+   }
+  },
+  "attendu": {
+   "score": 95.15,
+   "note_calculee": 10,
+   "note_approuvee": 10,
+   "plafond": 10,
+   "regime_calcule": "M",
+   "regime_retenu": "M",
+   "plafonds_actifs": [],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.75,
+   "dscr_min_s": 1.5925,
+   "couverture": 1.110344827586207,
+   "quote_part": 0.6896551724137931,
+   "D7": 97.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    100,
+    100,
+    100,
+    100,
+    80,
+    100
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.05,
+    1.15,
+    1.25
+   ],
+   "domaines": {
+    "D1": 95.0,
+    "D2": 95.0,
+    "D3": 95.0,
+    "D4": 94.0,
+    "D5": 95.0,
+    "D6": 90.0,
+    "D8": 100.0,
+    "D9": 89.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "EAU",
+   "ref": "CAS EAU",
+   "titre": "Usine de dessalement couplée à l'irrigation, 120 000 m³/jour",
+   "spv": "« Bahr Sud » SA (fictive)",
+   "lieu": "Littoral du Sud",
+   "resume": "Usine d'osmose inverse rémunérée par une redevance de capacité versée par l'acheteur public (25 ans), complétée par une redevance variable. Dette pour partie en euros, couverte à 85 %.",
+   "regime": "R2",
+   "secteur": "EAU",
+   "phase": "P2",
+   "climat_eleve": "Oui",
+   "proport": {
+    "expo": 520,
+    "mad": "Non",
+    "duree": 20,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Oui",
+    "contrat_20": "Oui",
+    "nb_cp": 4
+   },
+   "emplois": [
+    [
+     "Contrat EPC (prise d’eau, osmose inverse, rejet)",
+     1060
+    ],
+    [
+     "Réseau de transport et stockage",
+     180
+    ],
+    [
+     "Développement, frais, assurances",
+     60
+    ],
+    [
+     "Intérêts intercalaires",
+     70
+    ],
+    [
+     "Dotation DSRA",
+     45
+    ],
+    [
+     "BFR",
+     15
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior consortiale (20 ans), dont 30 % en euros",
+     1000,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     380,
+     "Fonds propres"
+    ],
+    [
+     "Subvention d’investissement encaissée",
+     60,
+     "Subvention encaissée"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.08,
+   "stress_lib": "Disponibilité 93 % au lieu de 98 % et hausse non répercutée du coût de l'énergie",
+   "periodes": [
+    [
+     "An 1 · S1",
+     63,
+     49
+    ],
+    [
+     "An 1 · S2",
+     64,
+     49
+    ],
+    [
+     "An 2 · S1",
+     66,
+     49
+    ],
+    [
+     "An 2 · S2",
+     65,
+     49
+    ],
+    [
+     "An 3 · S1",
+     67,
+     49
+    ],
+    [
+     "An 3 · S2",
+     66,
+     49
+    ],
+    [
+     "An 4 · S1",
+     68,
+     49
+    ],
+    [
+     "An 4 · S2",
+     67,
+     49
+    ],
+    [
+     "An 5 · S1",
+     69,
+     49
+    ],
+    [
+     "An 5 · S2",
+     68,
+     49
+    ]
+   ],
+   "n3_llcr": 80,
+   "n4": 80,
+   "n5": 80,
+   "n6": 50,
+   "n_lib": {
+    "N3": "LLCR 1,38 : Favorable",
+    "N4": "DSRA 6 mois mais pas de réserve de gros entretien dotée à la réception",
+    "N5": "Quote-part de dette 70 %",
+    "N6": "Dette à 30 % en euros couverte à 85 % : exposition nette résiduelle de 12 % du service"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.38,
+    "dsra": 6,
+    "fx": 0.12,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 0.95,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 25,
+    "duree_dette": 20,
+    "solution_contrat": "",
+    "plan_climat": "Oui",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     80
+    ],
+    "D2": [
+     80,
+     80,
+     80
+    ],
+    "D3": [
+     80,
+     80,
+     80
+    ],
+    "D4": [
+     100,
+     80,
+     80
+    ],
+    "D5": [
+     80,
+     50,
+     80
+    ],
+    "D6": [
+     80,
+     50,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     80,
+     80,
+     80,
+     50
+    ]
+   },
+   "commentaires": {
+    "D5": "Disponibilité moyenne de 96 % sur 12 mois, sous la garantie de 98 % : pénalités appliquées deux fois.",
+    "D6": "Fournisseur unique de membranes ; acheteur public adossé à l'État.",
+    "D9": "Site exposé à l'élévation du niveau marin et aux tempêtes : plan d'adaptation de 25 MMAD financé (C11 non actif)."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20117740",
+   "radical": "0117740",
+   "code_projet": "PF-2026-0007",
+   "credits": [
+    [
+     "CR-26-0701",
+     "Crédit d'investissement (moyen et long terme)",
+     360,
+     "MAD",
+     20
+    ],
+    [
+     "CR-26-0702",
+     "Crédit d'investissement (moyen et long terme)",
+     160,
+     "EUR",
+     20
+    ]
+   ],
+   "secteur_vals": [
+    120000,
+    3.4,
+    72,
+    80,
+    25
+   ],
+   "exploit": [
+    [
+     "Capacité",
+     "120 000 m³/jour"
+    ],
+    [
+     "Consommation électrique garantie",
+     "3,4 kWh/m³"
+    ],
+    [
+     "Redevance de capacité",
+     "72 % des recettes"
+    ],
+    [
+     "Chiffre d'affaires",
+     "205 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "128 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "98 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Redevance de capacité de 25 ans ; acheteur public adossé à l'État ; plan d'adaptation climatique financé.",
+    "faiblesses": "Disponibilité 96 % sous la garantie de 98 % ; fournisseur unique de membranes ; 12 % du service exposé au change.",
+    "justification": "",
+    "avis": "Favorable sous conditions",
+    "avis_txt": "Suivi de la disponibilité et de la couverture de change.",
+    "synthese": "Projet utile et structurellement sain (paiement à la disponibilité par un acheteur adossé à l'État), mais en phase de montée en charge : la disponibilité constatée est inférieure à la garantie, la dette en euros n'est couverte qu'à 85 % et le site est exposé aux risques côtiers. Aucun plafond ne s'applique : le risque climatique est traité par un plan financé.",
+    "conditions": "• Exiger le retour de la disponibilité à 98 % avant la fin de la montée en charge.\n• Porter la couverture de change de 85 % à 100 % (N6 et escalade en régime L).\n• Qualifier un second fournisseur de membranes."
+   }
+  },
+  "attendu": {
+   "score": 76.025,
+   "note_calculee": 7,
+   "note_approuvee": 7,
+   "plafond": 10,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.2857142857142858,
+   "dscr_min_s": 1.1828571428571428,
+   "couverture": 1.006993006993007,
+   "quote_part": 0.6993006993006993,
+   "D7": 71.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    80,
+    50,
+    80,
+    80,
+    80,
+    50
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.17,
+    1.27,
+    1.37
+   ],
+   "domaines": {
+    "D1": 80.0,
+    "D2": 80.0,
+    "D3": 80.0,
+    "D4": 89.0,
+    "D5": 68.0,
+    "D6": 74.0,
+    "D8": 80.0,
+    "D9": 72.5
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "TEL",
+   "ref": "CAS TEL",
+   "titre": "Centre de données Tier III, 24 MW informatiques",
+   "spv": "« Data Atlas » SA (fictive)",
+   "lieu": "Zone industrielle périurbaine",
+   "resume": "Centre de données en colocation commercialisé à 62 % après 15 mois ; contrats clients de 5 à 10 ans rémunérant la capacité réservée, le reste étant exposé au rythme de commercialisation.",
+   "regime": "R3",
+   "secteur": "TEL",
+   "phase": "P2",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 360,
+    "mad": "Oui",
+    "duree": 12,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Bâtiment et équipements techniques",
+     720
+    ],
+    [
+     "Raccordement électrique double alimentation",
+     90
+    ],
+    [
+     "Développement et frais",
+     40
+    ],
+    [
+     "Intérêts intercalaires",
+     35
+    ],
+    [
+     "Dotation DSRA",
+     30
+    ],
+    [
+     "BFR",
+     10
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (12 ans, 6,1 %)",
+     600,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     340,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.33,
+   "stress_lib": "Commercialisation bloquée à 62 % et départ d'un client de 4 MW",
+   "periodes": [
+    [
+     "An 2 · S1",
+     56,
+     38
+    ],
+    [
+     "An 2 · S2",
+     57,
+     38
+    ],
+    [
+     "An 3 · S1",
+     59,
+     39
+    ],
+    [
+     "An 3 · S2",
+     62,
+     40
+    ],
+    [
+     "An 4 · S1",
+     64,
+     41
+    ],
+    [
+     "An 4 · S2",
+     66,
+     41
+    ],
+    [
+     "An 5 · S1",
+     67,
+     42
+    ],
+    [
+     "An 5 · S2",
+     68,
+     42
+    ]
+   ],
+   "n3_llcr": 80,
+   "n4": 80,
+   "n5": 80,
+   "n6": 80,
+   "n_lib": {
+    "N3": "LLCR 1,41",
+    "N4": "DSRA 6 mois",
+    "N5": "Quote-part de dette 64 %",
+    "N6": "Taux variable couvert à 70 %"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.41,
+    "dsra": 6,
+    "fx": 0,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 0.35,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 7,
+    "duree_dette": 12,
+    "solution_contrat": "Oui",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     80
+    ],
+    "D2": [
+     100,
+     80,
+     80
+    ],
+    "D3": [
+     80,
+     80,
+     80
+    ],
+    "D4": [
+     50,
+     80,
+     50
+    ],
+    "D5": [
+     80,
+     80,
+     80
+    ],
+    "D6": [
+     80,
+     80,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     80,
+     80,
+     80,
+     80
+    ]
+   },
+   "commentaires": {
+    "D4": "Recettes contractuelles sur 62 % de la capacité ; renouvellements et commercialisation du solde exposés au marché.",
+    "D6": "Clients de premier rang (opérateurs, banques) ; aucun client au-delà de 35 % des recettes."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20123581",
+   "radical": "0123581",
+   "code_projet": "PF-2026-0008",
+   "credits": [
+    [
+     "CR-26-0801",
+     "Crédit d'investissement (moyen et long terme)",
+     330,
+     "MAD",
+     12
+    ],
+    [
+     "CR-26-0802",
+     "Garantie ou caution",
+     30,
+     "MAD",
+     3
+    ]
+   ],
+   "secteur_vals": [
+    24,
+    62,
+    6.5,
+    1.45,
+    35
+   ],
+   "exploit": [
+    [
+     "Capacité",
+     "24 MW informatiques"
+    ],
+    [
+     "Taux de commercialisation",
+     "62 % (cible 85 % en année 4)"
+    ],
+    [
+     "Durée moyenne des contrats",
+     "6,5 ans"
+    ],
+    [
+     "Efficacité énergétique (PUE)",
+     "1,45"
+    ],
+    [
+     "Chiffre d'affaires année 3",
+     "210 MMAD"
+    ],
+    [
+     "CFADS de référence",
+     "118 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Conception Tier III certifiée ; clients de premier rang, aucun au-delà de 35 % ; LLCR 1,41.",
+    "faiblesses": "38 % de la capacité non commercialisée ; DSCR défavorable 0,987.",
+    "justification": "C3 : DSCR défavorable 0,987 < 1,00 ; la note calculée 7 est ramenée à 4. Le plafond fait aussi passer le régime M en régime L.",
+    "avis": "Réservé",
+    "avis_txt": "Accord envisageable avec réserve complémentaire et tirages conditionnés.",
+    "synthese": "Un actif de qualité, mais un modèle de recettes encore en construction : 62 % de la capacité est contractualisée, le reste dépend du rythme de commercialisation. Le score (74,6) donnerait la note 7, mais le scénario défavorable fait tomber le DSCR sous 1,00 : la note est plafonnée à 4. C'est l'illustration type d'un risque que la moyenne masquerait.",
+    "conditions": "• Conditionner les tirages de la tranche d'extension à un taux de commercialisation de 75 %.\n• Demander un compte de réserve complémentaire tant que le DSCR défavorable reste sous 1,00 (levée du plafond C3)."
+   }
+  },
+  "attendu": {
+   "score": 74.61000000000001,
+   "note_calculee": 7,
+   "note_approuvee": 4,
+   "plafond": 4,
+   "regime_calcule": "M",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C3"
+   ],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.4736842105263157,
+   "dscr_min_s": 0.9873684210526315,
+   "couverture": 1.0162162162162163,
+   "quote_part": 0.6486486486486487,
+   "D7": 68.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    80,
+    20,
+    80,
+    80,
+    80,
+    80
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Oui",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.25,
+    1.4,
+    1.55
+   ],
+   "domaines": {
+    "D1": 80.0,
+    "D2": 87.0,
+    "D3": 80.0,
+    "D4": 59.0,
+    "D5": 80.0,
+    "D6": 80.0,
+    "D8": 80.0,
+    "D9": 80.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "TRA",
+   "ref": "CAS TRA",
+   "titre": "Autoroute à péage de 95 km",
+   "spv": "« Trik Express » SA (fictive)",
+   "lieu": "Corridor interurbain",
+   "resume": "Concession de 30 ans en exploitation depuis 6 ans ; recettes de péage exposées au trafic, sans garantie de recettes minimales. Refinancement de la dette de construction réalisé en 2025.",
+   "regime": "R4",
+   "secteur": "TRA",
+   "phase": "P3",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 650,
+    "mad": "Oui",
+    "duree": 16,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Oui",
+    "contrat_20": "Oui",
+    "nb_cp": 2
+   },
+   "emplois": [
+    [
+     "Refinancement de la dette de construction",
+     2350
+    ],
+    [
+     "Travaux d’élargissement (2×3 voies, 18 km)",
+     310
+    ],
+    [
+     "Frais et DSRA",
+     90
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior de refinancement (16 ans)",
+     2200,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres existants et réinvestis",
+     650,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.15,
+   "stress_lib": "Trafic − 15 % (récession et report modal)",
+   "periodes": [
+    [
+     "An 7 · S1",
+     150,
+     108
+    ],
+    [
+     "An 7 · S2",
+     154,
+     108
+    ],
+    [
+     "An 8 · S1",
+     149,
+     109
+    ],
+    [
+     "An 8 · S2",
+     158,
+     109
+    ],
+    [
+     "An 9 · S1",
+     152,
+     110
+    ],
+    [
+     "An 9 · S2",
+     162,
+     110
+    ],
+    [
+     "An 10 · S1",
+     158,
+     111
+    ],
+    [
+     "An 10 · S2",
+     166,
+     111
+    ],
+    [
+     "An 11 · S1",
+     162,
+     112
+    ],
+    [
+     "An 11 · S2",
+     171,
+     112
+    ]
+   ],
+   "n3_llcr": 80,
+   "n4": 100,
+   "n5": 80,
+   "n6": 80,
+   "n_lib": {
+    "N3": "LLCR 1,42",
+    "N4": "DSRA 6 mois et réserve de gros entretien dotée",
+    "N5": "Quote-part de dette 80 %",
+    "N6": "Taux fixe à 75 %"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.42,
+    "dsra": 6,
+    "fx": 0,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 0.0,
+    "qualite_acheteur": "Non noté",
+    "duree_contrat": null,
+    "duree_dette": 16,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     50,
+     80
+    ],
+    "D2": [
+     100,
+     80,
+     80
+    ],
+    "D3": [
+     80,
+     80,
+     80
+    ],
+    "D4": [
+     50,
+     80,
+     50
+    ],
+    "D5": [
+     80,
+     80,
+     80
+    ],
+    "D6": [
+     80,
+     80,
+     100
+    ],
+    "D8": [
+     80,
+     80,
+     100
+    ],
+    "D9": [
+     80,
+     80,
+     80,
+     80
+    ]
+   },
+   "commentaires": {
+    "D4": "Pas de garantie de trafic ni de recettes minimales : structure des recettes notée Vigilance. Indexation contractuelle des tarifs.",
+    "D1": "Concessionnaire expérimenté ; aucune obligation juridique de soutien au-delà des fonds propres apportés."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20131094",
+   "radical": "0131094",
+   "code_projet": "PF-2026-0009",
+   "credits": [
+    [
+     "CR-26-0901",
+     "Crédit d'investissement (moyen et long terme)",
+     600,
+     "MAD",
+     16
+    ],
+    [
+     "CR-26-0902",
+     "Couverture (taux ou change)",
+     50,
+     "MAD",
+     16
+    ]
+   ],
+   "secteur_vals": [
+    21400,
+    0,
+    "Péage",
+    "Non",
+    24
+   ],
+   "exploit": [
+    [
+     "Trafic moyen journalier",
+     "21 400 véhicules (+ 3,1 %/an sur 5 ans)"
+    ],
+    [
+     "Tarif moyen",
+     "0,62 MAD/km, indexé"
+    ],
+    [
+     "Chiffre d'affaires",
+     "445 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "305 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "218 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Six ans d'historique de trafic en croissance ; refinancement réalisé ; DSRA 6 mois.",
+    "faiblesses": "Recettes de péage sans garantie (R4) ; DSCR minimum 1,367 sous le seuil critique 1,40.",
+    "justification": "C2 : DSCR minimum 1,367 < seuil critique R4 × TRA (1,40) ; la note calculée 6 est ramenée à 5.",
+    "avis": "Favorable sous conditions",
+    "avis_txt": "Note 5 : sous surveillance, clauses de trafic à suivre.",
+    "synthese": "Autoroute en exploitation depuis six ans, avec un trafic en croissance régulière. Le dossier est bien géré mais pleinement exposé au trafic : en régime R4, les seuils DSCR sont les plus exigeants (1,40 critique avec l'écart transport). Le DSCR minimum de 1,37 est donc critique et plafonne la note à 5, alors que le score donnerait 6.",
+    "conditions": "• Le plafond C2 ne se lève qu'en améliorant le DSCR minimum au-dessus de 1,40 : allonger la maturité ou constituer une réserve de lissage.\n• Suivre le trafic trimestriel face au cas de base."
+   }
+  },
+  "attendu": {
+   "score": 70.875,
+   "note_calculee": 6,
+   "note_approuvee": 5,
+   "plafond": 5,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C2"
+   ],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.3669724770642202,
+   "dscr_min_s": 1.1619266055045872,
+   "couverture": 1.0363636363636364,
+   "quote_part": 0.8,
+   "D7": 56.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    20,
+    20,
+    80,
+    100,
+    80,
+    80
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Oui",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "n.a.",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.4,
+    1.6,
+    1.85
+   ],
+   "domaines": {
+    "D1": 69.5,
+    "D2": 87.0,
+    "D3": null,
+    "D4": 59.0,
+    "D5": 80.0,
+    "D6": 86.0,
+    "D8": 85.0,
+    "D9": 80.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "POR",
+   "ref": "CAS POR",
+   "titre": "Terminal à conteneurs de 1,2 million d'EVP",
+   "spv": "« Marsa Terminal » SA (fictive)",
+   "lieu": "Port en eau profonde",
+   "resume": "Concession de 30 ans ; un armateur international s'engage sur un volume minimum couvrant 60 % de la capacité et apporte 90 % du trafic attendu. Contrat de construction encore en négociation finale.",
+   "regime": "R3",
+   "secteur": "POR",
+   "phase": "P1",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 700,
+    "mad": "Oui",
+    "duree": 18,
+    "tech_refs": "Oui",
+    "epc": "Non",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Oui",
+    "contrat_20": "Oui",
+    "nb_cp": 4
+   },
+   "emplois": [
+    [
+     "Quais, terre-pleins, génie civil",
+     1450
+    ],
+    [
+     "Portiques et équipements",
+     620
+    ],
+    [
+     "Systèmes et frais",
+     110
+    ],
+    [
+     "Contingence",
+     120
+    ],
+    [
+     "Intérêts intercalaires",
+     140
+    ],
+    [
+     "Dotation DSRA",
+     60
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior consortiale (18 ans)",
+     1700,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     725,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": "Oui",
+   "choc": 0.12,
+   "stress_lib": "Trafic ramené au volume minimum garanti",
+   "periodes": [
+    [
+     "An 4 · S1",
+     140,
+     95
+    ],
+    [
+     "An 4 · S2",
+     146,
+     95
+    ],
+    [
+     "An 5 · S1",
+     150,
+     96
+    ],
+    [
+     "An 5 · S2",
+     152,
+     96
+    ],
+    [
+     "An 6 · S1",
+     155,
+     97
+    ],
+    [
+     "An 6 · S2",
+     158,
+     97
+    ],
+    [
+     "An 7 · S1",
+     160,
+     98
+    ],
+    [
+     "An 7 · S2",
+     162,
+     98
+    ]
+   ],
+   "n3_llcr": null,
+   "n4": 80,
+   "n5": 80,
+   "n6": 80,
+   "n_lib": {
+    "N4": "DSRA 6 mois",
+    "N5": "Quote-part de dette 68 %",
+    "N6": "Recettes en dirhams indexées au dollar, dette en dirhams"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.35,
+    "dsra": 6,
+    "fx": 0,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 0.9,
+    "qualite_acheteur": "Non noté",
+    "duree_contrat": 30,
+    "duree_dette": 18,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Oui"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     80
+    ],
+    "D2": [
+     80,
+     80,
+     50
+    ],
+    "D3": [
+     50,
+     50,
+     80
+    ],
+    "D4": [
+     80,
+     80,
+     80
+    ],
+    "D5": [
+     80,
+     80,
+     80
+    ],
+    "D6": [
+     50,
+     80,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     80,
+     80,
+     80,
+     80
+    ]
+   },
+   "commentaires": {
+    "D3": "Contrat de construction non signé (prix et délai encore ouverts) ; interfaces quais / équipements portées par la SPV.",
+    "D6": "Armateur apportant 90 % du trafic, non noté par la banque : acheteur principal noté Vigilance, plafond C10."
+   },
+   "sc_comm": {},
+   "verrous": {
+    "B2": "Oui"
+   },
+   "code_client": "20146628",
+   "radical": "0146628",
+   "code_projet": "PF-2026-0010",
+   "credits": [
+    [
+     "CR-26-1001",
+     "Crédit d'investissement (moyen et long terme)",
+     620,
+     "MAD",
+     18
+    ],
+    [
+     "CR-26-1002",
+     "Crédit relais (TVA, subventions)",
+     80,
+     "MAD",
+     3
+    ]
+   ],
+   "secteur_vals": [
+    1200000,
+    null,
+    90,
+    60,
+    30
+   ],
+   "exploit": [
+    [
+     "Capacité",
+     "1,2 million EVP/an"
+    ],
+    [
+     "Volume minimum garanti",
+     "720 000 EVP/an (60 %)"
+    ],
+    [
+     "Part du premier client",
+     "90 % du trafic"
+    ],
+    [
+     "Chiffre d'affaires cible",
+     "520 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "300 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Volume minimum garanti de 60 % ; concession de 30 ans ; plan de remédiation approuvé (couverture 97 %).",
+    "faiblesses": "EPC non signé (B2) ; armateur unique non noté (90 % du trafic) ; facteur commun au-delà de la limite.",
+    "justification": "B2 : EPC non signé en phase P1, la note reste provisoire (stade Octroi). C10 : acheteur à 90 % non noté ; C14 : exposition du groupe sur un facteur commun : note plafonnée à 6.",
+    "avis": "Réservé",
+    "avis_txt": "Pas d'octroi avant la signature de l'EPC.",
+    "synthese": "Un terminal stratégique adossé à un armateur international, mais trois fragilités se cumulent en phase de construction : le contrat de construction n'est pas signé (blocage B2), le financement à terminaison n'est couvert qu'à 97 % (rattrapé par un plan de remédiation approuvé) et 90 % du trafic dépend d'un seul armateur non noté (C10), dans un secteur où la banque est déjà fortement exposée (C14).",
+    "conditions": "• Signature du contrat de construction à prix et délai garantis : condition de l'octroi (levée de B2).\n• Obtenir une garantie de la maison mère de l'armateur pour lever le plafond C10.\n• Arbitrer le plafond C14 avec la direction des risques (concentration sur le transport maritime)."
+   }
+  },
+  "attendu": {
+   "score": 71.225,
+   "note_calculee": 6,
+   "note_approuvee": 6,
+   "plafond": 6,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C10",
+    "C14"
+   ],
+   "verrous_actifs": [
+    "B2"
+   ],
+   "statut": "Note provisoire — stade bloqué : B2 (Octroi)",
+   "dscr_min": 1.4736842105263157,
+   "dscr_min_s": 1.296842105263158,
+   "couverture": 0.97,
+   "quote_part": 0.68,
+   "D7": 69.5,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    80,
+    50,
+    50,
+    80,
+    80,
+    80
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Oui",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Oui",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.25,
+    1.4,
+    1.55
+   ],
+   "domaines": {
+    "D1": 80.0,
+    "D2": 72.5,
+    "D3": 60.5,
+    "D4": 80.0,
+    "D5": 80.0,
+    "D6": 65.0,
+    "D8": 80.0,
+    "D9": 80.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "SAN",
+   "ref": "CAS SAN",
+   "titre": "Centre hospitalier de 600 lits en partenariat public-privé",
+   "spv": "« Shifa PPP » SA (fictive)",
+   "lieu": "Capitale régionale",
+   "resume": "Conception, construction, financement et maintenance d'un hôpital ; l'autorité publique verse un loyer de disponibilité pendant 20 ans, minoré de pénalités de performance. L'exploitation médicale reste publique.",
+   "regime": "R2",
+   "secteur": "SAN",
+   "phase": "P1",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 420,
+    "mad": "Oui",
+    "duree": 20,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Contrat de conception-construction",
+     980
+    ],
+    [
+     "Équipements biomédicaux lourds",
+     170
+    ],
+    [
+     "Frais et assurances",
+     50
+    ],
+    [
+     "Contingence",
+     55
+    ],
+    [
+     "Intérêts intercalaires",
+     60
+    ],
+    [
+     "Dotation DSRA",
+     30
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (20 ans)",
+     1000,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     300,
+     "Fonds propres"
+    ],
+    [
+     "Garantie de bonne fin du constructeur",
+     60,
+     "Autre ressource"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.07,
+   "stress_lib": "Pénalités de performance au maximum contractuel",
+   "periodes": [
+    [
+     "An 3 · S1",
+     58,
+     47
+    ],
+    [
+     "An 3 · S2",
+     59,
+     47
+    ],
+    [
+     "An 4 · S1",
+     60,
+     47
+    ],
+    [
+     "An 4 · S2",
+     60,
+     47
+    ],
+    [
+     "An 5 · S1",
+     61,
+     47
+    ],
+    [
+     "An 5 · S2",
+     61,
+     47
+    ],
+    [
+     "An 6 · S1",
+     62,
+     47
+    ],
+    [
+     "An 6 · S2",
+     62,
+     47
+    ]
+   ],
+   "n3_llcr": null,
+   "n4": 80,
+   "n5": 80,
+   "n6": 100,
+   "n_lib": {
+    "N4": "DSRA 6 mois",
+    "N5": "Quote-part de dette 74 %",
+    "N6": "Intégralement en dirhams, taux fixe"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.3,
+    "dsra": 6,
+    "fx": 0,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 1.0,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 20,
+    "duree_dette": 20,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Non",
+    "ecart_om": 7,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     80
+    ],
+    "D2": [
+     80,
+     100,
+     80
+    ],
+    "D3": [
+     80,
+     80,
+     100
+    ],
+    "D4": [
+     100,
+     80,
+     100
+    ],
+    "D5": [
+     50,
+     80,
+     "Info. insuffisante"
+    ],
+    "D6": [
+     100,
+     80,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     80,
+     "Info. insuffisante",
+     80,
+     80
+    ]
+   },
+   "commentaires": {
+    "D5": "Coûts de gros entretien : aucun plan pluriannuel chiffré fourni (« Info. insuffisante »).",
+    "D9": "Étude d'impact social et plan de réinstallation des occupants du site non reçus (« Info. insuffisante »)."
+   },
+   "sc_comm": {
+    "D5.3": "Étude des coûts de gros entretien des équipements médicaux non remise.",
+    "D9.2": "Plan de consultation des riverains et du personnel transféré non communiqué."
+   },
+   "verrous": {},
+   "code_client": "20150372",
+   "radical": "0150372",
+   "code_projet": "PF-2026-0011",
+   "credits": [
+    [
+     "CR-26-1101",
+     "Crédit d'investissement (moyen et long terme)",
+     420,
+     "MAD",
+     20
+    ]
+   ],
+   "secteur_vals": [
+    600,
+    "Disponibilité",
+    20,
+    10
+   ],
+   "exploit": [
+    [
+     "Capacité",
+     "600 lits"
+    ],
+    [
+     "Loyer de disponibilité",
+     "148 MMAD/an, indexé"
+    ],
+    [
+     "Pénalités maximales",
+     "10 % du loyer"
+    ],
+    [
+     "CFADS de référence",
+     "118 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "94 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Loyer de disponibilité indexé versé par l'autorité de santé ; contrat de 20 ans égal à la dette.",
+    "faiblesses": "Deux sous-critères sans information (D5.3, D9.2) ; opérateur de maintenance spécialisée non remplaçable et contrat O&M expirant 7 ans avant la dette.",
+    "justification": "B7 et C15 : D5.3 et D9.2 en « Info. insuffisante » (complétude < 100 %), note provisoire. C13 : opérateur non remplaçable, écart O&M / dette de 7 ans > 5 ans.",
+    "avis": "Réservé",
+    "avis_txt": "Compléter le dossier avant présentation pour une note validée.",
+    "synthese": "Un partenariat public-privé classique et solide : loyer de disponibilité versé par l'autorité publique, constructeur de premier plan, financement en dirhams. Mais le dossier est incomplet : le plan de gros entretien et l'étude d'impact social manquent. Ces deux « informations insuffisantes » coûtent des points (comptées 20), rendent la note provisoire (B7) et la plafonnent à 6 (C15).",
+    "conditions": "• Obtenir le plan de gros entretien et l'étude d'impact social : leur réception lève B7 et C15.\n• Prolonger le contrat de maintenance biomédicale jusqu'à l'échéance de la dette ou qualifier un second prestataire (levée de C13)."
+   }
+  },
+  "attendu": {
+   "score": 77.35,
+   "note_calculee": 7,
+   "note_approuvee": 6,
+   "plafond": 6,
+   "regime_calcule": "M",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C13",
+    "C15"
+   ],
+   "verrous_actifs": [
+    "B7"
+   ],
+   "statut": "Note provisoire — stade bloqué : B7 (Notation validée)",
+   "dscr_min": 1.2340425531914894,
+   "dscr_min_s": 1.147659574468085,
+   "couverture": 1.0111524163568772,
+   "quote_part": 0.7434944237918215,
+   "D7": 62.5,
+   "completude": 0.9354838709677419,
+   "couverture_grille": 0.9633333333333334,
+   "noyau": [
+    50,
+    20,
+    80,
+    80,
+    80,
+    100
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Oui",
+    "C14": "Non",
+    "C15": "Oui"
+   },
+   "seuils": [
+    1.17,
+    1.27,
+    1.37
+   ],
+   "domaines": {
+    "D1": 80.0,
+    "D2": 88.0,
+    "D3": 87.0,
+    "D4": 94.0,
+    "D5": 54.5,
+    "D6": 90.0,
+    "D8": 80.0,
+    "D9": 62.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "ETH",
+   "ref": "CAS ETH",
+   "titre": "Centrale à cycle combiné au gaz de 450 MW",
+   "spv": "« Nour Gaz » SA (fictive)",
+   "lieu": "Zone portuaire",
+   "resume": "Centrale en exploitation depuis 8 ans, rémunérée par un contrat d'achat de capacité (tolling) ; le combustible est fourni par l'acheteur. La dette restante comporte un remboursement final de 35 % du nominal à refinancer.",
+   "regime": "R1",
+   "secteur": "ETH",
+   "phase": "P3",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 800,
+    "mad": "Oui",
+    "duree": 10,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Oui",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Refinancement partiel et rénovation des turbines",
+     1650
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (10 ans, ballon 35 %)",
+     1300,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     350,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.12,
+   "stress_lib": "Indisponibilité prolongée d'une turbine à gaz (6 mois)",
+   "periodes": [
+    [
+     "An 9 · S1",
+     118,
+     92
+    ],
+    [
+     "An 9 · S2",
+     120,
+     92
+    ],
+    [
+     "An 10 · S1",
+     119,
+     93
+    ],
+    [
+     "An 10 · S2",
+     121,
+     93
+    ],
+    [
+     "An 11 · S1",
+     120,
+     94
+    ],
+    [
+     "An 11 · S2",
+     122,
+     94
+    ],
+    [
+     "An 12 · S1",
+     120,
+     94
+    ],
+    [
+     "An 12 · S2",
+     123,
+     94
+    ]
+   ],
+   "n3_llcr": 20,
+   "n4": 80,
+   "n5": 80,
+   "n6": 50,
+   "n_lib": {
+    "N3": "LLCR 1,08 : Critique",
+    "N4": "DSRA 6 mois",
+    "N5": "Quote-part de dette 79 %",
+    "N6": "Remboursement final de 35 % à refinancer, sans stratégie approuvée"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.08,
+    "dsra": 6,
+    "fx": 0,
+    "refi": 0.35,
+    "strategie_refi": "Non",
+    "part_acheteur": 1.0,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 12,
+    "duree_dette": 10,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     80
+    ],
+    "D2": [
+     80,
+     80,
+     80
+    ],
+    "D3": [
+     80,
+     80,
+     80
+    ],
+    "D4": [
+     100,
+     80,
+     80
+    ],
+    "D5": [
+     80,
+     80,
+     50
+    ],
+    "D6": [
+     80,
+     80,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     50,
+     80,
+     80,
+     50
+    ]
+   },
+   "commentaires": {
+    "D5": "Révisions majeures des turbines à financer en années 10 et 14 ; dépendance au constructeur d'origine pour les pièces.",
+    "D9": "Émissions de CO₂ : exposition aux futures obligations de réduction (climat de transition noté Vigilance)."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20168815",
+   "radical": "0168815",
+   "code_projet": "PF-2026-0012",
+   "credits": [
+    [
+     "CR-26-1201",
+     "Crédit d'investissement (moyen et long terme)",
+     720,
+     "MAD",
+     10
+    ],
+    [
+     "CR-26-1202",
+     "Garantie ou caution",
+     80,
+     "MAD",
+     2
+    ]
+   ],
+   "secteur_vals": [
+    450,
+    56,
+    12,
+    90,
+    100
+   ],
+   "exploit": [
+    [
+     "Puissance",
+     "450 MW"
+    ],
+    [
+     "Disponibilité garantie",
+     "92 %"
+    ],
+    [
+     "Paiement de capacité",
+     "310 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "238 MMAD/an"
+    ],
+    [
+     "Service de la dette (hors ballon)",
+     "186 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Contrat de capacité de 12 ans ; disponibilité garantie de 92 % atteinte ; acheteur public de qualité.",
+    "faiblesses": "Ballon de 35 % du nominal sans stratégie de refinancement ; LLCR 1,08.",
+    "justification": "C4 : LLCR 1,08 < 1,10 ; C8 : 35 % de dette à refinancer sans stratégie approuvée. La note calculée 6 est ramenée à 4.",
+    "avis": "Réservé",
+    "avis_txt": "Une stratégie de refinancement approuvée lèverait C8 ; C4 demande de réduire le ballon.",
+    "synthese": "Une centrale qui fonctionne bien et un acheteur solide, mais une structure de dette fragile : le LLCR de 1,08 montre que les flux futurs couvrent à peine la dette restante, et 35 % du nominal reste à refinancer à l'échéance sans stratégie approuvée. Deux plafonds s'appliquent (C4 à 4, C8 à 5) : la note approuvée est 4 alors que le score donnerait 6.",
+    "conditions": "• Approuver une stratégie de refinancement du ballon de 35 % (levée de C8).\n• Le plafond C4 (LLCR) ne se lève qu'avec une réduction de la dette ou une prolongation du contrat de capacité."
+   }
+  },
+  "attendu": {
+   "score": 72.2,
+   "note_calculee": 6,
+   "note_approuvee": 4,
+   "plafond": 4,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C4",
+    "C8"
+   ],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.2765957446808511,
+   "dscr_min_s": 1.1234042553191488,
+   "couverture": 1.0,
+   "quote_part": 0.7878787878787878,
+   "D7": 56.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    80,
+    20,
+    20,
+    80,
+    80,
+    50
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Oui",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Oui",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.15,
+    1.25,
+    1.35
+   ],
+   "domaines": {
+    "D1": 80.0,
+    "D2": 80.0,
+    "D3": null,
+    "D4": 89.0,
+    "D5": 72.5,
+    "D6": 80.0,
+    "D8": 80.0,
+    "D9": 63.5
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "IMMO",
+   "ref": "CAS IMMO-REND",
+   "titre": "Ensemble de bureaux et commerces loués, 48 000 m²",
+   "spv": "« Arkane Business Park » SA (fictive)",
+   "lieu": "Quartier d'affaires",
+   "resume": "Actif livré et loué à 91 % à 26 locataires ; durée résiduelle moyenne des baux de 5,2 ans. Financement de rachat à fort levier, avec une réserve de service de la dette de 2 mois seulement.",
+   "regime": "R3",
+   "secteur": "IMMO-REND",
+   "phase": "P3",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 480,
+    "mad": "Oui",
+    "duree": 15,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Acquisition de l'actif",
+     640
+    ],
+    [
+     "Frais et droits",
+     30
+    ],
+    [
+     "Dotation DSRA",
+     10
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (15 ans)",
+     598,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     82,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.14,
+   "stress_lib": "Vacance portée à 20 % et baisse des loyers de relocation de 5 %",
+   "periodes": [
+    [
+     "An 1 · S1",
+     28.4,
+     20
+    ],
+    [
+     "An 1 · S2",
+     29.0,
+     20
+    ],
+    [
+     "An 2 · S1",
+     28.6,
+     20
+    ],
+    [
+     "An 2 · S2",
+     29.4,
+     20
+    ],
+    [
+     "An 3 · S1",
+     28.8,
+     20
+    ],
+    [
+     "An 3 · S2",
+     29.6,
+     20
+    ],
+    [
+     "An 4 · S1",
+     29.0,
+     20
+    ],
+    [
+     "An 4 · S2",
+     29.8,
+     20
+    ]
+   ],
+   "n3_llcr": 80,
+   "n4": 20,
+   "n5": 20,
+   "n6": 80,
+   "n_lib": {
+    "N3": "LLCR 1,36",
+    "N4": "DSRA limitée à 2 mois de service",
+    "N5": "Quote-part de dette 88 % : fonds propres très minces",
+    "N6": "Taux variable couvert à 80 %"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.36,
+    "dsra": 2,
+    "fx": 0,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 0.18,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 5.2,
+    "duree_dette": 15,
+    "solution_contrat": "Oui",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     50,
+     50,
+     80
+    ],
+    "D2": [
+     100,
+     100,
+     80
+    ],
+    "D3": [
+     80,
+     80,
+     80
+    ],
+    "D4": [
+     80,
+     80,
+     80
+    ],
+    "D5": [
+     80,
+     80,
+     80
+    ],
+    "D6": [
+     80,
+     80,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     80,
+     80,
+     80,
+     80
+    ]
+   },
+   "commentaires": {
+    "D2": "Emplacement de premier ordre, accès et stationnements ; immeuble certifié pour sa performance énergétique.",
+    "D1": "Sponsor de taille moyenne ; aucune garantie au-delà des fonds propres apportés."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20172204",
+   "radical": "0172204",
+   "code_projet": "PF-2026-0013",
+   "credits": [
+    [
+     "CR-26-1301",
+     "Crédit d'investissement (moyen et long terme)",
+     480,
+     "MAD",
+     15
+    ]
+   ],
+   "secteur_vals": [
+    48000,
+    91,
+    5.2,
+    9.7,
+    18
+   ],
+   "exploit": [
+    [
+     "Taux d'occupation",
+     "91 %"
+    ],
+    [
+     "Durée résiduelle moyenne des baux",
+     "5,2 ans"
+    ],
+    [
+     "Loyers nets",
+     "62 MMAD/an"
+    ],
+    [
+     "Rendement locatif",
+     "9,7 %"
+    ],
+    [
+     "CFADS de référence",
+     "56 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "40 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Occupation de 91 %, locataires diversifiés (premier à 18 %) ; LLCR 1,36.",
+    "faiblesses": "Quote-part de dette de 88 % ; DSRA de 2 mois ; baux de 5,2 ans face à une dette de 15 ans.",
+    "justification": "C9 : quote-part de dette 87,9 % > 85 % ; C7 : DSRA 2 mois < 3 mois. N4 et N5 notés Critique pour les mêmes raisons. Note calculée 6 ramenée à 5.",
+    "avis": "Favorable sous conditions",
+    "avis_txt": "Apport de fonds propres et DSRA de 6 mois exigés.",
+    "synthese": "Un très bel actif, bien situé et bien loué, mais financé avec trop de levier : 88 % de dette et une réserve de service de 2 mois seulement. Les deux faiblesses déclenchent chacune un plafond (C9 à 5, C7 à 6) ; le plus contraignant s'applique et la note approuvée est 5.",
+    "conditions": "• Porter la DSRA à 3 mois au moins (levée de C7).\n• Réduire la dette sous 85 % du plan de financement par un apport complémentaire (levée de C9)."
+   }
+  },
+  "attendu": {
+   "score": 70.625,
+   "note_calculee": 6,
+   "note_approuvee": 5,
+   "plafond": 5,
+   "regime_calcule": "M",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C7",
+    "C9"
+   ],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.42,
+   "dscr_min_s": 1.2212,
+   "couverture": 1.0,
+   "quote_part": 0.8794117647058823,
+   "D7": 50.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    80,
+    20,
+    80,
+    20,
+    20,
+    80
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Oui",
+    "C8": "Non",
+    "C9": "Oui",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.25,
+    1.4,
+    1.55
+   ],
+   "domaines": {
+    "D1": 57.5,
+    "D2": 95.0,
+    "D3": null,
+    "D4": 80.0,
+    "D5": 80.0,
+    "D6": 80.0,
+    "D8": 80.0,
+    "D9": 80.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "IND",
+   "ref": "CAS IND",
+   "titre": "Usine de verre plat de 600 tonnes/jour",
+   "spv": "« Zujaj Industries » SA (fictive)",
+   "lieu": "Plateforme industrielle",
+   "resume": "Usine mise en service il y a 14 mois ; un contrat d'enlèvement de 8 ans couvre 70 % de la production. La dette, à 40 % en euros, n'est pas couverte ; différé d'amortissement de 12 mois.",
+   "regime": "R3",
+   "secteur": "IND",
+   "phase": "P2",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 430,
+    "mad": "Non",
+    "duree": 12,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Four, ligne float et bâtiments",
+     1050
+    ],
+    [
+     "Utilités et raccordements",
+     110
+    ],
+    [
+     "Frais et intérêts intercalaires",
+     90
+    ],
+    [
+     "Dotation DSRA",
+     40
+    ],
+    [
+     "BFR",
+     60
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (12 ans), dont 40 % en euros",
+     880,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     470,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.18,
+   "stress_lib": "Prix du gaz + 25 % non répercuté et baisse des volumes export de 15 %",
+   "periodes": [
+    [
+     "An 2 · S1",
+     52,
+     0
+    ],
+    [
+     "An 2 · S2",
+     60,
+     0
+    ],
+    [
+     "An 3 · S1",
+     70,
+     50
+    ],
+    [
+     "An 3 · S2",
+     72,
+     50
+    ],
+    [
+     "An 4 · S1",
+     73,
+     51
+    ],
+    [
+     "An 4 · S2",
+     75,
+     51
+    ],
+    [
+     "An 5 · S1",
+     76,
+     52
+    ],
+    [
+     "An 5 · S2",
+     78,
+     52
+    ]
+   ],
+   "n3_llcr": 80,
+   "n4": 80,
+   "n5": 80,
+   "n6": 20,
+   "n_lib": {
+    "N3": "LLCR 1,33",
+    "N4": "DSRA 6 mois",
+    "N5": "Quote-part de dette 65 %",
+    "N6": "40 % de la dette en euros, non couverte ; recettes export partielles"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.33,
+    "dsra": 6,
+    "fx": 0.3,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 0.55,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 8,
+    "duree_dette": 12,
+    "solution_contrat": "Non",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     80
+    ],
+    "D2": [
+     80,
+     80,
+     80
+    ],
+    "D3": [
+     80,
+     80,
+     80
+    ],
+    "D4": [
+     80,
+     50,
+     50
+    ],
+    "D5": [
+     80,
+     80,
+     50
+    ],
+    "D6": [
+     80,
+     50,
+     80
+    ],
+    "D8": [
+     80,
+     50,
+     80
+    ],
+    "D9": [
+     80,
+     80,
+     80,
+     80
+    ]
+   },
+   "commentaires": {
+    "D4": "Prix du contrat d'enlèvement indexé à 50 % sur l'énergie ; 30 % des volumes vendus au prix de marché.",
+    "D8": "Avis juridique sur l'opposabilité des sûretés non encore reçu (blocage B5)."
+   },
+   "sc_comm": {},
+   "verrous": {
+    "B5": "Oui"
+   },
+   "code_client": "20185547",
+   "radical": "0185547",
+   "code_projet": "PF-2026-0014",
+   "credits": [
+    [
+     "CR-26-1401",
+     "Crédit d'investissement (moyen et long terme)",
+     300,
+     "MAD",
+     12
+    ],
+    [
+     "CR-26-1402",
+     "Crédit d'investissement (moyen et long terme)",
+     130,
+     "EUR",
+     12
+    ]
+   ],
+   "secteur_vals": [
+    219000,
+    82,
+    70,
+    45
+   ],
+   "exploit": [
+    [
+     "Capacité",
+     "600 t/jour"
+    ],
+    [
+     "Contrat d'enlèvement",
+     "70 % de la production, 8 ans"
+    ],
+    [
+     "Part de l’export",
+     "35 %"
+    ],
+    [
+     "Chiffre d'affaires",
+     "690 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "150 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Procédé éprouvé ; contrat d'enlèvement de 70 % de la production ; fonds propres à 35 %.",
+    "faiblesses": "Contrat d'enlèvement de 8 ans pour une dette de 12 ans ; exposition de change de 30 % du service ; réserve de l'avis juridique sur le nantissement.",
+    "justification": "B5 : avis d'opposabilité avec réserve (stade Décaissement). C5 : contrat de 8 ans < dette de 12 ans sans solution ; C6 : 30 % > 25 %. N6 Critique. Note calculée 6 ramenée à 5.",
+    "avis": "Réservé",
+    "avis_txt": "Levée de la réserve juridique et couverture de change avant décaissement.",
+    "synthese": "Une usine récente, un contrat d'enlèvement avec un client de qualité, mais trois faiblesses structurelles : 40 % de la dette est en euros sans couverture (C6), le contrat d'enlèvement (8 ans) s'arrête avant la dette (12 ans) sans solution (C5), et l'avis juridique sur les sûretés n'est pas reçu (blocage B5 au décaissement). Le différé d'amortissement est correctement traité : les deux périodes sans service de la dette ne faussent pas le DSCR minimum.",
+    "conditions": "• Mettre en place une couverture de change sur la dette en euros (levée de C6 et amélioration de N6).\n• Documenter la prolongation du contrat d'enlèvement jusqu'à l'échéance de la dette (levée de C5).\n• Avis juridique sans réserve : condition du décaissement (levée de B5)."
+   }
+  },
+  "attendu": {
+   "score": 68.3,
+   "note_calculee": 6,
+   "note_approuvee": 5,
+   "plafond": 5,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C5",
+    "C6"
+   ],
+   "verrous_actifs": [
+    "B5"
+   ],
+   "statut": "Note provisoire — stade bloqué : B5 (Décaissement)",
+   "dscr_min": 1.4,
+   "dscr_min_s": 1.1480000000000001,
+   "couverture": 1.0,
+   "quote_part": 0.6518518518518519,
+   "D7": 54.5,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    50,
+    20,
+    80,
+    80,
+    80,
+    20
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Oui",
+    "C6": "Oui",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.35,
+    1.5,
+    1.65
+   ],
+   "domaines": {
+    "D1": 80.0,
+    "D2": 80.0,
+    "D3": 80.0,
+    "D4": 63.5,
+    "D5": 72.5,
+    "D6": 74.0,
+    "D8": 68.0,
+    "D9": 80.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "AGR",
+   "ref": "CAS AGR",
+   "titre": "Unité de trituration d'olives et de conditionnement d'huile",
+   "spv": "« Zitouna Valley » SARL (fictive)",
+   "lieu": "Région oléicole de l'intérieur",
+   "resume": "Petite unité industrielle (150 MMAD) dont toute la production est achetée par un groupe agroalimentaire national noté BBB, sous contrat ferme de 10 ans. Constructeur clé-en-main, financement en dirhams sur 10 ans.",
+   "regime": "R1",
+   "secteur": "AGR",
+   "phase": "P1",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 95,
+    "mad": "Oui",
+    "duree": 10,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 2
+   },
+   "emplois": [
+    [
+     "Contrat clé-en-main (trituration, conditionnement)",
+     112
+    ],
+    [
+     "Bâtiments et stockage",
+     18
+    ],
+    [
+     "Frais",
+     5
+    ],
+    [
+     "Contingence",
+     6
+    ],
+    [
+     "Intérêts intercalaires",
+     4
+    ],
+    [
+     "Dotation DSRA",
+     3
+    ],
+    [
+     "BFR",
+     2
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (10 ans)",
+     95,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     55,
+     "Fonds propres"
+    ],
+    [
+     "Subvention du fonds de développement agricole encaissée",
+     12,
+     "Subvention encaissée"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.08,
+   "stress_lib": "Campagne oléicole déficitaire (− 25 % d'olives) partiellement compensée par le prix",
+   "periodes": [
+    [
+     "An 1 · S1",
+     9.6,
+     7
+    ],
+    [
+     "An 1 · S2",
+     10.0,
+     7
+    ],
+    [
+     "An 2 · S1",
+     9.8,
+     7
+    ],
+    [
+     "An 2 · S2",
+     10.2,
+     7
+    ],
+    [
+     "An 3 · S1",
+     9.7,
+     7
+    ],
+    [
+     "An 3 · S2",
+     10.1,
+     7
+    ],
+    [
+     "An 4 · S1",
+     9.9,
+     7
+    ],
+    [
+     "An 4 · S2",
+     10.3,
+     7
+    ]
+   ],
+   "n3_llcr": null,
+   "n4": 80,
+   "n5": 80,
+   "n6": 100,
+   "n_lib": {
+    "N4": "DSRA 6 mois",
+    "N5": "Quote-part de dette 64 %",
+    "N6": "Intégralement en dirhams, taux fixe"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.4,
+    "dsra": 6,
+    "fx": 0,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 1.0,
+    "qualite_acheteur": "≥ BBB−",
+    "duree_contrat": 10,
+    "duree_dette": 10,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     80,
+     80
+    ],
+    "D2": [
+     80,
+     80,
+     100
+    ],
+    "D3": [
+     100,
+     80,
+     80
+    ],
+    "D4": [
+     100,
+     80,
+     80
+    ],
+    "D5": [
+     80,
+     80,
+     80
+    ],
+    "D6": [
+     100,
+     50,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     80
+    ],
+    "D9": [
+     50,
+     80,
+     80,
+     50
+    ]
+   },
+   "commentaires": {
+    "D6": "Acheteur noté BBB ; dépendance à l'approvisionnement des producteurs (fournisseurs critiques notés Vigilance).",
+    "D9": "Stress hydrique de la région et rejets de margines : traitement prévu, risque climatique résiduel noté Vigilance."
+   },
+   "sc_comm": {},
+   "verrous": {},
+   "code_client": "20193360",
+   "radical": "0193360",
+   "code_projet": "PF-2026-0015",
+   "credits": [
+    [
+     "CR-26-1501",
+     "Crédit d'investissement (moyen et long terme)",
+     85,
+     "MAD",
+     10
+    ],
+    [
+     "CR-26-1502",
+     "Ligne de fonctionnement (BFR)",
+     10,
+     "MAD",
+     1
+    ]
+   ],
+   "secteur_vals": [
+    100,
+    2.8,
+    85,
+    100
+   ],
+   "exploit": [
+    [
+     "Capacité",
+     "1 200 t d’olives/jour en campagne"
+    ],
+    [
+     "Contrat d'achat",
+     "100 % de la production, 10 ans"
+    ],
+    [
+     "Approvisionnement amont",
+     "1 400 producteurs sous contrat"
+    ],
+    [
+     "Chiffre d'affaires",
+     "88 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "19,5 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "14 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Contrat d'achat de 100 % de la production sur 10 ans ; 1 400 producteurs sous contrat ; tout en MAD.",
+    "faiblesses": "Récolte d'olives sensible aux campagnes déficitaires.",
+    "justification": "",
+    "avis": "Favorable",
+    "avis_txt": "Régime simplifié ; conditions standard.",
+    "synthese": "Un petit projet bien structuré : contrat d'achat ferme avec un groupe agroalimentaire noté BBB, constructeur clé-en-main, financement en dirhams sur 10 ans. Il réunit toutes les conditions du régime simplifié S. Il est noté 8 et non plus, parce que l'écart sectoriel de + 0,15 rend les seuils DSCR exigeants et que les risques agricoles (eau, récoltes) pèsent sur les critères environnementaux et fournisseurs.",
+    "conditions": "• Suivre le traitement des margines (condition environnementale).\n• Contrat d'approvisionnement pluriannuel avec les principales coopératives."
+   }
+  },
+  "attendu": {
+   "score": 81.125,
+   "note_calculee": 8,
+   "note_approuvee": 8,
+   "plafond": 10,
+   "regime_calcule": "S",
+   "regime_retenu": "S",
+   "plafonds_actifs": [],
+   "verrous_actifs": [],
+   "statut": "Note validable, à soumettre au comité",
+   "dscr_min": 1.3714285714285714,
+   "dscr_min_s": 1.2617142857142858,
+   "couverture": 1.08,
+   "quote_part": 0.6333333333333333,
+   "D7": 76.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    80,
+    50,
+    80,
+    80,
+    80,
+    100
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Non",
+    "C3": "Non",
+    "C4": "Non",
+    "C5": "Non",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Non",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.25,
+    1.35,
+    1.45
+   ],
+   "domaines": {
+    "D1": 80.0,
+    "D2": 85.0,
+    "D3": 88.0,
+    "D4": 89.0,
+    "D5": 80.0,
+    "D6": 84.0,
+    "D8": 80.0,
+    "D9": 63.5
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "TOU",
+   "ref": "CAS TOU",
+   "titre": "Complexe hôtelier balnéaire de 420 chambres",
+   "spv": "« Riviera Atlantique » SA (fictive)",
+   "lieu": "Littoral atlantique",
+   "resume": "Hôtel ouvert il y a 10 mois, exposé à la fréquentation et aux prix ; une saison basse marquée par des travaux de reprise a produit un flux de trésorerie négatif. Le titre d'occupation du domaine public maritime expire avant la dette.",
+   "regime": "R4",
+   "secteur": "TOU",
+   "phase": "P2",
+   "climat_eleve": "Oui",
+   "proport": {
+    "expo": 380,
+    "mad": "Oui",
+    "duree": 14,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Non",
+    "contrat_20": "Non",
+    "nb_cp": 3
+   },
+   "emplois": [
+    [
+     "Construction et aménagements",
+     690
+    ],
+    [
+     "Équipements et décoration",
+     120
+    ],
+    [
+     "Frais, intérêts intercalaires",
+     70
+    ],
+    [
+     "Dotation DSRA",
+     25
+    ],
+    [
+     "BFR",
+     15
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior (14 ans)",
+     560,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     360,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.2,
+   "stress_lib": "Occupation − 15 points et prix − 10 %",
+   "periodes": [
+    [
+     "An 1 · S1",
+     -6,
+     32
+    ],
+    [
+     "An 1 · S2",
+     58,
+     32
+    ],
+    [
+     "An 2 · S1",
+     24,
+     33
+    ],
+    [
+     "An 2 · S2",
+     62,
+     33
+    ],
+    [
+     "An 3 · S1",
+     30,
+     33
+    ],
+    [
+     "An 3 · S2",
+     66,
+     33
+    ],
+    [
+     "An 4 · S1",
+     34,
+     34
+    ],
+    [
+     "An 4 · S2",
+     70,
+     34
+    ]
+   ],
+   "n3_llcr": 50,
+   "n4": 50,
+   "n5": 80,
+   "n6": 80,
+   "n_lib": {
+    "N3": "LLCR 1,18",
+    "N4": "DSRA 4,5 mois ; pas de ligne de liquidité saisonnière",
+    "N5": "Quote-part de dette 61 %",
+    "N6": "Recettes en partie en devises, dette en dirhams"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.18,
+    "dsra": 4.5,
+    "fx": 0,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 0.25,
+    "qualite_acheteur": "Non noté",
+    "duree_contrat": null,
+    "duree_dette": 14,
+    "solution_contrat": "",
+    "plan_climat": "Non",
+    "capacite_sponsor": "Oui",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     80,
+     50,
+     80
+    ],
+    "D2": [
+     80,
+     50,
+     80
+    ],
+    "D3": [
+     80,
+     80,
+     80
+    ],
+    "D4": [
+     20,
+     50,
+     50
+    ],
+    "D5": [
+     80,
+     50,
+     80
+    ],
+    "D6": [
+     50,
+     80,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     50
+    ],
+    "D9": [
+     50,
+     80,
+     80,
+     20
+    ]
+   },
+   "commentaires": {
+    "D4": "Aucune recette contractuelle (pas de contrat de location ni de garantie d'un opérateur) : structure des recettes Critique.",
+    "D8": "Autorisation d'occupation temporaire du domaine public maritime de 12 ans pour une dette de 14 ans (blocage B4).",
+    "D9": "Recul du trait de côte documenté au droit du site ; aucun plan d'adaptation financé (C11)."
+   },
+   "sc_comm": {
+    "D4.1": "Aucune garantie de loyer ni de résultat de l'opérateur : recettes entièrement exposées.",
+    "D9.4": "Site littoral exposé à l'érosion côtière, aucun plan d'adaptation financé."
+   },
+   "verrous": {
+    "B4": "Oui"
+   },
+   "code_client": "20207719",
+   "radical": "0207719",
+   "code_projet": "PF-2026-0016",
+   "credits": [
+    [
+     "CR-26-1601",
+     "Crédit d'investissement (moyen et long terme)",
+     380,
+     "MAD",
+     14
+    ]
+   ],
+   "secteur_vals": [
+    420,
+    54,
+    1450,
+    783,
+    70,
+    "Contrat de gestion, 20 ans"
+   ],
+   "exploit": [
+    [
+     "Chambres",
+     "420"
+    ],
+    [
+     "Taux d'occupation année 1",
+     "54 % (plan d’affaires : 68 %)"
+    ],
+    [
+     "Prix moyen",
+     "1 450 MAD/nuit"
+    ],
+    [
+     "RevPAR",
+     "783 MAD"
+    ],
+    [
+     "Chiffre d'affaires",
+     "215 MMAD/an"
+    ],
+    [
+     "Saisonnalité",
+     "70 % des recettes de mai à octobre"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Destination établie ; marque internationale sous contrat de gestion de 20 ans.",
+    "faiblesses": "Occupation de 54 % contre 68 % au plan ; CFADS négatif en basse saison ; droit d'occupation du domaine non établi ; érosion côtière sans plan.",
+    "justification": "C1, C2, C3 : CFADS négatif sur un semestre (DSCR −0,19) ; C11 : risque climatique élevé sans plan financé. B4 : droit d'occupation non établi (stade Octroi). D4.1 et D9.4 notés Critique.",
+    "avis": "Défavorable",
+    "avis_txt": "Révision de fond du plan d'affaires et de la structure.",
+    "synthese": "Le dossier le plus fragile : hôtel ouvert depuis 10 mois, sans aucune recette contractuelle, occupation très en dessous du plan d'affaires et forte saisonnalité. Une saison basse a produit un CFADS négatif. Les seuils sont les plus élevés du modèle (R4, écart tourisme + 0,20, majoration P2). S'y ajoutent l'érosion côtière sans plan d'adaptation et un titre d'occupation du domaine maritime plus court que la dette.",
+    "conditions": "• Restructuration à examiner : allonger la maturité, prévoir une ligne de liquidité saisonnière et un soutien du sponsor sur les pertes.\n• Obtenir une autorisation d'occupation couvrant la dette plus 24 mois (levée de B4).\n• Financer un plan de protection du littoral (levée de C11)."
+   }
+  },
+  "attendu": {
+   "score": 57.97999999999999,
+   "note_calculee": 4,
+   "note_approuvee": 3,
+   "plafond": 3,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C1",
+    "C2",
+    "C3",
+    "C11"
+   ],
+   "verrous_actifs": [
+    "B4"
+   ],
+   "statut": "Note provisoire — stade bloqué : B4 (Octroi)",
+   "dscr_min": -0.1875,
+   "dscr_min_s": -0.15000000000000002,
+   "couverture": 1.0,
+   "quote_part": 0.6086956521739131,
+   "D7": 44.0,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    20,
+    20,
+    50,
+    50,
+    80,
+    80
+   ],
+   "plafonds": {
+    "C1": "Oui",
+    "C2": "Oui",
+    "C3": "Oui",
+    "C4": "Non",
+    "C5": "n.a.",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Non",
+    "C11": "Oui",
+    "C12": "Non",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.6,
+    1.8,
+    2.05
+   ],
+   "domaines": {
+    "D1": 69.5,
+    "D2": 68.0,
+    "D3": 80.0,
+    "D4": 36.5,
+    "D5": 68.0,
+    "D6": 65.0,
+    "D8": 72.5,
+    "D9": 56.0
+   }
+  }
+ },
+ {
+  "dossier": {
+   "onglet": "MIN",
+   "ref": "CAS MIN",
+   "titre": "Mine de cuivre à ciel ouvert et usine de concentration",
+   "spv": "« Nhass Mining » SA (fictive)",
+   "lieu": "Massif montagneux",
+   "resume": "Projet minier en construction ; le concentré est vendu au prix du marché à un négociant international. Le contrôle de conformité révèle que ce négociant figure sur une liste de sanctions.",
+   "regime": "R4",
+   "secteur": "MIN",
+   "phase": "P1",
+   "climat_eleve": "Non",
+   "proport": {
+    "expo": 900,
+    "mad": "Non",
+    "duree": 9,
+    "tech_refs": "Oui",
+    "epc": "Oui",
+    "acheteur_unique": "Oui",
+    "premiere_ref": "Non",
+    "consortium": "Oui",
+    "contrat_20": "Non",
+    "nb_cp": 4
+   },
+   "emplois": [
+    [
+     "Pré-découverture, usine, infrastructures",
+     2650
+    ],
+    [
+     "Fonds de réhabilitation du site",
+     120
+    ],
+    [
+     "Frais",
+     110
+    ],
+    [
+     "Contingence",
+     180
+    ],
+    [
+     "Intérêts intercalaires",
+     160
+    ],
+    [
+     "Dotation DSRA",
+     80
+    ]
+   ],
+   "ressources": [
+    [
+     "Dette senior consortiale (9 ans, en dollars)",
+     1900,
+     "Dette senior"
+    ],
+    [
+     "Fonds propres",
+     1150,
+     "Fonds propres"
+    ]
+   ],
+   "plan_remediation": null,
+   "choc": 0.3,
+   "stress_lib": "Prix du cuivre − 25 % et coûts + 8 %",
+   "periodes": [
+    [
+     "An 3 · S1",
+     250,
+     160
+    ],
+    [
+     "An 3 · S2",
+     262,
+     165
+    ],
+    [
+     "An 4 · S1",
+     270,
+     165
+    ],
+    [
+     "An 4 · S2",
+     255,
+     166
+    ],
+    [
+     "An 5 · S1",
+     248,
+     166
+    ],
+    [
+     "An 5 · S2",
+     240,
+     168
+    ],
+    [
+     "An 6 · S1",
+     236,
+     168
+    ],
+    [
+     "An 6 · S2",
+     230,
+     170
+    ]
+   ],
+   "n3_llcr": null,
+   "n4": 50,
+   "n5": 80,
+   "n6": 20,
+   "n_lib": {
+    "N4": "DSRA 3 mois",
+    "N5": "Quote-part de dette 58 %",
+    "N6": "Dette en dollars ; recettes en dollars mais coûts en dirhams non couverts"
+   },
+   "plafonds_donnees": {
+    "llcr": 1.31,
+    "dsra": 3,
+    "fx": 0.2,
+    "refi": 0,
+    "strategie_refi": "",
+    "part_acheteur": 1.0,
+    "qualite_acheteur": "< BBB−",
+    "duree_contrat": null,
+    "duree_dette": 9,
+    "solution_contrat": "",
+    "plan_climat": "",
+    "capacite_sponsor": "Non",
+    "operateur_remplacable": "Oui",
+    "ecart_om": 0,
+    "expo_groupe": "Non"
+   },
+   "grille": {
+    "D1": [
+     50,
+     50,
+     50
+    ],
+    "D2": [
+     80,
+     50,
+     50
+    ],
+    "D3": [
+     80,
+     50,
+     80
+    ],
+    "D4": [
+     50,
+     20,
+     20
+    ],
+    "D5": [
+     80,
+     80,
+     50
+    ],
+    "D6": [
+     20,
+     50,
+     80
+    ],
+    "D8": [
+     80,
+     80,
+     50
+    ],
+    "D9": [
+     20,
+     50,
+     50,
+     50
+    ]
+   },
+   "commentaires": {
+    "D6": "Négociant unique acheteur du concentré, inscrit sur une liste de sanctions : exclusion X3.",
+    "D9": "Étude d'impact environnemental et social non approuvée ; consultation publique en cours (B8)."
+   },
+   "sc_comm": {
+    "D4.2": "Prix du cuivre libre, sans plancher ni couverture.",
+    "D4.3": "Coût de production dans le dernier quartile en scénario défavorable.",
+    "D6.1": "Acheteur unique de la production noté sous BBB− et signalé au titre du dispositif LBC-FT.",
+    "D9.1": "Gestion des résidus miniers non approuvée ; étude d'impact à reprendre."
+   },
+   "verrous": {
+    "X3": "Oui",
+    "B8": "Oui"
+   },
+   "code_client": "20214486",
+   "radical": "0214486",
+   "code_projet": "PF-2026-0017",
+   "credits": [
+    [
+     "CR-26-1701",
+     "Crédit d'investissement (moyen et long terme)",
+     500,
+     "MAD",
+     9
+    ],
+    [
+     "CR-26-1702",
+     "Crédit d'investissement (moyen et long terme)",
+     400,
+     "USD",
+     9
+    ]
+   ],
+   "secteur_vals": [
+    48,
+    "Norme internationale de certification",
+    13,
+    64,
+    100
+   ],
+   "exploit": [
+    [
+     "Réserves prouvées et probables",
+     "48 Mt à 0,62 % Cu"
+    ],
+    [
+     "Durée de vie",
+     "13 ans"
+    ],
+    [
+     "Coût de production",
+     "2,45 USD/lb face à un prix de référence de 3,80 USD/lb"
+    ],
+    [
+     "Chiffre d'affaires",
+     "1 450 MMAD/an"
+    ],
+    [
+     "CFADS de référence",
+     "520 MMAD/an"
+    ],
+    [
+     "Service de la dette",
+     "330 MMAD/an"
+    ]
+   ],
+   "bloc13": {
+    "forces": "Réserves certifiées de 48 Mt ; coût de production compétitif au prix de référence.",
+    "faiblesses": "Contrepartie clé sous sanctions (X3) ; couverture à terminaison de 92 % (B3) ; acceptabilité environnementale non obtenue (B8) ; capacité du sponsor insuffisante (C12).",
+    "justification": "X3 : exclusion, aucune note n'est produite. B3, B8 et les plafonds C2, C3, C10, C12 sont listés pour information. D4.2, D4.3, D6.1, D9.1 notés Critique.",
+    "avis": "Défavorable",
+    "avis_txt": "Hors périmètre tant que la contrepartie sous sanctions demeure.",
+    "synthese": "Le cas de l'exclusion : le négociant qui achète tout le concentré figure sur une liste de sanctions. Aucune note n'est produite, quel que soit le score. Le calcul complet est présenté pour l'apprentissage : même sans l'exclusion, le dossier serait plafonné à 4 (DSCR sous le seuil, scénario défavorable sous 1,00, acheteur de qualité inférieure à BBB−, sponsor sans capacité résiduelle) et provisoire (financement à terminaison couvert à 92 %, acceptabilité environnementale non obtenue).",
+    "conditions": "• Aucune décision possible tant que la contrepartie sous sanctions n'est pas remplacée.\n• Un nouvel acheteur qualifié, un financement à terminaison complété et l'étude d'impact approuvée sont des préalables à toute nouvelle notation."
+   }
+  },
+  "attendu": {
+   "score": 52.925,
+   "note_calculee": 4,
+   "note_approuvee": null,
+   "plafond": 4,
+   "regime_calcule": "L",
+   "regime_retenu": "L",
+   "plafonds_actifs": [
+    "C2",
+    "C3",
+    "C10",
+    "C12"
+   ],
+   "verrous_actifs": [
+    "X3",
+    "B3",
+    "B8"
+   ],
+   "statut": "Hors périmètre — aucune note produite",
+   "dscr_min": 1.3529411764705883,
+   "dscr_min_s": 0.9470588235294117,
+   "couverture": 0.9242424242424242,
+   "quote_part": 0.5757575757575758,
+   "D7": 33.5,
+   "completude": 1.0,
+   "couverture_grille": 1.0,
+   "noyau": [
+    20,
+    20,
+    20,
+    50,
+    80,
+    20
+   ],
+   "plafonds": {
+    "C1": "Non",
+    "C2": "Oui",
+    "C3": "Oui",
+    "C4": "Non",
+    "C5": "n.a.",
+    "C6": "Non",
+    "C7": "Non",
+    "C8": "Non",
+    "C9": "Non",
+    "C10": "Oui",
+    "C11": "Non",
+    "C12": "Oui",
+    "C13": "Non",
+    "C14": "Non",
+    "C15": "Non"
+   },
+   "seuils": [
+    1.6,
+    1.8,
+    2.05
+   ],
+   "domaines": {
+    "D1": 50.0,
+    "D2": 60.5,
+    "D3": 72.5,
+    "D4": 33.5,
+    "D5": 72.5,
+    "D6": 44.0,
+    "D8": 72.5,
+    "D9": 41.0
+   }
+  }
+ }
+]

@@ -2,7 +2,7 @@ Attribute VB_Name = "modOutil"
 Option Explicit
 
 ' =====================================================================
-'  Outil de scoring Project Finance V8 - version 2 - macros de pilotage
+'  Outil de scoring Project Finance V8 - version 3 - macros de pilotage
 '  Toutes les notes sont calculees par les FORMULES des onglets : les
 '  macros creent, dupliquent, controlent, preparent l'echeancier,
 '  exportent et tracent. Les feuilles sont protegees SANS mot de passe.
@@ -17,12 +17,20 @@ Public Const ONGLET_JOURNAL As String = "Journal"
 Public Const ONGLET_ACCUEIL As String = "Accueil"
 Public Const ONGLET_PARAM As String = "Paramètres"
 Public Const ONGLET_DIAG As String = "Diagnostic"
+Public Const ONGLET_COMPARAISON As String = "Comparaison"
+Public Const ONGLET_CONCORDANCE As String = "Concordance"
+Public Const ONGLET_REFERENTIEL As String = "Référentiel des niveaux"
+Public Const ONGLET_REVUE As String = "Revue IA"
+Public Const ONGLET_CHAMPS As String = "Champs IA"
+Public Const CELLULE_CODE_CLIENT As String = "B15"
+Public Const CELLULE_RADICAL As String = "B16"
+Public Const CELLULE_CODE_PROJET As String = "B17"
 
-Private Const LIGNE_P1 As Long = 72
-Private Const LIGNE_PN As Long = 131
+Private Const LIGNE_P1 As Long = 93
+Private Const LIGNE_PN As Long = 152
 Private Const CK_PREMIERE As Long = 14
-Private Const CK_DERNIERE As Long = 56
-Private Const MAX_DOSSIERS As Long = 23
+Private Const CK_DERNIERE As Long = 63
+Private Const MAX_DOSSIERS As Long = 40
 Private Const MAX_LIGNES_MSG As Long = 12
 
 ' ---------------------------------------------------------------------
@@ -95,6 +103,15 @@ Public Sub AllerJournal()
     Activer ONGLET_JOURNAL
 End Sub
 
+Public Sub AllerConcordance()
+    Application.Calculate
+    Activer ONGLET_CONCORDANCE
+End Sub
+
+Public Sub AllerReferentiel()
+    Activer ONGLET_REFERENTIEL
+End Sub
+
 ' ---------------------------------------------------------------------
 '  Reconnaissance d'un onglet dossier
 ' ---------------------------------------------------------------------
@@ -115,7 +132,7 @@ Non:
     EstDossier = False
 End Function
 
-Private Function FeuilleExiste(ByVal nom As String) As Boolean
+Public Function FeuilleExiste(ByVal nom As String) As Boolean
     Dim ws As Worksheet
     For Each ws In ThisWorkbook.Worksheets
         If StrComp(ws.Name, nom, vbTextCompare) = 0 Then
@@ -125,7 +142,7 @@ Private Function FeuilleExiste(ByVal nom As String) As Boolean
     Next ws
 End Function
 
-Private Function ListeDossiers() As String
+Public Function ListeDossiers() As String
     Dim ws As Worksheet, s As String
     For Each ws In ThisWorkbook.Worksheets
         If EstDossier(ws) Then
@@ -136,7 +153,7 @@ Private Function ListeDossiers() As String
     ListeDossiers = "Dossiers existants : " & s
 End Function
 
-Private Function NomValide(ByVal nom As String) As Boolean
+Public Function NomValide(ByVal nom As String) As Boolean
     Dim interdit As Variant, c As Variant
     NomValide = False
     If Len(nom) = 0 Or Len(nom) > 31 Then
@@ -159,7 +176,7 @@ End Function
 
 ' Dossier vise par une action : l'onglet actif s'il s'agit d'un dossier, sinon
 ' le nom demande a l'utilisateur. Renvoie Nothing si l'action est abandonnee.
-Private Function DossierCible(ByVal titre As String) As Worksheet
+Public Function DossierCible(ByVal titre As String) As Worksheet
     Dim nom As String
     If EstDossier(ActiveSheet) Then
         Set DossierCible = ActiveSheet
@@ -190,12 +207,24 @@ End Function
 '  Creation, duplication, suppression
 ' ---------------------------------------------------------------------
 Public Sub NouveauDossier()
-    Dim nom As String, intitule As String, wsM As Worksheet, wsN As Worksheet, etat As Long
+    Dim nom As String, intitule As String, wsN As Worksheet
     nom = Trim$(InputBox("Nom court du nouvel onglet (ex. C6 ou PORT-NADOR) :", "Nouveau dossier (1/2)"))
     If nom = "" Then Exit Sub
     If Not NomValide(nom) Then Exit Sub
     intitule = Trim$(InputBox("Intitulé du projet (facultatif, modifiable ensuite en A1) :", "Nouveau dossier (2/2)"))
+    Set wsN = CreerDossier(nom, intitule)
+    If wsN Is Nothing Then Exit Sub
+    Application.Goto wsN.Range(CELLULE_CODE_CLIENT), True
+    MsgBox "Dossier « " & nom & " » créé." & vbCrLf & vbCrLf & _
+           "1. Saisissez les codes : client T24, radical (7 chiffres), code projet (PF-AAAA-NNNN)." & vbCrLf & _
+           "2. Remplissez les cellules ORANGE (saisies obligatoires), de haut en bas." & vbCrLf & _
+           "3. La ligne « À SAISIR » en haut indique la prochaine saisie et donne un lien pour y aller." & vbCrLf & _
+           "4. Sélectionnez une cellule pour afficher son aide.", vbInformation, "Nouveau dossier"
+End Sub
 
+' Copie du modele vierge, renommee ; renvoie Nothing en cas d'echec.
+Public Function CreerDossier(ByVal nom As String, ByVal intitule As String) As Worksheet
+    Dim wsM As Worksheet, wsN As Worksheet, etat As Long
     On Error GoTo Echec
     Application.ScreenUpdating = False
     Set wsM = ThisWorkbook.Worksheets(ONGLET_MODELE)
@@ -205,6 +234,7 @@ Public Sub NouveauDossier()
     Set wsN = ActiveSheet
     wsM.Visible = etat
     wsN.Name = nom
+    If wsN.Name <> nom Then Err.Raise 1004, , "le nom « " & nom & " » est refusé"
     Proteger wsN
     wsN.Range("J1").Value = MARQUEUR
     If intitule <> "" Then
@@ -213,20 +243,25 @@ Public Sub NouveauDossier()
         wsN.Range("A1").Value = "Nouveau dossier " & nom
     End If
     Application.ScreenUpdating = True
-
     MajSynthese False
     Journaliser "Création", nom, "Dossier créé à partir du modèle vierge"
     wsN.Activate
-    Application.Goto wsN.Range("B15"), True
-    MsgBox "Dossier « " & nom & " » créé." & vbCrLf & vbCrLf & _
-           "1. Remplissez les cellules ORANGE (saisies obligatoires), de haut en bas." & vbCrLf & _
-           "2. La ligne « À SAISIR » en haut indique la prochaine saisie et donne un lien pour y aller." & vbCrLf & _
-           "3. Sélectionnez une cellule pour afficher son aide.", vbInformation, "Nouveau dossier"
-    Exit Sub
+    Set CreerDossier = wsN
+    Exit Function
 Echec:
+    Dim msg As String
+    msg = Err.Description
+    On Error Resume Next
+    If Not wsM Is Nothing Then wsM.Visible = xlSheetHidden
+    ' copie orpheline du modele : supprimee
+    If Not wsN Is Nothing Then
+        Application.DisplayAlerts = False
+        wsN.Delete
+        Application.DisplayAlerts = True
+    End If
     Application.ScreenUpdating = True
-    MsgBox "Création impossible : " & Err.Description, vbExclamation, "Nouveau dossier"
-End Sub
+    MsgBox "Création impossible : " & msg, vbExclamation, "Nouveau dossier"
+End Function
 
 Public Sub DupliquerDossier()
     Dim ws As Worksheet, nom As String, wsN As Worksheet
@@ -358,7 +393,7 @@ Public Sub ControlerDossier()
             If nbAtt <= 6 Then attention = attention & "- " & Txt(ws.Cells(r, 1).Value) & " : période de différé, exclue du DSCR." & vbCrLf
         End If
     Next r
-    nr = Application.WorksheetFunction.CountIf(ws.Range("E237:E251"), "n.r.")
+    nr = Application.WorksheetFunction.CountIf(ws.Range("E258:E272"), "n.r.")
     If nr > 0 Then attention = attention & "- " & nr & " plafond(s) non évalué(s) faute de donnée (section 11)." & vbCrLf
 
     If nb = 0 Then
@@ -388,7 +423,7 @@ Public Sub PreparerEcheancier()
     Set ws = DossierActif("Préparer l'échéancier")
     If ws Is Nothing Then Exit Sub
 
-    per = Txt(ws.Range("B18").Value)
+    per = Txt(ws.Range("B21").Value)
     If per = "" Then per = "Semestrielle"
     Select Case per
         Case "Trimestrielle"
@@ -401,8 +436,8 @@ Public Sub PreparerEcheancier()
     maxi = LIGNE_PN - LIGNE_P1 + 1
 
     defaut = 10
-    If EstNombre(ws.Range("B25").Value) Then
-        If ws.Range("B25").Value >= 1 Then defaut = CLng(ws.Range("B25").Value)
+    If EstNombre(ws.Range("B28").Value) Then
+        If ws.Range("B28").Value >= 1 Then defaut = CLng(ws.Range("B28").Value)
     End If
     rep = Trim$(InputBox("Nombre d'années de remboursement :" & vbCrLf & vbCrLf & _
                          "Périodicité « " & per & " » : " & parAn & " échéance(s) par an, " & maxi & " périodes au plus.", _
@@ -431,7 +466,7 @@ Public Sub PreparerEcheancier()
 
     Proteger ws
     Application.ScreenUpdating = False
-    If Txt(ws.Range("B18").Value) = "" Then ws.Range("B18").Value = per
+    If Txt(ws.Range("B21").Value) = "" Then ws.Range("B21").Value = per
     ws.Range("A" & LIGNE_P1 & ":A" & LIGNE_PN).ClearContents
     For i = 0 To n - 1
         If suffixe = "M" Then
@@ -460,6 +495,36 @@ Public Sub EffacerEcheancier()
     ws.Range("F" & LIGNE_P1 & ":F" & LIGNE_PN).ClearContents
     Journaliser "Échéancier effacé", ws.Name, ""
     Application.Goto ws.Range("A" & LIGNE_P1), True
+End Sub
+
+' ---------------------------------------------------------------------
+'  Comparaison de deux dossiers
+' ---------------------------------------------------------------------
+Public Sub ComparerDossiers()
+    Dim wsC As Worksheet, a As String, b As String
+    MajSynthese False
+    If EstDossier(ActiveSheet) Then a = ActiveSheet.Name
+    If a = "" Then
+        a = Trim$(InputBox("Premier dossier (nom de l'onglet) :" & vbCrLf & vbCrLf & ListeDossiers(), "Comparer deux dossiers"))
+        If a = "" Then Exit Sub
+    End If
+    b = Trim$(InputBox("Comparer « " & a & " » avec quel dossier ?" & vbCrLf & vbCrLf & ListeDossiers(), "Comparer deux dossiers"))
+    If b = "" Then Exit Sub
+    If Not FeuilleExiste(a) Or Not FeuilleExiste(b) Then
+        MsgBox "Onglet introuvable. " & ListeDossiers(), vbExclamation, "Comparer deux dossiers"
+        Exit Sub
+    End If
+    If Not EstDossier(ThisWorkbook.Worksheets(a)) Or Not EstDossier(ThisWorkbook.Worksheets(b)) Then
+        MsgBox "Choisissez deux onglets de dossier. " & ListeDossiers(), vbExclamation, "Comparer deux dossiers"
+        Exit Sub
+    End If
+    Set wsC = ThisWorkbook.Worksheets(ONGLET_COMPARAISON)
+    Proteger wsC
+    wsC.Range("B4").Value = "'" & a
+    wsC.Range("C4").Value = "'" & b
+    Application.Calculate
+    wsC.Activate
+    Journaliser "Comparaison", a, "Comparé avec " & b
 End Sub
 
 ' ---------------------------------------------------------------------
@@ -495,16 +560,18 @@ End Sub
 Public Sub ExporterPDF()
     Dim ws As Worksheet, chemin As Variant, dossier As String, nomFichier As String, sujet As String
     Set ws = ActiveSheet
-    If Not EstDossier(ws) And ws.Name <> ONGLET_SYNTHESE And ws.Name <> ONGLET_FICHE Then
-        MsgBox "Placez-vous sur un dossier, sur la fiche comité ou sur la synthèse.", vbExclamation, "Exporter en PDF"
+    If Not EstDossier(ws) And ws.Name <> ONGLET_SYNTHESE And ws.Name <> ONGLET_FICHE And ws.Name <> ONGLET_COMPARAISON Then
+        MsgBox "Placez-vous sur un dossier, sur la fiche comité, la comparaison ou la synthèse.", vbExclamation, "Exporter en PDF"
         Exit Sub
     End If
     If ws.Name = ONGLET_FICHE Then
-        sujet = "Fiche_comite_" & Txt(ws.Range("B4").Value)
+        sujet = "Fiche_comite_" & CodeProjetDe(Txt(ws.Range("B4").Value)) & Txt(ws.Range("B4").Value)
     ElseIf ws.Name = ONGLET_SYNTHESE Then
         sujet = "Synthese"
+    ElseIf ws.Name = ONGLET_COMPARAISON Then
+        sujet = "Comparaison_" & Txt(ws.Range("B4").Value) & "_" & Txt(ws.Range("C4").Value)
     Else
-        sujet = "Dossier_" & ws.Name
+        sujet = "Dossier_" & CodeProjetDe(ws.Name) & ws.Name
     End If
     nomFichier = sujet & "_" & Format(Now, "yyyymmdd_hhnn") & ".pdf"
     ' Classeur ouvert depuis OneDrive ou SharePoint : son chemin est une adresse web.
@@ -531,13 +598,48 @@ Public Sub Journaliser(ByVal action As String, ByVal dossier As String, ByVal de
     On Error GoTo Fin
     Set wsJ = ThisWorkbook.Worksheets(ONGLET_JOURNAL)
     Proteger wsJ
-    r = wsJ.Cells(wsJ.Rows.Count, 1).End(xlUp).Row + 1
-    If r < 5 Then r = 5
+    r = 5 + Application.WorksheetFunction.CountA(wsJ.Range("A5:A" & wsJ.Rows.Count))
     wsJ.Cells(r, 1).Value = Now
     wsJ.Cells(r, 1).NumberFormat = "dd/mm/yyyy hh:mm"
-    wsJ.Cells(r, 2).Value = Application.UserName
+    wsJ.Cells(r, 2).Value = Utilisateur()
     wsJ.Cells(r, 3).Value = action
     wsJ.Cells(r, 4).Value = "'" & dossier
-    wsJ.Cells(r, 5).Value = detail
+    wsJ.Cells(r, 5).Value = "'" & Replace(CodeProjetDe(dossier), "_", "")
+    wsJ.Cells(r, 6).Value = "'" & detail
 Fin:
+End Sub
+
+Private Function Utilisateur() As String
+    On Error Resume Next
+    Utilisateur = Application.UserName
+    If Utilisateur = "" Then Utilisateur = Environ$("USERNAME")
+End Function
+
+' Code projet d'un dossier suivi de « _ » (vide si l'onglet n'existe pas ou n'a pas de code).
+Public Function CodeProjetDe(ByVal nom As String) As String
+    Dim c As String
+    On Error GoTo Fin
+    If nom = "" Then Exit Function
+    If Not FeuilleExiste(nom) Then Exit Function
+    If Not EstDossier(ThisWorkbook.Worksheets(nom)) Then Exit Function
+    c = Txt(ThisWorkbook.Worksheets(nom).Range(CELLULE_CODE_PROJET).Value)
+    If c <> "" Then CodeProjetDe = c & "_"
+Fin:
+End Function
+
+' Changement de secteur : les donnees du bloc 4 se rapportent au secteur precedent.
+Public Sub SecteurModifie(ByVal ws As Worksheet)
+    On Error GoTo Fin
+    If Application.WorksheetFunction.CountA(ws.Range("B67:B72")) = 0 Then Exit Sub
+    If MsgBox("Le secteur a changé : les données sectorielles du bloc 4 se rapportent au secteur précédent." & vbCrLf & _
+              "Les effacer ?" & vbCrLf & vbCrLf & _
+              "Rappel : choisissez de nouveau les situations de D2.1, D4.1, D4.3 et D5.2, dont la description dépend du secteur.", _
+              vbYesNo + vbQuestion, "Changement de secteur") <> vbYes Then Exit Sub
+    Application.EnableEvents = False
+    Proteger ws
+    ws.Range("B67:B72").ClearContents
+    ws.Range("D67:H72").ClearContents
+    Journaliser "Données sectorielles effacées", ws.Name, "Secteur : " & Txt(ws.Range("B19").Value)
+Fin:
+    Application.EnableEvents = True
 End Sub

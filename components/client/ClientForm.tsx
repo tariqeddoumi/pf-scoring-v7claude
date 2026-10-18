@@ -624,6 +624,19 @@ export function ClientForm({
               options={options("typeClient")}
             />
             <Champ
+              cle="radical"
+              libelle="Radical client"
+              provenance={provenance("radical")}
+              aide="Exactement 7 chiffres, zéros de tête compris. Sert à retrouver le client et ses crédits."
+              valeur={v.radical}
+              onChange={(x) => {
+                set("radical")(x);
+                setErreurs((e) => ({ ...e, radical: undefined }));
+              }}
+              erreur={erreurs.radical}
+              placeholder="0041027"
+            />
+            <Champ
               cle="ice"
               libelle="ICE"
               provenance={provenance("ice")}

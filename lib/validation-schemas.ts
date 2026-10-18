@@ -150,6 +150,15 @@ export const createProjectSchema = z.object({
   periodeRemboursement: intOrString(),
   tauxCouverture: numberOrString(),
   ratio: numberOrString(),
+  // Code projet PF-AAAA-NNNN : proposé automatiquement à la création s'il est vide.
+  codeProjet: z
+    .string()
+    .trim()
+    .transform((v) => v.toUpperCase())
+    .pipe(z.string().regex(/^PF-\d{4}-\d{4}$/, { message: "Le code projet suit le format PF-AAAA-NNNN, par exemple PF-2026-0014" }))
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
   // scoreGlobal et grade ne sont plus acceptés : ils viennent du moteur, recopiés
   // lors de la validation de l'évaluation. Une propriété inconnue est ignorée.
 });
@@ -288,6 +297,13 @@ export const createClientSchema = z.object({
 
   // Signalétique project finance
   codeClientT24: codeT24.nullable().optional(),
+  // Radical : exactement 7 chiffres, zéros de tête compris (gardé en texte).
+  radical: z
+    .string()
+    .trim()
+    .regex(/^\d{7}$/, { message: "Le radical compte exactement 7 chiffres, zéros de tête compris (ex. 0041027)" })
+    .nullable()
+    .optional(),
   ice: z
     .string()
     .trim()

@@ -6,6 +6,8 @@
 export interface ValeursClient {
   // Identification
   codeClientT24: string;
+  /** Radical client (7 chiffres) */
+  radical: string;
   nom: string;
   raisonSociale: string;
   formeJuridique: string;
@@ -58,6 +60,7 @@ export interface ValeursClient {
 
 export const VALEURS_CLIENT_VIDES: ValeursClient = {
   codeClientT24: "",
+  radical: "",
   nom: "",
   raisonSociale: "",
   formeJuridique: "",

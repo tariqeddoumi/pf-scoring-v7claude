@@ -72,6 +72,7 @@ interface Client {
   statusKYC?: string | null;
   statusConformite?: string | null;
   codeClientT24?: string | null;
+  radical?: string | null;
   ice?: string | null;
   registreCommerce?: string | null;
   identifiantFiscal?: string | null;
@@ -390,6 +391,7 @@ export default function FicheClientPage({
           <SectionCard titre="Identification">
             <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
               <Ligne libelle="Code client T24" valeur={client.codeClientT24} />
+              <Ligne libelle="Radical" valeur={client.radical} />
               <Ligne libelle="Nom usuel" valeur={client.nom} />
               <Ligne libelle="Raison sociale" valeur={client.raisonSociale} />
               <Ligne libelle="Forme juridique" valeur={client.formeJuridique} />

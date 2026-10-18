@@ -39,6 +39,9 @@ export const FILTRES: Record<string, Filtre> = {
   ScoringComment: parWorkflow,
   ScoringApproval: parWorkflow,
   Scoring: parProjet,
+  // Modèle Project Finance : crédits et évaluations suivent leur projet.
+  ProjectCredit: parProjet,
+  EvaluationPF: parProjet,
   // Journaux : une entrée liée à un dossier suit le dossier ; les entrées générales
   // (paramétrage de la grille) restent visibles.
   ScoringChangeLog: (ids) => ({ OR: [{ evaluationId: null }, { evaluation: { project: { entiteId: { in: ids } } } }] }),
