@@ -166,6 +166,8 @@ model Client {
   // ─── Signalétique project finance (identification, groupe, solidité, risque) ───
   /// Code client dans le système central (Temenos T24 / Transact, application CUSTOMER)
   codeClientT24           String?
+  /// Radical du client : exactement 7 chiffres, zéros de tête conservés (texte)
+  radical                 String?
   /// Identifiant Commun de l'Entreprise (Maroc, 15 chiffres)
   ice                     String?
   /// Numéro et tribunal du registre du commerce
@@ -203,6 +205,7 @@ model Client {
   groupeAffaires GroupeAffaires?     @relation(fields: [groupeAffairesId], references: [id], onDelete: SetNull)
 
   @@unique([entiteId, codeClientT24])
+  @@unique([entiteId, radical])
   @@index([entiteId])
   @@index([groupeAffairesId])
   @@map("BP_PF_clients")
@@ -297,6 +300,8 @@ model Project {
   periodeRemboursement        Int?
   tauxCouverture              Float?
   ratio                       Float?
+  /// Code projet, format PF-AAAA-NNNN (proposé automatiquement, modifiable), unique par banque
+  codeProjet                  String?
   /// Banque (entité) qui porte le dossier — celle du client
   entiteId                    String?       @db.Uuid
 
@@ -309,11 +314,85 @@ model Project {
 
   // New relationships for scoring
   scoringEvaluations ScoringEvaluation[] @relation("ScoringProject")
+  credits            ProjectCredit[]
+  evaluationsPF      EvaluationPF[]
 
+  @@unique([entiteId, codeProjet])
   @@index([creePar])
   @@index([clientId])
   @@index([entiteId])
   @@map("BP_PF_projects")
+}
+
+/// Dossier de crédit de la banque rattaché à un projet (un projet peut en porter plusieurs).
+/// Saisie manuelle en attendant le rapatriement depuis Evolan ; un numéro de dossier ne se
+/// rattache qu'à un seul projet de la banque.
+model ProjectCredit {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @db.Uuid
+  /// Banque du projet (recopiée à la création) : porte l'unicité du numéro de dossier
+  entiteId    String?  @db.Uuid
+  numero      String
+  /// Investissement (moyen et long terme), relais, fonctionnement, garantie, couverture, autre
+  nature      String
+  /// Montant en MMAD (contre-valeur pour un crédit en devises)
+  montant     Float?
+  devise      String   @default("MAD")
+  dureeAns    Float?
+  /// Rôle dans le montage : senior, mezzanine, relais TVA, lettre de crédit…
+  role        String?
+  commentaire String?
+  /// MANUELLE (saisie) ou EVOLAN (rapatriement, à venir)
+  source      String   @default("MANUELLE")
+  ordre       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([entiteId, numero])
+  @@index([projectId])
+  @@map("BP_PF_project_credits")
+}
+
+/// Scoring d'un projet selon le modèle Project Finance (parcours en 13 blocs, moteur
+/// lib/modele-pf). La saisie et le résultat calculé par le serveur sont conservés en JSON ;
+/// les champs résumés servent aux listes et aux tris.
+model EvaluationPF {
+  id            String    @id @default(uuid()) @db.Uuid
+  projectId     String    @db.Uuid
+  titre         String?
+  /// brouillon, soumis, valide, rejete
+  statut        String    @default("brouillon")
+  /// Saisie des blocs 1 à 13 (lib/modele-pf/saisie.ts)
+  saisie        Json
+  /// Résultat du moteur au dernier enregistrement (lib/modele-pf/moteur.ts)
+  resultat      Json?
+  /// Paramètres appliqués au calcul (copie, pour reproduire la note)
+  parametres    Json?
+  scoreGlobal   Float?
+  noteCalculee  Int?
+  /// Note approuvée : « 1 » à « 10 », ou « — » pour un dossier hors périmètre
+  noteApprouvee String?
+  regimeRetenu  String?
+  statutNote    String?
+  /// Pièces du dossier déposées pour la lecture par l'IA (métadonnées et chemin de stockage)
+  pieces        Json?
+  /// Dernière lecture des pièces par l'IA : propositions sourcées et décisions
+  analyseIa     Json?
+  creePar       String    @db.Uuid
+  modifiePar    String?   @db.Uuid
+  soumisLe      DateTime?
+  validePar     String?   @db.Uuid
+  valideLe      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([statut])
+  @@map("BP_PF_evaluations_pf")
 }
 
 model Scoring {
