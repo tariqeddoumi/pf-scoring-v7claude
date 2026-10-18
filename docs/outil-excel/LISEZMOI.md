@@ -1,34 +1,78 @@
-# Outil de scoring Project Finance V8 — Excel / VBA (version 2)
+# Outil de scoring Project Finance V8 — Excel / VBA (version 3)
 
-- `Outil_Scoring_PF_V8_v2.xlsm` : l'outil avec ses macros.
-- `Outil_Scoring_PF_V8_v2.xlsx` : la même chose sans macros (tout se calcule, il n'y a pas de boutons).
+- `Outil_Scoring_PF_V8_v3.xlsm` : l'outil avec ses macros.
+- `Outil_Scoring_PF_V8_v3.xlsx` : la même chose sans macros (tout se calcule, il n'y a pas de boutons).
+- `exemple_propositions_IA.xlsx` : un fichier de propositions de l'IA, au format attendu, pour essayer
+  « Nouveau dossier depuis l'IA » (projet fictif de 60 MWc).
+
+Diffuser le `.xlsm` (ou le `.xlsx` si les macros sont interdites) ; ne pas l'enregistrer au format `.xls`, qui perd
+les listes, la protection et les macros.
 
 ## Scorer un projet en 5 étapes
 
 1. Ouvrez le fichier et **activez les macros** (bandeau « Activer le contenu »).
-2. **Accueil › Nouveau dossier** : donnez un nom court à l'onglet (ex. `PORT-NADOR`).
-3. Remplissez les cellules **orange**. Ce sont les saisies obligatoires encore vides ; elles passent au jaune une fois remplies.
-   Quand vous sélectionnez une cellule, une info-bulle explique quoi saisir.
-4. La ligne **« À SAISIR »** en haut du dossier compte ce qui manque et donne un lien vers la prochaine cellule.
-   Le tableau de bord affiche la note approuvée, les plafonds et les verrous.
-5. **Contrôler la saisie**, puis **Fiche comité** : page de synthèse imprimable ou exportable en PDF.
+2. **Accueil › Nouveau dossier (vide)**, **Dupliquer un dossier**, ou **Nouveau dossier depuis l'IA** avec un fichier de
+   propositions.
+3. Saisissez les **codes** (client T24, radical à 7 chiffres, code projet `PF-AAAA-NNNN`), puis les cellules **orange** :
+   ce sont les saisies obligatoires encore vides. Une info-bulle explique chaque cellule.
+4. Grille D1 à D9 et indicateurs N4 à N6 : choisissez dans la liste la **situation** qui décrit le dossier ; la note
+   (100, 80, 50, 20) s'affiche à côté. Une situation Critique ou « Info. insuffisante » exige un commentaire.
+5. Rédigez le **bloc 13 « Commentaires et conditions »**, puis **Contrôler la saisie** et **Fiche comité** (PDF).
 
-## Nouveautés de la version 2
+## Nouveautés de la version 3
 
-- Feuilles protégées **sans mot de passe** : une formule ne peut plus être écrasée par erreur.
-- Saisies obligatoires en orange, ligne « À SAISIR », info-bulles et contrôles de saisie avec messages en français.
-- Onglet **Fiche comité** (graphique des scores par domaine) ; accueil avec la liste des dossiers et un lien vers chacun.
-- Boutons **Préparer l'échéancier** (libellés « An n · S1 »…) et **Effacer l'échéancier**.
-- Corrections : couleur de la note (un dossier vide ou hors périmètre s'affichait en vert) ; noyau N1-N6 inclus dans la
-  complétude (un N4 vide laissait la note « validable ») ; C5 sans objet en régime R4 ; export PDF depuis OneDrive.
-  Le détail figure dans l'onglet **Diagnostic**.
+- **18 dossiers préchargés**, tous fictifs : les six cas d'origine (C1 à C5) et douze cas sectoriels (ENR, EAU, TEL, TRA,
+  POR, SAN, ETH, IMMO, IND, AGR, TOU, MIN). L'**Accueil** les présente en catalogue (secteur, régime, phase, note,
+  situations illustrées, « Ce que ce cas enseigne »).
+- **Identification** (bloc 1) : code client T24, radical (exactement 7 chiffres, zéros conservés), code projet
+  (`PF-AAAA-NNNN`), contrôlés et repris dans la synthèse, la fiche comité, le nom du PDF et le journal.
+  Bloc 3 : tableau des **crédits** de la banque sur le projet (numéro, nature, montant, devise, durée).
+- **Bloc 4 sectoriel** : trois à six données propres au secteur choisi ; les lignes inutiles sont « Sans objet ».
+- **Situations descriptives** : liste de quatre situations par sous-critère et pour N4 à N6, plus « Info. insuffisante ».
+  Pour D2.1, D4.1, D4.3 et D5.2, la description dépend du secteur. Le détail est dans l'onglet **Référentiel des niveaux**.
+- **Bloc 13 « Commentaires et conditions »** : synthèse (obligatoire), forces, faiblesses et mitigants, conditions,
+  justification des écarts (obligatoire si un plafond, un verrou ou une information insuffisante est actif), avis
+  risques, décision du comité. Il alimente la **Fiche comité**.
+- Onglets **Comparaison** (deux dossiers côte à côte, écarts surlignés) et **Concordance** (notes de référence des 18 cas
+  recalculées par un moteur indépendant ; « 18 / 18 » attendu).
+- **Propositions de l'IA** : « Importer les propositions IA » lit le fichier produit par l'outil web, refuse l'import si
+  les codes client ou projet diffèrent de ceux du dossier, affiche chaque proposition en bleu avec sa source à côté de la
+  valeur actuelle (onglet **Revue IA**), puis « Appliquer les décisions » écrit les seules propositions acceptées et
+  trace chaque décision au **Journal**. Le format est décrit dans l'onglet **Champs IA**.
+- Corrections : cas d'origine incomplets (la ligne « À SAISIR » ne tombait jamais à zéro), faits générateurs des plafonds
+  tronqués à l'écran, synthèse limitée à 23 dossiers. Le détail figure dans l'onglet **Diagnostic**.
 
-Les notes approuvées des six cas d'étude sont inchangées (C1 9, C2 6, C3 4, C4A 3, C4B 6, C5 6).
+Les notes approuvées des six cas d'origine sont inchangées (C1 9, C2 6, C3 4, C4A 3, C4B 6, C5 6).
+
+## Format du fichier de propositions de l'IA
+
+Classeur `.xlsx` avec une feuille **Propositions** :
+
+| Cellule | Contenu |
+|---|---|
+| B1 | `PF-PROPOSITIONS-IA v1` |
+| B2, B3, B4 | code client T24, radical (texte, 7 chiffres), code projet |
+| B5, B6 | date de génération, documents analysés |
+| ligne 8 | en-têtes ; à partir de la ligne 9 : A clé, B valeur proposée, C source (document, page), D confiance |
+
+Les clés (`regime`, `expo`, `emploi.1.montant`, `D2.1`, `N4.justification`, `bloc13.forces`…) sont listées dans
+l'onglet **Champs IA** avec la cellule alimentée et les valeurs admises. Les pourcentages s'écrivent en fraction
+(0,15 pour 15 %) ; une situation s'écrit par son niveau (« Favorable »…). La décision du comité ne s'importe pas.
 
 ## Fichiers techniques
 
-- `sources-vba/` : le code des macros. Il s'importe dans l'éditeur VBA (Alt+F11) si la politique de sécurité impose de
-  reconstruire le projet.
-- `generateur/` : les scripts Python qui produisent le classeur (`python build_tool.py [--sans-vba]`, dépendance : `xlsxwriter`).
+- `sources-vba/` : le code des macros (`modOutil.bas`, `modIA.bas`, `ThisWorkbook.txt`). Il s'importe dans l'éditeur VBA
+  (Alt+F11) si la politique de sécurité impose de reconstruire le projet.
+- `generateur/` : les scripts Python qui produisent le classeur (`python build_tool.py [--sans-vba]`, dépendance :
+  `xlsxwriter`) :
+  - `cas_tous.py` réunit les 18 dossiers (`cas_data.py`, `cas_sectoriels.py`, `complements.py`) ;
+  - `referentiel.py` contient les situations de chaque sous-critère et les données sectorielles ;
+  - `moteur_reference.py` recalcule chaque dossier en Python (notes de l'onglet Concordance) ;
+  - `verifier.py` compare un classeur recalculé au moteur de référence :
+    ```
+    soffice --headless --convert-to xlsx --outdir /tmp/recalc Outil_Scoring_PF_V8_v3.xlsx
+    python verifier.py /tmp/recalc/Outil_Scoring_PF_V8_v3.xlsx
+    ```
+    (LibreOffice réglé sur « toujours recalculer » au chargement.) Résultat attendu : `0 écart(s) sur 18 dossiers`.
 
-Les dossiers sont **fictifs** ; les paramètres sont des **candidats** à valider.
+Les dossiers, sociétés, codes et numéros de crédit sont **fictifs** ; les paramètres sont des **candidats** à valider.

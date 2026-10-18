@@ -12,10 +12,11 @@ End Sub
 Private Sub Workbook_SheetChange(ByVal Sh As Object, ByVal Target As Range)
     On Error GoTo Fin
     If Not modOutil.EstDossier(Sh) Then Exit Sub
-    If Not Intersect(Target, Sh.Range("B15:B17")) Is Nothing Then
+    If Not Intersect(Target, Sh.Range("B18:B20")) Is Nothing Then
         modOutil.Journaliser "Routage modifié", Sh.Name, _
-            modOutil.Txt(Sh.Range("B15").Value) & " / " & modOutil.Txt(Sh.Range("B16").Value) & " / " & _
-            modOutil.Txt(Sh.Range("B17").Value) & " -> note approuvée " & Sh.Range("B6").Text
+            modOutil.Txt(Sh.Range("B18").Value) & " / " & modOutil.Txt(Sh.Range("B19").Value) & " / " & _
+            modOutil.Txt(Sh.Range("B20").Value) & " -> note approuvée " & Sh.Range("B6").Text
+        If Not Intersect(Target, Sh.Range("B19")) Is Nothing Then modOutil.SecteurModifie Sh
     End If
 Fin:
 End Sub
