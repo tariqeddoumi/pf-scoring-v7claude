@@ -1,5 +1,6 @@
 "use client";
 
+import { ChampLogo } from "@/components/ui/champ-logo";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Building2, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { apiDelete, apiGet, apiPatch, apiPost, messageErreurApi } from "@/lib/api-client";
@@ -255,21 +256,15 @@ export default function EntitesPage() {
               <label className="text-[13px] text-foreground sm:col-span-2">Nom de l&apos;outil
                 <input className={`${champ} mt-1`} value={edition.saisie.nomOutil} onChange={(ev) => maj({ nomOutil: ev.target.value })} placeholder="Scoring PF" />
               </label>
-              <label className="text-[13px] text-foreground sm:col-span-2">Adresse du logo (https://… ou /…)
-                <input className={`${champ} mt-1`} value={edition.saisie.logoUrl} onChange={(ev) => maj({ logoUrl: ev.target.value })} placeholder="https://www.mabanque.ma/logo.png" />
-              </label>
+              <div className="text-[13px] text-foreground sm:col-span-2">Logo de la banque
+                <div className="mt-1"><ChampLogo id="logo-entite" valeur={edition.saisie.logoUrl} onChange={(v) => maj({ logoUrl: v })} /></div>
+              </div>
               <label className="text-[13px] text-foreground">Couleur principale
                 <div className="mt-1 flex items-center gap-2">
                   <input type="color" value={edition.saisie.couleurPrimaire || "#0f766e"} onChange={(ev) => maj({ couleurPrimaire: ev.target.value })} className="h-9 w-12 rounded border border-border bg-background" />
                   <input className={champ} value={edition.saisie.couleurPrimaire} onChange={(ev) => maj({ couleurPrimaire: ev.target.value })} placeholder="#RRGGBB" />
                 </div>
               </label>
-              {edition.saisie.logoUrl && (
-                <div className="flex items-end">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={edition.saisie.logoUrl} alt="Aperçu du logo" className="h-10 max-w-full object-contain" />
-                </div>
-              )}
             </div>
 
             <div className="mt-5 flex justify-end gap-2">

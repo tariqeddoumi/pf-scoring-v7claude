@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma-client';
+import { cleCatalogue } from '@/lib/config-catalogue';
 
 export interface AppConfig {
   [key: string]: string;
@@ -67,12 +68,19 @@ export async function setAppConfig(
         value,
         updatedAt: new Date(),
         updatedBy: changedBy,
+        // Une clé connue enregistrée autrefois comme « non publique » est remise d'aplomb.
+        ...(cleCatalogue(key) ? { isPublic: cleCatalogue(key)!.isPublic, type: cleCatalogue(key)!.type, category: cleCatalogue(key)!.category } : {}),
       },
+      // Une clé connue (nom, logo, couleurs…) est créée avec sa nature et sa visibilité :
+      // créée « comportement, non publique », elle n'atteignait jamais l'affichage.
       create: {
         key,
         value,
-        type: 'string',
-        category: 'behavior',
+        type: cleCatalogue(key)?.type ?? 'string',
+        category: cleCatalogue(key)?.category ?? 'behavior',
+        description: cleCatalogue(key)?.description,
+        isPublic: cleCatalogue(key)?.isPublic ?? false,
+        metadata: cleCatalogue(key)?.metadata,
         updatedAt: new Date(),
         updatedBy: changedBy,
       },
