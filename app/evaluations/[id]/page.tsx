@@ -181,6 +181,15 @@ export default function EvaluationDetailPage({
         const { id } = await params;
         setEvalId(id);
         const response = await apiGet(`/api/evaluations/${id}`);
+        // Les évaluations sont des scorings PF : un lien vers cette ancienne page (signet,
+        // courriel) mène à l'écran de scoring au lieu d'une impasse.
+        if (response.status === 404) {
+          const pf = await apiGet(`/api/evaluations-pf/${id}`);
+          if (pf.ok) {
+            router.replace(`/scoring-pf/${id}`);
+            return;
+          }
+        }
         if (!response.ok)
           throw new Error("Chargement de l'évaluation impossible");
         const data = await response.json();
@@ -194,7 +203,7 @@ export default function EvaluationDetailPage({
       }
     };
     resolveAndFetch();
-  }, [params]);
+  }, [params, router]);
 
   if (loading) {
     return (

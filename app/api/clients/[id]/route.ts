@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { completerNotesProjets } from "@/lib/modele-pf/note-projet";
 import { Prisma } from "@prisma/client";
 import { withAuth } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
@@ -97,7 +98,7 @@ export async function GET(
 
       return NextResponse.json({
         success: true,
-        data: { ...client, groupeAffaires: groupe },
+        data: { ...client, projects: await completerNotesProjets(client.projects), groupeAffaires: groupe },
       });
     } catch (error: unknown) {
       console.error(`[Client ${id} GET]`, error);

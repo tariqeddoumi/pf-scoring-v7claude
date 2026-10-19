@@ -8,7 +8,6 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { sansGeneration } from "@/lib/libelle-modele";
 import { ROLE_LABELS } from "@/lib/ui-constants";
 
 interface AdminSection {
@@ -85,9 +84,9 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "bareme",
     famille: "modele",
-    title: "Barème de notation",
+    title: "Barème de l'ancien questionnaire",
     description:
-      "Correspondance score → note (AAA…D) appliquée par le moteur à chaque calcul",
+      "Score → note de l'ancien questionnaire générique. Le barème des évaluations PF se règle dans l'administration du modèle PF",
     href: "/admin/bareme",
     icon: Tags,
     requiredRole: "scoring_admin",
@@ -97,7 +96,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     famille: "modele",
     title: "Règles et seuils rédhibitoires",
     description:
-      "Vue d'ensemble des règles du modèle, dont les seuils NO-GO, et des règles sans effet",
+      "Vue d'ensemble des règles du modèle, dont les seuils rédhibitoires, et des règles sans effet",
     href: "/admin/regles",
     icon: Ban,
     requiredRole: "scoring_admin",
@@ -115,8 +114,8 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "scoring",
     famille: "modele",
-    title: "Grille générique (constructeur)",
-    description: "Visualisez les domaines, critères et barèmes du modèle actif",
+    title: "Ancien questionnaire : constructeur",
+    description: "Domaines, critères et barèmes de l'ancien questionnaire générique (non utilisé par les évaluations PF)",
     href: "/admin/scoring",
     icon: BarChart3,
     requiredRole: "scoring_admin",
@@ -124,8 +123,8 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "grille-scoring",
     famille: "modele",
-    title: "Paramétrage de la grille générique",
-    description: "Éditeur hiérarchique complet — domaines, critères, sous-critères, options et plages numériques",
+    title: "Ancien questionnaire : éditeur de grille",
+    description: "Éditeur hiérarchique de l'ancien questionnaire générique (non utilisé par les évaluations PF)",
     href: "/admin/grille-scoring",
     icon: SlidersHorizontal,
     requiredRole: "scoring_admin",
@@ -251,12 +250,15 @@ export default function AdminPage() {
         let domaines: number | null = null;
         let criteres: number | null = null;
         try {
-          const resModele = await apiGet("/api/methodology");
+          // Modèle appliqué aux évaluations : le scoring Project Finance.
+          const resModele = await apiGet("/api/modele-pf/parametres");
           if (resModele.ok) {
-            const m = (await resModele.json()).data;
-            modelVersion = sansGeneration(m?.version?.label) || `Version ${m?.version?.numero ?? "?"}`;
-            domaines = m?.volumetrie?.domaines ?? null;
-            criteres = m?.volumetrie?.criteres ?? null;
+            const P = (await resModele.json()).parametres;
+            modelVersion = "Scoring Project Finance";
+            domaines = P?.libellesDomaines ? Object.keys(P.libellesDomaines).length : null;
+            criteres = P?.sousCriteres
+              ? Object.values(P.sousCriteres as Record<string, unknown[]>).reduce((t, l) => t + l.length, 0)
+              : null;
           }
         } catch (e) {
           console.warn("Modèle publié illisible :", e);

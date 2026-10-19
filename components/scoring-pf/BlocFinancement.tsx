@@ -20,7 +20,7 @@ export function BlocFinancement({ s, modifier, r, P, lecture, manquants, credits
   return (
     <div className="space-y-4">
       <SectionCard titre="Bloc 3 · Sources et emplois" description="Montants à terminaison, en millions de dirhams (MMAD). Seules les ressources engagées comptent.">
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div id="pf-emplois" className="scroll-mt-40">
             <h3 className="mb-2 text-[13px] font-semibold text-foreground">Emplois (besoin à terminaison){m("emplois") && <Badge />}</h3>
             <Lignes
@@ -32,7 +32,7 @@ export function BlocFinancement({ s, modifier, r, P, lecture, manquants, credits
               rendu={(e, i) => (
                 <>
                   <input aria-label={`Emploi ${i + 1}`} value={e.libelle} disabled={lecture} placeholder="Libellé" maxLength={200}
-                    onChange={(ev) => modifier((x) => { x.emplois[i].libelle = ev.target.value; })} className={CLASSE_SAISIE} />
+                    onChange={(ev) => modifier((x) => { x.emplois[i].libelle = ev.target.value; })} className={`${CLASSE_SAISIE} min-w-0 flex-[1_1_12rem]`} />
                   <div className="w-36 shrink-0">
                     <Nombre cible={`emploi-${i}`} valeur={e.montant} lecture={lecture} suffixe="MMAD" min={0}
                       onChange={(v) => modifier((x) => { x.emplois[i].montant = v; })} />
@@ -52,10 +52,10 @@ export function BlocFinancement({ s, modifier, r, P, lecture, manquants, credits
               rendu={(e, i) => (
                 <>
                   <input aria-label={`Ressource ${i + 1}`} value={e.libelle} disabled={lecture} placeholder="Libellé" maxLength={200}
-                    onChange={(ev) => modifier((x) => { x.ressources[i].libelle = ev.target.value; })} className={CLASSE_SAISIE} />
+                    onChange={(ev) => modifier((x) => { x.ressources[i].libelle = ev.target.value; })} className={`${CLASSE_SAISIE} min-w-0 flex-[1_1_12rem]`} />
                   <select aria-label={`Nature de la ressource ${i + 1}`} value={e.nature ?? ""} disabled={lecture}
                     onChange={(ev) => modifier((x) => { x.ressources[i].nature = (ev.target.value || null) as Nature | null; })}
-                    className={`${CLASSE_SAISIE} w-44 shrink-0 ${e.montant !== null && !e.nature ? "border-warning" : ""}`}>
+                    className={`${CLASSE_SAISIE.replace("w-full", "")} w-44 shrink-0 ${e.montant !== null && !e.nature ? "border-warning" : ""}`}>
                     <option value="">Nature…</option>
                     {NATURES.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
@@ -133,7 +133,7 @@ export function Lignes<T>({ lignes, rendu, ajouter, retirer, lecture, max, libel
   return (
     <div className="space-y-1.5">
       {lignes.map((l, i) => (
-        <div key={i} className="flex items-center gap-1.5">
+        <div key={i} className="flex flex-wrap items-center gap-1.5">
           {rendu(l, i)}
           {!lecture && (
             <button type="button" onClick={() => retirer(i)} aria-label="Retirer la ligne" className="shrink-0 rounded p-1.5 text-muted-foreground hover:bg-surface hover:text-destructive">

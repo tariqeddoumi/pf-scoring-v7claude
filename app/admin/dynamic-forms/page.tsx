@@ -280,10 +280,7 @@ export default function DynamicFormsAdmin() {
           </p>
           <ul className="list-disc list-inside ml-2 mb-3">
             <li>Cliquer sur « Installer la configuration ».</li>
-            <li>
-              This imports field definitions from lib/field-config.ts into the
-              database
-            </li>
+            <li>Les champs proposés par défaut sont alors enregistrés et deviennent modifiables.</li>
           </ul>
 
           <p>

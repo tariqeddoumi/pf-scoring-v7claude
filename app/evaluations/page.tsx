@@ -31,7 +31,7 @@ interface Evaluation {
   finalScore: number | null;
   rating: string | null;
   /** Statut de la note du scoring PF (« Note provisoire — stade bloqué… », « Hors périmètre… »). */
-  recommendation?: string | null;
+  statutNote?: string | null;
   titre?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -63,7 +63,7 @@ function etatDe(ev: Evaluation): Etat {
 
 /** Verrou actif : blocage B (note provisoire) ou exclusion X (aucune note). */
 function verrou(ev: Evaluation): "blocage" | "exclusion" | null {
-  const s = (ev.recommendation ?? "").toLowerCase();
+  const s = (ev.statutNote ?? "").toLowerCase();
   if (s.startsWith("hors périmètre")) return "exclusion";
   if (s.includes("bloqué")) return "blocage";
   return null;
@@ -116,6 +116,12 @@ export default function EvaluationsPage() {
   useEffect(() => {
     charger();
   }, [charger]);
+
+  // Lien direct vers un onglet (menu « Validations » : /evaluations?onglet=aValider).
+  useEffect(() => {
+    const demande = new URLSearchParams(window.location.search).get("onglet");
+    if (demande && ONGLETS.some((o) => o.cle === demande)) setOnglet(demande as Etat);
+  }, []);
 
   const supprimer = async (id: string) => {
     try {
@@ -332,7 +338,7 @@ export default function EvaluationsPage() {
                           {ev.project?.nom ?? "Projet inconnu"}
                           {v && (
                             <span
-                              title={ev.recommendation ?? undefined}
+                              title={ev.statutNote ?? undefined}
                               className="inline-flex items-center gap-1 rounded-full bg-destructive-subtle px-2 py-0.5 text-[11px] font-semibold text-destructive"
                             >
                               {v === "exclusion" ? <Ban size={12} /> : <ShieldAlert size={12} />}
@@ -388,7 +394,7 @@ export default function EvaluationsPage() {
                           className="flex items-center justify-end gap-1"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {can("evaluation", "delete") && (
+                          {can("evaluation", "delete") && ev.status === "brouillon" && (
                             <>
                               <button
                                 onClick={() => setASupprimer(ev.id)}

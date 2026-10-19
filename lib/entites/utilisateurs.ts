@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { peutLire, type Perimetre } from "./perimetre";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
 
 /**
  * Gestion des utilisateurs dans le périmètre de l'administrateur : un administrateur
@@ -44,8 +46,14 @@ export function entiteAttribuable(
   return { ok: true, entiteId: demandee };
 }
 
-/** Seul un administrateur système attribue, retire ou modifie le rôle d'administrateur système. */
+/**
+ * Seul un administrateur système attribue, retire ou modifie le rôle d'administrateur
+ * système, ou attribue un rôle qui décide des dossiers (validation des scorings) : un
+ * administrateur du modèle pouvait se donner, ou donner à un tiers, le rôle de décideur.
+ */
 export function roleAttribuable(roleAdmin: string, roleCible: string | undefined, roleActuel?: string): boolean {
   if (roleAdmin === "system_admin") return true;
-  return roleCible !== "system_admin" && roleActuel !== "system_admin";
+  if (roleCible === "system_admin" || roleActuel === "system_admin") return false;
+  if (roleCible !== undefined && roleCible !== roleActuel && hasPermission(roleCible as UserRole, "evaluation", "approve")) return false;
+  return true;
 }

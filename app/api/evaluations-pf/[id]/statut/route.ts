@@ -8,6 +8,7 @@ import { relireSaisie } from "@/lib/modele-pf/saisie";
 import { gradeDeLaNote, type ParametresModele } from "@/lib/modele-pf/parametres";
 import { chargerParametres, calculerEvaluation, peutSaisir, peutDecider } from "@/lib/modele-pf/serveur";
 import { getAppConfigKey } from "@/lib/services/app-config-service";
+import { intervenantsScoring } from "@/lib/modele-pf/acces";
 import { delegationSuffisante, lireMatriceDelegation, roleRequisPourMontant } from "@/lib/services/scoring/decision-guard";
 
 interface RouteParams { params: Promise<{ id: string }> }
@@ -27,7 +28,7 @@ async function changer(req: NextRequest, user: AuthPayload, id: string) {
     if (!v.success) return NextResponse.json({ error: "Action inconnue" }, { status: 400 });
     const e = await prisma.evaluationPF.findUnique({
       where: { id },
-      include: { project: { select: { id: true, creePar: true, codeProjet: true, montant: true, client: { select: { codeClientT24: true, radical: true } } } } },
+      include: { project: { select: { id: true, creePar: true, codeProjet: true, montant: true, credits: { select: { montant: true } }, client: { select: { codeClientT24: true, radical: true } } } } },
     });
     if (!e) return NextResponse.json({ error: "Scoring introuvable" }, { status: 404 });
     const auteurs = [e.creePar, e.project.creePar];
@@ -56,12 +57,26 @@ async function changer(req: NextRequest, user: AuthPayload, id: string) {
 
     if (action === "valider" || action === "rejeter") {
       if (e.statut !== "soumis") return NextResponse.json({ error: "Seul un scoring soumis se valide ou se rejette" }, { status: 409 });
-      if (!peutDecider(user.role, user.userId, [e.creePar, e.modifiePar, e.project.creePar])) {
+      // Tous ceux qui ont contribué à la saisie sont écartés, pas seulement le dernier rédacteur
+      // (modifiePar) : sinon un décideur qui a modifié le brouillon validait son propre travail.
+      if (!peutDecider(user.role, user.userId, await intervenantsScoring(e))) {
         return NextResponse.json({ error: "La décision revient à un autre utilisateur habilité (séparation des fonctions)" }, { status: 403 });
       }
       if (action === "rejeter" && !motif) return NextResponse.json({ error: "Indiquez le motif du rejet" }, { status: 400 });
       if (action === "valider") {
-        const roleRequis = roleRequisPourMontant(lireMatriceDelegation(await getAppConfigKey("delegation.matrice").catch(() => null)), e.project.montant);
+        // Le montant retenu est le plus élevé entre le projet, l'exposition saisie (figée à la
+        // soumission) et les crédits : le montant du projet seul se modifiait après soumission.
+        // Une matrice illisible bloque la validation au lieu de lever toute délégation.
+        let matrice: string | null;
+        try {
+          matrice = await getAppConfigKey("delegation.matrice");
+        } catch {
+          return NextResponse.json({ error: "Matrice de délégation illisible : validation impossible pour l'instant" }, { status: 503 });
+        }
+        const exposition = Number(relireSaisie(e.saisie).proportionnalite?.exposition ?? 0) * 1e6;
+        const credits = e.project.credits.reduce((t, c) => t + (c.montant ?? 0), 0) * 1e6;
+        const montant = Math.max(e.project.montant ?? 0, Number.isFinite(exposition) ? exposition : 0, credits);
+        const roleRequis = roleRequisPourMontant(lireMatriceDelegation(matrice), montant);
         if (!delegationSuffisante(user.role, roleRequis)) {
           return NextResponse.json({ error: `Délégation insuffisante pour ce montant : validation réservée au rôle ${roleRequis} ou supérieur` }, { status: 403 });
         }
@@ -76,7 +91,7 @@ async function changer(req: NextRequest, user: AuthPayload, id: string) {
           if (n.count !== 1) return false;
           // Le projet reçoit le grade de l'échelle de la banque (AAA à D), pas la note 1 à 10 :
           // la note brute s'affichait en badge rouge et manquait aux répartitions.
-          await tx.project.update({ where: { id: e.projectId }, data: { scoreGlobal: calc.resultat.score, grade: gradeDeLaNote(calc.resultat.noteApprouvee, P) } });
+          await tx.project.update({ where: { id: e.projectId }, data: { scoreGlobal: calc.resultat.score, grade: gradeDeLaNote(calc.resultat.noteApprouvee, P), status: "approuve" } });
           return true;
         });
         if (!ok) return conflit();

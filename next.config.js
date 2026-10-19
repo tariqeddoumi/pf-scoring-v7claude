@@ -55,8 +55,10 @@ const nextConfig = {
         source: "/api/:path*",
         headers: [
           {
+            // Les réponses de l'API dépendent de l'utilisateur et du moment (scores,
+            // droits) : aucun cache, comme le fixe aussi le middleware.
             key: "Cache-Control",
-            value: "private, max-age=300",
+            value: "no-store",
           },
         ],
       },

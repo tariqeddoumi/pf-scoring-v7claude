@@ -112,7 +112,7 @@ function LoginPageContent() {
           ) : (
             <div className="flex items-center justify-center gap-3 mb-4">
               <span aria-hidden className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
-                {nomAppli.split(/\s+/).map((m) => m[0]).join("").slice(0, 2).toUpperCase()}
+                {nomAppli.slice(0, 2).toUpperCase()}
               </span>
               <h1 className="text-3xl font-bold text-foreground">{nomAppli}</h1>
             </div>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyPassword, createToken } from "@/lib/auth";
-import { handleError, getErrorMessage } from "@/lib/error-handler";
+import { handleError } from "@/lib/error-handler";
 
 import prisma from "@/lib/prisma-client";
 
@@ -122,13 +122,12 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7, // 7 jours
     });
 
-    console.log(`[LOGIN] Successful login for ${email}`);
     return response;
   } catch (error: unknown) {
     console.error("[LOGIN] Unexpected error:", error);
     const errorCode = handleError(error);
-    const errorMessage =
-      getErrorMessage(error) || "Erreur lors de la connexion";
+    // Le message brut (base, configuration) ne sort pas : il renseignait un attaquant.
+    const errorMessage = "Erreur lors de la connexion";
 
     return NextResponse.json(
       { error: errorMessage, errorCode, timestamp: new Date().toISOString() },

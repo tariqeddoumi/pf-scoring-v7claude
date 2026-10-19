@@ -194,3 +194,18 @@ export function gradeDeLaNote(note: number | "—" | null | undefined, P: Parame
   if (typeof note !== "number") return null;
   return (P.correspondanceGrades ?? PARAMETRES_DEFAUT.correspondanceGrades)[String(note)] ?? null;
 }
+
+/**
+ * Paramètres tels qu'un rôle qui ne voit pas les scores peut les lire : la table de
+ * conversion, la correspondance des grades et le niveau des plafonds permettraient de
+ * reconstituer la note d'un dossier.
+ */
+export function parametresVisibles(P: ParametresModele, voirScores: boolean): ParametresModele {
+  if (voirScores) return P;
+  return {
+    ...P,
+    conversion: [],
+    correspondanceGrades: {},
+    plafonds: Object.fromEntries(Object.entries(P.plafonds).map(([k, v]) => [k, { ...v, niveau: 0 }])) as ParametresModele["plafonds"],
+  };
+}

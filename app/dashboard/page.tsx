@@ -111,8 +111,9 @@ export default function DashboardPage() {
     const enInstruction = projets.filter((p) => p.status !== "rejete");
     const engagements = enInstruction.reduce((s, p) => s + (p.montant || 0), 0);
 
+    // Un dossier rejeté ne fait pas partie du portefeuille noté.
     const calculees = evaluations.filter(
-      (e) => e.finalScore !== null && Number.isFinite(e.finalScore)
+      (e) => e.finalScore != null && Number.isFinite(e.finalScore) && e.status !== "rejete"
     );
     const scoreMoyen = calculees.length
       ? calculees.reduce((s, e) => s + (e.finalScore as number), 0) / calculees.length
@@ -130,6 +131,9 @@ export default function DashboardPage() {
     for (const e of calculees) {
       if (e.rating) parNote.set(e.rating, (parNote.get(e.rating) ?? 0) + 1);
     }
+    // Les parts se rapportent aux dossiers qui ont un grade (une exclusion n'en a pas) :
+    // rapportées à tous les dossiers calculés, les barres ne totalisaient pas 100 %.
+    const notees = Array.from(parNote.values()).reduce((t, n) => t + n, 0);
 
     const parSecteur = new Map<string, number>();
     for (const p of enInstruction) {
@@ -139,7 +143,7 @@ export default function DashboardPage() {
 
     return {
       enInstruction, engagements, calculees, scoreMoyen,
-      bloquees, aValider, brouillons, parNote,
+      bloquees, aValider, brouillons, parNote, notees,
       parSecteur: [...parSecteur.entries()].sort((a, b) => b[1] - a[1]),
     };
   }, [projets, evaluations, alertes]);
@@ -347,7 +351,7 @@ export default function DashboardPage() {
               <>
                 {ECHELLE.map((n) => {
                   const c = chiffres.parNote.get(n) ?? 0;
-                  const pc = (c / chiffres.calculees.length) * 100;
+                  const pc = chiffres.notees ? (c / chiffres.notees) * 100 : 0;
                   return (
                     <div key={n} className="mb-1.5 flex items-center gap-2.5">
                       <span className={`w-10 rounded border px-1 text-center text-[11.5px] font-bold ${ratingBadgeClass(n)}`}>
@@ -363,7 +367,7 @@ export default function DashboardPage() {
                   );
                 })}
                 <p className="mt-3 border-t border-border pt-2.5 text-[11.5px] text-muted-foreground">
-                  Barème de la banque · AAA ≥ 95 · D &lt; 25
+                  Grade issu de la note du modèle PF · 10 = AAA … 1 = D
                 </p>
               </>
             )}

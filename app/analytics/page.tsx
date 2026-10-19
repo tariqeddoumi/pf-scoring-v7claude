@@ -89,17 +89,17 @@ function AnalytiquePageContenu() {
             <Tuile
               libelle="Score moyen"
               valeur={
-                a.scoreMoyen !== null
+                a.scoreMoyen != null
                   ? a.scoreMoyen.toFixed(1).replace(".", ",")
                   : "—"
               }
-              precision={a.scoreMoyen !== null ? "sur 100" : "aucun calcul"}
-              classe={a.scoreMoyen !== null ? scoreTextClass(a.scoreMoyen) : undefined}
+              precision={a.scoreMoyen != null ? "sur 100" : "aucun calcul"}
+              classe={a.scoreMoyen != null ? scoreTextClass(a.scoreMoyen) : undefined}
             />
             <Tuile
               libelle="Notes BBB ou mieux"
               valeur={
-                a.partInvestissement !== null
+                a.partInvestissement != null
                   ? `${a.partInvestissement.toFixed(0)} %`
                   : "—"
               }
@@ -205,7 +205,7 @@ function AnalytiquePageContenu() {
                   {a.dossiers.map((d) => (
                     <li key={d.evaluationId} className="border-b border-border last:border-b-0">
                       <Link
-                        href={`/evaluations/${d.evaluationId}`}
+                        href={`/scoring-pf/${d.evaluationId}`}
                         className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-surface"
                       >
                         <span className="font-medium text-foreground">
