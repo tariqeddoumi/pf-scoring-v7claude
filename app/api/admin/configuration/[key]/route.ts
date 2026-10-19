@@ -1,3 +1,4 @@
+import { motifLogoInvalide } from '@/lib/logo';
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma-client';
@@ -55,6 +56,11 @@ async function handlePut(
       );
     }
 
+    if (key === 'APP_LOGO_URL') {
+      const motif = motifLogoInvalide(String(value));
+      if (motif) return NextResponse.json({ error: motif }, { status: 400 });
+    }
+
     // Persist via the shared service: upsert (no 404 on first save), record
     // history, and invalidate the 5-minute config cache so the new value takes
     // effect immediately for the scoring engine and screens.
@@ -66,7 +72,7 @@ async function handlePut(
       success: true,
       data: config,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[CONFIG PUT]', error);
     return NextResponse.json(
       { error: 'Failed to update configuration' },

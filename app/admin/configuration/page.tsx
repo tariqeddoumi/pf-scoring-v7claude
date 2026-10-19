@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { sansGeneration } from "@/lib/libelle-modele";
+import { ChampLogo } from "@/components/ui/champ-logo";
 
 interface ConfigItem {
   key: string;
@@ -180,6 +181,9 @@ export default function ConfigurationPage() {
                           <option value="true" className="bg-background">Activé</option>
                           <option value="false" className="bg-background">Désactivé</option>
                         </select>
+                      ) : item.key === "APP_LOGO_URL" ? (
+                        <ChampLogo id={item.key} valeur={current}
+                          onChange={(v) => setDrafts((p) => ({ ...p, [item.key]: v }))} />
                       ) : item.type === "json" ? (
                         <textarea
                           id={item.key}

@@ -1,3 +1,4 @@
+import { motifLogoInvalide } from "@/lib/logo";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { AuthPayload } from "@/lib/auth-middleware";
@@ -31,7 +32,9 @@ export const entiteSchema = z.object({
   pays: texteOptionnel,
   isActive: z.boolean().optional(),
   nomOutil: texteOptionnel,
-  logoUrl: texteOptionnel.refine((v) => !v || /^(https:\/\/|\/)/.test(v), "Le logo doit être une adresse https:// ou un chemin /…"),
+  // Image déposée (data:image/…) acceptée : texteOptionnel borne la longueur, on la relâche ici.
+  logoUrl: z.string().trim().max(250_000).nullable().optional().transform((v) => v || null)
+    .superRefine((v, ctx) => { const m = motifLogoInvalide(v); if (m) ctx.addIssue({ code: "custom", message: m }); }),
   couleurPrimaire: texteOptionnel.refine((v) => !v || /^#[0-9a-fA-F]{6}$/.test(v), "Couleur au format #RRGGBB"),
 });
 export type EntiteSaisie = z.infer<typeof entiteSchema>;
