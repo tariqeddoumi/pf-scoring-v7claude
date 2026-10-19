@@ -16,6 +16,11 @@ export async function GET(req: NextRequest) {
 /** PUT — enregistre la surcharge (administrateur du modèle) ; refusée si les poids ne totalisent pas 100 %. */
 export async function PUT(req: NextRequest) {
   return withAdminAuth(req, async (r, user) => {
+    // Les paramètres valent pour toutes les banques de la plateforme : un administrateur
+    // rattaché à une seule banque ne les modifie pas.
+    if (!user.perimetre?.tout) {
+      return NextResponse.json({ error: "Réservé à un administrateur de toute la plateforme (les paramètres s'appliquent à toutes les banques)" }, { status: 403 });
+    }
     try {
       const { parametres, anomalies } = await enregistrerParametres(await r.json(), user.userId);
       if (anomalies.length) return NextResponse.json({ error: "Paramètres incohérents", anomalies }, { status: 422 });

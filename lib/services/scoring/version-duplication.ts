@@ -24,6 +24,9 @@ export interface ResultatDuplication {
   plages: number;
   regles: number;
   liaisons: number;
+  formules: number;
+  applicabilites: number;
+  pieces: number;
 }
 
 /**
@@ -78,7 +81,7 @@ export async function duplicateVersion(input: {
 
   // La copie est transactionnelle : une version à moitié dupliquée serait un modèle
   // incohérent, avec des nœuds orphelins et des règles rattachées à rien.
-  const [noeuds, options, plages, regles, liaisons] = await prisma.$transaction([
+  const [noeuds, options, plages, regles, liaisons, formules, applicabilites, pieces] = await prisma.$transaction([
     prisma.$executeRaw`
       INSERT INTO "BP_PF_v7pp_scoring_nodes" (
         id, "versionId", "parentNodeId", "nodeType", code, label, "shortLabel",
@@ -162,6 +165,42 @@ export async function duplicateVersion(input: {
       JOIN "BP_PF_v7pp_scoring_nodes" n ON n.id = b."nodeId"
       WHERE n."versionId" = ${input.sourceVersionId}
     `,
+    // Formules, règles d'applicabilité et pièces exigées : sans elles, la copie perdait
+    // les calculs des nœuds calculés et l'affichage conditionnel des questions.
+    prisma.$executeRaw`
+      INSERT INTO "BP_PF_v7pp_scoring_formulas" (
+        id, "nodeId", expression, "variablesJson", "minOutput", "maxOutput",
+        "roundingMode", "fallbackValue", "fallbackMessage", "isActive", "createdAt", "updatedAt"
+      )
+      SELECT ${id("f.id")}, ${id('f."nodeId"')}, f.expression, f."variablesJson",
+             f."minOutput", f."maxOutput", f."roundingMode", f."fallbackValue",
+             f."fallbackMessage", f."isActive", NOW(), NOW()
+      FROM "BP_PF_v7pp_scoring_formulas" f
+      JOIN "BP_PF_v7pp_scoring_nodes" n ON n.id = f."nodeId"
+      WHERE n."versionId" = ${input.sourceVersionId}
+    `,
+    prisma.$executeRaw`
+      INSERT INTO "BP_PF_v7pp_applicability_rules" (
+        id, "nodeId", "conditionExpression", "effectType", priority, "isActive", "createdAt"
+      )
+      SELECT ${id("a.id")}, ${id('a."nodeId"')}, a."conditionExpression", a."effectType",
+             a.priority, a."isActive", NOW()
+      FROM "BP_PF_v7pp_applicability_rules" a
+      JOIN "BP_PF_v7pp_scoring_nodes" n ON n.id = a."nodeId"
+      WHERE n."versionId" = ${input.sourceVersionId}
+    `,
+    prisma.$executeRaw`
+      INSERT INTO "BP_PF_v7pp_document_requirements" (
+        id, "nodeId", "documentType", label, description, "isRequired",
+        "allowedMimeTypes", "maxFileSizeMb", "validationLevel", "isActive", "createdAt"
+      )
+      SELECT ${id("d.id")}, ${id('d."nodeId"')}, d."documentType", d.label, d.description,
+             d."isRequired", d."allowedMimeTypes", d."maxFileSizeMb", d."validationLevel",
+             d."isActive", NOW()
+      FROM "BP_PF_v7pp_document_requirements" d
+      JOIN "BP_PF_v7pp_scoring_nodes" n ON n.id = d."nodeId"
+      WHERE n."versionId" = ${input.sourceVersionId}
+    `,
   ]);
 
   return {
@@ -172,5 +211,8 @@ export async function duplicateVersion(input: {
     plages,
     regles,
     liaisons,
+    formules,
+    applicabilites,
+    pieces,
   };
 }

@@ -3,6 +3,7 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
 import { creditSchema, peutModifierProjet, messageConflitCredit } from "@/lib/modele-pf/credits";
 import { messagePublic } from "@/lib/erreur-publique";
+import { seulementFournis } from "@/lib/validation-schemas";
 
 interface RouteParams { params: Promise<{ id: string; creditId: string }> }
 
@@ -18,9 +19,10 @@ async function modifier(req: NextRequest, user: AuthPayload, id: string, creditI
     if (!peutModifierProjet(user.role, user.userId, credit.project.creePar)) {
       return NextResponse.json({ error: "Vos droits ne permettent pas de modifier ce projet" }, { status: 403 });
     }
-    const v = creditSchema.partial().safeParse(await req.json());
+    const corps = await req.json();
+    const v = creditSchema.partial().safeParse(corps);
     if (!v.success) return NextResponse.json({ error: v.error.issues[0]?.message ?? "Saisie invalide" }, { status: 400 });
-    const maj = await prisma.projectCredit.update({ where: { id: creditId }, data: v.data });
+    const maj = await prisma.projectCredit.update({ where: { id: creditId }, data: seulementFournis(v.data, corps) });
     return NextResponse.json(maj);
   } catch (e) {
     const conflit = messageConflitCredit(e);

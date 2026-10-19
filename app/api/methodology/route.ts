@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
             domaines: domaines.length,
             criteres: noeuds.filter((n) => n.depth === 1).length,
             sousCriteres: noeuds.filter((n) => n.depth === 2).length,
-            pointsNotes: noeuds.filter((n) => n.isScored).length,
+            nbPointsNotes: noeuds.filter((n) => n.isScored).length,
             options: nbOptions,
           },
           bareme,

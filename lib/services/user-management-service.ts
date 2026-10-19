@@ -280,6 +280,9 @@ export class UserManagementService {
    * À utiliser uniquement pour RGPD ou nettoyage complet
    */
   static async permanentlyDeleteUser(userId: string) {
+    // L'effacement supprimerait en cascade les projets du compte : refusé s'il en a.
+    const projets = await prisma.project.count({ where: { creePar: userId } });
+    if (projets > 0) throw new Error(`Effacement refusé : le compte a créé ${projets} projet(s). Désactivez-le plutôt.`);
     // D'abord supprimer l'audit log
     await prisma.userAuditLog.deleteMany({
       where: { OR: [{ userId }, { performedById: userId }] },

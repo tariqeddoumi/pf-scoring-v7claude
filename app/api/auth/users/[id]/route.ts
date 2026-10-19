@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma-client";
 import { etatDuCompte } from "@/lib/compte-actif";
 import { calculerPerimetre, chargerArbre } from "@/lib/entites/perimetre";
 import { compteGerable } from "@/lib/entites/utilisateurs";
+import { supprimerCompte } from "@/lib/compte-actif";
 
 export async function DELETE(
   request: NextRequest,
@@ -48,7 +49,7 @@ export async function DELETE(
     // Ne pas permettre de supprimer le dernier admin
     if (user.role === "system_admin") {
       const adminCount = await prisma.user.count({
-        where: { role: "system_admin" },
+        where: { role: "system_admin", isActive: true, deletedAt: null },
       });
 
       if (adminCount <= 1) {
@@ -60,9 +61,7 @@ export async function DELETE(
     }
 
     // Supprimer l'utilisateur
-    await prisma.user.delete({
-      where: { id },
-    });
+    await supprimerCompte(id);
 
     return NextResponse.json(
       {

@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { Loader2, Plus, Trash2, Save, X } from "lucide-react";
-import { apiCall, apiGet, apiPost } from "@/lib/api-client";
+import { apiCall, apiGet, apiPost, messageErreurApi } from "@/lib/api-client";
 import { SectionCard } from "@/components/ui/section-card";
 import { NATURES_CREDIT, DEVISES_CREDIT } from "@/lib/modele-pf/codes";
 
@@ -21,7 +21,8 @@ interface Credit {
 type Brouillon = { numero: string; nature: string; montant: string; devise: string; dureeAns: string; role: string };
 const VIDE: Brouillon = { numero: "", nature: NATURES_CREDIT[0], montant: "", devise: "MAD", dureeAns: "", role: "" };
 
-const nombre = (v: string) => (v.trim() === "" ? null : Number(v.replace(",", ".")));
+/** « 1 500,5 » ou « 1500.5 » → 1500.5 ; NaN si illisible (refusé avant l'envoi, sinon il partait en null). */
+const nombre = (v: string) => (v.trim() === "" ? null : Number(v.replace(/[\s\u00a0\u202f]/g, "").replace(",", ".")));
 const fmt = (v: number | null) => (v === null ? "—" : v.toLocaleString("fr-FR", { maximumFractionDigits: 1 }));
 
 /**
@@ -52,6 +53,11 @@ export function CreditsProjet({ projetId, modifiable }: { projetId: string; modi
   });
 
   async function enregistrer(b: Brouillon, id?: string) {
+    const c = corps(b);
+    if ((c.montant !== null && !Number.isFinite(c.montant)) || (c.dureeAns !== null && !Number.isFinite(c.dureeAns))) {
+      setErreur("Montant ou durée illisible : saisissez un nombre (ex. 1 500,5).");
+      return;
+    }
     setEnvoi(true);
     setErreur(null);
     const r = id
@@ -72,7 +78,7 @@ export function CreditsProjet({ projetId, modifiable }: { projetId: string; modi
     if (!window.confirm(`Détacher le crédit ${c.numero} de ce projet ? (Rien n'est supprimé dans les systèmes de la banque.)`)) return;
     const r = await apiCall(`/api/projects/${projetId}/credits/${c.id}`, { method: "DELETE" });
     if (r.ok) charger();
-    else setErreur("Retrait impossible");
+    else setErreur(await messageErreurApi(r, "Retrait impossible"));
   }
 
   const ligneSaisie = (b: Brouillon, setB: (b: Brouillon) => void, valider: () => void, annuler: () => void) => (
@@ -134,7 +140,7 @@ export function CreditsProjet({ projetId, modifiable }: { projetId: string; modi
                   <Fragment key={c.id}>{ligneSaisie(edition.b, (b) => setEdition({ id: c.id, b }), () => enregistrer(edition.b, c.id), () => setEdition(null))}</Fragment>
                 ) : (
                   <tr key={c.id} className="border-b border-border last:border-b-0">
-                    <td className="px-3 py-2 font-medium text-foreground">{c.numero}</td>
+                    <td className="whitespace-nowrap px-3 py-2 font-medium text-foreground">{c.numero}</td>
                     <td className="px-3 py-2">{c.nature}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{fmt(c.montant)}</td>
                     <td className="px-3 py-2">{c.devise}</td>

@@ -28,7 +28,7 @@ interface Methodologie {
     domaines: number;
     criteres: number;
     sousCriteres: number;
-    pointsNotes: number;
+    nbPointsNotes: number;
     options: number;
   };
   bareme: {
@@ -120,7 +120,7 @@ export default function MethodologiePage() {
         <Tuile libelle="Domaines" valeur={m.volumetrie.domaines} />
         <Tuile libelle="Critères" valeur={m.volumetrie.criteres} />
         <Tuile libelle="Sous-critères" valeur={m.volumetrie.sousCriteres} />
-        <Tuile libelle="Points notés" valeur={m.volumetrie.pointsNotes} />
+        <Tuile libelle="Points notés" valeur={m.volumetrie.nbPointsNotes} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -297,7 +297,7 @@ export default function MethodologiePage() {
             </ul>
             <p className="mt-3 border-t border-border pt-3 text-[12px] text-muted-foreground">
               Ces seuils commandent la couleur des scores dans toute l&apos;application.
-              Ils ne remplacent pas le barème de notation ci-contre.
+              Ils ne remplacent pas le barème de notation présenté plus haut.
             </p>
           </SectionCard>
 

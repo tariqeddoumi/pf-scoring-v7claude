@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
-import { oublierCompte } from "@/lib/compte-actif";
+import { oublierCompte, supprimerCompte } from "@/lib/compte-actif";
 import { PERIMETRE_VIDE, type Perimetre } from "@/lib/entites/perimetre";
 import { compteGerable, entiteAttribuable, PORTEES, roleAttribuable } from "@/lib/entites/utilisateurs";
 
@@ -172,10 +172,10 @@ export async function DELETE(
         return errorResponse("Seul un administrateur système supprime ce compte", { status: 403, errorCode: "FORBIDDEN" });
       }
 
-      const user = await prisma.user.delete({
-        where: { id },
-        select: { id: true, email: true, nom: true, prenom: true },
-      });
+      if (id === admin.userId) {
+        return errorResponse("Vous ne pouvez pas supprimer votre propre compte", { status: 400, errorCode: "FORBIDDEN" });
+      }
+      const user = await supprimerCompte(id);
 
       return successResponse(user, { message: "Utilisateur supprimé avec succès" });
     } catch (error: any) {

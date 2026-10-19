@@ -310,7 +310,7 @@ export default function NouvelleEvaluationPage() {
 
           <SectionCard titre="Déroulé">
             <ol className="list-inside list-decimal space-y-1.5 text-[12.5px] text-muted-foreground">
-              <li>Choisir le projet ci-contre</li>
+              <li>Choisir le projet dans la liste</li>
               <li>Renseigner les critères, domaine par domaine</li>
               <li>Calculer la note et lire la trace</li>
               <li>Soumettre à validation</li>

@@ -6,7 +6,7 @@ import { messagePublic } from "@/lib/erreur-publique";
 import { convertirPiece, type PieceConvertie } from "@/lib/services/ia-documents/conversion";
 import { lirePiece } from "@/lib/services/ia-documents/stockage";
 import { analyserPieces } from "@/lib/services/ia-documents/analyse";
-import { saisieSchema } from "@/lib/modele-pf/saisie";
+import { relireSaisie } from "@/lib/modele-pf/saisie";
 import { criteresIA, construirePropositionsPF, contexteDossier, type AnalysePF } from "@/lib/modele-pf/ia";
 import { evaluationModifiable, piecesDe, refus } from "@/lib/modele-pf/acces";
 
@@ -43,7 +43,7 @@ async function analyser(_req: NextRequest, user: AuthPayload, id: string) {
   if (!pieces.length) return NextResponse.json({ error: "Aucune pièce lisible.", details: avertissements }, { status: 400 });
 
   try {
-    const saisie = saisieSchema.parse(e.saisie);
+    const saisie = relireSaisie(e.saisie);
     const criteres = criteresIA(saisie);
     const appel = await analyserPieces({ pieces, criteres, contexte: contexteDossier(e.project as unknown as Record<string, unknown>, saisie) });
     const { propositions, manquants } = construirePropositionsPF(appel.resultat, saisie, criteres);
@@ -53,11 +53,15 @@ async function analyser(_req: NextRequest, user: AuthPayload, id: string) {
       synthese: appel.resultat.synthese, documents: appel.resultat.documents, questions: appel.resultat.questions,
       propositions, manquants,
     };
-    await prisma.$transaction([
-      prisma.evaluationPF.update({ where: { id }, data: { analyseIa: analyse as unknown as Prisma.InputJsonValue } }),
-      prisma.auditLog.create({ data: { projectId: e.projectId, utilisateurId: user.userId, action: "SCORING_PF_ANALYSE_IA",
-        details: JSON.stringify({ evaluationId: id, pieces: lues.length, propositions: propositions.length, manquants: manquants.length, modele: appel.modele }) } }),
-    ]);
+    // L'analyse dure plusieurs minutes : elle ne s'enregistre que si le scoring est resté au brouillon.
+    const ecrite = await prisma.$transaction(async (tx) => {
+      const n = await tx.evaluationPF.updateMany({ where: { id, statut: "brouillon" }, data: { analyseIa: analyse as unknown as Prisma.InputJsonValue } });
+      if (n.count !== 1) return false;
+      await tx.auditLog.create({ data: { projectId: e.projectId, utilisateurId: user.userId, action: "SCORING_PF_ANALYSE_IA",
+        details: JSON.stringify({ evaluationId: id, pieces: lues.length, propositions: propositions.length, manquants: manquants.length, modele: appel.modele }) } });
+      return true;
+    });
+    if (!ecrite) return refus(409, "Le scoring a été soumis pendant l'analyse : rouvrez-le pour relancer l'analyse.");
     return NextResponse.json({ analyse });
   } catch (err) {
     console.error("[ANALYSE IA PF]", err instanceof Error ? err.message : err);

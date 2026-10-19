@@ -544,3 +544,14 @@ export type CreateCountryInput = z.infer<typeof createCountrySchema>;
 export type UpdateCountryRiskInput = z.infer<typeof updateCountryRiskSchema>;
 export type UpdateSystemConfigInput = z.infer<typeof updateSystemConfigSchema>;
 export type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;
+
+/**
+ * Mises à jour partielles : avec Zod 4, `.partial()` applique encore les `.default()`
+ * du schéma de création — une modification du seul nom remettait le rôle d'un
+ * utilisateur à « read_only », la devise d'un projet à « MAD »… On ne garde que les
+ * champs effectivement envoyés.
+ */
+export function seulementFournis<T extends object>(valide: T, brut: unknown): Partial<T> {
+  if (!brut || typeof brut !== "object") return {};
+  return Object.fromEntries(Object.entries(valide).filter(([k]) => k in (brut as object))) as Partial<T>;
+}

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import { refusSiVersionFigee, verifierNoeudModifiable } from "@/lib/services/scoring/version-guard";
 
 export async function PUT(
   req: NextRequest,
@@ -10,6 +11,8 @@ export async function PUT(
   return withAdminAuth(req, async () => {
     try {
       const { nodeId } = await context.params;
+      const figee = await refusSiVersionFigee(verifierNoeudModifiable(nodeId));
+      if (figee) return figee;
       const body = await req.json();
 
       const updated = await prisma.scoringNode.update({

@@ -4,8 +4,9 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
 import { messagePublic } from "@/lib/erreur-publique";
 import { peutVoirScores } from "@/lib/score-visibility";
-import { saisieSchema } from "@/lib/modele-pf/saisie";
+import { relireSaisie, saisieSchema } from "@/lib/modele-pf/saisie";
 import type { ParametresModele } from "@/lib/modele-pf/parametres";
+import { piecesDe } from "@/lib/modele-pf/acces";
 import { chargerParametres, calculerEvaluation, peutSaisir, peutDecider, resultatVisible } from "@/lib/modele-pf/serveur";
 
 interface RouteParams { params: Promise<{ id: string }> }
@@ -26,7 +27,7 @@ async function charger(id: string) {
 }
 
 function reponse(e: Charge, user: AuthPayload, P: Awaited<ReturnType<typeof chargerParametres>>) {
-  const saisie = saisieSchema.parse(e.saisie);
+  const saisie = relireSaisie(e.saisie);
   const codes = { codeClientT24: e.project.client?.codeClientT24, radical: e.project.client?.radical, codeProjet: e.project.codeProjet };
   const calc = calculerEvaluation(saisie, P, codes);
   const voir = peutVoirScores(user.role);
@@ -38,14 +39,16 @@ function reponse(e: Charge, user: AuthPayload, P: Awaited<ReturnType<typeof char
     resultat: resultatVisible(calc.resultat, user.role),
     controles: calc.controles,
     voirScores: voir,
-    parametres: P,
+    // Sans visibilité des notes : ni barème de conversion, ni niveau des plafonds.
+    parametres: voir ? P : { ...P, conversion: [], plafonds: Object.fromEntries(Object.entries(P.plafonds).map(([k, v]) => [k, { ...v, niveau: 0 }])) },
     droits: {
       saisir: e.statut === "brouillon" && peutSaisir(user.role, user.userId, [e.creePar, e.project.creePar]),
-      decider: e.statut === "soumis" && peutDecider(user.role, user.userId, e.creePar),
+      decider: e.statut === "soumis" && peutDecider(user.role, user.userId, [e.creePar, e.modifiePar, e.project.creePar]),
       rouvrir: (e.statut === "soumis" || e.statut === "rejete") && peutSaisir(user.role, user.userId, [e.creePar, e.project.creePar]),
     },
     analyseIa: e.analyseIa ?? null,
-    pieces: e.pieces ?? [],
+    // Le chemin de stockage reste côté serveur.
+    pieces: piecesDe(e.pieces).map((p) => ({ id: p.id, nom: p.nom, taille: p.taille, type: p.type, deposeLe: p.deposeLe })),
   };
 }
 
@@ -75,15 +78,17 @@ async function enregistrer(req: NextRequest, user: AuthPayload, id: string) {
     }
     const P = await chargerParametres();
     const calc = calculerEvaluation(v.data, P, { codeClientT24: e.project.client?.codeClientT24, radical: e.project.client?.radical, codeProjet: e.project.codeProjet });
-    const maj = await prisma.evaluationPF.update({
-      where: { id },
+    // Écrit seulement si le scoring est toujours au brouillon (il a pu être soumis entre-temps).
+    const ecrit = await prisma.evaluationPF.updateMany({
+      where: { id, statut: "brouillon" },
       data: {
         saisie: v.data as unknown as Prisma.InputJsonValue, resultat: calc.resultat as unknown as Prisma.InputJsonValue,
         parametres: P as unknown as Prisma.InputJsonValue, ...calc.resume, modifiePar: user.userId,
         ...(typeof corps.titre === "string" ? { titre: corps.titre.trim().slice(0, 200) || null } : {}),
       },
-      include: inclure,
     });
+    if (ecrit.count !== 1) return NextResponse.json({ error: "Ce scoring n'est plus modifiable : il a été soumis entre-temps." }, { status: 409 });
+    const maj = (await charger(id))!;
     return NextResponse.json(reponse(maj, user, P));
   } catch (err) {
     return NextResponse.json({ error: messagePublic(err, "Enregistrement impossible") }, { status: 500 });

@@ -88,7 +88,11 @@ export function peutSaisir(role: string, userId: string, auteurs: (string | null
     && (auteurs.includes(userId) || hasMinimumRole(role as UserRole, "risk_manager"));
 }
 
-/** Valider ou rejeter : un rôle qui approuve les évaluations, jamais l'auteur (séparation des fonctions). */
-export function peutDecider(role: string, userId: string, auteur: string): boolean {
-  return userId !== auteur && hasPermission(role as UserRole, "evaluation", "approve");
+/**
+ * Valider ou rejeter : un rôle qui approuve les évaluations, et jamais un intervenant du
+ * dossier — auteur du scoring, dernier à l'avoir modifié ou soumis, créateur du projet
+ * (séparation des fonctions).
+ */
+export function peutDecider(role: string, userId: string, intervenants: (string | null | undefined)[]): boolean {
+  return !intervenants.includes(userId) && hasPermission(role as UserRole, "evaluation", "approve");
 }

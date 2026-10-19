@@ -595,10 +595,10 @@ export default function ScoringBuilderPage() {
                         <button
                           onClick={() => openCreateCriterionModal(domain.id)}
                           disabled={lectureSeule}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded text-xs transition-colors"
+                          className="disabled:hidden inline-flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded text-xs transition-colors"
                         >
                           <Plus size={14} />
-                          Ajouter Critère
+                          Ajouter un critère
                         </button>
                       </div>
                     )}
@@ -671,7 +671,7 @@ export default function ScoringBuilderPage() {
                                     <button
                                       onClick={() => openCreateOptionModal(criterion.id, criterion.code)}
                           disabled={lectureSeule}
-                                      className="p-1 hover:bg-secondary rounded text-secondary-foreground"
+                                      className="disabled:hidden p-1 hover:bg-secondary rounded text-secondary-foreground"
                                      aria-label="Ajouter">
                                       <Plus size={14} />
                                     </button>
@@ -718,7 +718,7 @@ export default function ScoringBuilderPage() {
                                     <button
                                       onClick={() => openCreateRangeModal(criterion.id, criterion.code)}
                           disabled={lectureSeule}
-                                      className="p-1 hover:bg-secondary rounded text-secondary-foreground"
+                                      className="disabled:hidden p-1 hover:bg-secondary rounded text-secondary-foreground"
                                      aria-label="Ajouter">
                                       <Plus size={14} />
                                     </button>
@@ -770,10 +770,10 @@ export default function ScoringBuilderPage() {
                       <button
                         onClick={() => openCreateCriterionModal(domain.id)}
                           disabled={lectureSeule}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/30 rounded transition-colors text-sm"
+                        className="disabled:hidden w-full flex items-center justify-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/30 rounded transition-colors text-sm"
                       >
                         <Plus size={14} />
-                        Ajouter Critère
+                        Ajouter un critère
                       </button>
                     </div>}
                   </div>
@@ -796,10 +796,10 @@ export default function ScoringBuilderPage() {
           <button
             onClick={openCreateDomainModal}
                           disabled={lectureSeule}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
+            className="disabled:hidden flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <Plus size={16} />
-            Ajouter Domaine
+            Ajouter un domaine
           </button>
         </div>
       )}

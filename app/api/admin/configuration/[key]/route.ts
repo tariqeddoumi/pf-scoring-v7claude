@@ -80,7 +80,9 @@ export async function GET(
   { params }: { params: Promise<{ key: string }> }
 ) {
   const { key } = await params;
-  return handleGet(key);
+  // La lecture était ouverte sans connexion : toute clé, même non publique (adresses
+  // IA et T24, paramètres du modèle), se lisait anonymement.
+  return withAdminAuth(request, () => handleGet(key));
 }
 
 export async function PUT(

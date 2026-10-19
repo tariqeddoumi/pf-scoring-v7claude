@@ -2084,7 +2084,7 @@ ALTER TABLE "BP_PF_client_actionnaires" ADD CONSTRAINT "BP_PF_client_actionnaire
 ALTER TABLE "BP_PF_groupes_affaires" ADD CONSTRAINT "BP_PF_groupes_affaires_entiteId_fkey" FOREIGN KEY ("entiteId") REFERENCES "BP_PF_entites"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BP_PF_projects" ADD CONSTRAINT "BP_PF_projects_creePar_fkey" FOREIGN KEY ("creePar") REFERENCES "BP_PF_users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "BP_PF_projects" ADD CONSTRAINT "BP_PF_projects_creePar_fkey" FOREIGN KEY ("creePar") REFERENCES "BP_PF_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BP_PF_projects" ADD CONSTRAINT "BP_PF_projects_entiteId_fkey" FOREIGN KEY ("entiteId") REFERENCES "BP_PF_entites"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

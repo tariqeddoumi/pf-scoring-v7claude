@@ -198,6 +198,14 @@ export default function ScoringGridRefactoredPage() {
         />
       )}
 
+      {/* Une version publiée ou validée est figée : les notes déjà rendues doivent rester
+          reproductibles. Le serveur refuse toute modification (409). */}
+      {activeVersion && (activeVersion.isPublished || ["PUBLISHED", "VALIDATED", "ARCHIVED"].includes(String(activeVersion.status))) && (
+        <p role="status" className="mx-4 mt-3 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
+          Version {activeVersion.isPublished ? "publiée" : "figée"} : consultation seule. Pour modifier la grille, créez une nouvelle version.
+        </p>
+      )}
+
       {/* Main content */}
       <div className="flex flex-1 md:overflow-hidden">
         {nodes.length > 0 && activeVersion && (

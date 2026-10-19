@@ -37,8 +37,9 @@ export default function CountryRiskPage() {
   const fetchCountries = async () => {
     try {
       const res = await apiGet("/api/admin/countries");
-      const data = await res.json();
-      setCountries(data);
+      // L'API répond { success, data } : la liste était lue à la racine et l'écran plantait.
+      const corps = await res.json();
+      setCountries(Array.isArray(corps) ? corps : Array.isArray(corps?.data) ? corps.data : []);
     } catch (error) {
       console.error("Erreur:", error);
     } finally {
@@ -49,8 +50,8 @@ export default function CountryRiskPage() {
   const fetchConfig = async () => {
     try {
       const res = await apiGet("/api/admin/config/country-risk-mode");
-      const data = await res.json();
-      setConfig(data);
+      const corps = await res.json();
+      if (corps?.data?.mode ?? corps?.mode) setConfig({ mode: corps?.data?.mode ?? corps.mode });
     } catch (error) {
       console.error("Erreur:", error);
     }

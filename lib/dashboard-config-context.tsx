@@ -71,7 +71,7 @@ const DEFAULT_WIDGETS: DashboardWidget[] = [
   {
     id: "distribution",
     type: "distribution",
-    label: "Distribution Ratings",
+    label: "Répartition des notes",
     enabled: true,
     position: 5,
     size: "medium",
@@ -130,7 +130,7 @@ const EXECUTIVE_TEMPLATE: DashboardWidget[] = [
   {
     id: "distribution",
     type: "distribution",
-    label: "Distribution Ratings",
+    label: "Répartition des notes",
     enabled: true,
     position: 4,
     size: "large",
@@ -181,7 +181,7 @@ const ANALYST_TEMPLATE: DashboardWidget[] = [
   {
     id: "distribution",
     type: "distribution",
-    label: "Distribution Ratings",
+    label: "Répartition des notes",
     enabled: true,
     position: 2,
     size: "medium",

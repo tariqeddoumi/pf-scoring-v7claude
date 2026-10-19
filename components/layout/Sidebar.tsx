@@ -63,7 +63,7 @@ const GROUPES: { titre: string; entrees: Entree[] }[] = [
       { icone: GitCompare, libelle: "Comparaison", href: "/compare" },
       { icone: Calculator, libelle: "Simulation des flux", href: "/flux" },
       { icone: LineChart, libelle: "Analytique", href: "/analytics", scores: true },
-      { icone: TrendingUp, libelle: "Monitoring", href: "/monitoring" },
+      { icone: TrendingUp, libelle: "Suivi des projets", href: "/monitoring" },
     ],
   },
   {

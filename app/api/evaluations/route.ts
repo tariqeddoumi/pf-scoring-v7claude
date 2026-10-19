@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import { withAuth } from "@/lib/auth-middleware";
 import { EvaluationService } from "@/lib/services/evaluation-service";
 import { lirePagination } from "@/lib/validation-schemas";
 import { messagePublic } from "@/lib/erreur-publique";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
 
 /**
  * GET /api/evaluations - List all evaluations (paginated)
  */
 async function handleGET(request: NextRequest, user: any) {
   try {
-    // Allow: admin, manager, analyst (not viewer)
-    const allowedRoles = ["system_admin", "scoring_admin", "risk_manager", "risk_analyst"];
-    if (!allowedRoles.includes(user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Tout rôle qui lit les évaluations : le comité (décideur), l'auditeur et la lecture
+    // seule recevaient 403 alors que le détail d'une évaluation leur est ouvert. Les
+    // notes restent masquées selon le rôle (withAuth).
+    if (!hasPermission(user.role as UserRole, "evaluation", "read")) {
+      return NextResponse.json({ error: "Vos droits ne permettent pas de consulter les évaluations" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -39,7 +42,7 @@ async function handleGET(request: NextRequest, user: any) {
     // La route répondait 400 à toute erreur, y compris une panne de base : l'écran
     // lisait « requête invalide » là où le serveur était en défaut, et le message
     // brut ne disait rien d'exploitable.
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     console.error("[LISTE] GET error:", message);
     return NextResponse.json(
       { success: false, error: "Erreur lors de la récupération de la liste" },
@@ -53,10 +56,11 @@ async function handleGET(request: NextRequest, user: any) {
  */
 async function handlePOST(request: NextRequest, user: any) {
   try {
-    // Allow: admin, manager, analyst (not viewer)
-    const allowedRoles = ["system_admin", "scoring_admin", "risk_manager", "risk_analyst"];
-    if (!allowedRoles.includes(user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Tout rôle qui lit les évaluations : le comité (décideur), l'auditeur et la lecture
+    // seule recevaient 403 alors que le détail d'une évaluation leur est ouvert. Les
+    // notes restent masquées selon le rôle (withAuth).
+    if (!hasPermission(user.role as UserRole, "evaluation", "read")) {
+      return NextResponse.json({ error: "Vos droits ne permettent pas de consulter les évaluations" }, { status: 403 });
     }
 
     const body = await request.json();

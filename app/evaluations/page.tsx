@@ -121,7 +121,7 @@ export default function EvaluationsPage() {
     try {
       setSuppression(true);
       const res = await apiDelete(`/api/evaluations/${id}`);
-      if (!res.ok) throw new Error("Suppression impossible.");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Suppression impossible."));
       setEvaluations((liste) => liste.filter((e) => e.id !== id));
       setASupprimer(null);
     } catch (e) {

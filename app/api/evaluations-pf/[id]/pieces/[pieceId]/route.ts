@@ -14,8 +14,9 @@ async function retirer(_req: NextRequest, user: AuthPayload, id: string, pieceId
   const pieces = piecesDe(a.e.pieces);
   const p = pieces.find((x) => x.id === pieceId);
   if (!p) return refus(404, "Pièce introuvable");
+  const n = await prisma.evaluationPF.updateMany({ where: { id, statut: "brouillon", updatedAt: a.e.updatedAt }, data: { pieces: pieces.filter((x) => x.id !== pieceId) as unknown as Prisma.InputJsonValue } });
+  if (n.count !== 1) return refus(409, "Le scoring a changé entre-temps : réessayez.");
   await supprimerPiece(p.chemin).catch(() => undefined);
-  await prisma.evaluationPF.update({ where: { id }, data: { pieces: pieces.filter((x) => x.id !== pieceId) as unknown as Prisma.InputJsonValue } });
   return NextResponse.json({ ok: true });
 }
 

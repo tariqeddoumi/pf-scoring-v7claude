@@ -72,10 +72,15 @@ async function handlePOST(request: NextRequest, user: AuthPayload) {
       );
     }
 
+    // Une trace envoyée par le navigateur ne doit pas pouvoir imiter une action du serveur
+    // (« SCORING_PF_VALIDER »…) : elle est préfixée et bornée.
+    const actionEcran = `ECRAN_${String(action).toUpperCase().replace(/[^A-Z0-9_]/g, "_").slice(0, 60)}`;
+    const texte = typeof details === "string" ? details : JSON.stringify(details ?? {});
+
     const auditLog = await prisma.auditLog.create({
       data: {
-        action,
-        details: typeof details === "string" ? details : JSON.stringify(details ?? {}),
+        action: actionEcran,
+        details: texte.slice(0, 10_000),
         // L'auteur est celui de la session, jamais celui que le corps de la requête
         // annonce : une trace que l'on peut signer d'un autre nom ne prouve rien.
         utilisateurId: user.userId,
