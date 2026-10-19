@@ -191,3 +191,14 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* Tableau plus large que l'écran : une ombre au bord signale les colonnes cachées
+   (sur téléphone, Montant, Statut ou Note étaient coupés sans indice). L'ombre suit
+   le défilement et disparaît quand on atteint le bord. */
+.defilement-x {
+  background:
+    linear-gradient(to right, var(--card) 30%, transparent) left / 24px 100% no-repeat local,
+    linear-gradient(to left, var(--card) 30%, transparent) right / 24px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.18), transparent) left / 10px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.18), transparent) right / 10px 100% no-repeat scroll;
+}

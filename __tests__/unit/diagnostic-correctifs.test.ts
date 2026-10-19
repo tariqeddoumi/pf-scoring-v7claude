@@ -41,3 +41,20 @@ describe("séparation des fonctions", () => {
     expect(peutDecider("risk_analyst", "tiers", ["auteur"])).toBe(false);
   });
 });
+
+import { anomaliesParametres, gradeDeLaNote, PARAMETRES_DEFAUT } from "@/lib/modele-pf/parametres";
+
+describe("note PF → échelle de la banque", () => {
+  it("fait correspondre les dix notes aux dix grades", () => {
+    expect(gradeDeLaNote(10)).toBe("AAA");
+    expect(gradeDeLaNote(7)).toBe("BBB");
+    expect(gradeDeLaNote(1)).toBe("D");
+    expect(gradeDeLaNote("—")).toBeNull();
+    expect(gradeDeLaNote(null)).toBeNull();
+  });
+  it("refuse une correspondance où une note plus basse donne un meilleur grade", () => {
+    expect(anomaliesParametres(PARAMETRES_DEFAUT)).toEqual([]);
+    const P = { ...PARAMETRES_DEFAUT, correspondanceGrades: { ...PARAMETRES_DEFAUT.correspondanceGrades, "5": "AAA" as const } };
+    expect(anomaliesParametres(P).join(" ")).toContain("Correspondance des grades");
+  });
+});

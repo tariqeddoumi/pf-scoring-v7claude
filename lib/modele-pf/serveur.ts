@@ -7,7 +7,7 @@ import { getAppConfigKey, setAppConfig } from "@/lib/services/app-config-service
 import { peutVoirScores } from "@/lib/score-visibility";
 import { hasMinimumRole, type UserRole } from "@/lib/permissions";
 import { hasPermission } from "@/lib/services/permission-service";
-import { anomaliesParametres, fusionnerParametres, PARAMETRES_DEFAUT, type ParametresModele } from "./parametres";
+import { anomaliesParametres, fusionnerParametres, GRADES, PARAMETRES_DEFAUT, type ParametresModele } from "./parametres";
 
 export { anomaliesParametres };
 import { calculer, type SaisiePF } from "./saisie";
@@ -39,6 +39,7 @@ export const surchargeSchema = z.object({
   poidsNoyau: z.tuple([poids, poids, poids, poids, poids, poids]).optional(),
   ancres: z.object({ tresFavorable: z.number(), favorable: z.number(), vigilance: z.number(), critique: z.number(), infoInsuffisante: z.number() })
     .partial().optional(),
+  correspondanceGrades: z.partialRecord(z.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]), z.enum(GRADES)).optional(),
   plafonds: z.partialRecord(z.string().regex(/^C(1[0-5]|[1-9])$/), z.object({ niveau: z.number().int().min(1).max(10) })).optional(),
   seuils: z.object({
     sCapex: z.number(), sExpo: z.number(), sDuree: z.number(), lCapex: z.number(), lExpo: z.number(), lNbContreparties: z.number(),

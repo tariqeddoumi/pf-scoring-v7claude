@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { Nombre } from "@/components/scoring-pf/champs";
 import {
-  anomaliesParametres, ORDRE_DOMAINES, ORDRE_PLAFONDS,
+  anomaliesParametres, GRADES, ORDRE_DOMAINES, ORDRE_PLAFONDS, type Grade,
   type ParametresModele, type CodeRegime, type CodeSecteur, type CodePhase,
 } from "@/lib/modele-pf/parametres";
 
@@ -61,6 +61,7 @@ export default function ParametresModelePFPage() {
       poidsDomaines: P.poidsDomaines, poidsNoyau: P.poidsNoyau, ancres: P.ancres,
       plafonds: Object.fromEntries(Object.entries(P.plafonds).map(([k, v]) => [k, { niveau: v.niveau }])),
       seuils: P.seuils,
+      correspondanceGrades: P.correspondanceGrades,
     };
     const r = await apiPut("/api/modele-pf/parametres", surcharge);
     setEnvoi(false);
@@ -202,6 +203,29 @@ export default function ParametresModelePFPage() {
               </div>
             ))}
           </div>
+        </SectionCard>
+
+        <SectionCard titre="Correspondance avec l'échelle de la banque" description="Grade (AAA à D) reporté sur le projet pour chaque note approuvée, à la validation." sansPadding>
+          <table className="w-full text-[13px]">
+            <tbody>
+              {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((n) => {
+                const ligne = P.conversion.find((c) => c.note === n);
+                const g = P.correspondanceGrades?.[String(n)] ?? defaut.correspondanceGrades[String(n)];
+                return (
+                  <tr key={n} className="border-t border-border first:border-t-0">
+                    <td className="px-3 py-1.5"><span className="font-semibold tabulaire">{n}</span> <span className="text-muted-foreground">{ligne?.libelle}</span></td>
+                    <td className={cn("w-28 px-2 py-1.5", g !== defaut.correspondanceGrades[String(n)] && "bg-warning/10")}>
+                      <select aria-label={`Grade de la note ${n}`} value={g} disabled={lecture}
+                        onChange={(e) => maj((p) => { p.correspondanceGrades = { ...(p.correspondanceGrades ?? defaut.correspondanceGrades), [String(n)]: e.target.value as Grade }; })}
+                        className="h-8 w-full rounded border border-border bg-background px-2 text-[13px]">
+                        {GRADES.map((x) => <option key={x} value={x}>{x}</option>)}
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </SectionCard>
 
         <SectionCard titre="Plafonds de note" description="Note maximale (1 à 10) quand le plafond est actif." sansPadding>

@@ -5,7 +5,7 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
 import { messagePublic } from "@/lib/erreur-publique";
 import { relireSaisie } from "@/lib/modele-pf/saisie";
-import type { ParametresModele } from "@/lib/modele-pf/parametres";
+import { gradeDeLaNote, type ParametresModele } from "@/lib/modele-pf/parametres";
 import { chargerParametres, calculerEvaluation, peutSaisir, peutDecider } from "@/lib/modele-pf/serveur";
 import { getAppConfigKey } from "@/lib/services/app-config-service";
 import { delegationSuffisante, lireMatriceDelegation, roleRequisPourMontant } from "@/lib/services/scoring/decision-guard";
@@ -74,7 +74,9 @@ async function changer(req: NextRequest, user: AuthPayload, id: string) {
         const ok = await prisma.$transaction(async (tx) => {
           const n = await tx.evaluationPF.updateMany({ where: { id, statut: "soumis", updatedAt: e.updatedAt }, data: { statut: "valide", validePar: user.userId, valideLe: new Date() } });
           if (n.count !== 1) return false;
-          await tx.project.update({ where: { id: e.projectId }, data: { scoreGlobal: calc.resultat.score, grade: String(calc.resultat.noteApprouvee) } });
+          // Le projet reçoit le grade de l'échelle de la banque (AAA à D), pas la note 1 à 10 :
+          // la note brute s'affichait en badge rouge et manquait aux répartitions.
+          await tx.project.update({ where: { id: e.projectId }, data: { scoreGlobal: calc.resultat.score, grade: gradeDeLaNote(calc.resultat.noteApprouvee, P) } });
           return true;
         });
         if (!ok) return conflit();

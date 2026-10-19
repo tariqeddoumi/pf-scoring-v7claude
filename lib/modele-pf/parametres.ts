@@ -13,6 +13,9 @@ export type DomaineGrille = Exclude<CodeDomaine, "D7">;
 export type CodePlafond = `C${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15}`;
 export type CodeVerrou = "X1" | "X2" | "X3" | "X4" | "B1" | "B2" | "B3" | "B4" | "B5" | "B6" | "B7" | "B8";
 
+export const GRADES = ["AAA", "AA", "A", "BBB", "BB", "B", "CCC", "CC", "C", "D"] as const;
+export type Grade = (typeof GRADES)[number];
+
 export interface ParametresModele {
   /** Seuils DSCR de base : critique, vigilance, favorable (phase stabilisée). */
   regimes: Record<CodeRegime, { libelle: string; seuils: [number, number, number] }>;
@@ -27,6 +30,8 @@ export interface ParametresModele {
   ancres: { tresFavorable: number; favorable: number; vigilance: number; critique: number; infoInsuffisante: number };
   /** Score à partir duquel s'applique chaque note (1 à 10). */
   conversion: { seuil: number; note: number; libelle: string; orientation: string }[];
+  /** Grade de l'échelle de la banque (AAA à D) correspondant à chaque note approuvée 1 à 10. */
+  correspondanceGrades: Record<string, Grade>;
   plafonds: Record<CodePlafond, { libelle: string; niveau: number }>;
   verrous: Record<CodeVerrou, { libelle: string; stade: string }>;
   seuils: {
@@ -97,6 +102,8 @@ export const PARAMETRES_DEFAUT: ParametresModele = {
     { seuil: 86, note: 9, libelle: "Très solide", orientation: "Conditions minimales" },
     { seuil: 92, note: 10, libelle: "Excellent", orientation: "Profil de référence" },
   ],
+  // Dix notes, dix grades : correspondance un pour un, à valider par les experts.
+  correspondanceGrades: { "10": "AAA", "9": "AA", "8": "A", "7": "BBB", "6": "BB", "5": "B", "4": "CCC", "3": "CC", "2": "C", "1": "D" },
   plafonds: {
     C1: { libelle: "DSCR minimum de base inférieur à 1,05x sur une échéance", niveau: 3 },
     C2: { libelle: "DSCR minimum de base sous le seuil critique du couple régime × secteur", niveau: 5 },
@@ -169,5 +176,21 @@ export function anomaliesParametres(P: ParametresModele): string[] {
     const [c, vg, f] = v.seuils;
     if (!(c < vg && vg < f)) a.push(`Seuils DSCR de ${r} : ils doivent croître (critique < vigilance < favorable)`);
   }
+  // Une note plus basse ne peut pas donner un meilleur grade.
+  const rang = (n: number) => GRADES.indexOf(P.correspondanceGrades?.[String(n)] as Grade);
+  for (let n = 1; n < 10; n++) {
+    if (rang(n) < 0 || rang(n + 1) < 0) { a.push(`Correspondance des grades : note ${rang(n) < 0 ? n : n + 1} sans grade`); break; }
+    if (rang(n) < rang(n + 1)) { a.push(`Correspondance des grades : la note ${n} donne un meilleur grade que la note ${n + 1}`); break; }
+  }
   return a;
+}
+
+/**
+ * Grade de l'échelle de la banque pour une note approuvée (null si aucune note : dossier
+ * hors périmètre ou incomplet). Les paramètres enregistrés avant l'ajout de la
+ * correspondance reprennent celle par défaut.
+ */
+export function gradeDeLaNote(note: number | "—" | null | undefined, P: ParametresModele = PARAMETRES_DEFAUT): Grade | null {
+  if (typeof note !== "number") return null;
+  return (P.correspondanceGrades ?? PARAMETRES_DEFAUT.correspondanceGrades)[String(note)] ?? null;
 }

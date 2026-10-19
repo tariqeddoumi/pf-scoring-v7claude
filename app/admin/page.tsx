@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { apiGet } from "@/lib/api-client";
 import { hasMinimumRole, type UserRole } from "@/lib/permissions";
-import { Loader2 } from "lucide-react";
+import { Loader2, type LucideIcon, Ban, BarChart3, Building2, Database, Factory, FileText, Globe, Landmark, Palette, Ruler, SlidersHorizontal, Stethoscope, Tags, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
@@ -16,7 +16,7 @@ interface AdminSection {
   title: string;
   description: string;
   href: string;
-  icon: string;
+  icon: LucideIcon;
   requiredRole?: string;
   /** Famille de paramétrage : onze tuiles à plat ne disent pas par où commencer. */
   famille: FamilleAdmin;
@@ -60,7 +60,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description:
       "Seuils DSCR par régime, écarts sectoriels, poids des domaines et du noyau, plafonds de note et seuils des règles",
     href: "/admin/modele-pf",
-    icon: "🏗️",
+    icon: Building2,
     requiredRole: "scoring_admin",
   },
   {
@@ -70,7 +70,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description:
       "Nom affiché, logo, couleurs, police et thème — appliqués en direct dans toute l'application",
     href: "/admin/configuration",
-    icon: "🎨",
+    icon: Palette,
     requiredRole: "system_admin",
   },
   {
@@ -79,7 +79,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Granularité du scoring",
     description: "Configurez le niveau de saisie des scores (domaine, critère ou sous-critère) par domaine",
     href: "/admin/scoring/granularity",
-    icon: "📐",
+    icon: Ruler,
     requiredRole: "scoring_admin",
   },
   {
@@ -89,7 +89,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description:
       "Correspondance score → note (AAA…D) appliquée par le moteur à chaque calcul",
     href: "/admin/bareme",
-    icon: "🏷️",
+    icon: Tags,
     requiredRole: "scoring_admin",
   },
   {
@@ -99,7 +99,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description:
       "Vue d'ensemble des règles du modèle, dont les seuils NO-GO, et des règles sans effet",
     href: "/admin/regles",
-    icon: "🚫",
+    icon: Ban,
     requiredRole: "scoring_admin",
   },
   {
@@ -109,7 +109,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description:
       "Facteurs de pondération par secteur, points d'alerte et tests de résistance",
     href: "/admin/secteurs",
-    icon: "🏭",
+    icon: Factory,
     requiredRole: "scoring_admin",
   },
   {
@@ -118,7 +118,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Grille générique (constructeur)",
     description: "Visualisez les domaines, critères et barèmes du modèle actif",
     href: "/admin/scoring",
-    icon: "📊",
+    icon: BarChart3,
     requiredRole: "scoring_admin",
   },
   {
@@ -127,7 +127,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Paramétrage de la grille générique",
     description: "Éditeur hiérarchique complet — domaines, critères, sous-critères, options et plages numériques",
     href: "/admin/grille-scoring",
-    icon: "🎛️",
+    icon: SlidersHorizontal,
     requiredRole: "scoring_admin",
   },
   {
@@ -136,7 +136,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Risque pays",
     description: "Configurez les scores de risque par pays",
     href: "/admin/country-risk",
-    icon: "🌍",
+    icon: Globe,
     requiredRole: "scoring_admin",
   },
   {
@@ -145,7 +145,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Diagnostic du système",
     description: "Tests de santé et vérification de la configuration",
     href: "/admin/diagnostic",
-    icon: "🔍",
+    icon: Stethoscope,
     requiredRole: "system_admin",
   },
   {
@@ -154,7 +154,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Banques et filiales",
     description: "Groupe, banques, banques régionales et filiales : périmètres d'accès, nom et logo de l'outil par entité",
     href: "/admin/entites",
-    icon: "🏦",
+    icon: Landmark,
     requiredRole: "system_admin",
   },
   {
@@ -163,7 +163,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Base de données",
     description: "Base en service, conformité du schéma et kit pour basculer vers un autre PostgreSQL",
     href: "/admin/base",
-    icon: "🗄️",
+    icon: Database,
     requiredRole: "system_admin",
   },
   {
@@ -172,7 +172,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Gestion des utilisateurs",
     description: "Gérez les utilisateurs et leurs rôles",
     href: "/admin/users",
-    icon: "👥",
+    icon: Users,
     requiredRole: "system_admin",
   },
   {
@@ -181,7 +181,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Formulaires dynamiques",
     description: "Activez les formulaires rendus depuis la base de données, sans code",
     href: "/admin/dynamic-forms",
-    icon: "📝",
+    icon: FileText,
     requiredRole: "scoring_admin",
   },
   {
@@ -190,7 +190,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
     title: "Champs de formulaire",
     description: "Personnalisez les champs, sections et options des formulaires",
     href: "/admin/field-management",
-    icon: "🏷️",
+    icon: Tags,
     requiredRole: "scoring_admin",
   },
 ];
@@ -336,7 +336,7 @@ export default function AdminPage() {
                     <Link key={section.id} href={section.href} className="group">
                       <Card className="p-5 h-full hover:border-primary transition-colors">
                         <div className="flex items-start gap-3">
-                          <div className="text-2xl shrink-0">{section.icon}</div>
+                          <section.icon size={22} aria-hidden className="mt-0.5 shrink-0 text-primary" />
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
                               {section.title}
