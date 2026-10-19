@@ -7,6 +7,7 @@
  *   npx tsx scripts/db/semer-cas-pf.ts <entiteId> <auteurId> > cas-pf.sql
  *
  * Le SQL est découpé en parties (« -- PARTIE n ») pour pouvoir être exécuté en plusieurs fois.
+ * Les fiches client et projet se complètent ensuite avec completer-fiches-cas-pf.ts.
  */
 import { createHash } from "crypto";
 import cas from "../../lib/modele-pf/cas-etude.json";

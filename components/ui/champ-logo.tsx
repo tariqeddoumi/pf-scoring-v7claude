@@ -29,7 +29,7 @@ export function ChampLogo({ id, valeur, onChange, placeholder = "https://www.mab
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-surface">
+        <span className="flex h-16 w-44 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-white px-2 py-1.5">
           {valeur && !motif ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={valeur} alt="Aperçu du logo" className="max-h-full max-w-full object-contain" />
