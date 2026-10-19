@@ -5,9 +5,19 @@ import { lirePagination } from "@/lib/validation-schemas";
 import { messagePublic } from "@/lib/erreur-publique";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
+import prisma from "@/lib/prisma-client";
+import { peutVoirScores } from "@/lib/score-visibility";
+import { chargerParametres } from "@/lib/modele-pf/serveur";
+import { gradeDeLaNote } from "@/lib/modele-pf/parametres";
 
 /**
- * GET /api/evaluations - List all evaluations (paginated)
+ * GET /api/evaluations — liste des évaluations, c'est-à-dire des scorings Project Finance
+ * (parcours en 13 blocs).
+ *
+ * La route lisait l'ancien moteur de questionnaire générique : les scorings PF, seuls
+ * utilisés, n'apparaissaient ni dans la page Évaluations ni dans le tableau de bord, la
+ * recherche ou les compteurs. Les champs gardent les noms attendus par ces écrans
+ * (status, finalScore, rating, project, analyst) ; « lien » mène à l'écran de scoring.
  */
 async function handleGET(request: NextRequest, user: AuthPayload) {
   try {
@@ -27,19 +37,54 @@ async function handleGET(request: NextRequest, user: AuthPayload) {
     const { page, limit } = lirePagination(searchParams, 50);
     const status = searchParams.get("status");
     const projectId = searchParams.get("projectId");
+    const where = { ...(status && { statut: status }), ...(projectId && { projectId }) };
 
-    const filters = {
-      ...(status && { status }),
-      ...(projectId && { projectId }),
-    };
-
-    const result = await EvaluationService.getAllEvaluations(
-      page,
-      limit,
-      filters
+    const [lignes, total, P] = await Promise.all([
+      prisma.evaluationPF.findMany({
+        where,
+        orderBy: { updatedAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true, projectId: true, titre: true, statut: true, scoreGlobal: true, noteCalculee: true,
+          noteApprouvee: true, statutNote: true, regimeRetenu: true, soumisLe: true, createdAt: true, updatedAt: true,
+          creePar: true,
+          project: {
+            select: { id: true, nom: true, montant: true, secteur: true, codeProjet: true, client: { select: { id: true, nom: true } } },
+          },
+        },
+      }),
+      prisma.evaluationPF.count({ where }),
+      chargerParametres(),
+    ]);
+    // Pas de relation vers l'auteur dans le modèle : les noms sont lus en une requête.
+    const auteurs = new Map(
+      (await prisma.user.findMany({ where: { id: { in: [...new Set(lignes.map((e) => e.creePar))] } }, select: { id: true, nom: true, prenom: true } }))
+        .map((u) => [u.id, { nom: u.nom, prenom: u.prenom }])
     );
-
-    return NextResponse.json(result, { status: 200 });
+    const voir = peutVoirScores(user.role);
+    const data = lignes.map((e) => {
+      const note = e.noteApprouvee === "—" ? "—" : e.noteApprouvee ? Number(e.noteApprouvee) : null;
+      return {
+        id: e.id,
+        projectId: e.projectId,
+        titre: e.titre,
+        status: e.statut,
+        finalScore: e.scoreGlobal,
+        rating: gradeDeLaNote(note, P),
+        ...(voir && { noteCalculee: e.noteCalculee, noteApprouvee: e.noteApprouvee }),
+        // Le statut de note commence par « Hors périmètre » (exclusion) ou « Note provisoire » (blocage).
+        recommendation: e.statutNote,
+        regimeRetenu: e.regimeRetenu,
+        submittedAt: e.soumisLe,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+        project: e.project,
+        analyst: auteurs.get(e.creePar) ?? null,
+        lien: `/scoring-pf/${e.id}`,
+      };
+    });
+    return NextResponse.json({ data, pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
   } catch (error: unknown) {
     // La route répondait 400 à toute erreur, y compris une panne de base : l'écran
     // lisait « requête invalide » là où le serveur était en défaut, et le message

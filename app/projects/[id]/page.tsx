@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Ban, Loader2, Pencil } from "lucide-react";
+import { Ban, Loader2, Pencil } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import { formatMAD, formatDate } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { KpiCard } from "@/components/ui/kpi-card";
-import { Note, StatutEvaluation, StatutProjet } from "@/components/ui/status-badge";
+import { StatutProjet } from "@/components/ui/status-badge";
 import { usePermission } from "@/lib/hooks/usePermission";
 import { hasMinimumRole, type UserRole } from "@/lib/permissions";
 import { useVoirScores } from "@/components/providers/visibilite-scores";
@@ -309,55 +309,6 @@ export default function ProjectDetailPage() {
 
         <div className="space-y-4">
           <ScoringsPF projetId={projet.id} peutCreer={peutIntervenir && can("evaluation", "create")} />
-
-          <SectionCard
-            titre="Évaluations"
-            actions={
-              <Link
-                href={`/evaluations/new?projectId=${projet.id}`}
-                className="text-[12.5px] font-semibold text-primary hover:underline"
-              >
-                Nouvelle →
-              </Link>
-            }
-            sansPadding
-          >
-            {evaluations.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                Aucune évaluation pour ce projet.
-              </p>
-            ) : (
-              evaluations.map((e) => (
-                <Link
-                  key={e.id}
-                  href={
-                    e.status === "brouillon"
-                      ? `/evaluations/${e.id}/saisie`
-                      : `/evaluations/${e.id}`
-                  }
-                  className="flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-surface"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="mb-1 block">
-                      <StatutEvaluation statut={e.status} />
-                    </span>
-                    {e.recommendation && (
-                      <span className="block truncate text-[12px] text-muted-foreground">
-                        {e.recommendation}
-                      </span>
-                    )}
-                    {e.updatedAt && (
-                      <span className="block text-[11.5px] text-muted-foreground">
-                        {formatDate(e.updatedAt)}
-                      </span>
-                    )}
-                  </span>
-                  <Note note={e.rating} score={e.finalScore} />
-                  <ArrowRight size={15} className="shrink-0 text-muted-foreground" />
-                </Link>
-              ))
-            )}
-          </SectionCard>
 
           {derniere?.status === "rejete" && (
             <SectionCard className="border-destructive/40">

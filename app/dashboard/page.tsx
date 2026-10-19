@@ -248,7 +248,7 @@ export default function DashboardPage() {
                 {chiffres.aValider.map((e) => (
                   <Tache
                     key={e.id}
-                    href={`/evaluations/${e.id}`}
+                    href={`/scoring-pf/${e.id}`}
                     marque="vigilance"
                     titre={e.project?.nom ?? "Projet"}
                     detail="Évaluation soumise, en attente de validation"
@@ -258,7 +258,7 @@ export default function DashboardPage() {
                 {chiffres.brouillons.map((e) => (
                   <Tache
                     key={e.id}
-                    href={`/evaluations/${e.id}/saisie`}
+                    href={`/scoring-pf/${e.id}`}
                     titre={e.project?.nom ?? "Projet"}
                     detail="Saisie en cours"
                     badge={<span className="rounded-full bg-muted px-2.5 py-0.5 text-[11.5px] font-semibold text-muted-foreground">Brouillon</span>}

@@ -4,17 +4,16 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Archive,
+  Ban,
   ClipboardList,
   Loader2,
   Plus,
-  RotateCcw,
   Search,
   ShieldAlert,
   Trash2,
   X,
 } from "lucide-react";
-import { apiGet, apiDelete, apiPut, messageErreurApi } from "@/lib/api-client";
+import { apiGet, apiDelete, messageErreurApi } from "@/lib/api-client";
 import { formatMAD, formatMADCompact, formatDate } from "@/lib/utils";
 import { GRADE_THRESHOLDS } from "@/lib/constants";
 import { PageHeader } from "@/components/ui/page-header";
@@ -31,8 +30,9 @@ interface Evaluation {
   status: string;
   finalScore: number | null;
   rating: string | null;
+  /** Statut de la note du scoring PF (« Note provisoire — stade bloqué… », « Hors périmètre… »). */
   recommendation?: string | null;
-  isArchived?: boolean;
+  titre?: string | null;
   createdAt: string;
   updatedAt: string;
   submittedAt?: string | null;
@@ -44,29 +44,29 @@ interface Evaluation {
     client?: { id: string; nom: string } | null;
   } | null;
   analyst?: { nom?: string | null; prenom?: string | null } | null;
-  avancement?: { repondues: number; total: number };
 }
 
-type Etat = "aReprendre" | "aValider" | "clos" | "archivees";
+type Etat = "aReprendre" | "aValider" | "clos";
 
 const ONGLETS: { cle: Etat; libelle: string }[] = [
   { cle: "aReprendre", libelle: "À reprendre" },
   { cle: "aValider", libelle: "En attente de validation" },
-  { cle: "clos", libelle: "Clos" },
-  { cle: "archivees", libelle: "Archivées" },
+  { cle: "clos", libelle: "Validées ou rejetées" },
 ];
 
 /** Dans quel état de travail se trouve une évaluation, du point de vue de celui qui la traite. */
 function etatDe(ev: Evaluation): Etat {
-  if (ev.isArchived) return "archivees";
   if (ev.status === "brouillon") return "aReprendre";
   if (ev.status === "soumis" || ev.status === "soumise") return "aValider";
   return "clos";
 }
 
-/** Le moteur préfixe la recommandation par « Blocage » quand une règle rédhibitoire a joué. */
-function estBloquee(ev: Evaluation): boolean {
-  return (ev.recommendation ?? "").toLowerCase().startsWith("blocage");
+/** Verrou actif : blocage B (note provisoire) ou exclusion X (aucune note). */
+function verrou(ev: Evaluation): "blocage" | "exclusion" | null {
+  const s = (ev.recommendation ?? "").toLowerCase();
+  if (s.startsWith("hors périmètre")) return "exclusion";
+  if (s.includes("bloqué")) return "blocage";
+  return null;
 }
 
 function joursDepuis(date: string | null | undefined): number | null {
@@ -120,7 +120,7 @@ export default function EvaluationsPage() {
   const supprimer = async (id: string) => {
     try {
       setSuppression(true);
-      const res = await apiDelete(`/api/evaluations/${id}`);
+      const res = await apiDelete(`/api/evaluations-pf/${id}`);
       if (!res.ok) throw new Error(await messageErreurApi(res, "Suppression impossible."));
       setEvaluations((liste) => liste.filter((e) => e.id !== id));
       setASupprimer(null);
@@ -131,24 +131,11 @@ export default function EvaluationsPage() {
     }
   };
 
-  const archiver = async (ev: Evaluation, archiver: boolean) => {
-    try {
-      const res = await apiPut(`/api/evaluations/${ev.id}`, { isArchived: archiver });
-      if (!res.ok) throw new Error("Archivage impossible.");
-      setEvaluations((liste) =>
-        liste.map((e) => (e.id === ev.id ? { ...e, isArchived: archiver } : e))
-      );
-    } catch (e) {
-      setErreur(e instanceof Error ? e.message : "Archivage impossible.");
-    }
-  };
-
   const compteurs = useMemo(() => {
     const c: Record<Etat, number> = {
       aReprendre: 0,
       aValider: 0,
       clos: 0,
-      archivees: 0,
     };
     for (const ev of evaluations) c[etatDe(ev)] += 1;
     return c;
@@ -159,7 +146,7 @@ export default function EvaluationsPage() {
     return evaluations
       .filter((ev) => {
         const texte =
-          `${ev.project?.nom ?? ""} ${ev.project?.client?.nom ?? ""} ${
+          `${ev.project?.nom ?? ""} ${ev.titre ?? ""} ${ev.project?.client?.nom ?? ""} ${
             ev.analyst ? `${ev.analyst.prenom ?? ""} ${ev.analyst.nom ?? ""}` : ""
           }`.toLowerCase();
         return (
@@ -296,7 +283,7 @@ export default function EvaluationsPage() {
             }
             description={
               evaluations.length === 0
-                ? "Lancez une évaluation depuis un projet pour obtenir une note."
+                ? "Lancez une évaluation depuis un projet ou avec le bouton « Nouvelle évaluation »."
                 : "Changez d'onglet ou retirez le filtre de notation."
             }
             action={
@@ -313,10 +300,7 @@ export default function EvaluationsPage() {
                   {[
                     { t: "Dossier", a: "left" },
                     { t: "Montant", a: "right" },
-                    {
-                      t: onglet === "aReprendre" ? "Avancement" : voirScores ? "Note" : "",
-                      a: "left",
-                    },
+                    { t: voirScores ? "Note" : "", a: "left" },
                     { t: "Statut", a: "left" },
                     { t: "Analyste", a: "left" },
                     { t: "Dernière activité", a: "left" },
@@ -335,38 +319,30 @@ export default function EvaluationsPage() {
               </thead>
               <tbody>
                 {filtrees.map((ev) => {
-                  const brouillon = ev.status === "brouillon";
                   const attente = joursDepuis(ev.submittedAt);
+                  const v = verrou(ev);
                   return (
                     <tr
                       key={ev.id}
-                      onClick={() =>
-                        router.push(
-                          brouillon && !ev.isArchived && can("evaluation", "update")
-                            ? `/evaluations/${ev.id}/saisie`
-                            : `/evaluations/${ev.id}`
-                        )
-                      }
+                      onClick={() => router.push(`/scoring-pf/${ev.id}`)}
                       className="cursor-pointer border-b border-border transition-colors last:border-b-0 hover:bg-surface"
                     >
                       <td className="px-4 py-3">
                         <span className="flex items-center gap-2 font-medium text-foreground">
                           {ev.project?.nom ?? "Projet inconnu"}
-                          {estBloquee(ev) && (
+                          {v && (
                             <span
                               title={ev.recommendation ?? undefined}
                               className="inline-flex items-center gap-1 rounded-full bg-destructive-subtle px-2 py-0.5 text-[11px] font-semibold text-destructive"
                             >
-                              <ShieldAlert size={12} />
-                              Blocage
+                              {v === "exclusion" ? <Ban size={12} /> : <ShieldAlert size={12} />}
+                              {v === "exclusion" ? "Exclusion" : "Blocage"}
                             </span>
                           )}
                         </span>
-                        {ev.project?.client?.nom && (
-                          <span className="block text-[11.5px] text-muted-foreground">
-                            {ev.project.client.nom}
-                          </span>
-                        )}
+                        <span className="block text-[11.5px] text-muted-foreground">
+                          {[ev.project?.client?.nom, ev.titre].filter(Boolean).join(" · ")}
+                        </span>
                       </td>
 
                       <td
@@ -379,11 +355,7 @@ export default function EvaluationsPage() {
                       </td>
 
                       <td className="px-4 py-3">
-                        {brouillon ? (
-                          <Avancement avancement={ev.avancement} />
-                        ) : (
-                          <Note note={ev.rating} score={ev.finalScore} />
-                        )}
+                        <Note note={ev.rating} score={ev.finalScore} />
                       </td>
 
                       <td className="px-4 py-3">
@@ -419,22 +391,6 @@ export default function EvaluationsPage() {
                           {can("evaluation", "delete") && (
                             <>
                               <button
-                                onClick={() => archiver(ev, !ev.isArchived)}
-                                aria-label={
-                                  ev.isArchived
-                                    ? `Restaurer l'évaluation de ${ev.project?.nom ?? "ce projet"}`
-                                    : `Archiver l'évaluation de ${ev.project?.nom ?? "ce projet"}`
-                                }
-                                title={ev.isArchived ? "Restaurer" : "Archiver"}
-                                className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                              >
-                                {ev.isArchived ? (
-                                  <RotateCcw size={15} />
-                                ) : (
-                                  <Archive size={15} />
-                                )}
-                              </button>
-                              <button
                                 onClick={() => setASupprimer(ev.id)}
                                 aria-label={`Supprimer l'évaluation de ${ev.project?.nom ?? "ce projet"}`}
                                 title="Supprimer"
@@ -463,33 +419,10 @@ export default function EvaluationsPage() {
           title="Supprimer cette évaluation ?"
           message={`L'évaluation de « ${
             evaluations.find((e) => e.id === aSupprimer)?.project?.nom ?? "ce projet"
-          } » sera définitivement supprimée, avec ses réponses et sa trace de calcul. Cette action est irréversible.`}
+          } » sera définitivement supprimée, avec sa saisie, ses pièces et son résultat. Cette action est irréversible.`}
           isDeleting={suppression}
         />
       )}
-    </div>
-  );
-}
-
-/** Avancement de la saisie d'un brouillon : rien ne l'indiquait dans la liste. */
-function Avancement({ avancement }: { avancement?: { repondues: number; total: number } }) {
-  if (!avancement || !avancement.total) {
-    return <span className="text-muted-foreground">—</span>;
-  }
-  const pct = Math.round((avancement.repondues / avancement.total) * 100);
-  return (
-    <div className="min-w-[110px]">
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[12.5px] text-foreground tabulaire">
-          {avancement.repondues}/{avancement.total}
-        </span>
-        <span className="text-[11.5px] text-muted-foreground tabulaire">{pct} %</span>
-      </div>
-      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        {/* La barre reste neutre : une saisie peu avancée n'est pas un mauvais
-            dossier, et la teinter de rouge la ferait lire comme un score. */}
-        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-      </div>
     </div>
   );
 }
