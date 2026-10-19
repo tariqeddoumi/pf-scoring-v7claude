@@ -1,16 +1,14 @@
-import { motifLogoInvalide } from '@/lib/logo';
-import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
-import prisma from '@/lib/prisma-client';
-import { setAppConfig } from '@/lib/services/app-config-service';
+import { motifLogoInvalide } from "@/lib/logo";
+import { NextRequest, NextResponse } from "next/server";
+import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
+import prisma from "@/lib/prisma-client";
+import { setAppConfig } from "@/lib/services/app-config-service";
 
 /**
  * GET /api/admin/configuration/[key]
  * Fetch specific configuration key
  */
-async function handleGet(
-  key: string
-) {
+async function handleGet(key: string) {
   try {
     const config = await prisma.appConfiguration.findUnique({
       where: { key },
@@ -18,7 +16,7 @@ async function handleGet(
 
     if (!config) {
       return NextResponse.json(
-        { error: 'Configuration key not found' },
+        { error: "Configuration key not found" },
         { status: 404 }
       );
     }
@@ -28,9 +26,9 @@ async function handleGet(
       data: config,
     });
   } catch (error) {
-    console.error('[CONFIG GET]', error);
+    console.error("[CONFIG GET]", error);
     return NextResponse.json(
-      { error: 'Failed to fetch configuration' },
+      { error: "Failed to fetch configuration" },
       { status: 500 }
     );
   }
@@ -40,23 +38,16 @@ async function handleGet(
  * PUT /api/admin/configuration/[key]
  * Update configuration key (admin only)
  */
-async function handlePut(
-  request: NextRequest,
-  key: string,
-  user: any
-) {
+async function handlePut(request: NextRequest, key: string, user: AuthPayload) {
   try {
     const body = await request.json();
     const { value } = body;
 
     if (value === undefined || value === null) {
-      return NextResponse.json(
-        { error: 'Value is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Value is required" }, { status: 400 });
     }
 
-    if (key === 'APP_LOGO_URL') {
+    if (key === "APP_LOGO_URL") {
       const motif = motifLogoInvalide(String(value));
       if (motif) return NextResponse.json({ error: motif }, { status: 400 });
     }
@@ -73,9 +64,9 @@ async function handlePut(
       data: config,
     });
   } catch (error: unknown) {
-    console.error('[CONFIG PUT]', error);
+    console.error("[CONFIG PUT]", error);
     return NextResponse.json(
-      { error: 'Failed to update configuration' },
+      { error: "Failed to update configuration" },
       { status: 500 }
     );
   }
@@ -96,7 +87,5 @@ export async function PUT(
   { params }: { params: Promise<{ key: string }> }
 ) {
   const { key } = await params;
-  return withAdminAuth(request, (req, user) =>
-    handlePut(req, key, user)
-  );
+  return withAdminAuth(request, (req, user) => handlePut(req, key, user));
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -59,55 +59,41 @@ export function errorResponse(
 export function validationError(
   errors: Array<{ field: string; message: string }>
 ): NextResponse<ApiResponse> {
-  return errorResponse(
-    "Erreur de validation",
-    {
-      status: 400,
-      errorCode: "VAL_001",
-      errors,
-    }
-  );
+  return errorResponse("Erreur de validation", {
+    status: 400,
+    errorCode: "VAL_001",
+    errors,
+  });
 }
 
 /**
  * Handle not found errors
  */
-export function notFoundError(
-  resource: string
-): NextResponse<ApiResponse> {
-  return errorResponse(
-    `${resource} non trouvé`,
-    {
-      status: 404,
-      errorCode: "NOT_FOUND",
-    }
-  );
+export function notFoundError(resource: string): NextResponse<ApiResponse> {
+  return errorResponse(`${resource} non trouvé`, {
+    status: 404,
+    errorCode: "NOT_FOUND",
+  });
 }
 
 /**
  * Handle unauthorized errors
  */
 export function unauthorizedError(): NextResponse<ApiResponse> {
-  return errorResponse(
-    "Non autorisé",
-    {
-      status: 401,
-      errorCode: "UNAUTHORIZED",
-    }
-  );
+  return errorResponse("Non autorisé", {
+    status: 401,
+    errorCode: "UNAUTHORIZED",
+  });
 }
 
 /**
  * Handle forbidden errors
  */
 export function forbiddenError(): NextResponse<ApiResponse> {
-  return errorResponse(
-    "Accès refusé",
-    {
-      status: 403,
-      errorCode: "FORBIDDEN",
-    }
-  );
+  return errorResponse("Accès refusé", {
+    status: 403,
+    errorCode: "FORBIDDEN",
+  });
 }
 
 /**
@@ -116,11 +102,8 @@ export function forbiddenError(): NextResponse<ApiResponse> {
 export function serverError(
   message: string = "Erreur serveur interne"
 ): NextResponse<ApiResponse> {
-  return errorResponse(
-    message,
-    {
-      status: 500,
-      errorCode: "SERVER_ERROR",
-    }
-  );
+  return errorResponse(message, {
+    status: 500,
+    errorCode: "SERVER_ERROR",
+  });
 }

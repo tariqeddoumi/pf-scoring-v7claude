@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAdminAuth } from "@/lib/auth-middleware";
+import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { ScoringModelService } from "@/lib/services/scoring-model-service";
 
-async function handler(request: NextRequest, user: any) {
+type ModelStatus = NonNullable<
+  Parameters<typeof ScoringModelService.listModels>[0]
+>["status"];
+
+async function handler(request: NextRequest, user: AuthPayload) {
   if (request.method === "GET") {
     try {
       const { searchParams } = new URL(request.url);
       const status = searchParams.get("status");
 
       const models = await ScoringModelService.listModels({
-        status: status as any,
+        status: status as ModelStatus,
         isActive: true,
       });
 

@@ -8,6 +8,7 @@ import { EvaluationWorkspace } from "@/components/scoring/EvaluationWorkspace";
 import type { AnswerValue } from "@/components/scoring/LiveScorePanel";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 import { apiGet } from "@/lib/api-client";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 /**
  * Poste de saisie d'une évaluation, à une URL propre.
@@ -24,7 +25,9 @@ export default function SaisieEvaluationPage() {
   const evaluationId = String(params?.id ?? "");
 
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireNode[]>([]);
-  const [initialAnswers, setInitialAnswers] = useState<Record<string, AnswerValue>>({});
+  const [initialAnswers, setInitialAnswers] = useState<
+    Record<string, AnswerValue>
+  >({});
   const [projectName, setProjectName] = useState("Projet");
   const [modelVersionId, setModelVersionId] = useState("");
   const [status, setStatus] = useState<string>("brouillon");
@@ -37,7 +40,9 @@ export default function SaisieEvaluationPage() {
 
     (async () => {
       try {
-        const res = await apiGet(`/api/scoring/evaluations/${evaluationId}/form`);
+        const res = await apiGet(
+          `/api/scoring/evaluations/${evaluationId}/form`
+        );
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.error || "Évaluation introuvable");
@@ -50,8 +55,8 @@ export default function SaisieEvaluationPage() {
         setProjectName(data.projectName ?? "Projet");
         setModelVersionId(data.modelVersionId ?? "");
         setStatus(data.status ?? "brouillon");
-      } catch (e: any) {
-        if (!annule) setError(e.message);
+      } catch (e: unknown) {
+        if (!annule) setError(messageErreur(e) ?? "");
       } finally {
         if (!annule) setLoading(false);
       }
@@ -74,7 +79,9 @@ export default function SaisieEvaluationPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
           <Loader2 className="animate-spin text-primary mx-auto" size={40} />
-          <p className="text-muted-foreground text-sm">Chargement de la saisie…</p>
+          <p className="text-muted-foreground text-sm">
+            Chargement de la saisie…
+          </p>
         </div>
       </div>
     );
@@ -108,7 +115,8 @@ export default function SaisieEvaluationPage() {
         <div className="rounded-lg bg-card border border-border p-5">
           <p className="text-foreground font-semibold mb-1">Saisie clôturée</p>
           <p className="text-sm text-muted-foreground">
-            Cette évaluation est au statut « {status} » et n&apos;est plus modifiable.
+            Cette évaluation est au statut « {status} » et n&apos;est plus
+            modifiable.
           </p>
         </div>
         <Link

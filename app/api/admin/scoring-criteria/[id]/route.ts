@@ -1,33 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
 import {
   getScoringCriterion,
   updateScoringCriterion,
   deleteScoringCriterion,
-  createScoringThreshold,
-  updateScoringThreshold,
-  deleteScoringThreshold,
-  createScoringOption,
-  updateScoringOption,
-  deleteScoringOption,
-} from '@/lib/services/scoring-criteria-service';
-import { messagePublic } from '@/lib/erreur-publique';
+} from "@/lib/services/scoring-criteria-service";
+import { messagePublic } from "@/lib/erreur-publique";
 
 async function handler(
   request: NextRequest,
-  user: any,
+  user: AuthPayload,
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
 
   // GET - Fetch specific criterion with thresholds and options
-  if (request.method === 'GET') {
+  if (request.method === "GET") {
     try {
       const criterion = await getScoringCriterion(id);
 
       if (!criterion) {
         return NextResponse.json(
-          { error: 'Criterion not found' },
+          { error: "Criterion not found" },
           { status: 404 }
         );
       }
@@ -36,17 +30,17 @@ async function handler(
         success: true,
         data: criterion,
       });
-    } catch (error: any) {
-      console.error('[Scoring Criterion GET]', error);
+    } catch (error: unknown) {
+      console.error("[Scoring Criterion GET]", error);
       return NextResponse.json(
-        { error: 'Failed to fetch criterion' },
+        { error: "Failed to fetch criterion" },
         { status: 500 }
       );
     }
   }
 
   // PUT - Update criterion
-  if (request.method === 'PUT') {
+  if (request.method === "PUT") {
     try {
       const body = await request.json();
 
@@ -59,34 +53,34 @@ async function handler(
         success: true,
         data: criterion,
       });
-    } catch (error: any) {
-      console.error('[Scoring Criterion PUT]', error);
+    } catch (error: unknown) {
+      console.error("[Scoring Criterion PUT]", error);
       return NextResponse.json(
-        { error: messagePublic(error, 'Failed to update criterion') },
+        { error: messagePublic(error, "Failed to update criterion") },
         { status: 500 }
       );
     }
   }
 
   // DELETE - Delete criterion
-  if (request.method === 'DELETE') {
+  if (request.method === "DELETE") {
     try {
       await deleteScoringCriterion(id);
 
       return NextResponse.json({
         success: true,
-        message: 'Criterion deleted successfully',
+        message: "Criterion deleted successfully",
       });
-    } catch (error: any) {
-      console.error('[Scoring Criterion DELETE]', error);
+    } catch (error: unknown) {
+      console.error("[Scoring Criterion DELETE]", error);
       return NextResponse.json(
-        { error: messagePublic(error, 'Failed to delete criterion') },
+        { error: messagePublic(error, "Failed to delete criterion") },
         { status: 500 }
       );
     }
   }
 
-  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function GET(

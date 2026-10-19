@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
 import {
   getAllScoringCriteria,
   createScoringCriterion,
-} from '@/lib/services/scoring-criteria-service';
-import { messagePublic } from '@/lib/erreur-publique';
+} from "@/lib/services/scoring-criteria-service";
+import { messagePublic } from "@/lib/erreur-publique";
 
-async function handler(request: NextRequest, user: any) {
+async function handler(request: NextRequest, user: AuthPayload) {
   // GET - List scoring criteria
-  if (request.method === 'GET') {
+  if (request.method === "GET") {
     try {
       const { searchParams } = new URL(request.url);
-      const category = searchParams.get('category');
+      const category = searchParams.get("category");
 
       const criteria = await getAllScoringCriteria(category || undefined);
 
@@ -19,17 +19,17 @@ async function handler(request: NextRequest, user: any) {
         success: true,
         data: criteria,
       });
-    } catch (error: any) {
-      console.error('[Scoring Criteria GET]', error);
+    } catch (error: unknown) {
+      console.error("[Scoring Criteria GET]", error);
       return NextResponse.json(
-        { error: messagePublic(error, 'Failed to fetch scoring criteria') },
+        { error: messagePublic(error, "Failed to fetch scoring criteria") },
         { status: 500 }
       );
     }
   }
 
   // POST - Create new criterion
-  if (request.method === 'POST') {
+  if (request.method === "POST") {
     try {
       const body = await request.json();
 
@@ -37,11 +37,11 @@ async function handler(request: NextRequest, user: any) {
       if (!body.code || !body.label || !body.category) {
         return NextResponse.json(
           {
-            error: 'Missing required fields: code, label, category',
+            error: "Missing required fields: code, label, category",
             errors: [
-              { field: 'code', message: 'Code is required' },
-              { field: 'label', message: 'Label is required' },
-              { field: 'category', message: 'Category is required' },
+              { field: "code", message: "Code is required" },
+              { field: "label", message: "Label is required" },
+              { field: "category", message: "Category is required" },
             ],
           },
           { status: 400 }
@@ -60,16 +60,16 @@ async function handler(request: NextRequest, user: any) {
         },
         { status: 201 }
       );
-    } catch (error: any) {
-      console.error('[Scoring Criteria POST]', error);
+    } catch (error: unknown) {
+      console.error("[Scoring Criteria POST]", error);
       return NextResponse.json(
-        { error: messagePublic(error, 'Failed to create scoring criterion') },
+        { error: messagePublic(error, "Failed to create scoring criterion") },
         { status: 500 }
       );
     }
   }
 
-  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function GET(request: NextRequest) {

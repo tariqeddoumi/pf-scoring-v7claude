@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 export interface OptionModalProps {
   isOpen: boolean;
@@ -13,7 +14,9 @@ export interface OptionModalProps {
     description?: string;
   };
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (
+    data: NonNullable<OptionModalProps["initialData"]>
+  ) => Promise<void>;
 }
 
 export default function OptionModal({
@@ -23,11 +26,13 @@ export default function OptionModal({
   onClose,
   onSubmit,
 }: OptionModalProps) {
-  const [formData, setFormData] = useState(initialData || {
-    label: "",
-    score: 0,
-    description: "",
-  });
+  const [formData, setFormData] = useState(
+    initialData || {
+      label: "",
+      score: 0,
+      description: "",
+    }
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,8 +44,8 @@ export default function OptionModal({
     try {
       await onSubmit(formData);
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de la sauvegarde");
+    } catch (err: unknown) {
+      setError(messageErreur(err) || "Erreur lors de la sauvegarde");
     } finally {
       setLoading(false);
     }
@@ -60,12 +65,15 @@ export default function OptionModal({
           <button
             onClick={onClose}
             className="p-1 hover:bg-accent rounded"
-           aria-label="Fermer">
+            aria-label="Fermer"
+          >
             <X size={20} className="text-muted-foreground" />
           </button>
         </div>
 
-        <p className="text-xs text-muted-foreground">Critère: <span className="font-mono">{criterionCode}</span></p>
+        <p className="text-xs text-muted-foreground">
+          Critère: <span className="font-mono">{criterionCode}</span>
+        </p>
 
         {error && (
           <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
@@ -75,13 +83,19 @@ export default function OptionModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="optionmodal-1" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="optionmodal-1"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Libellé
             </label>
-            <input id="optionmodal-1"
+            <input
+              id="optionmodal-1"
               type="text"
               value={formData.label}
-              onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, label: e.target.value })
+              }
               placeholder="Texte affiché à l'utilisateur"
               className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               required
@@ -89,13 +103,19 @@ export default function OptionModal({
           </div>
 
           <div>
-            <label htmlFor="optionmodal-2" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="optionmodal-2"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Score (0-100)
             </label>
-            <input id="optionmodal-2"
+            <input
+              id="optionmodal-2"
               type="number"
               value={formData.score}
-              onChange={(e) => setFormData({ ...formData, score: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setFormData({ ...formData, score: parseFloat(e.target.value) })
+              }
               min="0"
               max="100"
               step="1"
@@ -105,13 +125,19 @@ export default function OptionModal({
           </div>
 
           <div>
-            <label htmlFor="optionmodal-3" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="optionmodal-3"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Description (optionnel)
             </label>
-            <input id="optionmodal-3"
+            <input
+              id="optionmodal-3"
               type="text"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               placeholder="Notes supplémentaires"
               className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
             />

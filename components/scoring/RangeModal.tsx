@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 export interface RangeModalProps {
   isOpen: boolean;
@@ -14,7 +15,9 @@ export interface RangeModalProps {
     label?: string;
   };
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (
+    data: NonNullable<RangeModalProps["initialData"]>
+  ) => Promise<void>;
 }
 
 export default function RangeModal({
@@ -24,12 +27,14 @@ export default function RangeModal({
   onClose,
   onSubmit,
 }: RangeModalProps) {
-  const [formData, setFormData] = useState(initialData || {
-    minValue: 0,
-    maxValue: 100,
-    score: 50,
-    label: "",
-  });
+  const [formData, setFormData] = useState(
+    initialData || {
+      minValue: 0,
+      maxValue: 100,
+      score: 50,
+      label: "",
+    }
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -47,8 +52,8 @@ export default function RangeModal({
     try {
       await onSubmit(formData);
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de la sauvegarde");
+    } catch (err: unknown) {
+      setError(messageErreur(err) || "Erreur lors de la sauvegarde");
     } finally {
       setLoading(false);
     }
@@ -68,12 +73,15 @@ export default function RangeModal({
           <button
             onClick={onClose}
             className="p-1 hover:bg-accent rounded"
-           aria-label="Fermer">
+            aria-label="Fermer"
+          >
             <X size={20} className="text-muted-foreground" />
           </button>
         </div>
 
-        <p className="text-xs text-muted-foreground">Critère: <span className="font-mono">{criterionCode}</span></p>
+        <p className="text-xs text-muted-foreground">
+          Critère: <span className="font-mono">{criterionCode}</span>
+        </p>
 
         {error && (
           <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
@@ -84,25 +92,43 @@ export default function RangeModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="rangemodal-1" className="block text-sm font-medium text-secondary-foreground mb-1">
+              <label
+                htmlFor="rangemodal-1"
+                className="block text-sm font-medium text-secondary-foreground mb-1"
+              >
                 Valeur min
               </label>
-              <input id="rangemodal-1"
+              <input
+                id="rangemodal-1"
                 type="number"
                 value={formData.minValue}
-                onChange={(e) => setFormData({ ...formData, minValue: parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    minValue: parseFloat(e.target.value),
+                  })
+                }
                 className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
                 required
               />
             </div>
             <div>
-              <label htmlFor="rangemodal-2" className="block text-sm font-medium text-secondary-foreground mb-1">
+              <label
+                htmlFor="rangemodal-2"
+                className="block text-sm font-medium text-secondary-foreground mb-1"
+              >
                 Valeur max
               </label>
-              <input id="rangemodal-2"
+              <input
+                id="rangemodal-2"
                 type="number"
                 value={formData.maxValue}
-                onChange={(e) => setFormData({ ...formData, maxValue: parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    maxValue: parseFloat(e.target.value),
+                  })
+                }
                 className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
                 required
               />
@@ -110,13 +136,19 @@ export default function RangeModal({
           </div>
 
           <div>
-            <label htmlFor="rangemodal-3" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="rangemodal-3"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Score (0-100)
             </label>
-            <input id="rangemodal-3"
+            <input
+              id="rangemodal-3"
               type="number"
               value={formData.score}
-              onChange={(e) => setFormData({ ...formData, score: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setFormData({ ...formData, score: parseFloat(e.target.value) })
+              }
               min="0"
               max="100"
               step="1"
@@ -126,13 +158,19 @@ export default function RangeModal({
           </div>
 
           <div>
-            <label htmlFor="rangemodal-4" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="rangemodal-4"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Libellé (optionnel)
             </label>
-            <input id="rangemodal-4"
+            <input
+              id="rangemodal-4"
               type="text"
               value={formData.label}
-              onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, label: e.target.value })
+              }
               placeholder="ex: Excellent"
               className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
             />

@@ -57,7 +57,9 @@ async function testUserCount(): Promise<DiagnosticTest> {
   try {
     const count = await prisma.user.count();
     const admins = await prisma.user.count({ where: { role: "system_admin" } });
-    const analysts = await prisma.user.count({ where: { role: "risk_analyst" } });
+    const analysts = await prisma.user.count({
+      where: { role: "risk_analyst" },
+    });
 
     return {
       name: "Statistiques des utilisateurs",
@@ -279,11 +281,9 @@ export async function GET(request: NextRequest) {
         tests,
         environment,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/DIAGNOSTIC/FULL] GET error:", error);
-      return serverError(
-        "Erreur lors de l'exécution des diagnostiques"
-      );
+      return serverError("Erreur lors de l'exécution des diagnostiques");
     }
   });
 }

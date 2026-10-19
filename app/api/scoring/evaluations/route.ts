@@ -32,10 +32,7 @@ function refusPermission(action: "create" | "update") {
  * Initializes empty answers based on binding defaults.
  */
 
-async function handlePOST(
-  req: NextRequest,
-  user: AuthPayload
-) {
+async function handlePOST(req: NextRequest, user: AuthPayload) {
   try {
     if (!hasPermission(user.role as UserRole, "evaluation", "create")) {
       return refusPermission("create");
@@ -45,7 +42,11 @@ async function handlePOST(
 
     if (!projectId || !modelVersionId) {
       return NextResponse.json(
-        { success: false, error: "projectId and modelVersionId required", errorCode: "VALIDATION_ERROR" },
+        {
+          success: false,
+          error: "projectId and modelVersionId required",
+          errorCode: "VALIDATION_ERROR",
+        },
         { status: 400 }
       );
     }
@@ -68,7 +69,11 @@ async function handlePOST(
 
     if (!version) {
       return NextResponse.json(
-        { success: false, error: "Model version not found", errorCode: "NOT_FOUND" },
+        {
+          success: false,
+          error: "Model version not found",
+          errorCode: "NOT_FOUND",
+        },
         { status: 404 }
       );
     }
@@ -79,7 +84,8 @@ async function handlePOST(
       return NextResponse.json(
         {
           success: false,
-          error: "Cette version du modèle n'est pas publiée : seule la version publiée sert à évaluer.",
+          error:
+            "Cette version du modèle n'est pas publiée : seule la version publiée sert à évaluer.",
           errorCode: "INVALID_STATE",
         },
         { status: 409 }
@@ -110,7 +116,7 @@ async function handlePOST(
     const answersToCreate = nodes.map((n) => ({
       evaluationId: evaluation.id,
       nodeId: n.id,
-      answerType: (n.answerType || "TEXT") as any,
+      answerType: n.answerType || "TEXT",
       // La valeur par défaut du paramétrage n'est pas une réponse de l'analyste : la
       // recopier ici la faisait passer pour une donnée saisie.
       valueString: null,
@@ -147,10 +153,7 @@ async function handlePOST(
  * GET /api/scoring/evaluations?projectId=...&modelVersionId=...
  * List evaluations for a project, optionally filtered by model version.
  */
-async function handleGET(
-  req: NextRequest,
-  user: AuthPayload
-) {
+async function handleGET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
@@ -158,7 +161,11 @@ async function handleGET(
 
     if (!projectId) {
       return NextResponse.json(
-        { success: false, error: "projectId required", errorCode: "VALIDATION_ERROR" },
+        {
+          success: false,
+          error: "projectId required",
+          errorCode: "VALIDATION_ERROR",
+        },
         { status: 400 }
       );
     }
@@ -194,5 +201,5 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  return withAuth(req, (r, user) => handleGET(r, user));
+  return withAuth(req, (r) => handleGET(r));
 }

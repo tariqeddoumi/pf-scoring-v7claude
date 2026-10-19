@@ -4,13 +4,18 @@
  * Bridges between database and frontend components
  */
 
-import prisma from '@/lib/prisma';
+import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
-import { FieldConfiguration, FormSection, FormPreset } from '@prisma/client';
+import {
+  FieldConfiguration,
+  FormSection,
+  FormPreset,
+  Prisma,
+} from "@prisma/client";
 
 // In-memory cache for field configurations (with TTL)
 const configCache: {
-  data: Map<string, any>;
+  data: Map<string, FormSection[] | FieldConfiguration[]>;
   timestamp: number;
   ttl: number;
 } = {
@@ -48,17 +53,17 @@ export const getFormSections = async (
 
   // Check cache first
   if (isCacheValid() && configCache.data.has(cacheKey)) {
-    return configCache.data.get(cacheKey);
+    return configCache.data.get(cacheKey) as FormSection[];
   }
 
   try {
     const sections = await prisma.formSection.findMany({
       where: { entity, visible: true },
-      orderBy: { orderIndex: 'asc' },
+      orderBy: { orderIndex: "asc" },
       include: {
         fields: {
           where: { visible: true },
-          orderBy: { orderIndex: 'asc' },
+          orderBy: { orderIndex: "asc" },
         },
       },
     });
@@ -84,13 +89,13 @@ export const getEntityFields = async (
 
   // Check cache first
   if (isCacheValid() && configCache.data.has(cacheKey)) {
-    return configCache.data.get(cacheKey);
+    return configCache.data.get(cacheKey) as FieldConfiguration[];
   }
 
   try {
     const fields = await prisma.fieldConfiguration.findMany({
       where: { entity, visible: true },
-      orderBy: [{ sectionId: 'asc' }, { orderIndex: 'asc' }],
+      orderBy: [{ sectionId: "asc" }, { orderIndex: "asc" }],
     });
 
     // Update cache
@@ -128,7 +133,7 @@ export const getFieldConfig = async (
  * Create a new field configuration
  */
 export const createFieldConfig = async (
-  data: Omit<FieldConfiguration, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<FieldConfiguration, "id" | "createdAt" | "updatedAt">
 ): Promise<FieldConfiguration> => {
   try {
     const { customOptions, ...rest } = data;
@@ -136,8 +141,14 @@ export const createFieldConfig = async (
       data: {
         ...rest,
         id: randomUUID(),
-        customOptions: customOptions ? JSON.parse(typeof customOptions === 'string' ? customOptions : JSON.stringify(customOptions)) : undefined,
-      } as any,
+        customOptions: customOptions
+          ? JSON.parse(
+              typeof customOptions === "string"
+                ? customOptions
+                : JSON.stringify(customOptions)
+            )
+          : undefined,
+      } as Prisma.FieldConfigurationUncheckedCreateInput,
     });
 
     // Clear cache to force refresh
@@ -145,8 +156,8 @@ export const createFieldConfig = async (
 
     return field;
   } catch (error) {
-    console.error('Error creating field configuration:', error);
-    throw new Error('Failed to create field configuration');
+    console.error("Error creating field configuration:", error);
+    throw new Error("Failed to create field configuration");
   }
 };
 
@@ -159,12 +170,18 @@ export const updateFieldConfig = async (
 ): Promise<FieldConfiguration> => {
   try {
     const { customOptions, ...rest } = data;
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       ...rest,
       updatedAt: new Date(),
     };
     if (customOptions !== undefined) {
-      updateData.customOptions = customOptions ? JSON.parse(typeof customOptions === 'string' ? customOptions : JSON.stringify(customOptions)) : null;
+      updateData.customOptions = customOptions
+        ? JSON.parse(
+            typeof customOptions === "string"
+              ? customOptions
+              : JSON.stringify(customOptions)
+          )
+        : null;
     }
 
     const updated = await prisma.fieldConfiguration.update({
@@ -179,8 +196,8 @@ export const updateFieldConfig = async (
 
     return updated;
   } catch (error) {
-    console.error('Error updating field configuration:', error);
-    throw new Error('Failed to update field configuration');
+    console.error("Error updating field configuration:", error);
+    throw new Error("Failed to update field configuration");
   }
 };
 
@@ -194,7 +211,7 @@ export const deleteFieldConfig = async (id: string): Promise<void> => {
     });
 
     if (!field) {
-      throw new Error('Field configuration not found');
+      throw new Error("Field configuration not found");
     }
 
     await prisma.fieldConfiguration.delete({
@@ -204,8 +221,8 @@ export const deleteFieldConfig = async (id: string): Promise<void> => {
     // Clear cache to force refresh
     clearFieldConfigCache(field.entity);
   } catch (error) {
-    console.error('Error deleting field configuration:', error);
-    throw new Error('Failed to delete field configuration');
+    console.error("Error deleting field configuration:", error);
+    throw new Error("Failed to delete field configuration");
   }
 };
 
@@ -213,7 +230,7 @@ export const deleteFieldConfig = async (id: string): Promise<void> => {
  * Create a new form section
  */
 export const createFormSection = async (
-  data: Omit<FormSection, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<FormSection, "id" | "createdAt" | "updatedAt">
 ): Promise<FormSection> => {
   try {
     const section = await prisma.formSection.create({
@@ -228,8 +245,8 @@ export const createFormSection = async (
 
     return section;
   } catch (error) {
-    console.error('Error creating form section:', error);
-    throw new Error('Failed to create form section');
+    console.error("Error creating form section:", error);
+    throw new Error("Failed to create form section");
   }
 };
 
@@ -256,8 +273,8 @@ export const updateFormSection = async (
 
     return updated;
   } catch (error) {
-    console.error('Error updating form section:', error);
-    throw new Error('Failed to update form section');
+    console.error("Error updating form section:", error);
+    throw new Error("Failed to update form section");
   }
 };
 
@@ -271,7 +288,7 @@ export const deleteFormSection = async (id: string): Promise<void> => {
     });
 
     if (!section) {
-      throw new Error('Form section not found');
+      throw new Error("Form section not found");
     }
 
     // Delete all fields in this section first
@@ -287,8 +304,8 @@ export const deleteFormSection = async (id: string): Promise<void> => {
     // Clear cache to force refresh
     clearFieldConfigCache(section.entity);
   } catch (error) {
-    console.error('Error deleting form section:', error);
-    throw new Error('Failed to delete form section');
+    console.error("Error deleting form section:", error);
+    throw new Error("Failed to delete form section");
   }
 };
 
@@ -299,7 +316,7 @@ export const getFormPresets = async (entity: string): Promise<FormPreset[]> => {
   try {
     return await prisma.formPreset.findMany({
       where: { entity },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   } catch (error) {
     console.error(`Error fetching presets for entity ${entity}:`, error);
@@ -311,7 +328,7 @@ export const getFormPresets = async (entity: string): Promise<FormPreset[]> => {
  * Create a new form preset
  */
 export const createFormPreset = async (
-  data: Omit<FormPreset, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<FormPreset, "id" | "createdAt" | "updatedAt">
 ): Promise<FormPreset> => {
   try {
     return await prisma.formPreset.create({
@@ -321,8 +338,8 @@ export const createFormPreset = async (
       },
     });
   } catch (error) {
-    console.error('Error creating form preset:', error);
-    throw new Error('Failed to create form preset');
+    console.error("Error creating form preset:", error);
+    throw new Error("Failed to create form preset");
   }
 };
 
@@ -342,8 +359,8 @@ export const updateFormPreset = async (
       },
     });
   } catch (error) {
-    console.error('Error updating form preset:', error);
-    throw new Error('Failed to update form preset');
+    console.error("Error updating form preset:", error);
+    throw new Error("Failed to update form preset");
   }
 };
 
@@ -356,8 +373,8 @@ export const deleteFormPreset = async (id: string): Promise<void> => {
       where: { id },
     });
   } catch (error) {
-    console.error('Error deleting form preset:', error);
-    throw new Error('Failed to delete form preset');
+    console.error("Error deleting form preset:", error);
+    throw new Error("Failed to delete form preset");
   }
 };
 
@@ -365,120 +382,120 @@ export const deleteFormPreset = async (id: string): Promise<void> => {
  * Initialize field configurations from code-based config (one-time)
  * This seeds the database with initial field configuration from lib/field-config.ts
  */
-export const initializeFieldConfigurationsFromCode = async (): Promise<void> => {
-  try {
-    // Chaque entité est initialisée une seule fois : le contrôle portait sur les seuls
-    // clients, et une base où les sections « projet » existaient déjà faisait échouer
-    // l'initialisation sur la contrainte d'unicité (entité, titre).
-    const [sectionsClient, sectionsProjet] = await Promise.all([
-      prisma.formSection.count({ where: { entity: 'client' } }),
-      prisma.formSection.count({ where: { entity: 'project' } }),
-    ]);
+export const initializeFieldConfigurationsFromCode =
+  async (): Promise<void> => {
+    try {
+      // Chaque entité est initialisée une seule fois : le contrôle portait sur les seuls
+      // clients, et une base où les sections « projet » existaient déjà faisait échouer
+      // l'initialisation sur la contrainte d'unicité (entité, titre).
+      const [sectionsClient, sectionsProjet] = await Promise.all([
+        prisma.formSection.count({ where: { entity: "client" } }),
+        prisma.formSection.count({ where: { entity: "project" } }),
+      ]);
 
-    if (sectionsClient > 0 && sectionsProjet > 0) {
+      if (sectionsClient > 0 && sectionsProjet > 0) {
+        console.log(
+          "Field configurations already initialized in database, skipping..."
+        );
+        return;
+      }
+
       console.log(
-        'Field configurations already initialized in database, skipping...'
+        "Initializing field configurations from code-based config..."
       );
-      return;
-    }
 
-    console.log(
-      'Initializing field configurations from code-based config...'
-    );
+      // Import the code-based config
+      const { CLIENT_SECTIONS, PROJECT_SECTIONS } =
+        await import("@/lib/field-config");
 
-    // Import the code-based config
-    const { CLIENT_SECTIONS, PROJECT_SECTIONS } = await import(
-      '@/lib/field-config'
-    );
-
-    // Seed client sections and fields
-    for (const section of sectionsClient > 0 ? [] : CLIENT_SECTIONS) {
-      const createdSection = await prisma.formSection.create({
-        data: {
-          id: randomUUID(),
-          entity: 'client',
-          title: section.title,
-          description: section.description,
-          icon: section.icon,
-          columns: section.columns || 2,
-          orderIndex: CLIENT_SECTIONS.indexOf(section),
-          layout: 'accordion',
-          visible: true,
-        },
-      });
-
-      // Create fields for this section
-      for (const field of section.fields) {
-        const fieldData: any = {
-          id: randomUUID(),
-          entity: 'client',
-          sectionId: createdSection.id,
-          fieldName: field.name,
-          label: field.label,
-          fieldType: field.type,
-          required: field.required || false,
-          placeholder: field.placeholder,
-          helpText: field.help,
-          validation: field.validation,
-          orderIndex: section.fields.indexOf(field),
-          visible: true,
-          editable: true,
-        };
-        if (field.options) {
-          fieldData.customOptions = JSON.stringify(field.options);
-        }
-        await prisma.fieldConfiguration.create({
-          data: fieldData,
+      // Seed client sections and fields
+      for (const section of sectionsClient > 0 ? [] : CLIENT_SECTIONS) {
+        const createdSection = await prisma.formSection.create({
+          data: {
+            id: randomUUID(),
+            entity: "client",
+            title: section.title,
+            description: section.description,
+            icon: section.icon,
+            columns: section.columns || 2,
+            orderIndex: CLIENT_SECTIONS.indexOf(section),
+            layout: "accordion",
+            visible: true,
+          },
         });
-      }
-    }
 
-    // Seed project sections and fields
-    for (const section of sectionsProjet > 0 ? [] : PROJECT_SECTIONS) {
-      const createdSection = await prisma.formSection.create({
-        data: {
-          id: randomUUID(),
-          entity: 'project',
-          title: section.title,
-          description: section.description,
-          icon: section.icon,
-          columns: section.columns || 2,
-          orderIndex: PROJECT_SECTIONS.indexOf(section),
-          layout: 'tabs', // Projects use tabs
-          visible: true,
-        },
-      });
-
-      // Create fields for this section
-      for (const field of section.fields) {
-        const fieldData: any = {
-          id: randomUUID(),
-          entity: 'project',
-          sectionId: createdSection.id,
-          fieldName: field.name,
-          label: field.label,
-          fieldType: field.type,
-          required: field.required || false,
-          placeholder: field.placeholder,
-          helpText: field.help,
-          validation: field.validation,
-          orderIndex: section.fields.indexOf(field),
-          visible: true,
-          editable: true,
-        };
-        if (field.options) {
-          fieldData.customOptions = JSON.stringify(field.options);
+        // Create fields for this section
+        for (const field of section.fields) {
+          const fieldData: Prisma.FieldConfigurationUncheckedCreateInput = {
+            id: randomUUID(),
+            entity: "client",
+            sectionId: createdSection.id,
+            fieldName: field.name,
+            label: field.label,
+            fieldType: field.type,
+            required: field.required || false,
+            placeholder: field.placeholder,
+            helpText: field.help,
+            validation: field.validation,
+            orderIndex: section.fields.indexOf(field),
+            visible: true,
+            editable: true,
+          };
+          if (field.options) {
+            fieldData.customOptions = JSON.stringify(field.options);
+          }
+          await prisma.fieldConfiguration.create({
+            data: fieldData,
+          });
         }
-        await prisma.fieldConfiguration.create({
-          data: fieldData,
-        });
       }
-    }
 
-    console.log('Field configurations initialized successfully');
-    clearFieldConfigCache();
-  } catch (error) {
-    console.error('Error initializing field configurations:', error);
-    throw new Error('Failed to initialize field configurations');
-  }
-};
+      // Seed project sections and fields
+      for (const section of sectionsProjet > 0 ? [] : PROJECT_SECTIONS) {
+        const createdSection = await prisma.formSection.create({
+          data: {
+            id: randomUUID(),
+            entity: "project",
+            title: section.title,
+            description: section.description,
+            icon: section.icon,
+            columns: section.columns || 2,
+            orderIndex: PROJECT_SECTIONS.indexOf(section),
+            layout: "tabs", // Projects use tabs
+            visible: true,
+          },
+        });
+
+        // Create fields for this section
+        for (const field of section.fields) {
+          const fieldData: Prisma.FieldConfigurationUncheckedCreateInput = {
+            id: randomUUID(),
+            entity: "project",
+            sectionId: createdSection.id,
+            fieldName: field.name,
+            label: field.label,
+            fieldType: field.type,
+            required: field.required || false,
+            placeholder: field.placeholder,
+            helpText: field.help,
+            validation: field.validation,
+            orderIndex: section.fields.indexOf(field),
+            visible: true,
+            editable: true,
+          };
+          if (field.options) {
+            fieldData.customOptions = JSON.stringify(field.options);
+          }
+          await prisma.fieldConfiguration.create({
+            data: fieldData,
+          });
+        }
+      }
+
+      console.log("Field configurations initialized successfully");
+      clearFieldConfigCache();
+    } catch (error) {
+      console.error("Error initializing field configurations:", error);
+      throw new Error("Failed to initialize field configurations");
+    }
+  };

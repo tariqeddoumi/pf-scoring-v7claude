@@ -3,7 +3,6 @@
  * Tests the complete flow: model → evaluation → scoring → results
  */
 
-import { ModelLoader } from "../model-loader";
 import { BindingResolver } from "../binding-resolver";
 import { ValueResolver } from "../value-resolver";
 import { ScoreCalculator } from "../score-calculator";
@@ -111,7 +110,10 @@ describe("Scoring Engine V8 Integration", () => {
       };
 
       // Resolve value with type coercion
-      const valueSnapshot = ValueResolver.resolveValue(bindingResult.resolvedValue, bindingResult);
+      const valueSnapshot = ValueResolver.resolveValue(
+        bindingResult.resolvedValue,
+        bindingResult
+      );
       expect(valueSnapshot.valueType).toBe("NUMBER");
       expect(valueSnapshot.resolvedValue).toBe(500000);
 
@@ -137,7 +139,7 @@ describe("Scoring Engine V8 Integration", () => {
       ];
 
       // Test weighted average
-      const result = AggregationEngine.aggregate("WEIGHTED_AVERAGE", children as any);
+      const result = AggregationEngine.aggregate("WEIGHTED_AVERAGE", children);
       const expected = (60 * 2 + 80 * 1) / (2 + 1);
       expect(result).toBeCloseTo(expected, 2); // 73.33
     });
@@ -173,7 +175,11 @@ describe("Scoring Engine V8 Integration", () => {
 
   describe("Error Handling", () => {
     test("should handle formula evaluation errors", () => {
-      const result = ScoreCalculator.scoreFromFormula("invalid expression!", {}, 50);
+      const result = ScoreCalculator.scoreFromFormula(
+        "invalid expression!",
+        {},
+        50
+      );
       expect(result.rawScore).toBe(50);
       expect(result.explanation).toContain("Échec");
     });

@@ -9,7 +9,6 @@ import {
   FileText,
   CheckCircle,
   BarChart3,
-  AlertCircle,
   Edit2,
   FileSearch,
 } from "lucide-react";
@@ -19,6 +18,7 @@ import { usePermission } from "@/lib/hooks/usePermission";
 import { scoreBarClass, scoreTextClass } from "@/lib/score-colors";
 import { useVoirScores } from "@/components/providers/visibilite-scores";
 import { Note, StatutEvaluation } from "@/components/ui/status-badge";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 interface Evaluation {
   id: string;
@@ -48,13 +48,23 @@ interface Evaluation {
   updatedAt?: string;
 }
 
-const Field = ({ label, value }: { label: string; value?: string | number | null }) => (
+const Field = ({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | number | null;
+}) => (
   <div>
-    <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">{label}</label>
+    <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+      {label}
+    </label>
     <p className="text-foreground">
-      {value !== null && value !== undefined && value !== ""
-        ? value
-        : <span className="text-muted-foreground italic">Non renseigné</span>}
+      {value !== null && value !== undefined && value !== "" ? (
+        value
+      ) : (
+        <span className="text-muted-foreground italic">Non renseigné</span>
+      )}
     </p>
   </div>
 );
@@ -85,20 +95,32 @@ function tonRecommandation(texte?: string | null): string {
   return "bg-muted text-muted-foreground";
 }
 
-const ScoreBar = ({ label, value }: { label: string; value?: number | null }) => {
+const ScoreBar = ({
+  label,
+  value,
+}: {
+  label: string;
+  value?: number | null;
+}) => {
   const renseigne = value !== null && value !== undefined;
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase text-muted-foreground">{label}</span>
-        <span className={`font-semibold tabulaire ${renseigne ? scoreTextClass(value) : "text-muted-foreground"}`}>
+        <span className="text-xs font-semibold uppercase text-muted-foreground">
+          {label}
+        </span>
+        <span
+          className={`font-semibold tabulaire ${renseigne ? scoreTextClass(value) : "text-muted-foreground"}`}
+        >
           {renseigne ? `${value.toFixed(1).replace(".", ",")} / 100` : "—"}
         </span>
       </div>
       <div className="h-2 rounded-full bg-muted">
         <div
           className={`h-2 rounded-full transition-all ${renseigne ? scoreBarClass(value) : ""}`}
-          style={{ width: renseigne ? `${Math.max(0, Math.min(value, 100))}%` : "0%" }}
+          style={{
+            width: renseigne ? `${Math.max(0, Math.min(value, 100))}%` : "0%",
+          }}
         />
       </div>
     </div>
@@ -120,7 +142,9 @@ export default function EvaluationDetailPage({
   const [reouverture, setReouverture] = useState(false);
   const [motif, setMotif] = useState("");
   const [enCours, setEnCours] = useState(false);
-  const [erreurReouverture, setErreurReouverture] = useState<string | null>(null);
+  const [erreurReouverture, setErreurReouverture] = useState<string | null>(
+    null
+  );
 
   /**
    * Remise en saisie d'une évaluation soumise ou rejetée.
@@ -135,11 +159,18 @@ export default function EvaluationDetailPage({
     setEnCours(true);
     setErreurReouverture(null);
     try {
-      const res = await apiPost(`/api/scoring/evaluations/${evalId}/reopen`, { motif });
-      if (!res.ok) throw new Error(await messageErreurApi(res, "Remise en saisie impossible."));
+      const res = await apiPost(`/api/scoring/evaluations/${evalId}/reopen`, {
+        motif,
+      });
+      if (!res.ok)
+        throw new Error(
+          await messageErreurApi(res, "Remise en saisie impossible.")
+        );
       router.push(`/evaluations/${evalId}/saisie`);
     } catch (e) {
-      setErreurReouverture(e instanceof Error ? e.message : "Remise en saisie impossible.");
+      setErreurReouverture(
+        e instanceof Error ? e.message : "Remise en saisie impossible."
+      );
       setEnCours(false);
     }
   };
@@ -150,12 +181,13 @@ export default function EvaluationDetailPage({
         const { id } = await params;
         setEvalId(id);
         const response = await apiGet(`/api/evaluations/${id}`);
-        if (!response.ok) throw new Error("Chargement de l'évaluation impossible");
+        if (!response.ok)
+          throw new Error("Chargement de l'évaluation impossible");
         const data = await response.json();
         setEvaluation(data.data || data);
         setError(null);
-      } catch (err: any) {
-        setError(err.message || "Chargement de l'évaluation impossible");
+      } catch (err: unknown) {
+        setError(messageErreur(err) || "Chargement de l'évaluation impossible");
         setEvaluation(null);
       } finally {
         setLoading(false);
@@ -175,7 +207,10 @@ export default function EvaluationDetailPage({
   if (error || !evaluation) {
     return (
       <div className="space-y-6">
-        <Link href="/evaluations" className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground">
+        <Link
+          href="/evaluations"
+          className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft size={20} />
           <span>Retour aux évaluations</span>
         </Link>
@@ -196,31 +231,45 @@ export default function EvaluationDetailPage({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Projet" value={evaluation.project?.nom} />
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Statut</label>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+                Statut
+              </label>
               <StatutEvaluation statut={evaluation.status} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Recommandation</label>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+                Recommandation
+              </label>
               {/* Le moteur écrit une phrase — « Approuver avec conditions »,
                   « Blocage — condition rédhibitoire déclenchée (NOGO_DSCR_MIN) » — et
                   non un code APPROVE/REJECT. La comparer à des codes affichait
                   « Approuver sous conditions » sur tous les dossiers, y compris ceux
                   que le moteur bloque. */}
-              <span className={`inline-block rounded-full px-3 py-1 text-sm ${tonRecommandation(evaluation.recommendation)}`}>
+              <span
+                className={`inline-block rounded-full px-3 py-1 text-sm ${tonRecommandation(evaluation.recommendation)}`}
+              >
                 {evaluation.recommendation || "Non calculée"}
               </span>
             </div>
             {voirScores && (
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Note</label>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+                  Note
+                </label>
                 <Note note={evaluation.rating} />
               </div>
             )}
           </div>
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Notes</label>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+              Notes
+            </label>
             <p className="text-foreground whitespace-pre-wrap">
-              {evaluation.notes || <span className="text-muted-foreground italic">Non renseigné</span>}
+              {evaluation.notes || (
+                <span className="text-muted-foreground italic">
+                  Non renseigné
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -235,13 +284,27 @@ export default function EvaluationDetailPage({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2 grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
               <div className="text-center">
-                <p className="text-xs text-muted-foreground uppercase mb-1">Score final</p>
-                <p className="text-3xl font-bold text-foreground">{evaluation.finalScore != null ? evaluation.finalScore.toFixed(1).replace(".", ",") : "—"}</p>
+                <p className="text-xs text-muted-foreground uppercase mb-1">
+                  Score final
+                </p>
+                <p className="text-3xl font-bold text-foreground">
+                  {evaluation.finalScore != null
+                    ? evaluation.finalScore.toFixed(1).replace(".", ",")
+                    : "—"}
+                </p>
                 <p className="text-xs text-muted-foreground">sur 100</p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-muted-foreground uppercase mb-1">Probabilité de défaut</p>
-                <p className="text-3xl font-bold text-foreground">{evaluation.probabilityOfDefault != null ? evaluation.probabilityOfDefault.toFixed(2).replace(".", ",") : "—"}</p>
+                <p className="text-xs text-muted-foreground uppercase mb-1">
+                  Probabilité de défaut
+                </p>
+                <p className="text-3xl font-bold text-foreground">
+                  {evaluation.probabilityOfDefault != null
+                    ? evaluation.probabilityOfDefault
+                        .toFixed(2)
+                        .replace(".", ",")
+                    : "—"}
+                </p>
                 <p className="text-xs text-muted-foreground">%</p>
               </div>
             </div>
@@ -249,15 +312,27 @@ export default function EvaluationDetailPage({
           <div className="space-y-4">
             {evaluation.domainScores && evaluation.domainScores.length > 0 ? (
               evaluation.domainScores.map((d) => (
-                <ScoreBar key={d.code} label={d.label} value={d.score ?? undefined} />
+                <ScoreBar
+                  key={d.code}
+                  label={d.label}
+                  value={d.score ?? undefined}
+                />
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
-                Aucun score par domaine : l&apos;évaluation n&apos;a pas encore été calculée.
+                Aucun score par domaine : l&apos;évaluation n&apos;a pas encore
+                été calculée.
               </p>
             )}
           </div>
-          <Field label="Total malus" value={evaluation.malusTotal != null ? evaluation.malusTotal.toFixed(2).replace(".", ",") : null} />
+          <Field
+            label="Total malus"
+            value={
+              evaluation.malusTotal != null
+                ? evaluation.malusTotal.toFixed(2).replace(".", ",")
+                : null
+            }
+          />
         </div>
       ),
     },
@@ -269,14 +344,34 @@ export default function EvaluationDetailPage({
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Approuvé par" value={evaluation.approvedBy} />
-            <Field label="Date d'approbation" value={evaluation.approvedAt ? new Date(evaluation.approvedAt).toLocaleDateString("fr-FR") : null} />
+            <Field
+              label="Date d'approbation"
+              value={
+                evaluation.approvedAt
+                  ? new Date(evaluation.approvedAt).toLocaleDateString("fr-FR")
+                  : null
+              }
+            />
             <Field label="Rejeté par" value={evaluation.rejectedBy} />
-            <Field label="Date de rejet" value={evaluation.rejectedAt ? new Date(evaluation.rejectedAt).toLocaleDateString("fr-FR") : null} />
+            <Field
+              label="Date de rejet"
+              value={
+                evaluation.rejectedAt
+                  ? new Date(evaluation.rejectedAt).toLocaleDateString("fr-FR")
+                  : null
+              }
+            />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Raison du rejet</label>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+              Raison du rejet
+            </label>
             <p className="text-foreground whitespace-pre-wrap">
-              {evaluation.rejectionReason || <span className="text-muted-foreground italic">Non renseigné</span>}
+              {evaluation.rejectionReason || (
+                <span className="text-muted-foreground italic">
+                  Non renseigné
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -292,7 +387,8 @@ export default function EvaluationDetailPage({
           <Link
             href="/evaluations"
             className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-           aria-label="Retour">
+            aria-label="Retour"
+          >
             <ArrowLeft size={20} />
           </Link>
           <div>
@@ -300,7 +396,10 @@ export default function EvaluationDetailPage({
               {evaluation.project?.nom || "Évaluation"}
             </h1>
             <p className="text-muted-foreground mt-1 text-sm">
-              Évaluation • {evaluation.createdAt ? new Date(evaluation.createdAt).toLocaleDateString("fr-FR") : "N/A"}
+              Évaluation •{" "}
+              {evaluation.createdAt
+                ? new Date(evaluation.createdAt).toLocaleDateString("fr-FR")
+                : "N/A"}
             </p>
           </div>
         </div>
@@ -314,7 +413,9 @@ export default function EvaluationDetailPage({
           </Link>
           {evaluation.status === "brouillon" && (
             <button
-              onClick={() => evalId && router.push(`/evaluations/${evalId}/saisie`)}
+              onClick={() =>
+                evalId && router.push(`/evaluations/${evalId}/saisie`)
+              }
               className="inline-flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-lg transition-all"
             >
               <Edit2 size={20} />
@@ -337,10 +438,11 @@ export default function EvaluationDetailPage({
       {reouverture && (
         <div className="rounded-lg border border-warning/40 bg-warning-subtle p-4 space-y-3">
           <p className="text-sm text-foreground">
-            <strong>Remettre l&apos;évaluation en saisie ?</strong> Elle repasse en brouillon et
-            sort du circuit de validation. Le score ne se corrige pas directement : modifiez
-            les réponses concernées, relancez le calcul, puis soumettez à nouveau. Le motif
-            est conservé dans les notes et le journal d&apos;audit.
+            <strong>Remettre l&apos;évaluation en saisie ?</strong> Elle repasse
+            en brouillon et sort du circuit de validation. Le score ne se
+            corrige pas directement : modifiez les réponses concernées, relancez
+            le calcul, puis soumettez à nouveau. Le motif est conservé dans les
+            notes et le journal d&apos;audit.
           </p>
           <textarea
             value={motif}
@@ -350,10 +452,15 @@ export default function EvaluationDetailPage({
             aria-label="Motif de la correction"
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none"
           />
-          {erreurReouverture && <p className="text-sm text-destructive">{erreurReouverture}</p>}
+          {erreurReouverture && (
+            <p className="text-sm text-destructive">{erreurReouverture}</p>
+          )}
           <div className="flex justify-end gap-2">
             <button
-              onClick={() => { setReouverture(false); setErreurReouverture(null); }}
+              onClick={() => {
+                setReouverture(false);
+                setErreurReouverture(null);
+              }}
               className="h-9 rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground hover:bg-accent"
             >
               Annuler
@@ -372,44 +479,72 @@ export default function EvaluationDetailPage({
 
       {/* Score Card */}
       {/* Réservé aux rôles qui voient les scores : ailleurs, ni score ni note. */}
-      {voirScores && evaluation.finalScore !== undefined && evaluation.finalScore !== null && (
-        <div className="rounded-lg border border-border bg-card p-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div>
-              <p className="text-xs uppercase text-muted-foreground mb-1">Score final</p>
-              <p className={`text-3xl font-bold tabulaire ${scoreTextClass(evaluation.finalScore)}`}>
-                {evaluation.finalScore.toFixed(1).replace(".", ",")}
-              </p>
-              <p className="text-xs text-muted-foreground">sur 100</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase text-muted-foreground mb-1">Note</p>
-              <Note note={evaluation.rating} taille="grande" />
-            </div>
-            <div>
-              <p className="text-xs uppercase text-muted-foreground mb-1">Statut</p>
-              <StatutEvaluation statut={evaluation.status} />
-            </div>
-            <div>
-              <p className="text-xs uppercase text-muted-foreground mb-1">Recommandation</p>
-              <p className="text-sm font-semibold text-foreground">{evaluation.recommendation || "Non calculée"}</p>
+      {voirScores &&
+        evaluation.finalScore !== undefined &&
+        evaluation.finalScore !== null && (
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div>
+                <p className="text-xs uppercase text-muted-foreground mb-1">
+                  Score final
+                </p>
+                <p
+                  className={`text-3xl font-bold tabulaire ${scoreTextClass(evaluation.finalScore)}`}
+                >
+                  {evaluation.finalScore.toFixed(1).replace(".", ",")}
+                </p>
+                <p className="text-xs text-muted-foreground">sur 100</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground mb-1">
+                  Note
+                </p>
+                <Note note={evaluation.rating} taille="grande" />
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground mb-1">
+                  Statut
+                </p>
+                <StatutEvaluation statut={evaluation.status} />
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground mb-1">
+                  Recommandation
+                </p>
+                <p className="text-sm font-semibold text-foreground">
+                  {evaluation.recommendation || "Non calculée"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Tabs */}
       <div className="bg-card rounded-lg border border-border p-6">
-        <Tabs tabs={voirScores ? tabs : tabs.filter((t) => t.id !== "scores")} defaultTab="general" />
+        <Tabs
+          tabs={voirScores ? tabs : tabs.filter((t) => t.id !== "scores")}
+          defaultTab="general"
+        />
       </div>
 
       {/* Meta */}
       <div className="bg-card rounded-lg border border-border p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Informations système</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">
+          Informations système
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Créé le" value={evaluation.createdAt ? new Date(evaluation.createdAt).toLocaleDateString("fr-FR") : null} />
+          <Field
+            label="Créé le"
+            value={
+              evaluation.createdAt
+                ? new Date(evaluation.createdAt).toLocaleDateString("fr-FR")
+                : null
+            }
+          />
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Identifiant</label>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+              Identifiant
+            </label>
             <p className="text-foreground font-mono text-sm">{evaluation.id}</p>
           </div>
         </div>

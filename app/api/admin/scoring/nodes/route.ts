@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+  errorResponse,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 import {
   verifierVersionModifiable,
@@ -38,7 +43,13 @@ export async function GET(req: NextRequest) {
       if (searchParams.get("format") === "light") {
         const nodes = await prisma.scoringNode.findMany({
           where: { versionId },
-          select: { id: true, code: true, label: true, depth: true, isScored: true },
+          select: {
+            id: true,
+            code: true,
+            label: true,
+            depth: true,
+            isScored: true,
+          },
           orderBy: [{ depth: "asc" }, { orderIndex: "asc" }],
         });
         return successResponse(nodes, { count: nodes.length });
@@ -55,7 +66,7 @@ export async function GET(req: NextRequest) {
       });
 
       return successResponse(nodes, { count: nodes.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/NODES] GET error:", error);
       return serverError("Erreur lors de la récupération des nœuds");
     }
@@ -105,7 +116,10 @@ export async function POST(req: NextRequest) {
 
       if (existing) {
         return validationError([
-          { field: "code", message: `Le code "${code}" existe déjà dans cette version` },
+          {
+            field: "code",
+            message: `Le code "${code}" existe déjà dans cette version`,
+          },
         ]);
       }
 
@@ -134,7 +148,7 @@ export async function POST(req: NextRequest) {
       });
 
       return successResponse(node, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/NODES] POST error:", error);
       return serverError("Erreur lors de la création du nœud");
     }
@@ -171,7 +185,7 @@ export async function PUT(req: NextRequest) {
       });
 
       return successResponse(node);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/NODES] PUT error:", error);
       return serverError("Erreur lors de la mise à jour du nœud");
     }
@@ -201,7 +215,7 @@ export async function DELETE(req: NextRequest) {
       });
 
       return successResponse({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/NODES] DELETE error:", error);
       return serverError("Erreur lors de la suppression du nœud");
     }

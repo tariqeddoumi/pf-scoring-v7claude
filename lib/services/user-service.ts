@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, UserRole } from "@prisma/client";
 import prisma from "@/lib/prisma-client";
 import {
   createUserSchema,
@@ -62,7 +62,11 @@ export class UserService {
   /**
    * Get all users (paginated)
    */
-  static async getAllUsers(page: number = 1, limit: number = 50, where: Prisma.UserWhereInput = {}) {
+  static async getAllUsers(
+    page: number = 1,
+    limit: number = 50,
+    where: Prisma.UserWhereInput = {}
+  ) {
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
@@ -175,7 +179,7 @@ export class UserService {
    */
   static async getUsersByRole(role: string) {
     return prisma.user.findMany({
-      where: { role: role as any },
+      where: { role: role as UserRole },
       select: {
         id: true,
         email: true,

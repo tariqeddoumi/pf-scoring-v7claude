@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma-client";
+import type { ScoringNodeRule } from "@prisma/client";
 
 /**
  * Rule evaluation context
@@ -7,9 +8,9 @@ export interface RuleContext {
   evaluationId: string;
   nodeId: string;
   nodeScore: number;
-  projectData?: any;
-  evaluationData?: any;
-  allAnswers?: Map<string, any>;
+  projectData?: Record<string, unknown>;
+  evaluationData?: Record<string, unknown>;
+  allAnswers?: Map<string, unknown>;
 }
 
 /**
@@ -25,8 +26,8 @@ export interface RuleEvaluation {
   penalty: number;
   blocking: boolean;
   message: string;
-  messageUser?: string;
-  messageCommittee?: string;
+  messageUser?: string | null;
+  messageCommittee?: string | null;
 }
 
 /**
@@ -61,7 +62,7 @@ export class RuleEngine {
    * Evaluate a single rule
    */
   static async evaluateRule(
-    rule: any,
+    rule: ScoringNodeRule,
     context: RuleContext
   ): Promise<RuleEvaluation | null> {
     try {

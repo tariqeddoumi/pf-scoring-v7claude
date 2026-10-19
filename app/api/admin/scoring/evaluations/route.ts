@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAdminAuth } from "@/lib/auth-middleware";
+import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { ScoringEvaluationService } from "@/lib/services/scoring-evaluation-service";
 import { messagePublic } from "@/lib/erreur-publique";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
-async function handler(request: NextRequest, user: any) {
+async function handler(request: NextRequest, user: AuthPayload) {
   if (request.method === "POST") {
     try {
       const body = await request.json();
@@ -39,10 +40,13 @@ async function handler(request: NextRequest, user: any) {
         },
         { status: 201 }
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[Evaluations POST]", error);
-      if (error.message.includes("not found")) {
-        return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 404 });
+      if (messageErreur(error)?.includes("not found")) {
+        return NextResponse.json(
+          { error: messagePublic(error, "Requête refusée") },
+          { status: 404 }
+        );
       }
       return NextResponse.json(
         { error: "Failed to create evaluation" },

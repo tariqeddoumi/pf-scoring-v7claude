@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { EvaluationService } from "@/lib/services/evaluation-service";
 import { messagePublic } from "@/lib/erreur-publique";
 
 /**
  * POST /api/evaluations/submit - Submit evaluation for validation
  */
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: AuthPayload) {
   try {
-    if (!["system_admin","scoring_admin","risk_manager","risk_analyst"].includes(user.role)) {
+    if (
+      ![
+        "system_admin",
+        "scoring_admin",
+        "risk_manager",
+        "risk_analyst",
+      ].includes(user.role)
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -29,8 +36,11 @@ async function handlePOST(request: NextRequest, user: any) {
     );
 
     return NextResponse.json(evaluation, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: messagePublic(error, "Requête refusée") },
+      { status: 400 }
+    );
   }
 }
 

@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyPassword, createToken } from "@/lib/auth";
-import {
-  createErrorResponse,
-  handleError,
-  getErrorMessage,
-} from "@/lib/error-handler";
+import { handleError, getErrorMessage } from "@/lib/error-handler";
 
 import prisma from "@/lib/prisma-client";
 
@@ -84,7 +80,10 @@ export async function POST(request: Request) {
     // Un compte désactivé ou supprimé ne se connecte plus, même avec le bon mot de passe.
     if (!user.isActive || user.deletedAt) {
       return NextResponse.json(
-        { error: "Ce compte est désactivé. Contactez l'administrateur.", errorCode: "ERR_AUTH_DISABLED" },
+        {
+          error: "Ce compte est désactivé. Contactez l'administrateur.",
+          errorCode: "ERR_AUTH_DISABLED",
+        },
         { status: 403 }
       );
     }

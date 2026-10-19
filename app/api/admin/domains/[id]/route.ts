@@ -1,7 +1,12 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, notFoundError, serverError } from "@/lib/api-response";
+import {
+  successResponse,
+  notFoundError,
+  serverError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import { codeErreur } from "@/lib/erreur-inconnue";
 
 export async function PATCH(
   request: NextRequest,
@@ -21,8 +26,8 @@ export async function PATCH(
       });
 
       return successResponse(domain);
-    } catch (error: any) {
-      if (error.code === "P2025") {
+    } catch (error: unknown) {
+      if (codeErreur(error) === "P2025") {
         return notFoundError("Domaine");
       }
       console.error("[ADMIN/DOMAINS/[ID]] PATCH error:", error);

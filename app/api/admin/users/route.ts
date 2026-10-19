@@ -1,13 +1,31 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import type { UserRole } from "@prisma/client";
 import { hashPassword } from "@/lib/auth";
 import { genererMotDePasseProvisoire } from "@/lib/mot-de-passe";
 import { PERIMETRE_VIDE } from "@/lib/entites/perimetre";
-import { entiteAttribuable, filtreComptes, PORTEES, roleAttribuable } from "@/lib/entites/utilisateurs";
+import {
+  entiteAttribuable,
+  filtreComptes,
+  PORTEES,
+  roleAttribuable,
+} from "@/lib/entites/utilisateurs";
 
-const VALID_ROLES = ["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const;
+const VALID_ROLES = [
+  "system_admin",
+  "scoring_admin",
+  "risk_manager",
+  "committee_member",
+  "risk_analyst",
+  "auditor",
+  "read_only",
+] as const;
 const USER_SELECT = {
   id: true,
   email: true,
@@ -37,7 +55,7 @@ export async function GET(request: NextRequest) {
           deletedAt: null,
           ...filtreComptes(admin.perimetre ?? PERIMETRE_VIDE),
           ...(activeOnly && { isActive: true }),
-          ...(role && { role: role as any }),
+          ...(role && { role: role as UserRole }),
           ...(search && {
             OR: [
               { email: { contains: search, mode: "insensitive" } },
@@ -51,7 +69,7 @@ export async function GET(request: NextRequest) {
       });
 
       return successResponse(users, { count: users.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/USERS] GET error:", error);
       return serverError("Erreur lors de la récupération des utilisateurs");
     }
@@ -61,7 +79,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return withAdminAuth(request, async (_req, admin) => {
     try {
-      const { email, nom, prenom, role, entiteId, porteeEcriture } = await request.json();
+      const { email, nom, prenom, role, entiteId, porteeEcriture } =
+        await request.json();
       const perimetre = admin.perimetre ?? PERIMETRE_VIDE;
 
       const errors: { field: string; message: string }[] = [];
@@ -73,15 +92,26 @@ export async function POST(request: NextRequest) {
           errors.push({ field: "email", message: "Format email invalide" });
         }
         const existing = await prisma.user.findFirst({ where: { email } });
-        if (existing) errors.push({ field: "email", message: "Cet email est déjà utilisé" });
+        if (existing)
+          errors.push({
+            field: "email",
+            message: "Cet email est déjà utilisé",
+          });
       }
       if (role && !VALID_ROLES.includes(role)) {
         errors.push({ field: "role", message: "Rôle invalide" });
       }
       if (!roleAttribuable(admin.role, role)) {
-        errors.push({ field: "role", message: "Seul un administrateur système attribue ce rôle" });
+        errors.push({
+          field: "role",
+          message: "Seul un administrateur système attribue ce rôle",
+        });
       }
-      const entite = entiteAttribuable(perimetre, entiteId, role || "read_only");
+      const entite = entiteAttribuable(
+        perimetre,
+        entiteId,
+        role || "read_only"
+      );
       if (!entite.ok) errors.push({ field: "entiteId", message: entite.motif });
       if (porteeEcriture !== undefined && !PORTEES.includes(porteeEcriture)) {
         errors.push({ field: "porteeEcriture", message: "Portée invalide" });
@@ -107,11 +137,21 @@ export async function POST(request: NextRequest) {
         select: USER_SELECT,
       });
       await prisma.userAuditLog
-        .create({ data: { userId: user.id, performedById: admin.userId, action: "CREATE_USER", newValue: user.role } })
+        .create({
+          data: {
+            userId: user.id,
+            performedById: admin.userId,
+            action: "CREATE_USER",
+            newValue: user.role,
+          },
+        })
         .catch(() => undefined);
 
-      return successResponse({ ...user, motDePasseProvisoire }, { status: 201 });
-    } catch (error: any) {
+      return successResponse(
+        { ...user, motDePasseProvisoire },
+        { status: 201 }
+      );
+    } catch (error: unknown) {
       console.error("[ADMIN/USERS] POST error:", error);
       return serverError("Erreur lors de la création de l'utilisateur");
     }

@@ -1,26 +1,106 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { apiGet, apiPost, apiPut, messageErreurApi } from "@/lib/api-client";
 import { VersionHeaderBar } from "./components/VersionHeaderBar";
 import { ScoringGridSplit } from "./components/ScoringGridSplit";
 import { StatsDashboard } from "./components/StatsDashboard";
-import type { ScoringModel, ScoringModelVersion, ScoringNode, GridStatistics } from "@/lib/types/scoring-grid";
+import type {
+  ScoringModel,
+  ScoringModelVersion,
+  ScoringNode,
+  GridStatistics,
+} from "@/lib/types/scoring-grid";
+
+/** Reconstitue l'arbre des nœuds à partir de la liste à plat renvoyée par l'API. */
+const buildHierarchy = (flat: ScoringNode[]): ScoringNode[] => {
+  const map = new Map<string, ScoringNode>();
+  const roots: ScoringNode[] = [];
+
+  flat.forEach((n) => {
+    map.set(n.id, { ...n, childNodes: [] });
+  });
+
+  flat.forEach((n) => {
+    const node = map.get(n.id)!;
+    if (n.parentNodeId && map.has(n.parentNodeId)) {
+      map.get(n.parentNodeId)!.childNodes!.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  roots.sort((a, b) => a.orderIndex - b.orderIndex);
+  return roots;
+};
 
 export default function ScoringGridRefactoredPage() {
-  const [models, setModels] = useState<ScoringModel[]>([]);
+  const [, setModels] = useState<ScoringModel[]>([]);
   const [versions, setVersions] = useState<ScoringModelVersion[]>([]);
   const [nodes, setNodes] = useState<ScoringNode[]>([]);
   const [stats, setStats] = useState<GridStatistics | null>(null);
   const [activeModel, setActiveModel] = useState<ScoringModel | null>(null);
-  const [activeVersion, setActiveVersion] = useState<ScoringModelVersion | null>(null);
+  const [activeVersion, setActiveVersion] =
+    useState<ScoringModelVersion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dirty, setDirty] = useState(false);
 
-  // Charger les modèles au montage
+  const loadNodes = useCallback(async (versionId: string) => {
+    try {
+      const res = await apiGet(
+        `/api/admin/scoring/nodes?versionId=${versionId}`
+      );
+      if (!res.ok) throw new Error("Impossible de charger les nœuds");
+      const data = await res.json();
+      setNodes(buildHierarchy(data.data || []));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, []);
+
+  const loadStats = useCallback(async (versionId: string) => {
+    try {
+      const res = await apiGet(
+        `/api/admin/scoring/grid-stats?versionId=${versionId}`
+      );
+      if (!res.ok) throw new Error("Impossible de charger les stats");
+      const data = await res.json();
+      setStats(data.data);
+    } catch (e) {
+      console.error("Stats load error:", e);
+    }
+  }, []);
+
+  const loadVersions = useCallback(
+    async (modelId: string) => {
+      try {
+        const res = await apiGet(
+          `/api/admin/scoring/models/${modelId}/versions`
+        );
+        if (!res.ok) throw new Error("Impossible de charger les versions");
+        const data = await res.json();
+        const versionsList: ScoringModelVersion[] = data.data || [];
+        setVersions(versionsList);
+
+        // Charger la version publiée ou la plus récente
+        const published = versionsList.find((v) => v.isPublished);
+        const target = published || versionsList[0];
+        if (target) {
+          setActiveVersion(target);
+          await loadNodes(target.id);
+          await loadStats(target.id);
+        }
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    },
+    [loadNodes, loadStats]
+  );
+
+  // Charger les modèles au montage (loadVersions est stable : l'effet ne s'exécute qu'une fois)
   useEffect(() => {
     const loadModels = async () => {
       try {
@@ -30,7 +110,7 @@ export default function ScoringGridRefactoredPage() {
         setModels(data.data || []);
 
         // Charger le modèle PF_V7PP par défaut
-        const v7pp = data.data?.find((m: any) => m.code === "PF_V7PP");
+        const v7pp = data.data?.find((m: ScoringModel) => m.code === "PF_V7PP");
         if (v7pp) {
           setActiveModel(v7pp);
           await loadVersions(v7pp.id);
@@ -43,74 +123,14 @@ export default function ScoringGridRefactoredPage() {
     };
 
     loadModels();
-  }, []);
-
-  const loadVersions = async (modelId: string) => {
-    try {
-      const res = await apiGet(`/api/admin/scoring/models/${modelId}/versions`);
-      if (!res.ok) throw new Error("Impossible de charger les versions");
-      const data = await res.json();
-      const versionsList = data.data || [];
-      setVersions(versionsList);
-
-      // Charger la version publiée ou la plus récente
-      const published = versionsList.find((v: any) => v.isPublished);
-      const target = published || versionsList[0];
-      if (target) {
-        setActiveVersion(target);
-        await loadNodes(target.id);
-        await loadStats(target.id);
-      }
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  };
-
-  const loadNodes = async (versionId: string) => {
-    try {
-      const res = await apiGet(`/api/admin/scoring/nodes?versionId=${versionId}`);
-      if (!res.ok) throw new Error("Impossible de charger les nœuds");
-      const data = await res.json();
-      setNodes(buildHierarchy(data.data || []));
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  };
-
-  const loadStats = async (versionId: string) => {
-    try {
-      const res = await apiGet(`/api/admin/scoring/grid-stats?versionId=${versionId}`);
-      if (!res.ok) throw new Error("Impossible de charger les stats");
-      const data = await res.json();
-      setStats(data.data);
-    } catch (e) {
-      console.error("Stats load error:", e);
-    }
-  };
-
-  const buildHierarchy = (flat: any[]): ScoringNode[] => {
-    const map = new Map<string, ScoringNode>();
-    const roots: ScoringNode[] = [];
-
-    flat.forEach((n) => {
-      map.set(n.id, { ...n, childNodes: [] });
-    });
-
-    flat.forEach((n) => {
-      const node = map.get(n.id)!;
-      if (n.parentNodeId && map.has(n.parentNodeId)) {
-        map.get(n.parentNodeId)!.childNodes!.push(node);
-      } else {
-        roots.push(node);
-      }
-    });
-
-    roots.sort((a, b) => a.orderIndex - b.orderIndex);
-    return roots;
-  };
+  }, [loadVersions]);
 
   const handleVersionChange = async (versionId: string) => {
-    if (dirty && !confirm("Vous avez des changements non sauvegardés. Continuer ?")) return;
+    if (
+      dirty &&
+      !confirm("Vous avez des changements non sauvegardés. Continuer ?")
+    )
+      return;
     const version = versions.find((v) => v.id === versionId);
     if (version) {
       setActiveVersion(version);
@@ -124,9 +144,12 @@ export default function ScoringGridRefactoredPage() {
     if (!activeModel) return;
     try {
       setLoading(true);
-      const res = await apiPost(`/api/admin/scoring/models/${activeModel.id}/versions`, {
-        changeReason: "Nouvelle version de brouillon",
-      });
+      const res = await apiPost(
+        `/api/admin/scoring/models/${activeModel.id}/versions`,
+        {
+          changeReason: "Nouvelle version de brouillon",
+        }
+      );
       if (!res.ok) throw new Error("Erreur lors de la création");
       await loadVersions(activeModel.id);
     } catch (e) {
@@ -145,7 +168,10 @@ export default function ScoringGridRefactoredPage() {
         {}
       );
       // le serveur explique le refus (grille invalide, séparation des fonctions…)
-      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de la publication"));
+      if (!res.ok)
+        throw new Error(
+          await messageErreurApi(res, "Erreur lors de la publication")
+        );
       await loadVersions(activeModel.id);
     } catch (e) {
       setError((e as Error).message);
@@ -158,8 +184,13 @@ export default function ScoringGridRefactoredPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <Loader2 className="animate-spin text-primary mx-auto mb-4" size={40} />
-          <p className="text-muted-foreground">Chargement de la grille de scoring...</p>
+          <Loader2
+            className="animate-spin text-primary mx-auto mb-4"
+            size={40}
+          />
+          <p className="text-muted-foreground">
+            Chargement de la grille de scoring...
+          </p>
         </div>
       </div>
     );
@@ -169,10 +200,16 @@ export default function ScoringGridRefactoredPage() {
     <div className="flex flex-col min-h-screen md:h-screen bg-background">
       {/* Header */}
       <div className="bg-background border-b border-border px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4">
-        <Link href="/admin" className="hover:text-primary transition-colors" aria-label="Retour">
+        <Link
+          href="/admin"
+          className="hover:text-primary transition-colors"
+          aria-label="Retour"
+        >
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Paramétrage de la grille de scoring</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+          Paramétrage de la grille de scoring
+        </h1>
       </div>
 
       {/* Error bar */}
@@ -180,7 +217,10 @@ export default function ScoringGridRefactoredPage() {
         <div className="bg-destructive/10 border-b border-destructive/30 px-4 sm:px-6 py-3 text-destructive text-sm flex items-center gap-2">
           <AlertCircle size={16} />
           {error}
-          <button onClick={() => setError("")} className="ml-auto text-xs underline">
+          <button
+            onClick={() => setError("")}
+            className="ml-auto text-xs underline"
+          >
             Fermer
           </button>
         </div>
@@ -200,11 +240,20 @@ export default function ScoringGridRefactoredPage() {
 
       {/* Une version publiée ou validée est figée : les notes déjà rendues doivent rester
           reproductibles. Le serveur refuse toute modification (409). */}
-      {activeVersion && (activeVersion.isPublished || ["PUBLISHED", "VALIDATED", "ARCHIVED"].includes(String(activeVersion.status))) && (
-        <p role="status" className="mx-4 mt-3 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
-          Version {activeVersion.isPublished ? "publiée" : "figée"} : consultation seule. Pour modifier la grille, créez une nouvelle version.
-        </p>
-      )}
+      {activeVersion &&
+        (activeVersion.isPublished ||
+          ["PUBLISHED", "VALIDATED", "ARCHIVED"].includes(
+            String(activeVersion.status)
+          )) && (
+          <p
+            role="status"
+            className="mx-4 mt-3 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning"
+          >
+            Version {activeVersion.isPublished ? "publiée" : "figée"} :
+            consultation seule. Pour modifier la grille, créez une nouvelle
+            version.
+          </p>
+        )}
 
       {/* Main content */}
       <div className="flex flex-1 md:overflow-hidden">

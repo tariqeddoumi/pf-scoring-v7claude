@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
-import { withAdminAuth, withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { withAdminAuth, withAuth } from "@/lib/auth-middleware";
 import { messagePublic } from "@/lib/erreur-publique";
+import { codeErreur } from "@/lib/erreur-inconnue";
 
 /**
  * GET /api/scoring/bindings/[id]
@@ -9,8 +10,7 @@ import { messagePublic } from "@/lib/erreur-publique";
  */
 async function handleGET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-  user: AuthPayload
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -47,15 +47,27 @@ async function handleGET(
  * Update a binding.
  */
 const CHAMPS_MODIFIABLES = new Set([
-  "sourceEntity", "sourceField", "sourcePath", "bindingMode", "dataType", "transformType",
-  "defaultValue", "fallbackValue", "fallbackMessage", "isRequired", "isReadOnly", "allowOverride",
-  "overrideRequiresReason", "priority", "isActive", "description",
+  "sourceEntity",
+  "sourceField",
+  "sourcePath",
+  "bindingMode",
+  "dataType",
+  "transformType",
+  "defaultValue",
+  "fallbackValue",
+  "fallbackMessage",
+  "isRequired",
+  "isReadOnly",
+  "allowOverride",
+  "overrideRequiresReason",
+  "priority",
+  "isActive",
+  "description",
 ]);
 
 async function handlePUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-  user: AuthPayload
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -79,7 +91,7 @@ async function handlePUT(
       data: binding,
     });
   } catch (error) {
-    if ((error as any)?.code === "P2025") {
+    if (codeErreur(error) === "P2025") {
       return NextResponse.json(
         { success: false, error: "Binding not found", errorCode: "NOT_FOUND" },
         { status: 404 }
@@ -103,8 +115,7 @@ async function handlePUT(
  */
 async function handleDELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-  user: AuthPayload
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -118,7 +129,7 @@ async function handleDELETE(
       data: { id: binding.id, isActive: binding.isActive },
     });
   } catch (error) {
-    if ((error as any)?.code === "P2025") {
+    if (codeErreur(error) === "P2025") {
       return NextResponse.json(
         { success: false, error: "Binding not found", errorCode: "NOT_FOUND" },
         { status: 404 }
@@ -140,7 +151,7 @@ export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  return withAuth(req, (r, user) => handleGET(r, ctx, user));
+  return withAuth(req, (r) => handleGET(r, ctx));
 }
 
 export async function PUT(
@@ -149,12 +160,12 @@ export async function PUT(
 ) {
   // Modifier une liaison de la grille change la notation de toutes les banques :
   // réservé aux administrateurs (n'importe quel compte connecté le pouvait).
-  return withAdminAuth(req, (r, user) => handlePUT(r, ctx, user));
+  return withAdminAuth(req, (r) => handlePUT(r, ctx));
 }
 
 export async function DELETE(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  return withAdminAuth(req, (r, user) => handleDELETE(r, ctx, user));
+  return withAdminAuth(req, (r) => handleDELETE(r, ctx));
 }

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAdminAuth } from "@/lib/auth-middleware";
+import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { ScoringEvaluationService } from "@/lib/services/scoring-evaluation-service";
 import { messagePublic } from "@/lib/erreur-publique";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 async function handler(
   request: NextRequest,
-  user: any,
+  user: AuthPayload,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -77,16 +78,22 @@ async function handler(
       }
 
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[Evaluation POST]", error);
-      if (error.message.includes("not found")) {
-        return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 404 });
+      if (messageErreur(error)?.includes("not found")) {
+        return NextResponse.json(
+          { error: messagePublic(error, "Requête refusée") },
+          { status: 404 }
+        );
       }
       if (
-        error.message.includes("Can only") ||
-        error.message.includes("Only")
+        messageErreur(error)?.includes("Can only") ||
+        messageErreur(error)?.includes("Only")
       ) {
-        return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
+        return NextResponse.json(
+          { error: messagePublic(error, "Requête refusée") },
+          { status: 400 }
+        );
       }
       return NextResponse.json(
         { error: "Failed to process evaluation action" },

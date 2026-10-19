@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+  errorResponse,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 
 /**
@@ -35,8 +40,11 @@ export async function GET(
       });
 
       return successResponse(bindings, { count: bindings.length });
-    } catch (error: any) {
-      console.error("[ADMIN/SCORING-MODELS/VERSIONS/[ID]/BINDINGS] GET error:", error);
+    } catch (error: unknown) {
+      console.error(
+        "[ADMIN/SCORING-MODELS/VERSIONS/[ID]/BINDINGS] GET error:",
+        error
+      );
       return serverError("Erreur lors de la récupération des liaisons");
     }
   });
@@ -82,7 +90,10 @@ export async function POST(
       });
 
       if (!node || node.versionId !== id) {
-        return errorResponse("Nœud non trouvé dans cette version", { status: 404, errorCode: "NOT_FOUND" });
+        return errorResponse("Nœud non trouvé dans cette version", {
+          status: 404,
+          errorCode: "NOT_FOUND",
+        });
       }
 
       const binding = await prisma.scoringNodeDataBinding.create({
@@ -94,7 +105,9 @@ export async function POST(
           bindingMode: bindingMode || "AUTO_EDITABLE",
           dataType: dataType || null,
           transformType: transformType || "NONE",
-          transformConfigJson: transformConfigJson ? JSON.stringify(transformConfigJson) : null,
+          transformConfigJson: transformConfigJson
+            ? JSON.stringify(transformConfigJson)
+            : null,
           defaultValue: defaultValue || null,
           fallbackValue: fallbackValue || null,
           fallbackMessage: null,
@@ -108,8 +121,11 @@ export async function POST(
       });
 
       return successResponse(binding, { status: 201 });
-    } catch (error: any) {
-      console.error("[ADMIN/SCORING-MODELS/VERSIONS/[ID]/BINDINGS] POST error:", error);
+    } catch (error: unknown) {
+      console.error(
+        "[ADMIN/SCORING-MODELS/VERSIONS/[ID]/BINDINGS] POST error:",
+        error
+      );
       return serverError("Erreur lors de la création de la liaison");
     }
   });

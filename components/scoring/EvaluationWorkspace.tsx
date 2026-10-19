@@ -9,22 +9,34 @@ import {
   Send,
   AlertCircle,
   CheckCircle2,
-  Info,
   RotateCcw,
   LayoutList,
   Columns,
   FileSearch,
 } from "lucide-react";
 import { DomainSidebar } from "./DomainSidebar";
-import { LiveScorePanel, lireServerScore, type AnswerValue, type ServerScore } from "./LiveScorePanel";
+import {
+  LiveScorePanel,
+  lireServerScore,
+  type AnswerValue,
+  type ServerScore,
+} from "./LiveScorePanel";
 import { EvaluationAccordionView } from "./EvaluationAccordionView";
 import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
 import { apiPost, apiPatch, messageErreurApi } from "@/lib/api-client";
-import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
+import {
+  formatPart,
+  formatPoidsDetail,
+  sommeFratrie,
+} from "@/lib/weight-format";
 import { AggregationEngine } from "@/lib/services/scoring/score-calculator";
 import { AnalyseDocumentsIA } from "./AnalyseDocumentsIA";
 import { useVoirScores } from "@/components/providers/visibilite-scores";
-import { commentaireSource, type Proposition } from "@/lib/services/ia-documents/resultat";
+import {
+  commentaireSource,
+  type Proposition,
+} from "@/lib/services/ia-documents/resultat";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 interface EvaluationWorkspaceProps {
   evaluationId: string;
@@ -42,11 +54,16 @@ function countLeaves(node: QuestionnaireNode): number {
   return node.children.reduce((s, c) => s + countLeaves(c), 0);
 }
 
-function countAnswered(node: QuestionnaireNode, answers: Record<string, AnswerValue>): number {
+function countAnswered(
+  node: QuestionnaireNode,
+  answers: Record<string, AnswerValue>
+): number {
   if (!node.children || node.children.length === 0) {
     const a = answers[node.id];
     if (!a) return 0;
-    return a.valueString !== undefined || a.valueNumber !== undefined || a.valueBoolean !== undefined
+    return a.valueString !== undefined ||
+      a.valueNumber !== undefined ||
+      a.valueBoolean !== undefined
       ? 1
       : 0;
   }
@@ -57,7 +74,10 @@ function buildDomainStats(
   domains: QuestionnaireNode[],
   answers: Record<string, AnswerValue>
 ) {
-  const stats: Record<string, { answered: number; total: number; score: number | null }> = {};
+  const stats: Record<
+    string,
+    { answered: number; total: number; score: number | null }
+  > = {};
   for (const d of domains) {
     stats[d.id] = {
       answered: countAnswered(d, answers),
@@ -161,7 +181,9 @@ function NodeInput({
                     name={`reponse-${node.id}`}
                     value={opt.value}
                     checked={choisie}
-                    onChange={() => onChange({ ...answer, valueString: opt.value })}
+                    onChange={() =>
+                      onChange({ ...answer, valueString: opt.value })
+                    }
                     className="mt-[3px] h-4 w-4 shrink-0 accent-[var(--primary)]"
                   />
                   <span className="min-w-0 flex-1">
@@ -210,7 +232,10 @@ function NodeInput({
             onChange={(e) =>
               onChange({
                 ...answer,
-                valueNumber: e.target.value !== "" ? parseFloat(e.target.value) : undefined,
+                valueNumber:
+                  e.target.value !== ""
+                    ? parseFloat(e.target.value)
+                    : undefined,
               })
             }
             className={inputClass}
@@ -232,7 +257,9 @@ function NodeInput({
                   }`}
                 >
                   {r.label || `${r.minValue}–${r.maxValue}`}
-                  {voirScores && <> → {contribution(r.score).toFixed(0)} / 100</>}
+                  {voirScores && (
+                    <> → {contribution(r.score).toFixed(0)} / 100</>
+                  )}
                 </span>
               );
             })}
@@ -265,15 +292,19 @@ function NodeInput({
       )}
 
       {/* Free text (fallback) */}
-      {!node.options?.length && !node.ranges?.length && node.answerType !== "BOOLEAN" && (
-        <textarea
-          value={answer?.valueString ?? ""}
-          onChange={(e) => onChange({ ...answer, valueString: e.target.value || undefined })}
-          rows={2}
-          className={`${inputClass} resize-none`}
-          placeholder="Réponse libre..."
-        />
-      )}
+      {!node.options?.length &&
+        !node.ranges?.length &&
+        node.answerType !== "BOOLEAN" && (
+          <textarea
+            value={answer?.valueString ?? ""}
+            onChange={(e) =>
+              onChange({ ...answer, valueString: e.target.value || undefined })
+            }
+            rows={2}
+            className={`${inputClass} resize-none`}
+            placeholder="Réponse libre..."
+          />
+        )}
 
       {/* Comment */}
       <textarea
@@ -325,7 +356,8 @@ function CriteriaTree({
   ];
   const style = depthStyles[Math.min(depth, depthStyles.length - 1)];
 
-  const headerPy = depth === 0 ? "py-4 px-5" : depth === 1 ? "py-3 px-4" : "py-2 px-3";
+  const headerPy =
+    depth === 0 ? "py-4 px-5" : depth === 1 ? "py-3 px-4" : "py-2 px-3";
 
   return (
     <div className={style}>
@@ -362,8 +394,8 @@ function CriteriaTree({
                 depth === 0
                   ? "text-foreground text-base"
                   : depth === 1
-                  ? "text-foreground text-sm"
-                  : "text-secondary-foreground text-sm"
+                    ? "text-foreground text-sm"
+                    : "text-secondary-foreground text-sm"
               }`}
             >
               {node.label}
@@ -423,12 +455,14 @@ export function EvaluationWorkspace({
   evaluationId,
   projectName,
   questionnaire,
-  modelVersionId,
   initialAnswers = {},
   onComplete,
 }: EvaluationWorkspaceProps) {
-  const [answers, setAnswers] = useState<Record<string, AnswerValue>>(initialAnswers);
-  const [currentDomainId, setCurrentDomainId] = useState(questionnaire[0]?.id ?? "");
+  const [answers, setAnswers] =
+    useState<Record<string, AnswerValue>>(initialAnswers);
+  const [currentDomainId, setCurrentDomainId] = useState(
+    questionnaire[0]?.id ?? ""
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -444,7 +478,8 @@ export function EvaluationWorkspace({
   const voirScoresPanneau = useVoirScores();
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const currentDomain = questionnaire.find((d) => d.id === currentDomainId) ?? questionnaire[0];
+  const currentDomain =
+    questionnaire.find((d) => d.id === currentDomainId) ?? questionnaire[0];
   const currentIndex = questionnaire.findIndex((d) => d.id === currentDomainId);
   const stats = buildDomainStats(questionnaire, answers);
 
@@ -481,20 +516,25 @@ export function EvaluationWorkspace({
       try {
         // source : réponses à enregistrer tout de suite, avant que l'état React ne
         // soit relu (reprise des propositions de l'analyse documentaire).
-        const payload = Object.entries(source ?? answers).map(([nodeId, a]) => ({
-          nodeId,
-          valueString: a.valueString,
-          valueNumber: a.valueNumber,
-          valueBoolean: a.valueBoolean,
-          comment: a.comment,
-        }));
+        const payload = Object.entries(source ?? answers).map(
+          ([nodeId, a]) => ({
+            nodeId,
+            valueString: a.valueString,
+            valueNumber: a.valueNumber,
+            valueBoolean: a.valueBoolean,
+            comment: a.comment,
+          })
+        );
 
         const res = await apiPatch(
           `/api/scoring/evaluations/${evaluationId}/answers`,
           { answers: payload }
         );
 
-        if (!res.ok) throw new Error(await messageErreurApi(res, "Sauvegarde impossible."));
+        if (!res.ok)
+          throw new Error(
+            await messageErreurApi(res, "Sauvegarde impossible.")
+          );
 
         // Une sauvegarde partielle ne doit pas s'annoncer comme un succès.
         const body = await res.json();
@@ -508,11 +548,13 @@ export function EvaluationWorkspace({
 
         setLastSaved(new Date());
         if (showFeedback) {
-          setSuccessMsg(`${body?.data?.updatedCount ?? 0} réponse(s) enregistrée(s) ✓`);
+          setSuccessMsg(
+            `${body?.data?.updatedCount ?? 0} réponse(s) enregistrée(s) ✓`
+          );
         }
         void refreshScore();
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e: unknown) {
+        setError(messageErreur(e) ?? null);
       } finally {
         setIsSaving(false);
       }
@@ -530,7 +572,10 @@ export function EvaluationWorkspace({
 
   const triggerAutoSave = useCallback(() => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => saveAnswersRef.current(false), 3000);
+    autoSaveTimer.current = setTimeout(
+      () => saveAnswersRef.current(false),
+      3000
+    );
   }, []);
 
   const handleAnswer = (nodeId: string, val: AnswerValue) => {
@@ -566,7 +611,9 @@ export function EvaluationWorkspace({
     try {
       await saveAnswers(false);
 
-      const res = await apiPost(`/api/scoring/evaluations/${evaluationId}/calculate`);
+      const res = await apiPost(
+        `/api/scoring/evaluations/${evaluationId}/calculate`
+      );
 
       if (!res.ok) {
         const data = await res.json();
@@ -587,8 +634,8 @@ export function EvaluationWorkspace({
               ? `Score provisoire : ${data.finalScore.toFixed(1)} pts — compléments obligatoires attendus avant soumission`
               : `Score calculé : ${data.finalScore.toFixed(1)} pts — Rating : ${data.rating}`
       );
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(messageErreur(e) ?? null);
     } finally {
       setIsCalculating(false);
     }
@@ -615,11 +662,12 @@ export function EvaluationWorkspace({
         { notes: "" }
       );
       // le serveur dit ce qui manque (donnée obligatoire, règle critique…)
-      if (!subRes.ok) throw new Error(await messageErreurApi(subRes, "Soumission échouée"));
+      if (!subRes.ok)
+        throw new Error(await messageErreurApi(subRes, "Soumission échouée"));
 
       onComplete(evaluationId, data.finalScore, data.rating);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(messageErreur(e) ?? null);
     } finally {
       setIsCalculating(false);
     }
@@ -627,7 +675,8 @@ export function EvaluationWorkspace({
 
   /* ── Next / Prev domain ────────────────────────────────── */
   const goPrev = () => {
-    if (currentIndex > 0) setCurrentDomainId(questionnaire[currentIndex - 1].id);
+    if (currentIndex > 0)
+      setCurrentDomainId(questionnaire[currentIndex - 1].id);
   };
   const goNext = () => {
     if (currentIndex < questionnaire.length - 1)
@@ -650,7 +699,9 @@ export function EvaluationWorkspace({
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 lg:px-6 py-3 bg-background border-b border-border flex-shrink-0">
         <div className="min-w-0 flex-1 lg:flex-none">
           <h1 className="text-base font-bold text-foreground">{projectName}</h1>
-          <p className="text-xs text-muted-foreground">Évaluation de Scoring — {evaluationId.slice(0, 8)}…</p>
+          <p className="text-xs text-muted-foreground">
+            Évaluation de Scoring — {evaluationId.slice(0, 8)}…
+          </p>
         </div>
 
         {/* Messages (sous les boutons sur mobile) */}
@@ -768,9 +819,13 @@ export function EvaluationWorkspace({
                         {currentIndex + 1} / {questionnaire.length}
                       </span>
                     </div>
-                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">{currentDomain.label}</h2>
+                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">
+                      {currentDomain.label}
+                    </h2>
                     {currentDomain.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{currentDomain.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {currentDomain.description}
+                      </p>
                     )}
                   </div>
                   <button
@@ -789,7 +844,8 @@ export function EvaluationWorkspace({
                       <div className="flex justify-between text-xs text-muted-foreground mb-1">
                         <span>Progression du domaine</span>
                         <span>
-                          {stats[currentDomain.id].answered} / {stats[currentDomain.id].total} critères
+                          {stats[currentDomain.id].answered} /{" "}
+                          {stats[currentDomain.id].total} critères
                         </span>
                       </div>
                       <div className="bg-muted rounded-full h-2">
@@ -798,7 +854,9 @@ export function EvaluationWorkspace({
                           style={{
                             width: `${
                               stats[currentDomain.id].total > 0
-                                ? (stats[currentDomain.id].answered / stats[currentDomain.id].total) * 100
+                                ? (stats[currentDomain.id].answered /
+                                    stats[currentDomain.id].total) *
+                                  100
                                 : 0
                             }%`,
                           }}
@@ -810,7 +868,8 @@ export function EvaluationWorkspace({
 
                 {/* Criteria tree */}
                 <div>
-                  {currentDomain.children && currentDomain.children.length > 0 ? (
+                  {currentDomain.children &&
+                  currentDomain.children.length > 0 ? (
                     currentDomain.children.map((child) => (
                       <CriteriaTree
                         key={child.id}
@@ -824,7 +883,9 @@ export function EvaluationWorkspace({
                     ))
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
-                      <p>Ce domaine n&apos;a pas encore de critères configurés.</p>
+                      <p>
+                        Ce domaine n&apos;a pas encore de critères configurés.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -837,7 +898,9 @@ export function EvaluationWorkspace({
                     className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed text-foreground rounded-lg text-sm transition-all"
                   >
                     <ChevronRight size={16} className="rotate-180" />
-                    {currentIndex > 0 ? questionnaire[currentIndex - 1].label : "—"}
+                    {currentIndex > 0
+                      ? questionnaire[currentIndex - 1].label
+                      : "—"}
                   </button>
 
                   <span className="text-xs text-muted-foreground">

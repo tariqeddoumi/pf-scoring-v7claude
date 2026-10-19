@@ -1,18 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
-import { successResponse, serverError, validationError } from '@/lib/api-response';
-import prisma from '@/lib/prisma-client';
+import { NextRequest, NextResponse } from "next/server";
+import { withAdminAuth } from "@/lib/auth-middleware";
+import {
+  successResponse,
+  serverError,
+  validationError,
+} from "@/lib/api-response";
+import prisma from "@/lib/prisma-client";
+import { codeErreur } from "@/lib/erreur-inconnue";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   return withAdminAuth(request, async () => {
     try {
       const { searchParams } = new URL(request.url);
-      const evaluationId = searchParams.get('evaluationId');
-      const status = searchParams.get('status');
-      const limit = parseInt(searchParams.get('limit') || '50');
-      const offset = parseInt(searchParams.get('offset') || '0');
+      const evaluationId = searchParams.get("evaluationId");
+      const status = searchParams.get("status");
+      const limit = parseInt(searchParams.get("limit") || "50");
+      const offset = parseInt(searchParams.get("offset") || "0");
 
-      const whereClause: any = {};
+      const whereClause: Prisma.ScoringOverrideWhereInput = {};
       if (evaluationId) whereClause.evaluationId = evaluationId;
       if (status) whereClause.status = status;
 
@@ -20,31 +26,30 @@ export async function GET(request: NextRequest) {
         where: whereClause,
         include: {
           evaluation: {
-            select: { id: true, finalScore: true }
+            select: { id: true, finalScore: true },
           },
           node: {
-            select: { id: true, label: true, code: true }
+            select: { id: true, label: true, code: true },
           },
           overriddenByUser: {
-            select: { id: true, email: true, nom: true, prenom: true }
+            select: { id: true, email: true, nom: true, prenom: true },
           },
           approvedByUser: {
-            select: { id: true, email: true, nom: true, prenom: true }
-          }
+            select: { id: true, email: true, nom: true, prenom: true },
+          },
         },
-        orderBy: { overriddenAt: 'desc' },
+        orderBy: { overriddenAt: "desc" },
         take: limit,
-        skip: offset
+        skip: offset,
       });
 
-      const total = await prisma.scoringOverride.count({
-        where: whereClause
+      return successResponse(overrides, {
+        count: overrides.length,
+        status: 200,
       });
-
-      return successResponse(overrides, { count: overrides.length, status: 200 });
-    } catch (error: any) {
-      console.error('[Overrides GET]', error);
-      return serverError('Erreur lors de la récupération des surcharges');
+    } catch (error: unknown) {
+      console.error("[Overrides GET]", error);
+      return serverError("Erreur lors de la récupération des surcharges");
     }
   });
 }
@@ -62,20 +67,41 @@ export async function POST(request: NextRequest) {
   return withAdminAuth(request, async (req, user) => {
     try {
       const body = await request.json();
-      const { evaluationId, nodeId, overriddenValue, overriddenScore, reason, justification, riskLevel } = body;
+      const {
+        evaluationId,
+        nodeId,
+        overriddenValue,
+        overriddenScore,
+        reason,
+        justification,
+        riskLevel,
+      } = body;
 
       const errors = [];
-      if (!evaluationId) errors.push({ field: 'evaluationId', message: 'Évaluation requise' });
-      if (!nodeId) errors.push({ field: 'nodeId', message: 'Critère requis' });
-      if (!reason) errors.push({ field: 'reason', message: 'Motif requis' });
+      if (!evaluationId)
+        errors.push({ field: "evaluationId", message: "Évaluation requise" });
+      if (!nodeId) errors.push({ field: "nodeId", message: "Critère requis" });
+      if (!reason) errors.push({ field: "reason", message: "Motif requis" });
       if (!justification || String(justification).trim().length < 10) {
-        errors.push({ field: 'justification', message: 'Justification détaillée requise (10 caractères au moins)' });
+        errors.push({
+          field: "justification",
+          message: "Justification détaillée requise (10 caractères au moins)",
+        });
       }
-      if (!['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(riskLevel)) {
-        errors.push({ field: 'riskLevel', message: 'Niveau de risque requis : LOW, MEDIUM, HIGH ou CRITICAL' });
+      if (!["LOW", "MEDIUM", "HIGH", "CRITICAL"].includes(riskLevel)) {
+        errors.push({
+          field: "riskLevel",
+          message: "Niveau de risque requis : LOW, MEDIUM, HIGH ou CRITICAL",
+        });
       }
-      if (typeof overriddenScore !== 'number' || !(overriddenScore >= 0 && overriddenScore <= 100)) {
-        errors.push({ field: 'overriddenScore', message: 'Note proposée requise, entre 0 et 100' });
+      if (
+        typeof overriddenScore !== "number" ||
+        !(overriddenScore >= 0 && overriddenScore <= 100)
+      ) {
+        errors.push({
+          field: "overriddenScore",
+          message: "Note proposée requise, entre 0 et 100",
+        });
       }
       if (errors.length > 0) {
         return validationError(errors);
@@ -85,13 +111,29 @@ export async function POST(request: NextRequest) {
         where: { id: evaluationId },
         select: { status: true, modelVersionId: true },
       });
-      const node = await prisma.scoringNode.findUnique({ where: { id: nodeId }, select: { versionId: true } });
-      if (!evaluation || !node || node.versionId !== evaluation.modelVersionId) {
-        return validationError([{ field: 'nodeId', message: "Ce critère n'appartient pas à la grille du dossier" }]);
+      const node = await prisma.scoringNode.findUnique({
+        where: { id: nodeId },
+        select: { versionId: true },
+      });
+      if (
+        !evaluation ||
+        !node ||
+        node.versionId !== evaluation.modelVersionId
+      ) {
+        return validationError([
+          {
+            field: "nodeId",
+            message: "Ce critère n'appartient pas à la grille du dossier",
+          },
+        ]);
       }
-      if (String(evaluation.status) !== 'brouillon') {
+      if (String(evaluation.status) !== "brouillon") {
         return NextResponse.json(
-          { success: false, error: 'Une dérogation se propose sur un dossier en saisie.', errorCode: 'INVALID_STATE' },
+          {
+            success: false,
+            error: "Une dérogation se propose sur un dossier en saisie.",
+            errorCode: "INVALID_STATE",
+          },
           { status: 409 }
         );
       }
@@ -106,7 +148,9 @@ export async function POST(request: NextRequest) {
 
       const proposition = {
         originalValue:
-          reponse?.valueString ?? (reponse?.valueNumber ?? reponse?.valueBoolean)?.toString() ?? null,
+          reponse?.valueString ??
+          (reponse?.valueNumber ?? reponse?.valueBoolean)?.toString() ??
+          null,
         originalScore: resultat?.rawScore ?? null,
         overriddenValue: overriddenValue?.toString() ?? null,
         overriddenScore,
@@ -117,7 +161,7 @@ export async function POST(request: NextRequest) {
         overriddenAt: new Date(),
         approvedBy: null,
         approvedAt: null,
-        status: 'PENDING',
+        status: "PENDING",
       };
 
       // Une seule dérogation par critère (contrainte d'unicité) : après un rejet ou
@@ -126,44 +170,53 @@ export async function POST(request: NextRequest) {
       const existante = await prisma.scoringOverride.findUnique({
         where: { evaluationId_nodeId: { evaluationId, nodeId } },
       });
-      if (existante && !['REJECTED', 'REVERTED'].includes(existante.status)) {
+      if (existante && !["REJECTED", "REVERTED"].includes(existante.status)) {
         return validationError([
-          { field: 'nodeId', message: 'Une dérogation en attente ou approuvée existe déjà pour ce critère' }
+          {
+            field: "nodeId",
+            message:
+              "Une dérogation en attente ou approuvée existe déjà pour ce critère",
+          },
         ]);
       }
 
       const include = {
         evaluation: { select: { id: true, finalScore: true } },
         node: { select: { id: true, label: true } },
-        overriddenByUser: { select: { id: true, email: true, nom: true, prenom: true } }
+        overriddenByUser: {
+          select: { id: true, email: true, nom: true, prenom: true },
+        },
       };
       const override = existante
         ? await prisma.scoringOverride.update({
             where: { id: existante.id },
             data: {
               ...proposition,
-              changeLog: `${existante.changeLog ? existante.changeLog + '\n' : ''}[${new Date().toISOString()}] nouvelle proposition après ${existante.status} (ancienne note ${existante.overriddenScore ?? '—'}) par ${user.userId}`,
+              changeLog: `${existante.changeLog ? existante.changeLog + "\n" : ""}[${new Date().toISOString()}] nouvelle proposition après ${existante.status} (ancienne note ${existante.overriddenScore ?? "—"}) par ${user.userId}`,
             },
             include,
           })
         : await prisma.scoringOverride.create({
-        data: {
-          evaluationId,
-          nodeId,
-          ...proposition,
-        },
-        include,
-      });
+            data: {
+              evaluationId,
+              nodeId,
+              ...proposition,
+            },
+            include,
+          });
 
       return successResponse(override, { status: 201 });
-    } catch (error: any) {
-      console.error('[Overrides POST]', error);
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      console.error("[Overrides POST]", error);
+      if (codeErreur(error) === "P2002") {
         return validationError([
-          { field: 'nodeId', message: 'Une dérogation existe déjà pour ce critère' }
+          {
+            field: "nodeId",
+            message: "Une dérogation existe déjà pour ce critère",
+          },
         ]);
       }
-      return serverError('Erreur lors de la création de la surcharge');
+      return serverError("Erreur lors de la création de la surcharge");
     }
   });
 }

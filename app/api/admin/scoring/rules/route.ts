@@ -1,10 +1,16 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+  errorResponse,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 import { validateConditionExpression } from "@/lib/services/scoring/condition-evaluator";
 import { validerRegle } from "@/lib/services/scoring/rule-vocabulary";
 import { verifierVersionModifiable } from "@/lib/services/scoring/version-guard";
+import type { Prisma } from "@prisma/client";
 
 /**
  * Les règles font partie du modèle : les changer sur une version publiée modifierait
@@ -58,10 +64,15 @@ export async function GET(req: NextRequest) {
       const nodeId = searchParams.get("nodeId");
 
       if (!versionId) {
-        return validationError([{ field: "versionId", message: "Required query param" }]);
+        return validationError([
+          { field: "versionId", message: "Required query param" },
+        ]);
       }
 
-      const where: any = { versionId, isActive: true };
+      const where: Prisma.ScoringNodeRuleWhereInput = {
+        versionId,
+        isActive: true,
+      };
       if (nodeId) where.nodeId = nodeId;
 
       const rules = await prisma.scoringNodeRule.findMany({
@@ -73,7 +84,7 @@ export async function GET(req: NextRequest) {
       });
 
       return successResponse(rules, { count: rules.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/RULES] GET error:", error);
       return serverError("Erreur lors de la récupération des règles");
     }
@@ -115,7 +126,9 @@ export async function POST(req: NextRequest) {
       if (refusCreation) return refusCreation;
 
       if (!node || node.versionId !== versionId) {
-        return validationError([{ field: "nodeId", message: "Nœud non trouvé dans cette version" }]);
+        return validationError([
+          { field: "nodeId", message: "Nœud non trouvé dans cette version" },
+        ]);
       }
 
       const controle = controlerRegle({
@@ -164,7 +177,7 @@ export async function POST(req: NextRequest) {
         { rule, warnings: controle.warnings },
         { status: 201 }
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/RULES] POST error:", error);
       return serverError("Erreur lors de la création de la règle");
     }
@@ -178,11 +191,22 @@ export async function PUT(req: NextRequest) {
       const ruleId = searchParams.get("id");
 
       if (!ruleId) {
-        return validationError([{ field: "id", message: "Required query param" }]);
+        return validationError([
+          { field: "id", message: "Required query param" },
+        ]);
       }
 
       const body = await req.json();
-      const { label, conditionExpression, severity, actionType, penaltyValue, messageUser, messageCommittee, ruleType } = body;
+      const {
+        label,
+        conditionExpression,
+        severity,
+        actionType,
+        penaltyValue,
+        messageUser,
+        messageCommittee,
+        ruleType,
+      } = body;
 
       const existante = await prisma.scoringNodeRule.findUnique({
         where: { id: ruleId },
@@ -192,7 +216,9 @@ export async function PUT(req: NextRequest) {
         return validationError([{ field: "id", message: "Règle introuvable" }]);
       }
 
-      const refusModification = await refuserSiVersionFigee(existante.versionId);
+      const refusModification = await refuserSiVersionFigee(
+        existante.versionId
+      );
       if (refusModification) return refusModification;
 
       const controle = controlerRegle({
@@ -224,7 +250,7 @@ export async function PUT(req: NextRequest) {
       });
 
       return successResponse({ rule: updated, warnings: controle.warnings });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/RULES] PUT error:", error);
       return serverError("Erreur lors de la mise à jour de la règle");
     }
@@ -238,7 +264,9 @@ export async function DELETE(req: NextRequest) {
       const ruleId = searchParams.get("id");
 
       if (!ruleId) {
-        return validationError([{ field: "id", message: "Required query param" }]);
+        return validationError([
+          { field: "id", message: "Required query param" },
+        ]);
       }
 
       const aSupprimer = await prisma.scoringNodeRule.findUnique({
@@ -248,7 +276,9 @@ export async function DELETE(req: NextRequest) {
       if (!aSupprimer) {
         return validationError([{ field: "id", message: "Règle introuvable" }]);
       }
-      const refusSuppression = await refuserSiVersionFigee(aSupprimer.versionId);
+      const refusSuppression = await refuserSiVersionFigee(
+        aSupprimer.versionId
+      );
       if (refusSuppression) return refusSuppression;
 
       await prisma.scoringNodeRule.delete({
@@ -256,7 +286,7 @@ export async function DELETE(req: NextRequest) {
       });
 
       return successResponse({ message: "Règle supprimée" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/RULES] DELETE error:", error);
       return serverError("Erreur lors de la suppression de la règle");
     }

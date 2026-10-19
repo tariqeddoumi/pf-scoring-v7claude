@@ -106,7 +106,7 @@ async function handler(request: NextRequest, user: AuthPayload) {
         page: Math.floor(skip / take),
         pageSize: take,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[Clients GET]", error);
       return NextResponse.json(
         { success: false, error: messagePublic(error, "Erreur serveur") },
@@ -231,7 +231,7 @@ async function handler(request: NextRequest, user: AuthPayload) {
         { success: true, data: client },
         { status: 201 }
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       const conflit = messageConflit(error);
       if (conflit) {
         return NextResponse.json(

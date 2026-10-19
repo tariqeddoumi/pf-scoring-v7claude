@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma-client';
-import { withAuth } from '@/lib/auth-middleware';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma-client";
+import { withAuth } from "@/lib/auth-middleware";
 
 /**
  * GET /api/v9/control
  * Verifies V9 data integrity - all counts must match expected values
  */
-async function handleGET(request: NextRequest) {
+async function handleGET() {
   try {
     const checks = {
       sectors: await prisma.v9Sector.count(),
@@ -43,9 +43,9 @@ async function handleGET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[V9-CONTROL GET]', error);
+    console.error("[V9-CONTROL GET]", error);
     return NextResponse.json(
-      { error: 'Failed to verify data integrity' },
+      { error: "Failed to verify data integrity" },
       { status: 500 }
     );
   }
@@ -53,5 +53,5 @@ async function handleGET(request: NextRequest) {
 
 // Paramétrage du modèle : lisible par les utilisateurs connectés seulement.
 export async function GET(request: NextRequest) {
-  return withAuth(request, (req) => handleGET(req));
+  return withAuth(request, () => handleGET());
 }

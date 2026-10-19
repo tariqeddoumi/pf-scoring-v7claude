@@ -9,40 +9,53 @@
  *   - Body: { aggregationMethod, weightMode, scoreScale }
  */
 
-import { NextRequest } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
-import { successResponse, serverError, errorResponse, validationError } from '@/lib/api-response';
-import prisma from '@/lib/prisma-client';
-import { verifierVersionModifiable } from '@/lib/services/scoring/version-guard';
+import { NextRequest } from "next/server";
+import { withAdminAuth } from "@/lib/auth-middleware";
+import {
+  successResponse,
+  serverError,
+  errorResponse,
+  validationError,
+} from "@/lib/api-response";
+import prisma from "@/lib/prisma-client";
+import { verifierVersionModifiable } from "@/lib/services/scoring/version-guard";
 
 export async function GET(req: NextRequest) {
   return withAdminAuth(req, async () => {
     try {
       const { searchParams } = new URL(req.url);
-      const versionId = searchParams.get('versionId');
+      const versionId = searchParams.get("versionId");
 
       if (!versionId) {
-        return validationError([{ field: 'versionId', message: 'Requis' }]);
+        return validationError([{ field: "versionId", message: "Requis" }]);
       }
 
       // Get model version to check it exists
       const version = await prisma.scoringModelVersion.findUnique({
         where: { id: versionId },
-        select: { id: true, aggregationMethod: true, weightMode: true, scoreScale: true },
+        select: {
+          id: true,
+          aggregationMethod: true,
+          weightMode: true,
+          scoreScale: true,
+        },
       });
 
       if (!version) {
-        return errorResponse('Version du modèle non trouvée', { status: 404, errorCode: 'VERSION_NOT_FOUND' });
+        return errorResponse("Version du modèle non trouvée", {
+          status: 404,
+          errorCode: "VERSION_NOT_FOUND",
+        });
       }
 
       return successResponse({
-        aggregationMethod: version.aggregationMethod || 'WEIGHTED_AVERAGE',
-        weightMode: version.weightMode || 'RELATIVE',
-        scoreScale: version.scoreScale || '0_100',
+        aggregationMethod: version.aggregationMethod || "WEIGHTED_AVERAGE",
+        weightMode: version.weightMode || "RELATIVE",
+        scoreScale: version.scoreScale || "0_100",
       });
-    } catch (error: any) {
-      console.error('[ADMIN/SCORING/MODEL_CONFIG] GET error:', error);
-      return serverError('Erreur lors de la récupération de la configuration');
+    } catch (error: unknown) {
+      console.error("[ADMIN/SCORING/MODEL_CONFIG] GET error:", error);
+      return serverError("Erreur lors de la récupération de la configuration");
     }
   });
 }
@@ -51,19 +64,19 @@ export async function PUT(req: NextRequest) {
   return withAdminAuth(req, async () => {
     try {
       const { searchParams } = new URL(req.url);
-      const versionId = searchParams.get('versionId');
+      const versionId = searchParams.get("versionId");
 
       if (!versionId) {
-        return validationError([{ field: 'versionId', message: 'Requis' }]);
+        return validationError([{ field: "versionId", message: "Requis" }]);
       }
 
       // La méthode d'agrégation et l'échelle décident du calcul : les changer sur une
       // version publiée rendrait irreproductibles les notes déjà attribuées.
       const verdict = await verifierVersionModifiable(versionId);
       if (!verdict.modifiable) {
-        return errorResponse(verdict.message ?? 'Version non modifiable', {
+        return errorResponse(verdict.message ?? "Version non modifiable", {
           status: 409,
-          errorCode: 'ERR_VERSION_PUBLIEE',
+          errorCode: "ERR_VERSION_PUBLIEE",
         });
       }
 
@@ -73,9 +86,9 @@ export async function PUT(req: NextRequest) {
       // Validate that all required fields are present
       if (!aggregationMethod || !weightMode || !scoreScale) {
         return validationError([
-          { field: 'aggregationMethod', message: 'Requis' },
-          { field: 'weightMode', message: 'Requis' },
-          { field: 'scoreScale', message: 'Requis' },
+          { field: "aggregationMethod", message: "Requis" },
+          { field: "weightMode", message: "Requis" },
+          { field: "scoreScale", message: "Requis" },
         ]);
       }
 
@@ -95,9 +108,9 @@ export async function PUT(req: NextRequest) {
         weightMode: updated.weightMode,
         scoreScale: updated.scoreScale,
       });
-    } catch (error: any) {
-      console.error('[ADMIN/SCORING/MODEL_CONFIG] PUT error:', error);
-      return serverError('Erreur lors de la mise à jour de la configuration');
+    } catch (error: unknown) {
+      console.error("[ADMIN/SCORING/MODEL_CONFIG] PUT error:", error);
+      return serverError("Erreur lors de la mise à jour de la configuration");
     }
   });
 }

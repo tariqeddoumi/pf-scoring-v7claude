@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 import type { GridValidationError } from "@/lib/types/scoring-grid";
 
@@ -8,7 +12,8 @@ export async function POST(req: NextRequest) {
   return withAdminAuth(req, async () => {
     try {
       const { versionId } = await req.json();
-      if (!versionId) return validationError([{ field: "versionId", message: "Requis" }]);
+      if (!versionId)
+        return validationError([{ field: "versionId", message: "Requis" }]);
 
       const nodes = await prisma.scoringNode.findMany({
         where: { versionId, isActive: true },
@@ -25,10 +30,13 @@ export async function POST(req: NextRequest) {
       const nodeMap = new Map(nodes.map((n) => [n.id, n]));
       const getPath = (nodeId: string): string => {
         const parts: string[] = [];
-        let current: any = nodeMap.get(nodeId);
+        let current: (typeof nodes)[number] | null | undefined =
+          nodeMap.get(nodeId);
         while (current) {
           parts.unshift(current.label);
-          current = current.parentNodeId ? nodeMap.get(current.parentNodeId) : null;
+          current = current.parentNodeId
+            ? nodeMap.get(current.parentNodeId)
+            : null;
         }
         return parts.join(" › ");
       };
@@ -43,8 +51,10 @@ export async function POST(req: NextRequest) {
 
       // Validate weights per sibling group
       // Weights are stored as fractions (0.0-1.0), tolerance ±1.5% = ±0.015
-      for (const [parentId, siblings] of byParent.entries()) {
-        const withWeight = siblings.filter((n) => n.weight !== null && n.weight !== undefined);
+      for (const siblings of byParent.values()) {
+        const withWeight = siblings.filter(
+          (n) => n.weight !== null && n.weight !== undefined
+        );
         if (withWeight.length === 0) continue;
         const total = withWeight.reduce((s, n) => s + (n.weight ?? 0), 0);
         const isPercentageFormat = total > 1.5; // heuristic: if sum > 1.5 assume % format
@@ -52,7 +62,9 @@ export async function POST(req: NextRequest) {
         const tolerance = isPercentageFormat ? 1.5 : 0.015;
         if (Math.abs(total - expected) > tolerance) {
           for (const n of withWeight) {
-            const displayTotal = isPercentageFormat ? total.toFixed(1) + "%" : (total * 100).toFixed(1) + "%";
+            const displayTotal = isPercentageFormat
+              ? total.toFixed(1) + "%"
+              : (total * 100).toFixed(1) + "%";
             errors.push({
               nodeId: n.id,
               nodePath: getPath(n.id),
@@ -88,7 +100,9 @@ export async function POST(req: NextRequest) {
 
         // Validate range overlaps
         if (node.answerType === "NUMERIC_RANGE" && node.ranges.length > 1) {
-          const sorted = [...node.ranges].sort((a, b) => a.minValue - b.minValue);
+          const sorted = [...node.ranges].sort(
+            (a, b) => a.minValue - b.minValue
+          );
           for (let i = 0; i < sorted.length - 1; i++) {
             if (sorted[i].maxValue > sorted[i + 1].minValue) {
               errors.push({

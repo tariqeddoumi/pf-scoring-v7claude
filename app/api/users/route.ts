@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
+import {
+  withAuth,
+  hasMinimumRole,
+  type AuthPayload,
+} from "@/lib/auth-middleware";
 import { UserService } from "@/lib/services/user-service";
 import { lirePagination } from "@/lib/validation-schemas";
 import { PERIMETRE_VIDE } from "@/lib/entites/perimetre";
@@ -11,14 +15,17 @@ import type { UserRole } from "@/lib/permissions";
 /**
  * GET /api/users - List all users (paginated)
  */
-async function handleGET(request: NextRequest, user: any) {
+async function handleGET(request: NextRequest, user: AuthPayload) {
   try {
     // Les rôles qui saisissent des clients reçoivent seulement les noms (choix du
     // gestionnaire dans la fiche client) : la liste leur était refusée et le champ
     // restait vide.
     const complet = hasMinimumRole(user.role, "risk_manager");
     if (!complet && !hasPermission(user.role as UserRole, "client", "create")) {
-      return NextResponse.json({ error: "Vos droits ne permettent pas de consulter les utilisateurs" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Vos droits ne permettent pas de consulter les utilisateurs" },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -28,10 +35,22 @@ async function handleGET(request: NextRequest, user: any) {
 
     // Comptes de la branche de l'utilisateur seulement (gestionnaires proposés à la saisie).
     const result = await UserService.getAllUsers(page, limit, {
-      ...filtreComptes(user.perimetre ?? PERIMETRE_VIDE), isActive: true, deletedAt: null,
+      ...filtreComptes(user.perimetre ?? PERIMETRE_VIDE),
+      isActive: true,
+      deletedAt: null,
     });
     if (!complet) {
-      return NextResponse.json({ ...result, data: result.data.map((u) => ({ id: u.id, nom: u.nom, prenom: u.prenom })) }, { status: 200 });
+      return NextResponse.json(
+        {
+          ...result,
+          data: result.data.map((u) => ({
+            id: u.id,
+            nom: u.nom,
+            prenom: u.prenom,
+          })),
+        },
+        { status: 200 }
+      );
     }
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
@@ -50,7 +69,7 @@ async function handleGET(request: NextRequest, user: any) {
 /**
  * POST /api/users - Create new user (admin only)
  */
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: AuthPayload) {
   try {
     if (user.role !== "system_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -60,7 +79,11 @@ async function handlePOST(request: NextRequest, user: any) {
     // Le nouveau compte est rattaché à l'entité de l'administrateur : un administrateur
     // de filiale ne peut pas créer un compte qui verrait tout le groupe.
     const perimetre = user.perimetre ?? PERIMETRE_VIDE;
-    const newUser = await UserService.createUser(body, user.userId, perimetre.tout ? null : perimetre.entiteId);
+    const newUser = await UserService.createUser(
+      body,
+      user.userId,
+      perimetre.tout ? null : perimetre.entiteId
+    );
 
     return NextResponse.json(
       {
@@ -73,8 +96,11 @@ async function handlePOST(request: NextRequest, user: any) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: messagePublic(error, "Requête refusée") },
+      { status: 400 }
+    );
   }
 }
 

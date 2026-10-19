@@ -8,7 +8,10 @@ import {
 } from "@/lib/validation-schemas";
 import type { z } from "zod";
 import { ScoringEngineV8 } from "@/lib/services/scoring/scoring-engine-v8";
-import { motifsRefusDecisionFavorable, motifsRefusSoumission } from "@/lib/services/scoring/decision-guard";
+import {
+  motifsRefusDecisionFavorable,
+  motifsRefusSoumission,
+} from "@/lib/services/scoring/decision-guard";
 import { ouvrirCircuit } from "@/lib/services/scoring/circuit";
 
 /**
@@ -41,7 +44,13 @@ const EVALUATION_INCLUDE = {
  */
 const LIST_INCLUDE = {
   project: {
-    select: { id: true, nom: true, montant: true, secteur: true, client: { select: { id: true, nom: true } } },
+    select: {
+      id: true,
+      nom: true,
+      montant: true,
+      secteur: true,
+      client: { select: { id: true, nom: true } },
+    },
   },
   analyst: { select: { nom: true, prenom: true } },
 } as const;
@@ -128,7 +137,7 @@ export class EvaluationService {
    * calculés et persistés (nœuds racine de la trace). Ils ne sont plus lus dans huit
    * colonnes figées : le nombre de domaines est une donnée du référentiel.
    */
-  static async getEvaluationById(id: string, _userId?: string) {
+  static async getEvaluationById(id: string) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id },
       include: EVALUATION_INCLUDE,
@@ -140,7 +149,9 @@ export class EvaluationService {
       select: {
         rawScore: true,
         normalizedScore: true,
-        node: { select: { code: true, label: true, weight: true, orderIndex: true } },
+        node: {
+          select: { code: true, label: true, weight: true, orderIndex: true },
+        },
       },
     });
 
@@ -169,7 +180,8 @@ export class EvaluationService {
     if (filters?.projectId) where.projectId = filters.projectId;
     if (filters?.analystId) where.analystId = filters.analystId;
     if (filters?.rating) where.rating = filters.rating;
-    if (typeof filters?.isArchived === "boolean") where.isArchived = filters.isArchived;
+    if (typeof filters?.isArchived === "boolean")
+      where.isArchived = filters.isArchived;
 
     const [evaluations, total] = await Promise.all([
       prisma.scoringEvaluation.findMany({
@@ -255,7 +267,8 @@ export class EvaluationService {
     const trace = await ScoringEngineV8.scoreEvaluation(id);
     await ScoringEngineV8.persistTrace(trace, submittedBy);
     const motifs = motifsRefusSoumission(trace.traceJson);
-    if (motifs.length > 0) throw new Error(`Soumission refusée : ${motifs.join(" ")}`);
+    if (motifs.length > 0)
+      throw new Error(`Soumission refusée : ${motifs.join(" ")}`);
 
     const [evaluation] = await prisma.$transaction([
       prisma.scoringEvaluation.update({
@@ -275,7 +288,11 @@ export class EvaluationService {
         entityId: id,
         evaluationId: id,
         action: "SUBMIT",
-        newValueJson: JSON.stringify({ status: "soumis", finalScore: trace.finalScore, rating: trace.rating }),
+        newValueJson: JSON.stringify({
+          status: "soumis",
+          finalScore: trace.finalScore,
+          rating: trace.rating,
+        }),
         changedBy: submittedBy,
         comment: "Évaluation soumise (note recalculée par le moteur)",
       },
@@ -300,14 +317,22 @@ export class EvaluationService {
     if (validated.recommendation === "REJECT") {
       return this.rejectEvaluation(
         id,
-        { reason: "Recommandation de rejet lors de la validation", notes: validated.notes },
+        {
+          reason: "Recommandation de rejet lors de la validation",
+          notes: validated.notes,
+        },
         validatedBy
       );
     }
 
     const current = await prisma.scoringEvaluation.findUnique({
       where: { id },
-      select: { status: true, finalScore: true, summaryJson: true, analystId: true },
+      select: {
+        status: true,
+        finalScore: true,
+        summaryJson: true,
+        analystId: true,
+      },
     });
     if (!current) throw new Error("Evaluation not found");
     if (current.status !== "soumis") {
@@ -360,7 +385,11 @@ export class EvaluationService {
     // le circuit de validation suit la décision (même état partout)
     await prisma.scoringWorkflow.updateMany({
       where: { evaluationId: id, status: { notIn: ["APPROVED", "REJECTED"] } },
-      data: { status: "APPROVED", approvedAt: new Date(), approvedBy: validatedBy },
+      data: {
+        status: "APPROVED",
+        approvedAt: new Date(),
+        approvedBy: validatedBy,
+      },
     });
 
     return evaluation;
@@ -403,7 +432,10 @@ export class EvaluationService {
         entityId: id,
         evaluationId: id,
         action: "REJECT",
-        newValueJson: JSON.stringify({ status: "rejete", reason: validated.reason ?? null }),
+        newValueJson: JSON.stringify({
+          status: "rejete",
+          reason: validated.reason ?? null,
+        }),
         changedBy: rejectedBy,
         comment: "Évaluation rejetée",
       },
@@ -446,8 +478,7 @@ export class EvaluationService {
 
   static async createStressTest(
     evaluationId: string,
-    scenarioData: Record<string, unknown>,
-    _createdBy: string
+    scenarioData: Record<string, unknown>
   ) {
     const evaluation = await prisma.scoringEvaluation.findUnique({
       where: { id: evaluationId },
@@ -484,7 +515,7 @@ export class EvaluationService {
    * permettait d'écrire une note ou un statut final sans moteur ni transition. Toute
    * propriété de résultat ou de statut est rejetée explicitement.
    */
-  static async updateEvaluation(id: string, data: unknown, _updatedBy: string) {
+  static async updateEvaluation(id: string, data: unknown) {
     const validated = updateEvaluationSchema.parse(data);
 
     const current = await prisma.scoringEvaluation.findUnique({
@@ -498,7 +529,9 @@ export class EvaluationService {
 
     return prisma.scoringEvaluation.update({
       where: { id },
-      data: { ...(validated.notes !== undefined ? { notes: validated.notes } : {}) },
+      data: {
+        ...(validated.notes !== undefined ? { notes: validated.notes } : {}),
+      },
       include: EVALUATION_INCLUDE,
     });
   }
@@ -514,7 +547,9 @@ export class EvaluationService {
     });
     if (!evaluation) throw new Error("Evaluation not found");
     if (String(evaluation.status) !== "brouillon") {
-      throw new Error("Seule une évaluation en brouillon peut être supprimée ; archivez les autres.");
+      throw new Error(
+        "Seule une évaluation en brouillon peut être supprimée ; archivez les autres."
+      );
     }
 
     await prisma.scoringEvaluation.delete({ where: { id } });

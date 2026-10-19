@@ -10,9 +10,14 @@ import { proposerCodeProjet } from "@/lib/modele-pf/codes";
 
 /** Message d'un conflit d'unicité sur un projet (code projet déjà attribué), sinon null. */
 export function messageConflitProjet(e: unknown): string | null {
-  if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== "P2002") return null;
+  if (
+    !(e instanceof Prisma.PrismaClientKnownRequestError) ||
+    e.code !== "P2002"
+  )
+    return null;
   const cible = JSON.stringify(e.meta?.target ?? "");
-  if (cible.includes("codeProjet")) return "Ce code projet est déjà attribué à un autre projet de la banque.";
+  if (cible.includes("codeProjet"))
+    return "Ce code projet est déjà attribué à un autre projet de la banque.";
   return "Un projet portant ces identifiants existe déjà.";
 }
 
@@ -26,18 +31,19 @@ export class ProjectService {
   ) {
     const validated = createProjectSchema.parse(data);
 
-    const { debutConstruction, finConstruction, clientId, ...rest } = validated as any;
-    const createData: any = {
+    const { debutConstruction, finConstruction, clientId, ...rest } = validated;
+    const createData: Record<string, unknown> = {
       ...rest,
       creePar: createdBy,
       status: validated.status || "brouillon",
     };
-    if (debutConstruction) createData.debutConstruction = new Date(debutConstruction);
+    if (debutConstruction)
+      createData.debutConstruction = new Date(debutConstruction);
     if (finConstruction) createData.finConstruction = new Date(finConstruction);
     if (clientId) createData.clientId = clientId;
 
     let project = await prisma.project.create({
-      data: createData,
+      data: createData as Prisma.ProjectUncheckedCreateInput,
     });
 
     // Code projet proposé automatiquement (PF-AAAA-NNNN) quand il n'a pas été saisi :
@@ -46,13 +52,20 @@ export class ProjectService {
     if (!project.codeProjet) {
       for (let essai = 0; essai < 3; essai++) {
         const existants = await prisma.project.findMany({
-          where: { entiteId: project.entiteId, codeProjet: { startsWith: `PF-${new Date().getFullYear()}-` } },
+          where: {
+            entiteId: project.entiteId,
+            codeProjet: { startsWith: `PF-${new Date().getFullYear()}-` },
+          },
           select: { codeProjet: true },
         });
         try {
           project = await prisma.project.update({
             where: { id: project.id },
-            data: { codeProjet: proposerCodeProjet(existants.map((p) => p.codeProjet)) },
+            data: {
+              codeProjet: proposerCodeProjet(
+                existants.map((p) => p.codeProjet)
+              ),
+            },
           });
           break;
         } catch (e) {
@@ -83,7 +96,7 @@ export class ProjectService {
   /**
    * Get project by ID
    */
-  static async getProjectById(id: string, userId?: string) {
+  static async getProjectById(id: string) {
     const project = await prisma.project.findUnique({
       where: { id },
       include: {
@@ -91,7 +104,14 @@ export class ProjectService {
           select: { id: true, email: true, nom: true, prenom: true },
         },
         client: {
-          select: { id: true, nom: true, email: true, telephone: true, codeClientT24: true, radical: true },
+          select: {
+            id: true,
+            nom: true,
+            email: true,
+            telephone: true,
+            codeClientT24: true,
+            radical: true,
+          },
         },
       },
     });
@@ -107,12 +127,13 @@ export class ProjectService {
   static async getAllProjects(
     page: number = 1,
     limit: number = 50,
-    filters?: any
+    filters?: { status?: string; secteur?: string; creePar?: string }
   ) {
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    if (filters?.status) where.status = filters.status;
+    const where: Prisma.ProjectWhereInput = {};
+    if (filters?.status)
+      where.status = filters.status as Prisma.ProjectWhereInput["status"];
     if (filters?.secteur) where.secteur = filters.secteur;
     if (filters?.creePar) where.creePar = filters.creePar;
 
@@ -175,12 +196,21 @@ export class ProjectService {
     const validated = seulementFournis(updateProjectSchema.parse(data), data);
 
     // Extract date strings and convert to Date objects; remove undefined fields
-    const { debutConstruction, finConstruction, clientId, ...rest } = validated as any;
-    const updateData: any = { ...rest, dateMiseAJour: new Date() };
+    const { debutConstruction, finConstruction, clientId, ...rest } = validated;
+    const updateData: Record<string, unknown> = {
+      ...rest,
+      dateMiseAJour: new Date(),
+    };
     // Le code projet se modifie mais ne s'efface pas : un champ vidé le conserve.
     if (updateData.codeProjet === null) delete updateData.codeProjet;
-    if (debutConstruction !== undefined) updateData.debutConstruction = debutConstruction ? new Date(debutConstruction) : null;
-    if (finConstruction !== undefined) updateData.finConstruction = finConstruction ? new Date(finConstruction) : null;
+    if (debutConstruction !== undefined)
+      updateData.debutConstruction = debutConstruction
+        ? new Date(debutConstruction)
+        : null;
+    if (finConstruction !== undefined)
+      updateData.finConstruction = finConstruction
+        ? new Date(finConstruction)
+        : null;
     if (clientId !== undefined) updateData.clientId = clientId || null;
 
     const project = await prisma.project.update({

@@ -7,18 +7,17 @@ export async function apiCall(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const token = typeof window !== 'undefined' 
-    ? localStorage.getItem('auth_token') 
-    : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   const headers = new Headers(options.headers || {});
-  
+
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
-  if (!headers.has('Content-Type') && options.body) {
-    headers.set('Content-Type', 'application/json');
+  if (!headers.has("Content-Type") && options.body) {
+    headers.set("Content-Type", "application/json");
   }
 
   const res = await fetch(url, {
@@ -28,43 +27,63 @@ export async function apiCall(
 
   // Mot de passe provisoire non remplacé : le serveur refuse tout le reste ; on
   // conduit l'utilisateur vers l'écran de changement.
-  if (res.status === 403 && typeof window !== 'undefined' && window.location.pathname !== '/changer-mot-de-passe') {
-    const corps = await res.clone().json().catch(() => null);
-    if (corps?.errorCode === 'MUST_CHANGE_PASSWORD') window.location.assign('/changer-mot-de-passe');
+  if (
+    res.status === 403 &&
+    typeof window !== "undefined" &&
+    window.location.pathname !== "/changer-mot-de-passe"
+  ) {
+    const corps = await res
+      .clone()
+      .json()
+      .catch(() => null);
+    if (corps?.errorCode === "MUST_CHANGE_PASSWORD")
+      window.location.assign("/changer-mot-de-passe");
   }
   return res;
 }
 
 export async function apiGet(url: string, options?: RequestInit) {
-  return apiCall(url, { ...options, method: 'GET' });
+  return apiCall(url, { ...options, method: "GET" });
 }
 
-export async function apiPost(url: string, body?: any, options?: RequestInit) {
+export async function apiPost(
+  url: string,
+  body?: unknown,
+  options?: RequestInit
+) {
   return apiCall(url, {
     ...options,
-    method: 'POST',
+    method: "POST",
     body: body ? JSON.stringify(body) : undefined,
   });
 }
 
-export async function apiPut(url: string, body?: any, options?: RequestInit) {
+export async function apiPut(
+  url: string,
+  body?: unknown,
+  options?: RequestInit
+) {
   return apiCall(url, {
     ...options,
-    method: 'PUT',
+    method: "PUT",
     body: body ? JSON.stringify(body) : undefined,
   });
 }
 
-export async function apiPatch(url: string, body?: any, options?: RequestInit) {
+export async function apiPatch(
+  url: string,
+  body?: unknown,
+  options?: RequestInit
+) {
   return apiCall(url, {
     ...options,
-    method: 'PATCH',
+    method: "PATCH",
     body: body ? JSON.stringify(body) : undefined,
   });
 }
 
 export async function apiDelete(url: string, options?: RequestInit) {
-  return apiCall(url, { ...options, method: 'DELETE' });
+  return apiCall(url, { ...options, method: "DELETE" });
 }
 
 /**
@@ -85,7 +104,12 @@ export async function messageErreurApi(
     // Refus d'accès : l'explication du serveur (« délégation insuffisante… », « réservé
     // aux administrateurs de la plateforme ») vaut mieux qu'un message générique.
     if (res.status === 403) {
-      const motif = typeof corps?.error === "string" && corps.error.trim() && !/^forbidden$/i.test(corps.error.trim()) ? corps.error.trim() : null;
+      const motif =
+        typeof corps?.error === "string" &&
+        corps.error.trim() &&
+        !/^forbidden$/i.test(corps.error.trim())
+          ? corps.error.trim()
+          : null;
       return motif ?? "Vos droits ne permettent pas cette consultation.";
     }
     const detail =
@@ -100,6 +124,7 @@ export async function messageErreurApi(
   } catch {
     /* corps illisible : le message générique suffit */
   }
-  if (res.status === 403) return "Vos droits ne permettent pas cette consultation.";
+  if (res.status === 403)
+    return "Vos droits ne permettent pas cette consultation.";
   return `${parDefaut} (erreur ${res.status})`;
 }

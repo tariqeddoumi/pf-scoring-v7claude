@@ -9,7 +9,6 @@ export async function GET(
   const { entity } = await params;
   return withAuth(request, async () => {
     try {
-
       if (!entity) {
         return NextResponse.json(
           { success: false, error: "Entity parameter required" },
@@ -53,7 +52,7 @@ export async function GET(
         fields: section.fields.map((field) => ({
           name: field.fieldName,
           label: field.label,
-          type: field.fieldType as any,
+          type: field.fieldType,
           required: field.required,
           placeholder: field.placeholder,
           help: field.helpText,

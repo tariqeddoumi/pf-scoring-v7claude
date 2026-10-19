@@ -1,19 +1,45 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+  errorResponse,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 import { oublierCompte, supprimerCompte } from "@/lib/compte-actif";
 import { PERIMETRE_VIDE, type Perimetre } from "@/lib/entites/perimetre";
-import { compteGerable, entiteAttribuable, PORTEES, roleAttribuable } from "@/lib/entites/utilisateurs";
+import {
+  compteGerable,
+  entiteAttribuable,
+  PORTEES,
+  roleAttribuable,
+} from "@/lib/entites/utilisateurs";
+import { codeErreur } from "@/lib/erreur-inconnue";
 
 /** Compte cible s'il est dans le périmètre de l'administrateur, sinon null (404). */
 async function compteDuPerimetre(id: string, p: Perimetre) {
-  const compte = await prisma.user.findUnique({ where: { id }, select: { id: true, entiteId: true, role: true } });
+  const compte = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, entiteId: true, role: true },
+  });
   return compte && compteGerable(p, compte.entiteId) ? compte : null;
 }
-const introuvable = () => errorResponse("Utilisateur non trouvé", { status: 404, errorCode: "NOT_FOUND" });
+const introuvable = () =>
+  errorResponse("Utilisateur non trouvé", {
+    status: 404,
+    errorCode: "NOT_FOUND",
+  });
 
-const VALID_ROLES = ["system_admin", "scoring_admin", "risk_manager", "committee_member", "risk_analyst", "auditor", "read_only"] as const;
+const VALID_ROLES = [
+  "system_admin",
+  "scoring_admin",
+  "risk_manager",
+  "committee_member",
+  "risk_analyst",
+  "auditor",
+  "read_only",
+] as const;
 const USER_SELECT = {
   id: true,
   email: true,
@@ -36,18 +62,22 @@ export async function GET(
   return withAdminAuth(request, async (_req, admin) => {
     try {
       const { id } = await params;
-      if (!(await compteDuPerimetre(id, admin.perimetre ?? PERIMETRE_VIDE))) return introuvable();
+      if (!(await compteDuPerimetre(id, admin.perimetre ?? PERIMETRE_VIDE)))
+        return introuvable();
       const user = await prisma.user.findUnique({
         where: { id },
         select: USER_SELECT,
       });
 
       if (!user) {
-        return errorResponse("Utilisateur non trouvé", { status: 404, errorCode: "NOT_FOUND" });
+        return errorResponse("Utilisateur non trouvé", {
+          status: 404,
+          errorCode: "NOT_FOUND",
+        });
       }
 
       return successResponse(user);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/USERS/[ID]] GET error:", error);
       return serverError("Erreur lors de la récupération");
     }
@@ -65,7 +95,8 @@ export async function PUT(
       const cible = await compteDuPerimetre(id, perimetre);
       if (!cible) return introuvable();
       const body = await request.json();
-      const { email, nom, prenom, role, isActive, entiteId, porteeEcriture } = body;
+      const { email, nom, prenom, role, isActive, entiteId, porteeEcriture } =
+        body;
 
       const errors: { field: string; message: string }[] = [];
 
@@ -82,17 +113,28 @@ export async function PUT(
           where: { email, NOT: { id } },
         });
         if (existing) {
-          errors.push({ field: "email", message: "Cet email est déjà utilisé" });
+          errors.push({
+            field: "email",
+            message: "Cet email est déjà utilisé",
+          });
         }
       }
       if (role !== undefined && !VALID_ROLES.includes(role)) {
         errors.push({ field: "role", message: "Rôle invalide" });
       }
       if (!roleAttribuable(admin.role, role, String(cible.role))) {
-        errors.push({ field: "role", message: "Seul un administrateur système modifie ce compte ou attribue ce rôle" });
+        errors.push({
+          field: "role",
+          message:
+            "Seul un administrateur système modifie ce compte ou attribue ce rôle",
+        });
       }
-      const entite = entiteId === undefined ? null : entiteAttribuable(perimetre, entiteId, role ?? String(cible.role));
-      if (entite && !entite.ok) errors.push({ field: "entiteId", message: entite.motif });
+      const entite =
+        entiteId === undefined
+          ? null
+          : entiteAttribuable(perimetre, entiteId, role ?? String(cible.role));
+      if (entite && !entite.ok)
+        errors.push({ field: "entiteId", message: entite.motif });
       if (porteeEcriture !== undefined && !PORTEES.includes(porteeEcriture)) {
         errors.push({ field: "porteeEcriture", message: "Portée invalide" });
       }
@@ -116,10 +158,13 @@ export async function PUT(
       oublierCompte(id);
 
       return successResponse(user);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/USERS/[ID]] PUT error:", error);
-      if (error.code === "P2025") {
-        return errorResponse("Utilisateur non trouvé", { status: 404, errorCode: "NOT_FOUND" });
+      if (codeErreur(error) === "P2025") {
+        return errorResponse("Utilisateur non trouvé", {
+          status: 404,
+          errorCode: "NOT_FOUND",
+        });
       }
       return serverError("Erreur lors de la mise à jour");
     }
@@ -133,7 +178,10 @@ export async function PATCH(
   return withAdminAuth(request, async (_req, admin) => {
     try {
       const { id } = await params;
-      const cible = await compteDuPerimetre(id, admin.perimetre ?? PERIMETRE_VIDE);
+      const cible = await compteDuPerimetre(
+        id,
+        admin.perimetre ?? PERIMETRE_VIDE
+      );
       if (!cible) return introuvable();
       const { role } = await request.json();
 
@@ -141,7 +189,12 @@ export async function PATCH(
         return validationError([{ field: "role", message: "Rôle invalide" }]);
       }
       if (!roleAttribuable(admin.role, role, String(cible.role))) {
-        return validationError([{ field: "role", message: "Seul un administrateur système attribue ce rôle" }]);
+        return validationError([
+          {
+            field: "role",
+            message: "Seul un administrateur système attribue ce rôle",
+          },
+        ]);
       }
 
       const user = await prisma.user.update({
@@ -152,7 +205,7 @@ export async function PATCH(
       oublierCompte(id);
 
       return successResponse(user);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/USERS/[ID]] PATCH error:", error);
       return serverError("Erreur lors de la mise à jour");
     }
@@ -166,22 +219,36 @@ export async function DELETE(
   return withAdminAuth(request, async (_req, admin) => {
     try {
       const { id } = await params;
-      const cible = await compteDuPerimetre(id, admin.perimetre ?? PERIMETRE_VIDE);
+      const cible = await compteDuPerimetre(
+        id,
+        admin.perimetre ?? PERIMETRE_VIDE
+      );
       if (!cible) return introuvable();
       if (!roleAttribuable(admin.role, undefined, String(cible.role))) {
-        return errorResponse("Seul un administrateur système supprime ce compte", { status: 403, errorCode: "FORBIDDEN" });
+        return errorResponse(
+          "Seul un administrateur système supprime ce compte",
+          { status: 403, errorCode: "FORBIDDEN" }
+        );
       }
 
       if (id === admin.userId) {
-        return errorResponse("Vous ne pouvez pas supprimer votre propre compte", { status: 400, errorCode: "FORBIDDEN" });
+        return errorResponse(
+          "Vous ne pouvez pas supprimer votre propre compte",
+          { status: 400, errorCode: "FORBIDDEN" }
+        );
       }
       const user = await supprimerCompte(id);
 
-      return successResponse(user, { message: "Utilisateur supprimé avec succès" });
-    } catch (error: any) {
+      return successResponse(user, {
+        message: "Utilisateur supprimé avec succès",
+      });
+    } catch (error: unknown) {
       console.error("[ADMIN/USERS/[ID]] DELETE error:", error);
-      if (error.code === "P2025") {
-        return errorResponse("Utilisateur non trouvé", { status: 404, errorCode: "NOT_FOUND" });
+      if (codeErreur(error) === "P2025") {
+        return errorResponse("Utilisateur non trouvé", {
+          status: 404,
+          errorCode: "NOT_FOUND",
+        });
       }
       return serverError("Erreur lors de la suppression");
     }

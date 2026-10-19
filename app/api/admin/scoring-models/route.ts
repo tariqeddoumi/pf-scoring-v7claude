@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+  errorResponse,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 
 /**
@@ -25,7 +30,7 @@ export async function GET(req: NextRequest) {
       });
 
       return successResponse(models, { count: models.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING-MODELS] GET error:", error);
       return serverError("Erreur lors de la récupération des modèles");
     }
@@ -55,7 +60,10 @@ export async function POST(req: NextRequest) {
       });
 
       if (existing) {
-        return errorResponse(`Le modèle avec le code "${code}" existe déjà`, { status: 400, errorCode: "DUPLICATE" });
+        return errorResponse(`Le modèle avec le code "${code}" existe déjà`, {
+          status: 400,
+          errorCode: "DUPLICATE",
+        });
       }
 
       const model = await prisma.scoringModel.create({
@@ -70,7 +78,7 @@ export async function POST(req: NextRequest) {
       });
 
       return successResponse(model, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING-MODELS] POST error:", error);
       return serverError("Erreur lors de la création du modèle");
     }

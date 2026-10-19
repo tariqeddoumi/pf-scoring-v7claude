@@ -133,6 +133,18 @@ export const DATABASE_SCHEMA = {
   },
 };
 
+/** Propriété d'une page Notion, réduite aux champs lus ici. */
+type ProprieteNotion = {
+  title?: Array<{ plain_text?: string }>;
+  select?: { name?: string } | null;
+  number?: number | null;
+  rich_text?: Array<{ plain_text?: string }>;
+  date?: { start?: string } | null;
+};
+
+/** Page Notion telle que renvoyée par `databases.query`. */
+type PageNotion = { id: string; properties: Record<string, ProprieteNotion> };
+
 /**
  * Fetch all tracking items from Notion
  */
@@ -149,21 +161,24 @@ export async function getTrackingItems() {
       database_id: databaseId,
     });
 
-    return ((response as unknown) as { results: unknown[] }).results.map((page: unknown) => {
-      const pageObj = page as Record<string, any>;
-      const properties = pageObj.properties as Record<string, any>;
-      return {
-        id: pageObj.id,
-        name: (properties.Name as Record<string, any>).title?.[0]?.plain_text || "",
-        bloc: (properties.Bloc as Record<string, any>).select?.name || "",
-        statut: (properties.Statut as Record<string, any>).select?.name || "",
-        completion: (properties["Complétion %"] as Record<string, any>).number || 0,
-        description: (properties.Description as Record<string, any>).rich_text?.[0]?.plain_text || "",
-        specification: (properties.Spécification as Record<string, any>).rich_text?.[0]?.plain_text || "",
-        notes: (properties.Notes as Record<string, any>).rich_text?.[0]?.plain_text || "",
-        dateUpdated: (properties["Date Maj"] as Record<string, any>).date?.start || "",
-      };
-    });
+    return (response as unknown as { results: unknown[] }).results.map(
+      (page: unknown) => {
+        const pageObj = page as PageNotion;
+        const properties = pageObj.properties;
+        return {
+          id: pageObj.id,
+          name: properties.Name.title?.[0]?.plain_text || "",
+          bloc: properties.Bloc.select?.name || "",
+          statut: properties.Statut.select?.name || "",
+          completion: properties["Complétion %"].number || 0,
+          description: properties.Description.rich_text?.[0]?.plain_text || "",
+          specification:
+            properties.Spécification.rich_text?.[0]?.plain_text || "",
+          notes: properties.Notes.rich_text?.[0]?.plain_text || "",
+          dateUpdated: properties["Date Maj"].date?.start || "",
+        };
+      }
+    );
   } catch (error) {
     console.error("Error fetching Notion items:", error);
     return [];

@@ -5,7 +5,12 @@
  */
 
 import prisma from "@/lib/prisma-client";
-import { ResolvedValue } from "./binding-resolver";
+import {
+  ResolvedValue,
+  type BindingMode,
+  type SourceEntity,
+  type TransformType,
+} from "./binding-resolver";
 
 export type ValueType = "STRING" | "NUMBER" | "BOOLEAN" | "DATE" | "JSON";
 
@@ -35,7 +40,8 @@ export class ValueResolver {
     // Try to infer type from binding
     if (binding?.dataType) {
       if (binding.dataType.toUpperCase() === "NUMBER") valueType = "NUMBER";
-      else if (binding.dataType.toUpperCase() === "BOOLEAN") valueType = "BOOLEAN";
+      else if (binding.dataType.toUpperCase() === "BOOLEAN")
+        valueType = "BOOLEAN";
       else if (binding.dataType.toUpperCase() === "DATE") valueType = "DATE";
       else if (binding.dataType.toUpperCase() === "JSON") valueType = "JSON";
     }
@@ -47,13 +53,19 @@ export class ValueResolver {
     } else if (valueType === "BOOLEAN" && rawValue != null) {
       if (typeof rawValue === "boolean") resolvedValue = rawValue;
       else if (typeof rawValue === "string") {
-        resolvedValue = ["true", "yes", "1", "on"].includes(rawValue.toLowerCase());
+        resolvedValue = ["true", "yes", "1", "on"].includes(
+          rawValue.toLowerCase()
+        );
       } else {
         resolvedValue = Boolean(rawValue);
       }
     } else if (valueType === "DATE" && rawValue != null) {
       try {
-        if (typeof rawValue === "string" || typeof rawValue === "number" || rawValue instanceof Date) {
+        if (
+          typeof rawValue === "string" ||
+          typeof rawValue === "number" ||
+          rawValue instanceof Date
+        ) {
           const dateValue = new Date(rawValue);
           if (!isNaN(dateValue.getTime())) {
             resolvedValue = dateValue;
@@ -108,14 +120,14 @@ export class ValueResolver {
       if (b) {
         binding = {
           bindingId: b.id,
-          sourceEntity: b.sourceEntity as any,
+          sourceEntity: b.sourceEntity as SourceEntity,
           sourceField: b.sourceField,
           sourcePath: b.sourcePath,
           sourceSnapshot: null,
           resolvedValue: null,
           dataType: b.dataType,
-          transformType: b.transformType as any,
-          bindingMode: b.bindingMode as any,
+          transformType: b.transformType as TransformType,
+          bindingMode: b.bindingMode as BindingMode,
           isAvailable: true,
           valueOrigin: "SOURCE",
         };
@@ -123,7 +135,12 @@ export class ValueResolver {
     }
 
     // Use sourceValueSnapshotJson if available
-    let rawValue: unknown = answer.valueString ?? answer.valueNumber ?? answer.valueBoolean ?? answer.valueDate ?? answer.valueJson;
+    let rawValue: unknown =
+      answer.valueString ??
+      answer.valueNumber ??
+      answer.valueBoolean ??
+      answer.valueDate ??
+      answer.valueJson;
     if (answer.sourceValueSnapshotJson) {
       try {
         rawValue = JSON.parse(answer.sourceValueSnapshotJson);
@@ -147,7 +164,9 @@ export class ValueResolver {
     if (resolvedValue == null) return "";
     switch (valueType) {
       case "NUMBER":
-        return typeof resolvedValue === "number" ? resolvedValue.toFixed(2) : String(resolvedValue);
+        return typeof resolvedValue === "number"
+          ? resolvedValue.toFixed(2)
+          : String(resolvedValue);
       case "DATE":
         if (resolvedValue instanceof Date) {
           return resolvedValue.toLocaleDateString("fr-FR");

@@ -21,14 +21,17 @@ export interface ScoringNode {
   isScoringLeaf: boolean;
   children?: ScoringNode[];
   answerType?: string;
-  options?: any[];
-  ranges?: any[];
+  options?: unknown[];
+  ranges?: unknown[];
 }
 
 /**
  * Determine if a node is a scoring leaf based on scoreLeafDepth configuration
  */
-export function isScoringLeaf(node: ScoringNode, parentLeafDepth?: number): boolean {
+export function isScoringLeaf(
+  node: ScoringNode,
+  parentLeafDepth?: number
+): boolean {
   // If explicitly marked, use that
   if (node.isScoringLeaf === true) {
     return true;
@@ -68,7 +71,7 @@ export function getScoringLeaves(
 
   // Otherwise, recurse into children
   if (node.children && node.children.length > 0) {
-    return node.children.flatMap(child =>
+    return node.children.flatMap((child) =>
       getScoringLeaves(child, effectiveLeafDepth)
     );
   }
@@ -81,14 +84,16 @@ export function getScoringLeaves(
  * Get all scoring leaves from an array of nodes (typically domains)
  */
 export function getScoringLeavesFromNodes(nodes: ScoringNode[]): ScoringNode[] {
-  return nodes.flatMap(node => getScoringLeaves(node));
+  return nodes.flatMap((node) => getScoringLeaves(node));
 }
 
 /**
  * Build a scoring-leaf-only tree for evaluation UI
  * Keeps the hierarchy but only includes leaves and their paths
  */
-export function buildScoringLeafTree(node: ScoringNode, parentLeafDepth?: number): ScoringNode | null {
+export function buildScoringLeafTree<
+  T extends { depth: number; scoreLeafDepth?: number | null; children?: T[] },
+>(node: T, parentLeafDepth?: number): T | null {
   const effectiveLeafDepth = node.scoreLeafDepth ?? parentLeafDepth ?? 1;
 
   // If this is a scoring leaf, return it (no children)
@@ -102,8 +107,8 @@ export function buildScoringLeafTree(node: ScoringNode, parentLeafDepth?: number
   // Otherwise, recursively build children
   if (node.children && node.children.length > 0) {
     const scoringChildren = node.children
-      .map(child => buildScoringLeafTree(child, effectiveLeafDepth))
-      .filter((child): child is ScoringNode => child !== null);
+      .map((child) => buildScoringLeafTree(child, effectiveLeafDepth))
+      .filter((child): child is T => child !== null);
 
     if (scoringChildren.length === 0) {
       return null; // No scoring children, skip this branch
@@ -127,7 +132,7 @@ export function getNodePath(
   parents: ScoringNode[] = []
 ): string {
   const path = [...parents, node];
-  return path.map(n => n.label).join(" > ");
+  return path.map((n) => n.label).join(" > ");
 }
 
 /**
@@ -174,7 +179,8 @@ export function getScoringStats(nodes: ScoringNode[]): {
     stats.maxDepth = Math.max(stats.maxDepth, node.depth);
 
     // Count by depth
-    stats.depthDistribution[node.depth] = (stats.depthDistribution[node.depth] || 0) + 1;
+    stats.depthDistribution[node.depth] =
+      (stats.depthDistribution[node.depth] || 0) + 1;
 
     // Check if scoring leaf
     if (isScoringLeaf(node)) {

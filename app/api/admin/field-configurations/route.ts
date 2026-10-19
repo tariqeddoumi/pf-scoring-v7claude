@@ -1,30 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
 import {
   getEntityFields,
   getFormSections,
   createFieldConfig,
   createFormSection,
-} from '@/lib/services/field-config-service';
-import { messagePublic } from '@/lib/erreur-publique';
+} from "@/lib/services/field-config-service";
+import { messagePublic } from "@/lib/erreur-publique";
 
-async function handler(request: NextRequest, user: any) {
+async function handler(request: NextRequest, user: AuthPayload) {
   // GET - List field configurations for an entity
-  if (request.method === 'GET') {
+  if (request.method === "GET") {
     try {
       const { searchParams } = new URL(request.url);
-      const entity = searchParams.get('entity');
-      const type = searchParams.get('type'); // 'sections' or 'fields'
+      const entity = searchParams.get("entity");
+      const type = searchParams.get("type"); // 'sections' or 'fields'
 
       if (!entity) {
         return NextResponse.json(
-          { error: 'Entity parameter required' },
+          { error: "Entity parameter required" },
           { status: 400 }
         );
       }
 
       let data;
-      if (type === 'sections') {
+      if (type === "sections") {
         data = await getFormSections(entity);
       } else {
         data = await getEntityFields(entity);
@@ -34,43 +34,40 @@ async function handler(request: NextRequest, user: any) {
         success: true,
         data,
       });
-    } catch (error: any) {
-      console.error('[Field Config GET]', error);
+    } catch (error: unknown) {
+      console.error("[Field Config GET]", error);
       return NextResponse.json(
-        { error: messagePublic(error, 'Failed to fetch field configurations') },
+        { error: messagePublic(error, "Failed to fetch field configurations") },
         { status: 500 }
       );
     }
   }
 
   // POST - Create new field or section
-  if (request.method === 'POST') {
+  if (request.method === "POST") {
     try {
       const body = await request.json();
       const { type, ...data } = body;
 
       if (!type) {
         return NextResponse.json(
-          { error: 'Type (section or field) required' },
+          { error: "Type (section or field) required" },
           { status: 400 }
         );
       }
 
       if (!data.entity) {
-        return NextResponse.json(
-          { error: 'Entity required' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Entity required" }, { status: 400 });
       }
 
       let result;
-      if (type === 'section') {
+      if (type === "section") {
         // Create form section
         result = await createFormSection({
           ...data,
           createdBy: user.userId,
         });
-      } else if (type === 'field') {
+      } else if (type === "field") {
         // Create field
         result = await createFieldConfig({
           ...data,
@@ -90,16 +87,16 @@ async function handler(request: NextRequest, user: any) {
         },
         { status: 201 }
       );
-    } catch (error: any) {
-      console.error('[Field Config POST]', error);
+    } catch (error: unknown) {
+      console.error("[Field Config POST]", error);
       return NextResponse.json(
-        { error: messagePublic(error, 'Failed to create field configuration') },
+        { error: messagePublic(error, "Failed to create field configuration") },
         { status: 500 }
       );
     }
   }
 
-  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function GET(request: NextRequest) {

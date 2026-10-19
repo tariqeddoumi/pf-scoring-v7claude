@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Check, X } from "lucide-react";
-import type { ScoringNode, ScoringNodeOption, ScoringNodeRange } from "@/lib/types/scoring-grid";
+import { Plus, Trash2, X } from "lucide-react";
+import type {
+  GridValidationError,
+  ScoringAnswerType,
+  ScoringNode,
+  ScoringNodeOption,
+  ScoringNodeRange,
+} from "@/lib/types/scoring-grid";
 import { apiPut, apiPost, apiDelete, messageErreurApi } from "@/lib/api-client";
 import { RulesTab } from "./RulesTab";
 import { BindingsTab } from "./BindingsTab";
@@ -14,7 +20,13 @@ interface NodeDetailsPanelProps {
   onDirtyChange: (dirty: boolean) => void;
 }
 
-type TabType = "properties" | "options" | "ranges" | "rules" | "bindings" | "validation";
+type TabType =
+  | "properties"
+  | "options"
+  | "ranges"
+  | "rules"
+  | "bindings"
+  | "validation";
 
 export function NodeDetailsPanel({
   node,
@@ -30,7 +42,16 @@ export function NodeDetailsPanel({
       {/* Tab bar */}
       <div className="border-b border-border bg-background">
         <div className="flex gap-0 overflow-x-auto">
-          {(["properties", "options", "ranges", "rules", "bindings", "validation"] as const).map((tab) => (
+          {(
+            [
+              "properties",
+              "options",
+              "ranges",
+              "rules",
+              "bindings",
+              "validation",
+            ] as const
+          ).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -55,22 +76,48 @@ export function NodeDetailsPanel({
       <div className="flex-1 overflow-y-auto p-6">
         {/* Les échecs d'enregistrement n'étaient écrits que dans la console. */}
         {erreur && (
-          <p role="alert" className="mb-4 flex items-start justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="mb-4 flex items-start justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
             {erreur}
-            <button type="button" aria-label="Fermer" onClick={() => setErreur(null)}><X size={14} /></button>
+            <button
+              type="button"
+              aria-label="Fermer"
+              onClick={() => setErreur(null)}
+            >
+              <X size={14} />
+            </button>
           </p>
         )}
         {activeTab === "properties" && (
-          <PropertiesTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} onErreur={setErreur} />
+          <PropertiesTab
+            node={node}
+            onNodeUpdate={onNodeUpdate}
+            onDirtyChange={onDirtyChange}
+            onErreur={setErreur}
+          />
         )}
         {activeTab === "options" && (
-          <OptionsTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} onErreur={setErreur} />
+          <OptionsTab
+            node={node}
+            onDirtyChange={onDirtyChange}
+            onErreur={setErreur}
+          />
         )}
         {activeTab === "ranges" && (
-          <RangesTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} onErreur={setErreur} />
+          <RangesTab
+            node={node}
+            onDirtyChange={onDirtyChange}
+            onErreur={setErreur}
+          />
         )}
-        {activeTab === "rules" && <RulesTab nodeId={node.id} versionId={versionId} />}
-        {activeTab === "bindings" && <BindingsTab nodeId={node.id} versionId={versionId} />}
+        {activeTab === "rules" && (
+          <RulesTab nodeId={node.id} versionId={versionId} />
+        )}
+        {activeTab === "bindings" && (
+          <BindingsTab nodeId={node.id} versionId={versionId} />
+        )}
         {activeTab === "validation" && (
           <ValidationTab node={node} versionId={versionId} />
         )}
@@ -85,10 +132,18 @@ interface PropertiesTabProps {
   onDirtyChange: (dirty: boolean) => void;
 }
 
-function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: PropertiesTabProps & { onErreur: (m: string) => void }) {
+function PropertiesTab({
+  node,
+  onNodeUpdate,
+  onDirtyChange,
+  onErreur,
+}: PropertiesTabProps & { onErreur: (m: string) => void }) {
   const [formData, setFormData] = useState(node);
 
-  const handleChange = (field: keyof ScoringNode, value: any) => {
+  const handleChange = <K extends keyof ScoringNode>(
+    field: K,
+    value: ScoringNode[K] | null
+  ) => {
     setFormData({ ...formData, [field]: value });
     onDirtyChange(true);
   };
@@ -96,7 +151,10 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
   const handleSave = async () => {
     try {
       const res = await apiPut(`/api/admin/scoring/nodes/${node.id}`, formData);
-      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de la sauvegarde"));
+      if (!res.ok)
+        throw new Error(
+          await messageErreurApi(res, "Erreur lors de la sauvegarde")
+        );
       onNodeUpdate(formData);
       onDirtyChange(false);
     } catch (e) {
@@ -107,8 +165,14 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="nodedetailspanel-1" className="block text-sm font-medium text-secondary-foreground mb-2">Code</label>
-        <input id="nodedetailspanel-1"
+        <label
+          htmlFor="nodedetailspanel-1"
+          className="block text-sm font-medium text-secondary-foreground mb-2"
+        >
+          Code
+        </label>
+        <input
+          id="nodedetailspanel-1"
           type="text"
           value={formData.code}
           onChange={(e) => handleChange("code", e.target.value)}
@@ -117,8 +181,14 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
       </div>
 
       <div>
-        <label htmlFor="nodedetailspanel-2" className="block text-sm font-medium text-secondary-foreground mb-2">Libellé</label>
-        <input id="nodedetailspanel-2"
+        <label
+          htmlFor="nodedetailspanel-2"
+          className="block text-sm font-medium text-secondary-foreground mb-2"
+        >
+          Libellé
+        </label>
+        <input
+          id="nodedetailspanel-2"
           type="text"
           value={formData.label}
           onChange={(e) => handleChange("label", e.target.value)}
@@ -127,8 +197,14 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
       </div>
 
       <div>
-        <label htmlFor="nodedetailspanel-3" className="block text-sm font-medium text-secondary-foreground mb-2">Libellé court</label>
-        <input id="nodedetailspanel-3"
+        <label
+          htmlFor="nodedetailspanel-3"
+          className="block text-sm font-medium text-secondary-foreground mb-2"
+        >
+          Libellé court
+        </label>
+        <input
+          id="nodedetailspanel-3"
           type="text"
           value={formData.shortLabel || ""}
           onChange={(e) => handleChange("shortLabel", e.target.value)}
@@ -137,8 +213,14 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
       </div>
 
       <div>
-        <label htmlFor="nodedetailspanel-4" className="block text-sm font-medium text-secondary-foreground mb-2">Description</label>
-        <textarea id="nodedetailspanel-4"
+        <label
+          htmlFor="nodedetailspanel-4"
+          className="block text-sm font-medium text-secondary-foreground mb-2"
+        >
+          Description
+        </label>
+        <textarea
+          id="nodedetailspanel-4"
           value={formData.description || ""}
           onChange={(e) => handleChange("description", e.target.value)}
           rows={4}
@@ -148,8 +230,14 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
 
       {formData.weight !== null && formData.weight !== undefined && (
         <div>
-          <label htmlFor="nodedetailspanel-5" className="block text-sm font-medium text-secondary-foreground mb-2">Poids (%)</label>
-          <input id="nodedetailspanel-5"
+          <label
+            htmlFor="nodedetailspanel-5"
+            className="block text-sm font-medium text-secondary-foreground mb-2"
+          >
+            Poids (%)
+          </label>
+          <input
+            id="nodedetailspanel-5"
             type="number"
             value={formData.weight}
             onChange={(e) => handleChange("weight", parseFloat(e.target.value))}
@@ -161,11 +249,22 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
       {/* Always shown so a domain/criterion node (answerType=null by default)
           can be made scoreable — required for DOMAIN-level granularity. */}
       <div>
-        <label htmlFor="nodedetailspanel-6" className="block text-sm font-medium text-secondary-foreground mb-2">Type de réponse</label>
-        <select id="nodedetailspanel-6"
+        <label
+          htmlFor="nodedetailspanel-6"
+          className="block text-sm font-medium text-secondary-foreground mb-2"
+        >
+          Type de réponse
+        </label>
+        <select
+          id="nodedetailspanel-6"
           value={formData.answerType ?? ""}
           onChange={(e) =>
-            handleChange("answerType", e.target.value === "" ? null : e.target.value)
+            handleChange(
+              "answerType",
+              e.target.value === ""
+                ? null
+                : (e.target.value as ScoringAnswerType)
+            )
           }
           className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
         >
@@ -174,8 +273,9 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
           <option value="NUMERIC_RANGE">Plage Numérique</option>
         </select>
         <p className="text-xs text-muted-foreground mt-1">
-          Choisir « Option Unique » ou « Plage » pour saisir un score directement
-          sur ce nœud (utile pour la granularité au niveau domaine/critère).
+          Choisir « Option Unique » ou « Plage » pour saisir un score
+          directement sur ce nœud (utile pour la granularité au niveau
+          domaine/critère).
         </p>
       </div>
 
@@ -191,21 +291,29 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: Properti
 
 interface OptionsTabProps {
   node: ScoringNode;
-  onNodeUpdate: (node: ScoringNode) => void;
   onDirtyChange: (dirty: boolean) => void;
 }
 
-function OptionsTab({ node, onNodeUpdate, onDirtyChange, onErreur }: OptionsTabProps & { onErreur: (m: string) => void }) {
-  const [options, setOptions] = useState<ScoringNodeOption[]>(node.options || []);
-  const [editingId, setEditingId] = useState<string | null>(null);
+function OptionsTab({
+  node,
+  onDirtyChange,
+  onErreur,
+}: OptionsTabProps & { onErreur: (m: string) => void }) {
+  const [options, setOptions] = useState<ScoringNodeOption[]>(
+    node.options || []
+  );
   const [newOption, setNewOption] = useState<Partial<ScoringNodeOption>>({});
 
   const handleAddOption = async () => {
     if (!newOption.label || newOption.value === undefined) return;
 
     try {
-      const res = await apiPost(`/api/admin/scoring/nodes/${node.id}/options`, newOption);
-      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de l'ajout"));
+      const res = await apiPost(
+        `/api/admin/scoring/nodes/${node.id}/options`,
+        newOption
+      );
+      if (!res.ok)
+        throw new Error(await messageErreurApi(res, "Erreur lors de l'ajout"));
       const data = await res.json();
       setOptions([...options, data.data]);
       setNewOption({});
@@ -217,8 +325,13 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange, onErreur }: OptionsTabP
 
   const handleDeleteOption = async (optionId: string) => {
     try {
-      const res = await apiDelete(`/api/admin/scoring/nodes/${node.id}/options/${optionId}`);
-      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de la suppression"));
+      const res = await apiDelete(
+        `/api/admin/scoring/nodes/${node.id}/options/${optionId}`
+      );
+      if (!res.ok)
+        throw new Error(
+          await messageErreurApi(res, "Erreur lors de la suppression")
+        );
       setOptions(options.filter((o) => o.id !== optionId));
       onDirtyChange(true);
     } catch (e) {
@@ -227,25 +340,39 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange, onErreur }: OptionsTabP
   };
 
   if (node.answerType !== "OPTION_SINGLE") {
-    return <p className="text-muted-foreground">Ce nœud n&apos;utilise pas les options</p>;
+    return (
+      <p className="text-muted-foreground">
+        Ce nœud n&apos;utilise pas les options
+      </p>
+    );
   }
 
   return (
     <div className="space-y-4">
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {options.map((option) => (
-          <div key={option.id} className="p-3 bg-card rounded border border-border">
+          <div
+            key={option.id}
+            className="p-3 bg-card rounded border border-border"
+          >
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1">
                 <p className="text-foreground font-medium">{option.label}</p>
-                <p className="text-muted-foreground text-sm">Code: {option.code}</p>
-                <p className="text-muted-foreground text-sm">Valeur: {option.value}</p>
-                <p className="text-muted-foreground text-sm">Score: {option.score}</p>
+                <p className="text-muted-foreground text-sm">
+                  Code: {option.code}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Valeur: {option.value}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Score: {option.score}
+                </p>
               </div>
               <button
                 onClick={() => handleDeleteOption(option.id)}
                 className="p-1 hover:bg-accent rounded text-destructive"
-               aria-label="Supprimer">
+                aria-label="Supprimer"
+              >
                 <Trash2 size={16} />
               </button>
             </div>
@@ -254,34 +381,44 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange, onErreur }: OptionsTabP
       </div>
 
       <div className="border-t border-border pt-4">
-        <h4 className="text-sm font-medium text-secondary-foreground mb-3">Ajouter une option</h4>
+        <h4 className="text-sm font-medium text-secondary-foreground mb-3">
+          Ajouter une option
+        </h4>
         <div className="space-y-2">
           <input
             type="text"
             placeholder="Libellé"
             value={newOption.label || ""}
-            onChange={(e) => setNewOption({ ...newOption, label: e.target.value })}
+            onChange={(e) =>
+              setNewOption({ ...newOption, label: e.target.value })
+            }
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <input
             type="text"
             placeholder="Code"
             value={newOption.code || ""}
-            onChange={(e) => setNewOption({ ...newOption, code: e.target.value })}
+            onChange={(e) =>
+              setNewOption({ ...newOption, code: e.target.value })
+            }
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <input
             type="text"
             placeholder="Valeur"
             value={newOption.value || ""}
-            onChange={(e) => setNewOption({ ...newOption, value: e.target.value })}
+            onChange={(e) =>
+              setNewOption({ ...newOption, value: e.target.value })
+            }
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <input
             type="number"
             placeholder="Score"
             value={newOption.score || ""}
-            onChange={(e) => setNewOption({ ...newOption, score: parseFloat(e.target.value) })}
+            onChange={(e) =>
+              setNewOption({ ...newOption, score: parseFloat(e.target.value) })
+            }
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <button
@@ -299,20 +436,28 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange, onErreur }: OptionsTabP
 
 interface RangesTabProps {
   node: ScoringNode;
-  onNodeUpdate: (node: ScoringNode) => void;
   onDirtyChange: (dirty: boolean) => void;
 }
 
-function RangesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: RangesTabProps & { onErreur: (m: string) => void }) {
+function RangesTab({
+  node,
+  onDirtyChange,
+  onErreur,
+}: RangesTabProps & { onErreur: (m: string) => void }) {
   const [ranges, setRanges] = useState<ScoringNodeRange[]>(node.ranges || []);
   const [newRange, setNewRange] = useState<Partial<ScoringNodeRange>>({});
 
   const handleAddRange = async () => {
-    if (newRange.minValue === undefined || newRange.maxValue === undefined) return;
+    if (newRange.minValue === undefined || newRange.maxValue === undefined)
+      return;
 
     try {
-      const res = await apiPost(`/api/admin/scoring/nodes/${node.id}/ranges`, newRange);
-      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de l'ajout"));
+      const res = await apiPost(
+        `/api/admin/scoring/nodes/${node.id}/ranges`,
+        newRange
+      );
+      if (!res.ok)
+        throw new Error(await messageErreurApi(res, "Erreur lors de l'ajout"));
       const data = await res.json();
       setRanges([...ranges, data.data]);
       setNewRange({});
@@ -324,8 +469,13 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: RangesTabPro
 
   const handleDeleteRange = async (rangeId: string) => {
     try {
-      const res = await apiDelete(`/api/admin/scoring/nodes/${node.id}/ranges/${rangeId}`);
-      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de la suppression"));
+      const res = await apiDelete(
+        `/api/admin/scoring/nodes/${node.id}/ranges/${rangeId}`
+      );
+      if (!res.ok)
+        throw new Error(
+          await messageErreurApi(res, "Erreur lors de la suppression")
+        );
       setRanges(ranges.filter((r) => r.id !== rangeId));
       onDirtyChange(true);
     } catch (e) {
@@ -334,26 +484,36 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: RangesTabPro
   };
 
   if (node.answerType !== "NUMERIC_RANGE") {
-    return <p className="text-muted-foreground">Ce nœud n&apos;utilise pas les plages</p>;
+    return (
+      <p className="text-muted-foreground">
+        Ce nœud n&apos;utilise pas les plages
+      </p>
+    );
   }
 
   return (
     <div className="space-y-4">
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {ranges.map((range) => (
-          <div key={range.id} className="p-3 bg-card rounded border border-border">
+          <div
+            key={range.id}
+            className="p-3 bg-card rounded border border-border"
+          >
             <div className="flex justify-between items-start gap-2">
               <div className="flex-1">
                 <p className="text-foreground font-medium">{range.label}</p>
                 <p className="text-muted-foreground text-sm">
                   Plage: [{range.minValue}, {range.maxValue}]
                 </p>
-                <p className="text-muted-foreground text-sm">Score: {range.score}</p>
+                <p className="text-muted-foreground text-sm">
+                  Score: {range.score}
+                </p>
               </div>
               <button
                 onClick={() => handleDeleteRange(range.id)}
                 className="p-1 hover:bg-accent rounded text-destructive"
-               aria-label="Supprimer">
+                aria-label="Supprimer"
+              >
                 <Trash2 size={16} />
               </button>
             </div>
@@ -362,13 +522,17 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: RangesTabPro
       </div>
 
       <div className="border-t border-border pt-4">
-        <h4 className="text-sm font-medium text-secondary-foreground mb-3">Ajouter une plage</h4>
+        <h4 className="text-sm font-medium text-secondary-foreground mb-3">
+          Ajouter une plage
+        </h4>
         <div className="space-y-2">
           <input
             type="text"
             placeholder="Libellé"
             value={newRange.label || ""}
-            onChange={(e) => setNewRange({ ...newRange, label: e.target.value })}
+            onChange={(e) =>
+              setNewRange({ ...newRange, label: e.target.value })
+            }
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <div className="grid grid-cols-2 gap-2">
@@ -376,14 +540,24 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: RangesTabPro
               type="number"
               placeholder="Min"
               value={newRange.minValue || ""}
-              onChange={(e) => setNewRange({ ...newRange, minValue: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setNewRange({
+                  ...newRange,
+                  minValue: parseFloat(e.target.value),
+                })
+              }
               className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
             />
             <input
               type="number"
               placeholder="Max"
               value={newRange.maxValue || ""}
-              onChange={(e) => setNewRange({ ...newRange, maxValue: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setNewRange({
+                  ...newRange,
+                  maxValue: parseFloat(e.target.value),
+                })
+              }
               className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
             />
           </div>
@@ -391,7 +565,9 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: RangesTabPro
             type="number"
             placeholder="Score"
             value={newRange.score || ""}
-            onChange={(e) => setNewRange({ ...newRange, score: parseFloat(e.target.value) })}
+            onChange={(e) =>
+              setNewRange({ ...newRange, score: parseFloat(e.target.value) })
+            }
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <button
@@ -413,7 +589,9 @@ interface ValidationTabProps {
 }
 
 function ValidationTab({ node, versionId }: ValidationTabProps) {
-  const [validationErrors, setValidationErrors] = useState<any[]>([]);
+  const [validationErrors, setValidationErrors] = useState<
+    GridValidationError[]
+  >([]);
   const [loading, setLoading] = useState(false);
 
   const validateNode = async () => {
@@ -421,7 +599,9 @@ function ValidationTab({ node, versionId }: ValidationTabProps) {
     try {
       // L'onglet envoyait { versionId: "dummy" } : le serveur ne trouvait aucun nœud
       // et répondait toujours « valide ». La validation ne contrôlait rien.
-      const res = await apiPost("/api/admin/scoring/validate-grid", { versionId });
+      const res = await apiPost("/api/admin/scoring/validate-grid", {
+        versionId,
+      });
       const data = await res.json();
       setValidationErrors(data.data?.errors || []);
     } catch (e) {
@@ -455,7 +635,9 @@ function ValidationTab({ node, versionId }: ValidationTabProps) {
                 }`}
               >
                 <p className="font-medium">{error.message}</p>
-                <p className="text-xs text-muted-foreground">Champ : {error.field}</p>
+                <p className="text-xs text-muted-foreground">
+                  Champ : {error.field}
+                </p>
               </div>
             ))}
         </div>

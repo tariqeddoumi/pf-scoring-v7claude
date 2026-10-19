@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 
 /**
@@ -23,8 +27,11 @@ export async function GET(
       });
 
       return successResponse(rules, { count: rules.length });
-    } catch (error: any) {
-      console.error("[ADMIN/SCORING-MODELS/VERSIONS/[ID]/RULES] GET error:", error);
+    } catch (error: unknown) {
+      console.error(
+        "[ADMIN/SCORING-MODELS/VERSIONS/[ID]/RULES] GET error:",
+        error
+      );
       return serverError("Erreur lors de la récupération des règles");
     }
   });
@@ -90,8 +97,11 @@ export async function POST(
       });
 
       return successResponse(rule, { status: 201 });
-    } catch (error: any) {
-      console.error("[ADMIN/SCORING-MODELS/VERSIONS/[ID]/RULES] POST error:", error);
+    } catch (error: unknown) {
+      console.error(
+        "[ADMIN/SCORING-MODELS/VERSIONS/[ID]/RULES] POST error:",
+        error
+      );
       return serverError("Erreur lors de la création de la règle");
     }
   });

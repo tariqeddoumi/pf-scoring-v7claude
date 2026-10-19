@@ -18,7 +18,12 @@ export interface QuestionnaireNode {
     /** Phrase qui décrit dans quel cas retenir cette réponse. */
     quandChoisir?: string;
   }[];
-  ranges?: { minValue: number; maxValue: number; score: number; label?: string }[];
+  ranges?: {
+    minValue: number;
+    maxValue: number;
+    score: number;
+    label?: string;
+  }[];
   weight?: number;
   /** Bornes de l'échelle du critère : le barème est exprimé dessus, le moteur sur 0–100. */
   scoreMin?: number | null;
@@ -81,18 +86,19 @@ export class ScoringQuestionnaireService {
         isScoringLeaf: node.isScoringLeaf || false,
         options:
           node.options && node.options.length > 0
-            ? node.options.map((o: any) => ({
-                value: o.value,
+            ? node.options.map((o) => ({
+                // Colonnes facultatives en base, transmises telles quelles (null possible).
+                value: o.value as string,
                 label: o.label,
-                score: o.score,
+                score: o.score as number,
               }))
             : undefined,
         ranges:
           node.ranges && node.ranges.length > 0
-            ? node.ranges.map((r: any) => ({
+            ? node.ranges.map((r) => ({
                 minValue: r.minValue,
                 maxValue: r.maxValue,
-                score: r.score,
+                score: r.score as number,
                 label: r.label || undefined,
               }))
             : undefined,
@@ -141,10 +147,7 @@ export class ScoringQuestionnaireService {
       rootNode.scoreLeafDepth = effectiveLeafDepth;
 
       // Truncate tree to appropriate level
-      const truncated = buildScoringLeafTree(
-        rootNode as any,
-        effectiveLeafDepth
-      );
+      const truncated = buildScoringLeafTree(rootNode, effectiveLeafDepth);
 
       if (truncated) {
         truncatedRoots.push(truncated);
@@ -198,7 +201,7 @@ export class ScoringQuestionnaireService {
           create: {
             evaluationId,
             nodeId: answer.nodeId,
-            answerType: answer.answerType as any,
+            answerType: answer.answerType,
             valueString: answer.valueString,
             valueNumber: answer.valueNumber,
             valueBoolean: answer.valueBoolean,

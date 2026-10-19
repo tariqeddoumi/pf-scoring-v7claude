@@ -1,7 +1,12 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import type { Prisma } from "@prisma/client";
 
 /**
  * GET /api/admin/scoring-models/[id]/versions
@@ -39,8 +44,10 @@ export async function GET(
         })
       );
 
-      return successResponse(versionsWithCounts, { count: versionsWithCounts.length });
-    } catch (error: any) {
+      return successResponse(versionsWithCounts, {
+        count: versionsWithCounts.length,
+      });
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING-MODELS/[ID]/VERSIONS] GET error:", error);
       return serverError("Erreur lors de la récupération des versions");
     }
@@ -100,17 +107,25 @@ export async function POST(
             ...n,
             id: newId,
             versionId: version.id,
-            parentNodeId: n.parentNodeId ? idMap.get(n.parentNodeId) || null : null,
+            parentNodeId: n.parentNodeId
+              ? idMap.get(n.parentNodeId) || null
+              : null,
           };
         });
 
         await prisma.scoringNode.createMany({
-          data: newNodes.map(({ createdAt, updatedAt, ...n }) => n) as any,
+          // Les horodatages de la version source ne sont pas recopiés.
+          data: newNodes.map((n) => {
+            const copie: Partial<typeof n> = { ...n };
+            delete copie.createdAt;
+            delete copie.updatedAt;
+            return copie;
+          }) as unknown as Prisma.ScoringNodeCreateManyInput[],
         });
       }
 
       return successResponse(version, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING-MODELS/[ID]/VERSIONS] POST error:", error);
       return serverError("Erreur lors de la création de la version");
     }

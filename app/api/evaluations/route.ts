@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth-middleware";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { EvaluationService } from "@/lib/services/evaluation-service";
 import { lirePagination } from "@/lib/validation-schemas";
 import { messagePublic } from "@/lib/erreur-publique";
@@ -9,13 +9,16 @@ import type { UserRole } from "@/lib/permissions";
 /**
  * GET /api/evaluations - List all evaluations (paginated)
  */
-async function handleGET(request: NextRequest, user: any) {
+async function handleGET(request: NextRequest, user: AuthPayload) {
   try {
     // Tout rôle qui lit les évaluations : le comité (décideur), l'auditeur et la lecture
     // seule recevaient 403 alors que le détail d'une évaluation leur est ouvert. Les
     // notes restent masquées selon le rôle (withAuth).
     if (!hasPermission(user.role as UserRole, "evaluation", "read")) {
-      return NextResponse.json({ error: "Vos droits ne permettent pas de consulter les évaluations" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Vos droits ne permettent pas de consulter les évaluations" },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -24,7 +27,6 @@ async function handleGET(request: NextRequest, user: any) {
     const { page, limit } = lirePagination(searchParams, 50);
     const status = searchParams.get("status");
     const projectId = searchParams.get("projectId");
-
 
     const filters = {
       ...(status && { status }),
@@ -54,13 +56,16 @@ async function handleGET(request: NextRequest, user: any) {
 /**
  * POST /api/evaluations - Create new evaluation (analyst+)
  */
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: AuthPayload) {
   try {
     // Tout rôle qui lit les évaluations : le comité (décideur), l'auditeur et la lecture
     // seule recevaient 403 alors que le détail d'une évaluation leur est ouvert. Les
     // notes restent masquées selon le rôle (withAuth).
     if (!hasPermission(user.role as UserRole, "evaluation", "read")) {
-      return NextResponse.json({ error: "Vos droits ne permettent pas de consulter les évaluations" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Vos droits ne permettent pas de consulter les évaluations" },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -70,8 +75,11 @@ async function handlePOST(request: NextRequest, user: any) {
     );
 
     return NextResponse.json(evaluation, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { error: messagePublic(error, "Requête refusée") },
+      { status: 400 }
+    );
   }
 }
 

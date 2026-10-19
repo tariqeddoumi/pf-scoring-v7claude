@@ -16,7 +16,7 @@ export interface ValidationError {
   code: string;
   message: string;
   severity: "ERROR" | "CRITICAL";
-  context?: any;
+  context?: unknown;
 }
 
 /**
@@ -25,7 +25,7 @@ export interface ValidationError {
 export interface ValidationWarning {
   code: string;
   message: string;
-  context?: any;
+  context?: unknown;
 }
 
 /**
@@ -125,7 +125,9 @@ export class ScoringValidationService {
     // Fonctions paramétrables mais non exécutées de bout en bout : une grille qui les
     // utilise afficherait un comportement que le moteur ne produit pas.
     const reglesApplicabilite = version.nodes.flatMap((n) =>
-      n.applicabilityRules.filter((r) => r.isActive !== false).map((r) => ({ r, n }))
+      n.applicabilityRules
+        .filter((r) => r.isActive !== false)
+        .map((r) => ({ r, n }))
     );
     for (const { n } of reglesApplicabilite) {
       errors.push({
@@ -256,7 +258,12 @@ export class ScoringValidationService {
    */
   static async validateAnswer(
     nodeId: string,
-    answer: any
+    answer: {
+      valueString?: string | null;
+      valueNumber?: number | null;
+      valueBoolean?: boolean | null;
+      valueDate?: string | Date | null;
+    }
   ): Promise<ValidationResult> {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
@@ -310,10 +317,9 @@ export class ScoringValidationService {
             severity: "ERROR",
           });
         } else {
+          const valeur = answer.valueNumber;
           const inRange = node.ranges.some(
-            (r) =>
-              answer.valueNumber >= r.minValue &&
-              answer.valueNumber <= r.maxValue
+            (r) => valeur >= r.minValue && valeur <= r.maxValue
           );
           if (!inRange && node.ranges.length > 0) {
             warnings.push({
@@ -326,13 +332,17 @@ export class ScoringValidationService {
         break;
 
       case "PERCENTAGE":
+        // NB : une valeur null n'est pas interceptée ici et passe le contrôle de bornes.
         if (answer.valueNumber === undefined) {
           errors.push({
             code: "PERCENTAGE_REQUIRED",
             message: "Percentage value is required",
             severity: "ERROR",
           });
-        } else if (answer.valueNumber < 0 || answer.valueNumber > 100) {
+        } else if (
+          (answer.valueNumber as number) < 0 ||
+          (answer.valueNumber as number) > 100
+        ) {
           errors.push({
             code: "INVALID_PERCENTAGE",
             message: "Percentage must be between 0 and 100",

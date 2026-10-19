@@ -17,8 +17,8 @@ export interface AppError {
   context?: {
     endpoint?: string;
     method?: string;
-    payload?: any;
-    response?: any;
+    payload?: unknown;
+    response?: unknown;
     timestamp?: string;
     requestId?: string;
   };
@@ -128,7 +128,12 @@ export function createAppError(
   errorType: string,
   additionalContext?: AppError["context"]
 ): AppError {
-  const errorConfig = (ErrorCategories as any)[category]?.[errorType];
+  const errorConfig = (
+    ErrorCategories[category] as Record<
+      string,
+      { code: string; userMessage: string; debugMessage: string } | undefined
+    >
+  )?.[errorType];
 
   if (!errorConfig) {
     console.error(`Unknown error: ${category}.${errorType}`);
@@ -172,7 +177,13 @@ export function logAppError(error: AppError) {
 /**
  * Parse une réponse d'erreur API et la transforme en AppError
  */
-export function parseApiError(apiResponse: any, endpoint: string): AppError {
+export function parseApiError(
+  apiResponse:
+    | { status?: number; errorCode?: string; error?: string }
+    | null
+    | undefined,
+  endpoint: string
+): AppError {
   const errorCode = apiResponse?.errorCode;
   const errorMessage = apiResponse?.error;
 

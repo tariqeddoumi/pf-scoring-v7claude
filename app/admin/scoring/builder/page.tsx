@@ -18,7 +18,11 @@ import OptionModal from "@/components/scoring/OptionModal";
 import RangeModal from "@/components/scoring/RangeModal";
 import { ModelConfigurationPanel } from "@/components/admin/ModelConfigurationPanel";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
-import { formatPart, formatPoidsDetail, sommeFratrie } from "@/lib/weight-format";
+import {
+  formatPart,
+  formatPoidsDetail,
+  sommeFratrie,
+} from "@/lib/weight-format";
 import { sansGeneration } from "@/lib/libelle-modele";
 
 interface ScoringOption {
@@ -90,24 +94,36 @@ export default function ScoringBuilderPage() {
   const [modelVersion, setModelVersion] = useState<ModelVersion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [expandedDomains, setExpandedDomains] = useState<Set<string>>(new Set());
-  const [expandedCriteria, setExpandedCriteria] = useState<Set<string>>(new Set());
+  const [expandedDomains, setExpandedDomains] = useState<Set<string>>(
+    new Set()
+  );
+  const [expandedCriteria, setExpandedCriteria] = useState<Set<string>>(
+    new Set()
+  );
   const [saving, setSaving] = useState(false);
   const [duplication, setDuplication] = useState(false);
 
   // Modal states
   const [nodeModalOpen, setNodeModalOpen] = useState(false);
-  const [nodeModalData, setNodeModalData] = useState<Partial<ScoringNode> | undefined>(undefined);
-  const [nodeModalType, setNodeModalType] = useState<"DOMAIN" | "CRITERION">("DOMAIN");
+  const [nodeModalData, setNodeModalData] = useState<
+    Partial<ScoringNode> | undefined
+  >(undefined);
+  const [nodeModalType, setNodeModalType] = useState<"DOMAIN" | "CRITERION">(
+    "DOMAIN"
+  );
   const [selectedDomainId, setSelectedDomainId] = useState("");
 
   const [optionModalOpen, setOptionModalOpen] = useState(false);
-  const [optionModalData, setOptionModalData] = useState<Partial<ScoringOption> | undefined>(undefined);
+  const [optionModalData, setOptionModalData] = useState<
+    Partial<ScoringOption> | undefined
+  >(undefined);
   const [selectedCriterionId, setSelectedCriterionId] = useState("");
   const [selectedCriterionCode, setSelectedCriterionCode] = useState("");
 
   const [rangeModalOpen, setRangeModalOpen] = useState(false);
-  const [rangeModalData, setRangeModalData] = useState<Partial<ScoringRange> | undefined>(undefined);
+  const [rangeModalData, setRangeModalData] = useState<
+    Partial<ScoringRange> | undefined
+  >(undefined);
 
   useEffect(() => {
     loadModel();
@@ -140,7 +156,10 @@ export default function ScoringBuilderPage() {
   const handleNodeSubmit = async (data: Record<string, unknown>) => {
     if (nodeModalData?.id) {
       // Edit
-      const res = await apiPut(`/api/admin/scoring/nodes?nodeId=${nodeModalData.id}`, data);
+      const res = await apiPut(
+        `/api/admin/scoring/nodes?nodeId=${nodeModalData.id}`,
+        data
+      );
 
       if (!res.ok) {
         const err = await res.json();
@@ -168,14 +187,20 @@ export default function ScoringBuilderPage() {
     await loadModel();
   };
 
-  const openCreateOptionModal = (criterionId: string, criterionCode: string) => {
+  const openCreateOptionModal = (
+    criterionId: string,
+    criterionCode: string
+  ) => {
     setSelectedCriterionId(criterionId);
     setSelectedCriterionCode(criterionCode);
     setOptionModalData(undefined);
     setOptionModalOpen(true);
   };
 
-  const openEditOptionModal = (option: ScoringOption, criterionCode: string) => {
+  const openEditOptionModal = (
+    option: ScoringOption,
+    criterionCode: string
+  ) => {
     setSelectedCriterionId(option.nodeId);
     setSelectedCriterionCode(criterionCode);
     setOptionModalData(option);
@@ -185,7 +210,10 @@ export default function ScoringBuilderPage() {
   const handleOptionSubmit = async (data: Record<string, unknown>) => {
     if (optionModalData?.id) {
       // Edit
-      const res = await apiPut(`/api/admin/scoring/options?optionId=${optionModalData.id}`, data);
+      const res = await apiPut(
+        `/api/admin/scoring/options?optionId=${optionModalData.id}`,
+        data
+      );
 
       if (!res.ok) {
         const err = await res.json();
@@ -226,7 +254,10 @@ export default function ScoringBuilderPage() {
   const handleRangeSubmit = async (data: Record<string, unknown>) => {
     if (rangeModalData?.id) {
       // Edit
-      const res = await apiPut(`/api/admin/scoring/ranges?rangeId=${rangeModalData.id}`, data);
+      const res = await apiPut(
+        `/api/admin/scoring/ranges?rangeId=${rangeModalData.id}`,
+        data
+      );
 
       if (!res.ok) {
         const err = await res.json();
@@ -289,9 +320,12 @@ export default function ScoringBuilderPage() {
             `/api/admin/scoring/models/${modele.id}/versions`
           );
           if (resVersions.ok) {
-            const liste: VersionDisponible[] = (await resVersions.json()).data ?? [];
+            const liste: VersionDisponible[] =
+              (await resVersions.json()).data ?? [];
             const brouillon = liste.find(
-              (v) => !v.isPublished && (v.status === "DRAFT" || v.status === "IN_REVIEW")
+              (v) =>
+                !v.isPublished &&
+                (v.status === "DRAFT" || v.status === "IN_REVIEW")
             );
             if (brouillon) {
               const resArbre = await apiGet(
@@ -331,21 +365,28 @@ export default function ScoringBuilderPage() {
     setError("");
     try {
       const resModeles = await apiGet("/api/admin/scoring/models");
-      const modeles = resModeles.ok ? ((await resModeles.json()).data ?? []) : [];
+      const modeles = resModeles.ok
+        ? ((await resModeles.json()).data ?? [])
+        : [];
       const modeleId = modeles[0]?.id;
       if (!modeleId) throw new Error("Modèle introuvable.");
 
-      const res = await apiPost(`/api/admin/scoring/models/${modeleId}/versions`, {
-        sourceVersionId: modelVersion.id,
-        changeReason: "Brouillon créé depuis l'éditeur de modèle",
-      });
+      const res = await apiPost(
+        `/api/admin/scoring/models/${modeleId}/versions`,
+        {
+          sourceVersionId: modelVersion.id,
+          changeReason: "Brouillon créé depuis l'éditeur de modèle",
+        }
+      );
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || "Création du brouillon impossible.");
       }
       await loadModel();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Création du brouillon impossible.");
+      setError(
+        e instanceof Error ? e.message : "Création du brouillon impossible."
+      );
     } finally {
       setDuplication(false);
     }
@@ -376,7 +417,9 @@ export default function ScoringBuilderPage() {
 
     try {
       setSaving(true);
-      const res = await apiDelete(`/api/admin/scoring/options?optionId=${optionId}`);
+      const res = await apiDelete(
+        `/api/admin/scoring/options?optionId=${optionId}`
+      );
 
       if (!res.ok) {
         const d = await res.json();
@@ -396,7 +439,9 @@ export default function ScoringBuilderPage() {
 
     try {
       setSaving(true);
-      const res = await apiDelete(`/api/admin/scoring/ranges?rangeId=${rangeId}`);
+      const res = await apiDelete(
+        `/api/admin/scoring/ranges?rangeId=${rangeId}`
+      );
 
       if (!res.ok) {
         const d = await res.json();
@@ -414,7 +459,11 @@ export default function ScoringBuilderPage() {
   const toggleDomain = (id: string) => {
     setExpandedDomains((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -422,7 +471,11 @@ export default function ScoringBuilderPage() {
   const toggleCriterion = (id: string) => {
     setExpandedCriteria((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -448,11 +501,17 @@ export default function ScoringBuilderPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/admin/scoring" className="p-2 hover:bg-card rounded-lg transition-colors" aria-label="Retour">
+        <Link
+          href="/admin/scoring"
+          className="p-2 hover:bg-card rounded-lg transition-colors"
+          aria-label="Retour"
+        >
           <ArrowLeft size={20} className="text-muted-foreground" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-foreground">Éditeur du modèle</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            Éditeur du modèle
+          </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {modelVersion
               ? `Version ${sansGeneration(modelVersion.label)} — ${
@@ -469,9 +528,9 @@ export default function ScoringBuilderPage() {
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
           <AlertCircle size={16} className="shrink-0" />
           <span className="min-w-0 flex-1">
-            Cette version est publiée : sa structure ne peut plus être modifiée, faute
-            de quoi les notes déjà calculées ne seraient plus reproductibles. Créez un
-            brouillon pour la faire évoluer.
+            Cette version est publiée : sa structure ne peut plus être modifiée,
+            faute de quoi les notes déjà calculées ne seraient plus
+            reproductibles. Créez un brouillon pour la faire évoluer.
           </span>
           <button
             onClick={creerBrouillon}
@@ -506,8 +565,22 @@ export default function ScoringBuilderPage() {
           </div>
           <div className="text-xs text-muted-foreground grid grid-cols-3 gap-4">
             <span>Domaines: {questionnaire.length}</span>
-            <span>Critères: {questionnaire.reduce((s, d) => s + (d.children?.length ?? 0), 0)}</span>
-            <span>Options: {questionnaire.reduce((s, d) => s + (d.children?.reduce((cs, c) => cs + (c.options?.length ?? 0), 0) ?? 0), 0)}</span>
+            <span>
+              Critères:{" "}
+              {questionnaire.reduce((s, d) => s + (d.children?.length ?? 0), 0)}
+            </span>
+            <span>
+              Options:{" "}
+              {questionnaire.reduce(
+                (s, d) =>
+                  s +
+                  (d.children?.reduce(
+                    (cs, c) => cs + (c.options?.length ?? 0),
+                    0
+                  ) ?? 0),
+                0
+              )}
+            </span>
           </div>
         </div>
       )}
@@ -525,11 +598,17 @@ export default function ScoringBuilderPage() {
       {questionnaire.length > 0 ? (
         <div className="space-y-3">
           {questionnaire.map((domain) => {
-            const meta = DOMAIN_META[domain.code] ?? { icon: "📋", color: "text-muted-foreground bg-muted/50" };
+            const meta = DOMAIN_META[domain.code] ?? {
+              icon: "📋",
+              color: "text-muted-foreground bg-muted/50",
+            };
             const isExpanded = expandedDomains.has(domain.id);
 
             return (
-              <div key={domain.id} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div
+                key={domain.id}
+                className="rounded-xl border border-border bg-card overflow-hidden"
+              >
                 {/* Domain header */}
                 <button
                   onClick={() => toggleDomain(domain.id)}
@@ -538,60 +617,82 @@ export default function ScoringBuilderPage() {
                   <span className="text-2xl">{meta.icon}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${meta.color}`}>
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded ${meta.color}`}
+                      >
                         {domain.code}
                       </span>
-                      <span className="text-foreground font-semibold">{domain.label}</span>
+                      <span className="text-foreground font-semibold">
+                        {domain.label}
+                      </span>
                     </div>
                     <div
                       className="text-xs text-muted-foreground mt-1"
-                      title={formatPoidsDetail(domain.weight, sommeFratrie(questionnaire))}
+                      title={formatPoidsDetail(
+                        domain.weight,
+                        sommeFratrie(questionnaire)
+                      )}
                     >
                       Poids :{" "}
                       <strong>
-                        {formatPart(domain.weight, sommeFratrie(questionnaire)) ?? "—"}
+                        {formatPart(
+                          domain.weight,
+                          sommeFratrie(questionnaire)
+                        ) ?? "—"}
                       </strong>{" "}
                       • {domain.children?.length ?? 0} critères
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {!lectureSeule && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditNodeModal(domain);
-                      }}
-                      className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                     aria-label="Modifier">
-                      <Edit2 size={14} />
-                    </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditNodeModal(domain);
+                        }}
+                        className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
+                        aria-label="Modifier"
+                      >
+                        <Edit2 size={14} />
+                      </button>
                     )}
                     {!lectureSeule && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteNode(domain.id);
-                      }}
-                      disabled={saving}
-                      className="p-1.5 hover:bg-destructive/10 rounded text-destructive hover:text-destructive/80 disabled:opacity-50"
-                     aria-label="Supprimer">
-                      <Trash2 size={14} />
-                    </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteNode(domain.id);
+                        }}
+                        disabled={saving}
+                        className="p-1.5 hover:bg-destructive/10 rounded text-destructive hover:text-destructive/80 disabled:opacity-50"
+                        aria-label="Supprimer"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     )}
                     {isExpanded ? (
-                      <ChevronDown size={18} className="text-muted-foreground" />
+                      <ChevronDown
+                        size={18}
+                        className="text-muted-foreground"
+                      />
                     ) : (
-                      <ChevronRight size={18} className="text-muted-foreground" />
+                      <ChevronRight
+                        size={18}
+                        className="text-muted-foreground"
+                      />
                     )}
                   </div>
                 </button>
 
                 {/* Criteria list */}
                 {isExpanded && (
-                  <div className={`border-t border-border ${domain.children && domain.children.length > 0 ? 'divide-y divide-border/50' : ''}`}>
+                  <div
+                    className={`border-t border-border ${domain.children && domain.children.length > 0 ? "divide-y divide-border/50" : ""}`}
+                  >
                     {(!domain.children || domain.children.length === 0) && (
                       <div className="px-5 py-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-3">Aucun critère dans ce domaine</p>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Aucun critère dans ce domaine
+                        </p>
                         <button
                           onClick={() => openCreateCriterionModal(domain.id)}
                           disabled={lectureSeule}
@@ -602,180 +703,275 @@ export default function ScoringBuilderPage() {
                         </button>
                       </div>
                     )}
-                    {domain.children && domain.children.length > 0 && domain.children.map((criterion) => {
-                      const isExpCrit = expandedCriteria.has(criterion.id);
-                      const hasDetails = (criterion.options?.length ?? 0) > 0 || (criterion.ranges?.length ?? 0) > 0;
+                    {domain.children &&
+                      domain.children.length > 0 &&
+                      domain.children.map((criterion) => {
+                        const isExpCrit = expandedCriteria.has(criterion.id);
+                        const hasDetails =
+                          (criterion.options?.length ?? 0) > 0 ||
+                          (criterion.ranges?.length ?? 0) > 0;
 
-                      return (
-                        <div key={criterion.id}>
-                          <button
-                            onClick={() => hasDetails && toggleCriterion(criterion.id)}
-                            className={`w-full flex items-start gap-4 px-5 py-3.5 transition-colors text-left ${
-                              hasDetails ? "hover:bg-accent/20" : ""
-                            }`}
-                          >
-                            <div className="flex-1 min-w-0 ml-10">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs text-muted-foreground font-mono">{criterion.code}</span>
-                                <span className="text-foreground text-sm font-medium">{criterion.label}</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  criterion.answerType === "NUMERIC_RANGE"
-                                    ? "bg-purple-500/10 text-purple-400"
-                                    : "bg-primary/10 text-primary"
-                                }`}>
-                                  {criterion.answerType === "NUMERIC_RANGE" ? "Numérique" : "Options"}
-                                </span>
+                        return (
+                          <div key={criterion.id}>
+                            <button
+                              onClick={() =>
+                                hasDetails && toggleCriterion(criterion.id)
+                              }
+                              className={`w-full flex items-start gap-4 px-5 py-3.5 transition-colors text-left ${
+                                hasDetails ? "hover:bg-accent/20" : ""
+                              }`}
+                            >
+                              <div className="flex-1 min-w-0 ml-10">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs text-muted-foreground font-mono">
+                                    {criterion.code}
+                                  </span>
+                                  <span className="text-foreground text-sm font-medium">
+                                    {criterion.label}
+                                  </span>
+                                  <span
+                                    className={`text-xs px-1.5 py-0.5 rounded ${
+                                      criterion.answerType === "NUMERIC_RANGE"
+                                        ? "bg-purple-500/10 text-purple-400"
+                                        : "bg-primary/10 text-primary"
+                                    }`}
+                                  >
+                                    {criterion.answerType === "NUMERIC_RANGE"
+                                      ? "Numérique"
+                                      : "Options"}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {!lectureSeule && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openEditNodeModal(criterion);
-                                }}
-                                className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                               aria-label="Modifier">
-                                <Edit2 size={14} />
-                              </button>
-                              )}
-                              {!lectureSeule && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteNode(criterion.id);
-                                }}
-                                disabled={saving}
-                                className="p-1.5 hover:bg-destructive/10 rounded text-destructive hover:text-destructive/80 disabled:opacity-50"
-                               aria-label="Supprimer">
-                                <Trash2 size={14} />
-                              </button>
-                              )}
-                              {hasDetails && (
-                                isExpCrit ? (
-                                  <ChevronDown size={14} className="text-muted-foreground" />
-                                ) : (
-                                  <ChevronRight size={14} className="text-muted-foreground" />
-                                )
-                              )}
-                            </div>
-                          </button>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {!lectureSeule && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openEditNodeModal(criterion);
+                                    }}
+                                    className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
+                                    aria-label="Modifier"
+                                  >
+                                    <Edit2 size={14} />
+                                  </button>
+                                )}
+                                {!lectureSeule && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteNode(criterion.id);
+                                    }}
+                                    disabled={saving}
+                                    className="p-1.5 hover:bg-destructive/10 rounded text-destructive hover:text-destructive/80 disabled:opacity-50"
+                                    aria-label="Supprimer"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                                {hasDetails &&
+                                  (isExpCrit ? (
+                                    <ChevronDown
+                                      size={14}
+                                      className="text-muted-foreground"
+                                    />
+                                  ) : (
+                                    <ChevronRight
+                                      size={14}
+                                      className="text-muted-foreground"
+                                    />
+                                  ))}
+                              </div>
+                            </button>
 
-                          {/* Options and Ranges */}
-                          {isExpCrit && (
-                            <div className="ml-24 mr-5 mb-3 space-y-3">
-                              {criterion.options && criterion.options.length > 0 && (
-                                <div className="rounded-lg border border-border overflow-hidden">
-                                  <div className="bg-muted/50 px-4 py-2 text-xs font-medium text-muted-foreground flex justify-between items-center">
-                                    <span>Options</span>
-                                    <button
-                                      onClick={() => openCreateOptionModal(criterion.id, criterion.code)}
-                          disabled={lectureSeule}
-                                      className="disabled:hidden p-1 hover:bg-secondary rounded text-secondary-foreground"
-                                     aria-label="Ajouter">
-                                      <Plus size={14} />
-                                    </button>
-                                  </div>
-                                  <table className="w-full text-xs">
-                                    <thead>
-                                      <tr className="bg-muted/30 text-muted-foreground">
-                                        <th className="text-left px-3 py-2 font-medium">Option</th>
-                                        <th className="text-right px-3 py-2 font-medium">Score</th>
-                                        <th className="text-right px-3 py-2 w-16">Actions</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/50">
-                                      {criterion.options.map((opt) => (
-                                        <tr key={opt.id} className="text-secondary-foreground hover:bg-accent/20">
-                                          <td className="px-3 py-2">{opt.label}</td>
-                                          <td className="px-3 py-2 text-right font-bold text-success">{opt.score}</td>
-                                          <td className="px-3 py-2 text-right space-x-1">
-                                            <button
-                                              onClick={() => openEditOptionModal(opt, criterion.code)}
-                                              className="text-muted-foreground hover:text-foreground"
-                                             aria-label="Modifier">
-                                              <Edit2 size={12} />
-                                            </button>
-                                            <button
-                                              onClick={() => handleDeleteOption(opt.id)}
-                                              disabled={saving || lectureSeule}
-                                              className="text-destructive hover:text-destructive/80 disabled:opacity-50"
-                                             aria-label="Supprimer">
-                                              <Trash2 size={12} />
-                                            </button>
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              )}
+                            {/* Options and Ranges */}
+                            {isExpCrit && (
+                              <div className="ml-24 mr-5 mb-3 space-y-3">
+                                {criterion.options &&
+                                  criterion.options.length > 0 && (
+                                    <div className="rounded-lg border border-border overflow-hidden">
+                                      <div className="bg-muted/50 px-4 py-2 text-xs font-medium text-muted-foreground flex justify-between items-center">
+                                        <span>Options</span>
+                                        <button
+                                          onClick={() =>
+                                            openCreateOptionModal(
+                                              criterion.id,
+                                              criterion.code
+                                            )
+                                          }
+                                          disabled={lectureSeule}
+                                          className="disabled:hidden p-1 hover:bg-secondary rounded text-secondary-foreground"
+                                          aria-label="Ajouter"
+                                        >
+                                          <Plus size={14} />
+                                        </button>
+                                      </div>
+                                      <table className="w-full text-xs">
+                                        <thead>
+                                          <tr className="bg-muted/30 text-muted-foreground">
+                                            <th className="text-left px-3 py-2 font-medium">
+                                              Option
+                                            </th>
+                                            <th className="text-right px-3 py-2 font-medium">
+                                              Score
+                                            </th>
+                                            <th className="text-right px-3 py-2 w-16">
+                                              Actions
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/50">
+                                          {criterion.options.map((opt) => (
+                                            <tr
+                                              key={opt.id}
+                                              className="text-secondary-foreground hover:bg-accent/20"
+                                            >
+                                              <td className="px-3 py-2">
+                                                {opt.label}
+                                              </td>
+                                              <td className="px-3 py-2 text-right font-bold text-success">
+                                                {opt.score}
+                                              </td>
+                                              <td className="px-3 py-2 text-right space-x-1">
+                                                <button
+                                                  onClick={() =>
+                                                    openEditOptionModal(
+                                                      opt,
+                                                      criterion.code
+                                                    )
+                                                  }
+                                                  className="text-muted-foreground hover:text-foreground"
+                                                  aria-label="Modifier"
+                                                >
+                                                  <Edit2 size={12} />
+                                                </button>
+                                                <button
+                                                  onClick={() =>
+                                                    handleDeleteOption(opt.id)
+                                                  }
+                                                  disabled={
+                                                    saving || lectureSeule
+                                                  }
+                                                  className="text-destructive hover:text-destructive/80 disabled:opacity-50"
+                                                  aria-label="Supprimer"
+                                                >
+                                                  <Trash2 size={12} />
+                                                </button>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
 
-                              {criterion.ranges && criterion.ranges.length > 0 && (
-                                <div className="rounded-lg border border-border overflow-hidden">
-                                  <div className="bg-muted/50 px-4 py-2 text-xs font-medium text-muted-foreground flex justify-between items-center">
-                                    <span>Plages</span>
-                                    <button
-                                      onClick={() => openCreateRangeModal(criterion.id, criterion.code)}
+                                {criterion.ranges &&
+                                  criterion.ranges.length > 0 && (
+                                    <div className="rounded-lg border border-border overflow-hidden">
+                                      <div className="bg-muted/50 px-4 py-2 text-xs font-medium text-muted-foreground flex justify-between items-center">
+                                        <span>Plages</span>
+                                        <button
+                                          onClick={() =>
+                                            openCreateRangeModal(
+                                              criterion.id,
+                                              criterion.code
+                                            )
+                                          }
+                                          disabled={lectureSeule}
+                                          className="disabled:hidden p-1 hover:bg-secondary rounded text-secondary-foreground"
+                                          aria-label="Ajouter"
+                                        >
+                                          <Plus size={14} />
+                                        </button>
+                                      </div>
+                                      <table className="w-full text-xs">
+                                        <thead>
+                                          <tr className="bg-muted/30 text-muted-foreground">
+                                            <th className="text-left px-3 py-2 font-medium">
+                                              Plage
+                                            </th>
+                                            <th className="text-center px-3 py-2 font-medium w-12">
+                                              Min
+                                            </th>
+                                            <th className="text-center px-3 py-2 font-medium w-12">
+                                              Max
+                                            </th>
+                                            <th className="text-right px-3 py-2 font-medium">
+                                              Score
+                                            </th>
+                                            <th className="text-right px-3 py-2 w-16">
+                                              Actions
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/50">
+                                          {criterion.ranges.map((r) => (
+                                            <tr
+                                              key={r.id}
+                                              className="text-secondary-foreground hover:bg-accent/20"
+                                            >
+                                              <td className="px-3 py-2">
+                                                {r.label ?? "—"}
+                                              </td>
+                                              <td className="px-3 py-2 text-center font-mono">
+                                                {r.minValue}
+                                              </td>
+                                              <td className="px-3 py-2 text-center font-mono">
+                                                {r.maxValue === 999
+                                                  ? "∞"
+                                                  : r.maxValue}
+                                              </td>
+                                              <td className="px-3 py-2 text-right font-bold text-success">
+                                                {r.score}
+                                              </td>
+                                              <td className="px-3 py-2 text-right space-x-1">
+                                                <button
+                                                  onClick={() =>
+                                                    openEditRangeModal(
+                                                      r,
+                                                      criterion.code
+                                                    )
+                                                  }
+                                                  className="text-muted-foreground hover:text-foreground"
+                                                  aria-label="Modifier"
+                                                >
+                                                  <Edit2 size={12} />
+                                                </button>
+                                                <button
+                                                  onClick={() =>
+                                                    handleDeleteRange(r.id)
+                                                  }
+                                                  disabled={
+                                                    saving || lectureSeule
+                                                  }
+                                                  className="text-destructive hover:text-destructive/80 disabled:opacity-50"
+                                                  aria-label="Supprimer"
+                                                >
+                                                  <Trash2 size={12} />
+                                                </button>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    {domain.children && domain.children.length > 0 && (
+                      <div className="px-5 py-3 border-t border-border bg-muted/20">
+                        <button
+                          onClick={() => openCreateCriterionModal(domain.id)}
                           disabled={lectureSeule}
-                                      className="disabled:hidden p-1 hover:bg-secondary rounded text-secondary-foreground"
-                                     aria-label="Ajouter">
-                                      <Plus size={14} />
-                                    </button>
-                                  </div>
-                                  <table className="w-full text-xs">
-                                    <thead>
-                                      <tr className="bg-muted/30 text-muted-foreground">
-                                        <th className="text-left px-3 py-2 font-medium">Plage</th>
-                                        <th className="text-center px-3 py-2 font-medium w-12">Min</th>
-                                        <th className="text-center px-3 py-2 font-medium w-12">Max</th>
-                                        <th className="text-right px-3 py-2 font-medium">Score</th>
-                                        <th className="text-right px-3 py-2 w-16">Actions</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/50">
-                                      {criterion.ranges.map((r) => (
-                                        <tr key={r.id} className="text-secondary-foreground hover:bg-accent/20">
-                                          <td className="px-3 py-2">{r.label ?? "—"}</td>
-                                          <td className="px-3 py-2 text-center font-mono">{r.minValue}</td>
-                                          <td className="px-3 py-2 text-center font-mono">{r.maxValue === 999 ? "∞" : r.maxValue}</td>
-                                          <td className="px-3 py-2 text-right font-bold text-success">{r.score}</td>
-                                          <td className="px-3 py-2 text-right space-x-1">
-                                            <button
-                                              onClick={() => openEditRangeModal(r, criterion.code)}
-                                              className="text-muted-foreground hover:text-foreground"
-                                             aria-label="Modifier">
-                                              <Edit2 size={12} />
-                                            </button>
-                                            <button
-                                              onClick={() => handleDeleteRange(r.id)}
-                                              disabled={saving || lectureSeule}
-                                              className="text-destructive hover:text-destructive/80 disabled:opacity-50"
-                                             aria-label="Supprimer">
-                                              <Trash2 size={12} />
-                                            </button>
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                    {domain.children && domain.children.length > 0 && <div className="px-5 py-3 border-t border-border bg-muted/20">
-                      <button
-                        onClick={() => openCreateCriterionModal(domain.id)}
-                          disabled={lectureSeule}
-                        className="disabled:hidden w-full flex items-center justify-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/30 rounded transition-colors text-sm"
-                      >
-                        <Plus size={14} />
-                        Ajouter un critère
-                      </button>
-                    </div>}
+                          className="disabled:hidden w-full flex items-center justify-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/30 rounded transition-colors text-sm"
+                        >
+                          <Plus size={14} />
+                          Ajouter un critère
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -785,7 +981,9 @@ export default function ScoringBuilderPage() {
       ) : (
         !error && (
           <div className="rounded-xl border border-border bg-card p-12 text-center">
-            <p className="text-muted-foreground font-medium">Aucun modèle configuré</p>
+            <p className="text-muted-foreground font-medium">
+              Aucun modèle configuré
+            </p>
           </div>
         )
       )}
@@ -795,7 +993,7 @@ export default function ScoringBuilderPage() {
         <div className="flex gap-3 justify-end">
           <button
             onClick={openCreateDomainModal}
-                          disabled={lectureSeule}
+            disabled={lectureSeule}
             className="disabled:hidden flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 py-2 rounded-lg transition-colors text-sm"
           >
             <Plus size={16} />
@@ -808,16 +1006,28 @@ export default function ScoringBuilderPage() {
       <NodeModal
         isOpen={nodeModalOpen}
         nodeType={nodeModalType}
-        initialData={nodeModalData && 'code' in nodeModalData && 'label' in nodeModalData && typeof nodeModalData.code === 'string' && typeof nodeModalData.label === 'string' ? {
-          id: nodeModalData.id,
-          code: nodeModalData.code,
-          label: nodeModalData.label,
-          shortLabel: nodeModalData.shortLabel,
-          description: nodeModalData.description,
-          weight: nodeModalData.weight,
-          answerType: nodeModalData.answerType,
-        } : undefined}
-        parentDomainCode={selectedDomainId ? questionnaire.find(d => d.id === selectedDomainId)?.code : undefined}
+        initialData={
+          nodeModalData &&
+          "code" in nodeModalData &&
+          "label" in nodeModalData &&
+          typeof nodeModalData.code === "string" &&
+          typeof nodeModalData.label === "string"
+            ? {
+                id: nodeModalData.id,
+                code: nodeModalData.code,
+                label: nodeModalData.label,
+                shortLabel: nodeModalData.shortLabel,
+                description: nodeModalData.description,
+                weight: nodeModalData.weight,
+                answerType: nodeModalData.answerType,
+              }
+            : undefined
+        }
+        parentDomainCode={
+          selectedDomainId
+            ? questionnaire.find((d) => d.id === selectedDomainId)?.code
+            : undefined
+        }
         onClose={() => setNodeModalOpen(false)}
         onSubmit={handleNodeSubmit}
         versionId={modelVersion?.id}
@@ -826,12 +1036,20 @@ export default function ScoringBuilderPage() {
       <OptionModal
         isOpen={optionModalOpen}
         criterionCode={selectedCriterionCode}
-        initialData={optionModalData && 'label' in optionModalData && 'score' in optionModalData && typeof optionModalData.label === 'string' && typeof optionModalData.score === 'number' ? {
-          id: optionModalData.id,
-          label: optionModalData.label,
-          score: optionModalData.score,
-          description: undefined,
-        } : undefined}
+        initialData={
+          optionModalData &&
+          "label" in optionModalData &&
+          "score" in optionModalData &&
+          typeof optionModalData.label === "string" &&
+          typeof optionModalData.score === "number"
+            ? {
+                id: optionModalData.id,
+                label: optionModalData.label,
+                score: optionModalData.score,
+                description: undefined,
+              }
+            : undefined
+        }
         onClose={() => setOptionModalOpen(false)}
         onSubmit={handleOptionSubmit}
       />
@@ -839,13 +1057,23 @@ export default function ScoringBuilderPage() {
       <RangeModal
         isOpen={rangeModalOpen}
         criterionCode={selectedCriterionCode}
-        initialData={rangeModalData && 'minValue' in rangeModalData && 'maxValue' in rangeModalData && 'score' in rangeModalData && typeof rangeModalData.minValue === 'number' && typeof rangeModalData.maxValue === 'number' && typeof rangeModalData.score === 'number' ? {
-          id: rangeModalData.id,
-          minValue: rangeModalData.minValue,
-          maxValue: rangeModalData.maxValue,
-          score: rangeModalData.score,
-          label: rangeModalData.label,
-        } : undefined}
+        initialData={
+          rangeModalData &&
+          "minValue" in rangeModalData &&
+          "maxValue" in rangeModalData &&
+          "score" in rangeModalData &&
+          typeof rangeModalData.minValue === "number" &&
+          typeof rangeModalData.maxValue === "number" &&
+          typeof rangeModalData.score === "number"
+            ? {
+                id: rangeModalData.id,
+                minValue: rangeModalData.minValue,
+                maxValue: rangeModalData.maxValue,
+                score: rangeModalData.score,
+                label: rangeModalData.label,
+              }
+            : undefined
+        }
         onClose={() => setRangeModalOpen(false)}
         onSubmit={handleRangeSubmit}
       />

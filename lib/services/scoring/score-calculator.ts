@@ -54,7 +54,10 @@ export class ScoreCalculator {
   ): ScoreOutput {
     const num = Number(answer);
     if (isNaN(num)) {
-      return { rawScore: 0, explanation: `Cannot convert "${answer}" to number` };
+      return {
+        rawScore: 0,
+        explanation: `Cannot convert "${answer}" to number`,
+      };
     }
     for (const r of ranges) {
       if (num >= r.min && num <= r.max) {
@@ -159,7 +162,11 @@ export class ScoreCalculator {
     }
 
     if (inputs.formula) {
-      return this.scoreFromFormula(inputs.formula.expression, inputs.formula.variables, fallback);
+      return this.scoreFromFormula(
+        inputs.formula.expression,
+        inputs.formula.variables,
+        fallback
+      );
     }
 
     return { rawScore: fallback, explanation: "No scoring method available" };
@@ -190,9 +197,16 @@ function tokenize(expr: string): string[] {
   while (i < expr.length) {
     const ch = expr[i];
     // Ignorer les espaces
-    if (/\s/.test(ch)) { i++; continue; }
+    if (/\s/.test(ch)) {
+      i++;
+      continue;
+    }
     // Opérateurs et parenthèses
-    if ("+-*/()".includes(ch)) { tokens.push(ch); i++; continue; }
+    if ("+-*/()".includes(ch)) {
+      tokens.push(ch);
+      i++;
+      continue;
+    }
     // Nombres décimaux
     if (/[\d.]/.test(ch)) {
       let num = "";
@@ -216,7 +230,10 @@ function safeEvalArithmetic(expr: string): number {
   // Niveau 1 : addition et soustraction (priorité basse)
   function parseExpression(): number {
     let left = parseTerm();
-    while (pos < tokens.length && (tokens[pos] === "+" || tokens[pos] === "-")) {
+    while (
+      pos < tokens.length &&
+      (tokens[pos] === "+" || tokens[pos] === "-")
+    ) {
       const op = tokens[pos++];
       const right = parseTerm();
       left = op === "+" ? left + right : left - right;
@@ -227,7 +244,10 @@ function safeEvalArithmetic(expr: string): number {
   // Niveau 2 : multiplication et division (priorité haute)
   function parseTerm(): number {
     let left = parseFactor();
-    while (pos < tokens.length && (tokens[pos] === "*" || tokens[pos] === "/")) {
+    while (
+      pos < tokens.length &&
+      (tokens[pos] === "*" || tokens[pos] === "/")
+    ) {
       const op = tokens[pos++];
       const right = parseFactor();
       if (op === "/" && right === 0) throw new Error("Division par zéro");
@@ -267,7 +287,7 @@ function safeEvalArithmetic(expr: string): number {
 export interface NodeScoreData {
   nodeId: string;
   rawScore: number;
-  weight?: number;
+  weight?: number | null;
   isScored?: boolean;
   isTerminal?: boolean;
   children?: NodeScoreData[];
@@ -279,8 +299,7 @@ export class AggregationEngine {
    */
   static aggregate(
     method: string | undefined,
-    children: NodeScoreData[],
-    totalWeight: number = 1
+    children: NodeScoreData[]
   ): number {
     if (!children || children.length === 0) return 0;
 
@@ -299,7 +318,9 @@ export class AggregationEngine {
       }
 
       case "AVERAGE":
-        return children.reduce((sum, c) => sum + c.rawScore, 0) / children.length;
+        return (
+          children.reduce((sum, c) => sum + c.rawScore, 0) / children.length
+        );
 
       case "WEIGHTED_AVERAGE": {
         let sum = 0;
@@ -352,7 +373,10 @@ export class AggregationEngine {
   /**
    * Recursively compute weighted scores using hierarchy.
    */
-  static computeWeighted(node: NodeScoreData, totalWeight: number = 100): number {
+  static computeWeighted(
+    node: NodeScoreData,
+    totalWeight: number = 100
+  ): number {
     const nodeWeight = node.weight ?? totalWeight;
     return (node.rawScore * nodeWeight) / 100;
   }
@@ -388,7 +412,8 @@ export class AggregationEngine {
     const max = scoreMax ?? 100;
 
     // Échelle inexploitable ou déjà centésimale : on ne touche à rien.
-    if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return score;
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min)
+      return score;
     if (min === 0 && max === 100) return score;
 
     return ((score - min) / (max - min)) * 100;
