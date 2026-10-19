@@ -65,6 +65,16 @@ def nb(x, dec=0):
     return s
 
 
+def nbx(x, maxdec=4):
+    """Nombre avec ses décimales utiles, sans arrondi visible."""
+    if x is None or x == "":
+        return "—"
+    if isinstance(x, str):
+        return x
+    t = f"{x:,.{maxdec}f}".rstrip("0").rstrip(".")
+    return t.replace(",", " ").replace(".", ",")
+
+
 def pct(x, dec=0):
     return "—" if x is None else f"{nb(x * 100, dec)} %"
 
@@ -162,6 +172,20 @@ def sans_jargon(t):
     return re.sub(r"\s*\(«\s*Info\. insuffisante\s*»\)", "", t or "").strip()
 
 
+def constat_noyau(cle, saisie, manquants):
+    """Constat d'un indicateur choisi du noyau financier (N4 à N6)."""
+    g = (saisie.get("noyau") or {}).get(cle) or {}
+    n = g.get("niveau")
+    j = (g.get("justification") or "").strip()
+    if n == 5:
+        manquants.append((cle, libelle_critere(cle), j or "Pièce justificative non remise."))
+        return f"Élément non disponible à la date du présent document. {j}".strip()
+    d = REF["niveaux"].get(cle, {}).get("descriptions", [])
+    txt = d[n - 1] if n and 1 <= n <= len(d) else ""
+    debut = txt[0].lower() + txt[1:] if txt and not (len(txt) > 1 and txt[1].isupper()) else txt
+    return f"Constat : {debut or 'sans observation particulière'}. {j}".strip()
+
+
 def section_criteres(dom, saisie, manquants, intro=None):
     blocs = [f"# {dom} — {PAR['libellesDomaines'][dom]}"]
     cd = (saisie.get("commentairesDomaines") or {}).get(dom)
@@ -221,7 +245,7 @@ def generer_cas(i, c):
             f"Actionnaires : {f['sponsor']}. Expérience du sponsor dans le secteur : {f['experience']} ans ; "
             f"projets comparables réalisés : {f['similaires']}.",
             bene,
-            constat("D1.3", s, manquants),
+            tableau([["Point examiné", "Constat"], [f"D1.3 · {libelle_critere('D1.3')}", constat("D1.3", s, manquants)]], [5.5 * cm, W - 5.5 * cm]),
             "# Relation bancaire",
             fiche([
                 ("Statut bancaire", f["statutBancaire"]), ("Date d'entrée en relation", f["relation"]),
@@ -286,10 +310,10 @@ def generer_cas(i, c):
     noy = s.get("noyau") or {}
     blocs = [
         "# Emplois (besoin à terminaison, MMAD)",
-        tableau([["Emploi", "Montant (MMAD)"]] + [[e["libelle"], nb(e["montant"], 1)] for e in em]
+        tableau([["Emploi", "Montant (MMAD)"]] + [[e["libelle"], nbx(e["montant"])] for e in em]
                 + [["Total du besoin", nb(sum(e["montant"] or 0 for e in em), 1)]], [12 * cm, W - 12 * cm]),
         "# Ressources (MMAD)",
-        tableau([["Ressource", "Nature", "Montant (MMAD)"]] + [[x["libelle"], x.get("nature") or "—", nb(x["montant"], 1)] for x in rs]
+        tableau([["Ressource", "Nature", "Montant (MMAD)"]] + [[x["libelle"], x.get("nature") or "—", nbx(x["montant"])] for x in rs]
                 + [["Total des ressources", "", nb(sum(x["montant"] or 0 for x in rs), 1)]], [8.5 * cm, 4.5 * cm, W - 13 * cm]),
         f"Couverture du besoin à terminaison par les ressources engagées : {pct(r.get('couverture'), 1)}. "
         f"Quote-part de dette dans le plan de financement : {pct(r.get('quotePart'), 1)}.",
@@ -298,6 +322,8 @@ def generer_cas(i, c):
         blocs.append("!! Les ressources engagées ne couvrent pas le besoin à terminaison : un complément de financement reste à engager.")
     if s.get("planRemediation") == "Oui":
         blocs.append("Un plan de remédiation du financement à terminaison a été présenté par le sponsor.")
+    elif s.get("planRemediation") == "Non":
+        blocs.append("Aucun plan de remédiation du financement à terminaison n'a été présenté.")
     blocs += [
         "# Crédits sollicités auprès de la banque",
         tableau([["N°", "Nature", "Montant (MMAD)", "Devise", "Durée"]] +
@@ -307,14 +333,17 @@ def generer_cas(i, c):
         fiche([
             ("Type de crédit", f["typeCredit"]), ("Taux indicatif", f"{nb(f['taux'], 1)} %"),
             ("Différé d'amortissement", f"{f['amorce']} an(s)"), ("Périodicité", s.get("periodicite") or "—"),
-            ("Réserve de service de la dette (DSRA)", f"{nb(pl.get('dsraMois'), 1)} mois de service — {noy.get('N4', {}).get('justification', '')}"),
+            ("Réserve de service de la dette (DSRA)", f"{nbx(pl.get('dsraMois'))} mois de service — {noy.get('N4', {}).get('justification', '')}"),
             ("Levier", noy.get("N5", {}).get("justification", "—")),
             ("Exposition taux / change / refinancement", noy.get("N6", {}).get("justification", "—")),
-            ("Exposition nette en devises non couverte", f"{pct(pl.get('expositionDevises'))} du service annuel de la dette"),
-            ("Dette à refinancer à l'échéance (ballon)", pct(pl.get("detteARefinancer"))),
+            ("Exposition nette en devises non couverte", f"{nbx((pl.get('expositionDevises') or 0) * 100)} % du service annuel de la dette"),
+            ("Dette à refinancer à l'échéance (ballon)", f"{nbx((pl.get('detteARefinancer') or 0) * 100)} %"),
             ("Stratégie de refinancement approuvée", pl.get("strategieRefinancement") or "Sans objet"),
             ("Sûretés", "Nantissement des actions et des comptes de la SPV, cession des créances des contrats, délégation des assurances, accords directs."),
         ]),
+        "# Appréciation des prêteurs sur la structure",
+        tableau([["Point examiné", "Constat"]] + [[f"{k} · {libelle_critere(k)}", constat_noyau(k, s, manquants)] for k in ("N4", "N5", "N6")],
+                [5.5 * cm, W - 5.5 * cm]),
     ]
     pdf(chemin("03_Plan_de_financement_et_term_sheet"), "Plan de financement et term sheet indicative",
         f"{nom_spv} · financement sollicité de {nb(sum((cr[2] or 0) for cr in d.get('credits') or []), 1)} MMAD", blocs, entete)
@@ -322,17 +351,19 @@ def generer_cas(i, c):
     # 04 — Modèle financier : synthèse
     lignes = [["Période", "CFADS (MMAD)", "Service de la dette (MMAD)", "DSCR"]]
     for p in r.get("periodes") or []:
-        lignes.append([p["libelle"], nb(p["cfads"], 1), nb(p["service"], 1), nb(p["dscr"], 2) if p["dscr"] is not None else "—"])
+        lignes.append([p["libelle"], nbx(p["cfads"]), nbx(p["service"]), nb(p["dscr"], 2) if p["dscr"] is not None else "—"])
     blocs = [
         "# Échéancier du scénario central",
         f"Modèle de flux daté (périodicité {s.get('periodicite', 'semestrielle').lower()}), extrait des périodes les plus contraintes.",
-        tableau(lignes, [4 * cm, 4 * cm, 5 * cm, W - 13 * cm]),
+        tableau(lignes, [6 * cm, 3.5 * cm, 4.5 * cm, W - 14 * cm]),
         f"DSCR minimum du scénario central : {nb(r.get('dscrMin'), 2)}x.",
         "# Scénario défavorable",
-        f"{s.get('descriptionStress') or 'Scénario de la banque'} : baisse du CFADS de {pct(s.get('choc'), 1)} sur chaque période. "
+        f"{s.get('descriptionStress') or 'Scénario de la banque'} : baisse du CFADS de {nbx((s.get('choc') or 0) * 100)} % sur chaque période. "
         f"DSCR minimum sous ce scénario : {nb(r.get('dscrMinStresse'), 2)}x.",
         "# Couverture sur la durée du prêt",
-        f"LLCR : {nb(pl.get('llcr'), 2)}x." if pl.get("llcr") is not None else "LLCR non calculé à ce stade.",
+        f"LLCR : {nbx(pl.get('llcr'))}x." if pl.get("llcr") is not None else "LLCR non calculé à ce stade.",
+        (f"N3 · Appréciation du LLCR (hors construction) : note {s['n3Llcr']} sur 100 retenue par l'analyse des prêteurs."
+         if s["phase"] != "P1" and isinstance(s.get("n3Llcr"), int) else None),
     ]
     if s["phase"] == "P1":
         blocs.append(f"Phase de construction : test de financement à terminaison — ressources engagées / besoin = {pct(r.get('couverture'), 1)}.")
@@ -350,7 +381,8 @@ def generer_cas(i, c):
     rempl = pl.get("operateurRemplacable")
     if rempl:
         blocs.append(f"Opérateur remplaçable sans rupture d'exploitation : {rempl}."
-                     + (f" Le contrat d'exploitation et de maintenance expire {nb(pl.get('ecartOm'))} ans avant la dernière échéance de la dette." if pl.get("ecartOm") else ""))
+                     + (f" Le contrat d'exploitation et de maintenance expire {nbx(pl.get('ecartOm'))} ans avant la dernière échéance de la dette." if pl.get("ecartOm")
+                        else " Le contrat d'exploitation et de maintenance couvre toute la durée de la dette (écart de 0 an)." if pl.get("ecartOm") == 0 else ""))
     pdf(chemin("05_Rapport_ingenieur_independant"), "Rapport de l'ingénieur indépendant", f"{d['titre']} · {f['ville']}", blocs, entete)
 
     # 06 — Analyse du marché et des contreparties (D1.1-1.2, D4, D6)
@@ -360,12 +392,12 @@ def generer_cas(i, c):
              f"Capacité résiduelle du sponsor pour l'appel de fonds propres restant : {'suffisante' if pl.get('capaciteSponsor') == 'Oui' else 'insuffisante'}."
              if pl.get("capaciteSponsor") else None]
     blocs += section_criteres("D4", s, manquants)
-    blocs.append(f"Durée du contrat de revenus : {nb(pl.get('dureeContrat'))} ans, pour une dette de {nb(pl.get('dureeDette'))} ans."
+    blocs.append(f"Durée du contrat de revenus : {nbx(pl.get('dureeContrat'))} ans, pour une dette de {nbx(pl.get('dureeDette'))} ans."
                  + (f" Solution documentée pour la période non couverte : {pl.get('solutionContrat')}." if pl.get("solutionContrat") else "")
                  if pl.get("dureeContrat") is not None else
-                 f"Aucun contrat de revenus à durée ferme ; dette de {nb(pl.get('dureeDette'))} ans.")
+                 f"Aucun contrat de revenus à durée ferme ; dette de {nbx(pl.get('dureeDette'))} ans.")
     blocs += section_criteres("D6", s, manquants)
-    blocs.append(f"Part des recettes portée par l'acheteur ou payeur principal : {pct(pl.get('partAcheteur'))} ; "
+    blocs.append(f"Part des recettes portée par l'acheteur ou payeur principal : {nbx((pl.get('partAcheteur') or 0) * 100)} % ; "
                  f"qualité de crédit interne de cet acheteur : {pl.get('qualiteAcheteur') or '—'}.")
     blocs.append("!! L'exposition du groupe bancaire sur une contrepartie commune dépasse la limite interne." if pl.get("expositionGroupe") == "Oui"
                  else "L'exposition du groupe bancaire sur les contreparties du projet reste dans les limites internes.")
