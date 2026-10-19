@@ -101,17 +101,22 @@ function LoginPageContent() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            {config.APP_LOGO_URL ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={config.APP_LOGO_URL} alt="" className="h-10 w-10 rounded-md object-contain" />
-            ) : (
+          {config.APP_LOGO_URL ? (
+            <div className="mb-4 flex flex-col items-center gap-4">
+              <span className="flex h-24 w-full max-w-xs items-center justify-center rounded-xl bg-white px-6 py-3 shadow-sm">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={config.APP_LOGO_URL} alt={nomAppli} className="max-h-full max-w-full object-contain" />
+              </span>
+              <h1 className="text-3xl font-bold text-foreground">{nomAppli}</h1>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-3 mb-4">
               <span aria-hidden className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
                 {nomAppli.split(/\s+/).map((m) => m[0]).join("").slice(0, 2).toUpperCase()}
               </span>
-            )}
-            <h1 className="text-3xl font-bold text-foreground">{nomAppli}</h1>
-          </div>
+              <h1 className="text-3xl font-bold text-foreground">{nomAppli}</h1>
+            </div>
+          )}
           <p className="text-muted-foreground">
             Application de Scoring Project Finance
           </p>

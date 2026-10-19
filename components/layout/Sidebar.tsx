@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { useVoirScores } from "@/components/providers/visibilite-scores";
 
@@ -145,21 +146,29 @@ export function Sidebar({
 
   const contenu = (
     <>
-      <div className="flex h-14 items-center gap-2.5 px-4">
-        <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5">
-          {logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt="" className="h-8 w-8 shrink-0 rounded-md bg-white object-contain p-0.5" />
-          ) : (
+      <div className={cn("flex gap-2.5 px-4", logo ? "items-start py-3" : "h-14 items-center")}>
+        {logo ? (
+          // Logo sur toute la largeur du menu : un logo horizontal restait illisible
+          // dans l'ancien carré de 32 px.
+          <Link href="/dashboard" className="min-w-0 flex-1">
+            <span className="flex h-16 w-full items-center justify-center rounded-lg bg-white px-3 py-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logo} alt={nomAppli} className="max-h-full max-w-full object-contain" />
+            </span>
+            <span className="mt-2 block truncate text-[13px] font-semibold text-sidebar-accent-foreground">{nomAppli}</span>
+            {entite && <span className="block truncate text-[11px] text-sidebar-foreground">{entite}</span>}
+          </Link>
+        ) : (
+          <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5">
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
               {nomAppli.slice(0, 2).toUpperCase()}
             </span>
-          )}
-          <span className="min-w-0">
-            <span className="block truncate text-[15px] font-semibold text-sidebar-accent-foreground">{nomAppli}</span>
-            {entite && <span className="block truncate text-[11px] text-sidebar-foreground">{entite}</span>}
-          </span>
-        </Link>
+            <span className="min-w-0">
+              <span className="block truncate text-[15px] font-semibold text-sidebar-accent-foreground">{nomAppli}</span>
+              {entite && <span className="block truncate text-[11px] text-sidebar-foreground">{entite}</span>}
+            </span>
+          </Link>
+        )}
         <button
           onClick={onFermer}
           aria-label="Fermer le menu"
