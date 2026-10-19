@@ -4,13 +4,19 @@
  * Enables fully parameterizable scoring engine
  */
 
-import prisma from '@/lib/prisma';
+import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
-import { ScoringCriterion, ScoringThreshold, ScoringOption, ScoringGrille } from '@prisma/client';
+import {
+  ScoringCriterion,
+  ScoringThreshold,
+  ScoringOption,
+  ScoringGrille,
+  Prisma,
+} from "@prisma/client";
 
 // In-memory cache for scoring criteria
 const scoringCache: {
-  data: Map<string, any>;
+  data: Map<string, ScoringCriterion[] | ScoringGrille[]>;
   timestamp: number;
   ttl: number;
 } = {
@@ -47,19 +53,21 @@ const isCacheValid = (): boolean => {
 export const getAllScoringCriteria = async (
   categoryFilter?: string
 ): Promise<ScoringCriterion[]> => {
-  const cacheKey = `all_criteria_${categoryFilter || 'all'}`;
+  const cacheKey = `all_criteria_${categoryFilter || "all"}`;
 
   if (isCacheValid() && scoringCache.data.has(cacheKey)) {
-    return scoringCache.data.get(cacheKey);
+    return scoringCache.data.get(cacheKey) as ScoringCriterion[];
   }
 
   try {
     const criteria = await prisma.scoringCriterion.findMany({
-      where: categoryFilter ? { category: categoryFilter, isActive: true } : { isActive: true },
-      orderBy: [{ category: 'asc' }, { orderIndex: 'asc' }],
+      where: categoryFilter
+        ? { category: categoryFilter, isActive: true }
+        : { isActive: true },
+      orderBy: [{ category: "asc" }, { orderIndex: "asc" }],
       include: {
-        thresholds: { orderBy: { orderIndex: 'asc' } },
-        options: { orderBy: { orderIndex: 'asc' } },
+        thresholds: { orderBy: { orderIndex: "asc" } },
+        options: { orderBy: { orderIndex: "asc" } },
       },
     });
 
@@ -68,8 +76,8 @@ export const getAllScoringCriteria = async (
 
     return criteria;
   } catch (error) {
-    console.error('Error fetching scoring criteria:', error);
-    throw new Error('Failed to load scoring criteria');
+    console.error("Error fetching scoring criteria:", error);
+    throw new Error("Failed to load scoring criteria");
   }
 };
 
@@ -78,13 +86,19 @@ export const getAllScoringCriteria = async (
  */
 export const getScoringCriterion = async (
   id: string
-): Promise<(ScoringCriterion & { thresholds: ScoringThreshold[]; options: ScoringOption[] }) | null> => {
+): Promise<
+  | (ScoringCriterion & {
+      thresholds: ScoringThreshold[];
+      options: ScoringOption[];
+    })
+  | null
+> => {
   try {
     return await prisma.scoringCriterion.findUnique({
       where: { id },
       include: {
-        thresholds: { orderBy: { orderIndex: 'asc' } },
-        options: { orderBy: { orderIndex: 'asc' } },
+        thresholds: { orderBy: { orderIndex: "asc" } },
+        options: { orderBy: { orderIndex: "asc" } },
       },
     });
   } catch (error) {
@@ -97,21 +111,21 @@ export const getScoringCriterion = async (
  * Create new scoring criterion
  */
 export const createScoringCriterion = async (
-  data: Omit<ScoringCriterion, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<ScoringCriterion, "id" | "createdAt" | "updatedAt">
 ): Promise<ScoringCriterion> => {
   try {
     const criterion = await prisma.scoringCriterion.create({
       data: {
         ...data,
         id: randomUUID(),
-      } as any,
+      } as Prisma.ScoringCriterionUncheckedCreateInput,
     });
 
     clearScoringCache();
     return criterion;
   } catch (error) {
-    console.error('Error creating scoring criterion:', error);
-    throw new Error('Failed to create scoring criterion');
+    console.error("Error creating scoring criterion:", error);
+    throw new Error("Failed to create scoring criterion");
   }
 };
 
@@ -135,7 +149,7 @@ export const updateScoringCriterion = async (
     return updated;
   } catch (error) {
     console.error(`Error updating criterion ${id}:`, error);
-    throw new Error('Failed to update scoring criterion');
+    throw new Error("Failed to update scoring criterion");
   }
 };
 
@@ -151,7 +165,7 @@ export const deleteScoringCriterion = async (id: string): Promise<void> => {
     clearScoringCache();
   } catch (error) {
     console.error(`Error deleting criterion ${id}:`, error);
-    throw new Error('Failed to delete scoring criterion');
+    throw new Error("Failed to delete scoring criterion");
   }
 };
 
@@ -168,11 +182,14 @@ export const getCriterionThresholds = async (
   try {
     return await prisma.scoringThreshold.findMany({
       where: { criterionId },
-      orderBy: { orderIndex: 'asc' },
+      orderBy: { orderIndex: "asc" },
     });
   } catch (error) {
-    console.error(`Error fetching thresholds for criterion ${criterionId}:`, error);
-    throw new Error('Failed to load thresholds');
+    console.error(
+      `Error fetching thresholds for criterion ${criterionId}:`,
+      error
+    );
+    throw new Error("Failed to load thresholds");
   }
 };
 
@@ -180,7 +197,7 @@ export const getCriterionThresholds = async (
  * Create new threshold
  */
 export const createScoringThreshold = async (
-  data: Omit<ScoringThreshold, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<ScoringThreshold, "id" | "createdAt" | "updatedAt">
 ): Promise<ScoringThreshold> => {
   try {
     const threshold = await prisma.scoringThreshold.create({
@@ -193,8 +210,8 @@ export const createScoringThreshold = async (
     clearScoringCache();
     return threshold;
   } catch (error) {
-    console.error('Error creating threshold:', error);
-    throw new Error('Failed to create threshold');
+    console.error("Error creating threshold:", error);
+    throw new Error("Failed to create threshold");
   }
 };
 
@@ -218,7 +235,7 @@ export const updateScoringThreshold = async (
     return updated;
   } catch (error) {
     console.error(`Error updating threshold ${id}:`, error);
-    throw new Error('Failed to update threshold');
+    throw new Error("Failed to update threshold");
   }
 };
 
@@ -234,7 +251,7 @@ export const deleteScoringThreshold = async (id: string): Promise<void> => {
     clearScoringCache();
   } catch (error) {
     console.error(`Error deleting threshold ${id}:`, error);
-    throw new Error('Failed to delete threshold');
+    throw new Error("Failed to delete threshold");
   }
 };
 
@@ -251,11 +268,14 @@ export const getCriterionOptions = async (
   try {
     return await prisma.scoringOption.findMany({
       where: { criterionId },
-      orderBy: { orderIndex: 'asc' },
+      orderBy: { orderIndex: "asc" },
     });
   } catch (error) {
-    console.error(`Error fetching options for criterion ${criterionId}:`, error);
-    throw new Error('Failed to load options');
+    console.error(
+      `Error fetching options for criterion ${criterionId}:`,
+      error
+    );
+    throw new Error("Failed to load options");
   }
 };
 
@@ -263,7 +283,7 @@ export const getCriterionOptions = async (
  * Create new option
  */
 export const createScoringOption = async (
-  data: Omit<ScoringOption, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<ScoringOption, "id" | "createdAt" | "updatedAt">
 ): Promise<ScoringOption> => {
   try {
     const option = await prisma.scoringOption.create({
@@ -276,8 +296,8 @@ export const createScoringOption = async (
     clearScoringCache();
     return option;
   } catch (error) {
-    console.error('Error creating option:', error);
-    throw new Error('Failed to create option');
+    console.error("Error creating option:", error);
+    throw new Error("Failed to create option");
   }
 };
 
@@ -301,7 +321,7 @@ export const updateScoringOption = async (
     return updated;
   } catch (error) {
     console.error(`Error updating option ${id}:`, error);
-    throw new Error('Failed to update option');
+    throw new Error("Failed to update option");
   }
 };
 
@@ -317,7 +337,7 @@ export const deleteScoringOption = async (id: string): Promise<void> => {
     clearScoringCache();
   } catch (error) {
     console.error(`Error deleting option ${id}:`, error);
-    throw new Error('Failed to delete option');
+    throw new Error("Failed to delete option");
   }
 };
 
@@ -334,13 +354,13 @@ export const getAllScoringGrilles = async (
   const cacheKey = `all_grilles_${activeOnly}`;
 
   if (isCacheValid() && scoringCache.data.has(cacheKey)) {
-    return scoringCache.data.get(cacheKey);
+    return scoringCache.data.get(cacheKey) as ScoringGrille[];
   }
 
   try {
     const grilles = await prisma.scoringGrille.findMany({
       where: activeOnly ? { isActive: true } : {},
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     scoringCache.data.set(cacheKey, grilles);
@@ -348,15 +368,17 @@ export const getAllScoringGrilles = async (
 
     return grilles;
   } catch (error) {
-    console.error('Error fetching scoring grilles:', error);
-    throw new Error('Failed to load scoring grilles');
+    console.error("Error fetching scoring grilles:", error);
+    throw new Error("Failed to load scoring grilles");
   }
 };
 
 /**
  * Get specific grille
  */
-export const getScoringGrille = async (id: string): Promise<ScoringGrille | null> => {
+export const getScoringGrille = async (
+  id: string
+): Promise<ScoringGrille | null> => {
   try {
     return await prisma.scoringGrille.findUnique({
       where: { id },
@@ -370,22 +392,23 @@ export const getScoringGrille = async (id: string): Promise<ScoringGrille | null
 /**
  * Get default grille
  */
-export const getDefaultScoringGrille = async (): Promise<ScoringGrille | null> => {
-  try {
-    return await prisma.scoringGrille.findFirst({
-      where: { isDefault: true, isActive: true },
-    });
-  } catch (error) {
-    console.error('Error fetching default grille:', error);
-    return null;
-  }
-};
+export const getDefaultScoringGrille =
+  async (): Promise<ScoringGrille | null> => {
+    try {
+      return await prisma.scoringGrille.findFirst({
+        where: { isDefault: true, isActive: true },
+      });
+    } catch (error) {
+      console.error("Error fetching default grille:", error);
+      return null;
+    }
+  };
 
 /**
  * Create new grille
  */
 export const createScoringGrille = async (
-  data: Omit<ScoringGrille, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<ScoringGrille, "id" | "createdAt" | "updatedAt">
 ): Promise<ScoringGrille> => {
   try {
     const grille = await prisma.scoringGrille.create({
@@ -398,8 +421,8 @@ export const createScoringGrille = async (
     clearScoringCache();
     return grille;
   } catch (error) {
-    console.error('Error creating grille:', error);
-    throw new Error('Failed to create grille');
+    console.error("Error creating grille:", error);
+    throw new Error("Failed to create grille");
   }
 };
 
@@ -423,19 +446,21 @@ export const updateScoringGrille = async (
     return updated;
   } catch (error) {
     console.error(`Error updating grille ${id}:`, error);
-    throw new Error('Failed to update grille');
+    throw new Error("Failed to update grille");
   }
 };
 
 /**
  * Publish grille (make active and set published date)
  */
-export const publishScoringGrille = async (id: string): Promise<ScoringGrille> => {
+export const publishScoringGrille = async (
+  id: string
+): Promise<ScoringGrille> => {
   try {
     const updated = await prisma.scoringGrille.update({
       where: { id },
       data: {
-        status: 'PUBLISHED',
+        status: "PUBLISHED",
         isActive: true,
         publishedAt: new Date(),
         updatedAt: new Date(),
@@ -446,7 +471,7 @@ export const publishScoringGrille = async (id: string): Promise<ScoringGrille> =
     return updated;
   } catch (error) {
     console.error(`Error publishing grille ${id}:`, error);
-    throw new Error('Failed to publish grille');
+    throw new Error("Failed to publish grille");
   }
 };
 
@@ -462,7 +487,7 @@ export const deleteScoringGrille = async (id: string): Promise<void> => {
     clearScoringCache();
   } catch (error) {
     console.error(`Error deleting grille ${id}:`, error);
-    throw new Error('Failed to delete grille');
+    throw new Error("Failed to delete grille");
   }
 };
 
@@ -476,7 +501,7 @@ export const calculateScore = async (
   try {
     const criterion = await getScoringCriterion(criterionId);
 
-    if (!criterion || criterion.scoreType !== 'NUMERIC') {
+    if (!criterion || criterion.scoreType !== "NUMERIC") {
       return null;
     }
 
@@ -487,7 +512,7 @@ export const calculateScore = async (
 
     return threshold?.score || null;
   } catch (error) {
-    console.error('Error calculating score:', error);
+    console.error("Error calculating score:", error);
     return null;
   }
 };
@@ -503,7 +528,7 @@ export const validateWeights = async (category: string): Promise<boolean> => {
     // Allow 0.01 tolerance for floating point errors
     return Math.abs(totalWeight - 1.0) < 0.01;
   } catch (error) {
-    console.error('Error validating weights:', error);
+    console.error("Error validating weights:", error);
     return false;
   }
 };
@@ -517,7 +542,7 @@ export const normalizeWeights = async (category: string): Promise<void> => {
     const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
 
     if (totalWeight === 0) {
-      throw new Error('Cannot normalize with zero total weight');
+      throw new Error("Cannot normalize with zero total weight");
     }
 
     for (const criterion of criteria) {
@@ -527,7 +552,7 @@ export const normalizeWeights = async (category: string): Promise<void> => {
       });
     }
   } catch (error) {
-    console.error('Error normalizing weights:', error);
-    throw new Error('Failed to normalize weights');
+    console.error("Error normalizing weights:", error);
+    throw new Error("Failed to normalize weights");
   }
 };

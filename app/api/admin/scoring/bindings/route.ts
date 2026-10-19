@@ -1,8 +1,15 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
-import { refusSiVersionFigee, verifierNoeudModifiable } from "@/lib/services/scoring/version-guard";
+import {
+  refusSiVersionFigee,
+  verifierNoeudModifiable,
+} from "@/lib/services/scoring/version-guard";
 
 export async function GET(req: NextRequest) {
   return withAdminAuth(req, async () => {
@@ -12,7 +19,9 @@ export async function GET(req: NextRequest) {
       const nodeId = searchParams.get("nodeId");
 
       if (!versionId) {
-        return validationError([{ field: "versionId", message: "Required query param" }]);
+        return validationError([
+          { field: "versionId", message: "Required query param" },
+        ]);
       }
 
       let nodeIds: string[] = [];
@@ -39,7 +48,7 @@ export async function GET(req: NextRequest) {
       });
 
       return successResponse(bindings, { count: bindings.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/BINDINGS] GET error:", error);
       return serverError("Erreur lors de la récupération des liaisons");
     }
@@ -66,7 +75,9 @@ export async function POST(req: NextRequest) {
         description,
       } = body;
 
-      const figeeNoeud = nodeId ? await refusSiVersionFigee(verifierNoeudModifiable(nodeId)) : null;
+      const figeeNoeud = nodeId
+        ? await refusSiVersionFigee(verifierNoeudModifiable(nodeId))
+        : null;
       if (figeeNoeud) return figeeNoeud;
       if (!versionId || !nodeId || !sourceEntity) {
         return validationError([
@@ -81,7 +92,9 @@ export async function POST(req: NextRequest) {
       });
 
       if (!node || node.versionId !== versionId) {
-        return validationError([{ field: "nodeId", message: "Nœud non trouvé dans cette version" }]);
+        return validationError([
+          { field: "nodeId", message: "Nœud non trouvé dans cette version" },
+        ]);
       }
 
       const binding = await prisma.scoringNodeDataBinding.create({
@@ -93,7 +106,9 @@ export async function POST(req: NextRequest) {
           bindingMode: bindingMode || "AUTO_EDITABLE",
           dataType: dataType || null,
           transformType: transformType || "NONE",
-          transformConfigJson: transformConfigJson ? JSON.stringify(transformConfigJson) : null,
+          transformConfigJson: transformConfigJson
+            ? JSON.stringify(transformConfigJson)
+            : null,
           defaultValue: defaultValue || null,
           fallbackValue: fallbackValue || null,
           fallbackMessage: null,
@@ -111,7 +126,7 @@ export async function POST(req: NextRequest) {
       });
 
       return successResponse(binding, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/BINDINGS] POST error:", error);
       return serverError("Erreur lors de la création de la liaison");
     }
@@ -125,10 +140,17 @@ export async function PUT(req: NextRequest) {
       const bindingId = searchParams.get("id");
 
       if (!bindingId) {
-        return validationError([{ field: "id", message: "Required query param" }]);
+        return validationError([
+          { field: "id", message: "Required query param" },
+        ]);
       }
-      const liaison = await prisma.scoringNodeDataBinding.findUnique({ where: { id: bindingId }, select: { nodeId: true } });
-      const figee = liaison ? await refusSiVersionFigee(verifierNoeudModifiable(liaison.nodeId)) : null;
+      const liaison = await prisma.scoringNodeDataBinding.findUnique({
+        where: { id: bindingId },
+        select: { nodeId: true },
+      });
+      const figee = liaison
+        ? await refusSiVersionFigee(verifierNoeudModifiable(liaison.nodeId))
+        : null;
       if (figee) return figee;
 
       const body = await req.json();
@@ -155,7 +177,9 @@ export async function PUT(req: NextRequest) {
           bindingMode,
           dataType,
           transformType,
-          transformConfigJson: transformConfigJson ? JSON.stringify(transformConfigJson) : null,
+          transformConfigJson: transformConfigJson
+            ? JSON.stringify(transformConfigJson)
+            : null,
           defaultValue,
           fallbackValue,
           priority,
@@ -167,7 +191,7 @@ export async function PUT(req: NextRequest) {
       });
 
       return successResponse(updated);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/BINDINGS] PUT error:", error);
       return serverError("Erreur lors de la mise à jour de la liaison");
     }
@@ -181,10 +205,17 @@ export async function DELETE(req: NextRequest) {
       const bindingId = searchParams.get("id");
 
       if (!bindingId) {
-        return validationError([{ field: "id", message: "Required query param" }]);
+        return validationError([
+          { field: "id", message: "Required query param" },
+        ]);
       }
-      const liaison = await prisma.scoringNodeDataBinding.findUnique({ where: { id: bindingId }, select: { nodeId: true } });
-      const figee = liaison ? await refusSiVersionFigee(verifierNoeudModifiable(liaison.nodeId)) : null;
+      const liaison = await prisma.scoringNodeDataBinding.findUnique({
+        where: { id: bindingId },
+        select: { nodeId: true },
+      });
+      const figee = liaison
+        ? await refusSiVersionFigee(verifierNoeudModifiable(liaison.nodeId))
+        : null;
       if (figee) return figee;
 
       await prisma.scoringNodeDataBinding.delete({
@@ -192,7 +223,7 @@ export async function DELETE(req: NextRequest) {
       });
 
       return successResponse({ message: "Liaison supprimée" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/BINDINGS] DELETE error:", error);
       return serverError("Erreur lors de la suppression de la liaison");
     }

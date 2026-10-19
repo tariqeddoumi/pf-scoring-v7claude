@@ -44,7 +44,7 @@ export function withAuth(handler: GestionnaireRoute) {
       const userRole = payload.role || payload.user_role || "read_only";
 
       return handler(req, context, userRole);
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
   };

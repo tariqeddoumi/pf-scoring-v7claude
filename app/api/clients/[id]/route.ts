@@ -14,12 +14,13 @@ import {
 } from "@/lib/clients/enregistrement";
 import { lireAttestation } from "@/lib/services/t24/attestation";
 import { messagePublic } from "@/lib/erreur-publique";
+import { codeErreur } from "@/lib/erreur-inconnue";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withAuth(request, async (req) => {
+  return withAuth(request, async () => {
     const { id } = await params;
     try {
       const client = await prisma.client.findUnique({
@@ -98,7 +99,7 @@ export async function GET(
         success: true,
         data: { ...client, groupeAffaires: groupe },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`[Client ${id} GET]`, error);
       return NextResponse.json(
         { success: false, error: messagePublic(error, "Erreur serveur") },
@@ -256,7 +257,7 @@ export async function PUT(
       });
 
       return NextResponse.json({ success: true, data: client });
-    } catch (error: any) {
+    } catch (error: unknown) {
       const conflit = messageConflit(error);
       if (conflit) {
         return NextResponse.json(
@@ -265,7 +266,7 @@ export async function PUT(
         );
       }
       // Client visible en consultation (banque mère) mais hors du périmètre d'écriture.
-      if (error?.code === "P2025") {
+      if (codeErreur(error) === "P2025") {
         return NextResponse.json(
           {
             success: false,
@@ -301,11 +302,15 @@ export async function DELETE(
     try {
       await prisma.client.delete({ where: { id } });
       return NextResponse.json({ success: true, message: "Client supprimé" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Client absent, ou visible en consultation seule depuis cette banque.
-      if (error?.code === "P2025") {
+      if (codeErreur(error) === "P2025") {
         return NextResponse.json(
-          { success: false, error: "Client introuvable ou en consultation seule depuis votre banque." },
+          {
+            success: false,
+            error:
+              "Client introuvable ou en consultation seule depuis votre banque.",
+          },
           { status: 404 }
         );
       }

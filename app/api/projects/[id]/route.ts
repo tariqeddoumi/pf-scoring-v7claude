@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, hasMinimumRole, type AuthPayload } from "@/lib/auth-middleware";
+import {
+  withAuth,
+  hasMinimumRole,
+  type AuthPayload,
+} from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
-import { ProjectService, messageConflitProjet } from "@/lib/services/project-service";
+import {
+  ProjectService,
+  messageConflitProjet,
+} from "@/lib/services/project-service";
 import { messagePublic } from "@/lib/erreur-publique";
 
 interface RouteParams {
@@ -12,9 +19,13 @@ interface RouteParams {
 /**
  * GET /api/projects/[id] - Get project by ID
  */
-async function handleGET(request: NextRequest, user: AuthPayload, params: { id: string }) {
+async function handleGET(
+  request: NextRequest,
+  user: AuthPayload,
+  params: { id: string }
+) {
   try {
-    const project = await ProjectService.getProjectById(params.id, user.userId);
+    const project = await ProjectService.getProjectById(params.id);
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -30,7 +41,11 @@ async function handleGET(request: NextRequest, user: AuthPayload, params: { id: 
 /**
  * PUT /api/projects/[id] - Update project (owner or admin)
  */
-async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: string }) {
+async function handlePUT(
+  request: NextRequest,
+  user: AuthPayload,
+  params: { id: string }
+) {
   try {
     const project = await ProjectService.getProjectById(params.id);
 
@@ -74,7 +89,11 @@ async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: 
 /**
  * DELETE /api/projects/[id] - Delete project (owner or admin)
  */
-async function handleDELETE(request: NextRequest, user: AuthPayload, params: { id: string }) {
+async function handleDELETE(
+  request: NextRequest,
+  user: AuthPayload,
+  params: { id: string }
+) {
   try {
     const project = await ProjectService.getProjectById(params.id);
 

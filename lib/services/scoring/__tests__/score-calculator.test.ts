@@ -83,10 +83,13 @@ describe("ScoreCalculator", () => {
   });
 
   test("scoreFromFormula evaluates math expression", () => {
-    const result = ScoreCalculator.scoreFromFormula("(revenue / expenses) * 100", {
-      revenue: 1000,
-      expenses: 800,
-    });
+    const result = ScoreCalculator.scoreFromFormula(
+      "(revenue / expenses) * 100",
+      {
+        revenue: 1000,
+        expenses: 800,
+      }
+    );
 
     expect(result.rawScore).toBe(125);
   });
@@ -127,7 +130,7 @@ describe("AggregationEngine", () => {
       { nodeId: "c2", rawScore: 20, weight: 1 },
     ];
 
-    const result = AggregationEngine.aggregate("SUM", children as any);
+    const result = AggregationEngine.aggregate("SUM", children);
     expect(result).toBe(30);
   });
 
@@ -137,7 +140,7 @@ describe("AggregationEngine", () => {
       { nodeId: "c2", rawScore: 20, weight: 1 },
     ];
 
-    const result = AggregationEngine.aggregate("WEIGHTED_SUM", children as any);
+    const result = AggregationEngine.aggregate("WEIGHTED_SUM", children);
     expect(result).toBe(10 * 2 + 20 * 1); // 40
   });
 
@@ -147,7 +150,7 @@ describe("AggregationEngine", () => {
       { nodeId: "c2", rawScore: 20, weight: 1 },
     ];
 
-    const result = AggregationEngine.aggregate("AVERAGE", children as any);
+    const result = AggregationEngine.aggregate("AVERAGE", children);
     expect(result).toBe(15);
   });
 
@@ -157,7 +160,7 @@ describe("AggregationEngine", () => {
       { nodeId: "c2", rawScore: 20, weight: 1 },
     ];
 
-    const result = AggregationEngine.aggregate("WEIGHTED_AVERAGE", children as any);
+    const result = AggregationEngine.aggregate("WEIGHTED_AVERAGE", children);
     expect(result).toBeCloseTo((10 * 2 + 20 * 1) / (2 + 1)); // 13.33
   });
 
@@ -167,7 +170,7 @@ describe("AggregationEngine", () => {
       { nodeId: "c2", rawScore: 99, weight: 5 },
     ];
 
-    expect(AggregationEngine.aggregate("FIRST", children as any)).toBe(42);
+    expect(AggregationEngine.aggregate("FIRST", children)).toBe(42);
   });
 
   test("aggregate refuse une méthode inconnue au lieu de renvoyer 0", () => {
@@ -175,7 +178,7 @@ describe("AggregationEngine", () => {
 
     // Un zéro silencieux passerait pour un score légitime : la faute de paramétrage
     // doit remonter, pas se transformer en note nulle.
-    expect(() => AggregationEngine.aggregate("MOYENNE", children as any)).toThrow(
+    expect(() => AggregationEngine.aggregate("MOYENNE", children)).toThrow(
       /Méthode d'agrégation inconnue/
     );
   });
@@ -187,7 +190,9 @@ describe("AggregationEngine", () => {
     ];
 
     for (const methode of AggregationEngine.METHODES_SUPPORTEES) {
-      expect(() => AggregationEngine.aggregate(methode, children as any)).not.toThrow();
+      expect(() =>
+        AggregationEngine.aggregate(methode, children)
+      ).not.toThrow();
     }
   });
 

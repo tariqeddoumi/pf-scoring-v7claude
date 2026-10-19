@@ -11,8 +11,15 @@ import {
   RatingSource,
   resolveRatingFromBands,
 } from "./rating-scale";
-import { buildConditionContext, buildCriteresContext } from "./condition-context";
-import { actionRegle, bloquePublication, estBloquante } from "./rule-vocabulary";
+import {
+  buildConditionContext,
+  buildCriteresContext,
+} from "./condition-context";
+import {
+  actionRegle,
+  bloquePublication,
+  estBloquante,
+} from "./rule-vocabulary";
 import { getRatingScales } from "@/lib/services/scoring-configuration-service";
 import { choisirValeur, type OrigineValeur } from "./value-selection";
 import {
@@ -73,7 +80,11 @@ export interface SectorialTrace {
     penalty: number | null;
     effet: "INFORMATION";
   }>;
-  stressTests: Array<{ code: string; description: string; effet: "INFORMATION" }>;
+  stressTests: Array<{
+    code: string;
+    description: string;
+    effet: "INFORMATION";
+  }>;
 }
 
 export interface EvaluationTrace {
@@ -150,19 +161,29 @@ export class ScoringEngineV8 {
     const derogationsApprouvees = await prisma.scoringOverride.findMany({
       where: { evaluationId, status: "APPROVED" },
     });
-    const derogationParNode = new Map(derogationsApprouvees.map((o) => [o.nodeId, o]));
+    const derogationParNode = new Map(
+      derogationsApprouvees.map((o) => [o.nodeId, o])
+    );
     const derogations: Derogation[] = [];
     const donneesObligatoiresManquantes: string[] = [];
     const reglesCritiquesNonEvaluees: string[] = [];
     const valeursParDefaut: string[] = [];
     // Instantané des entrées réellement utilisées : critère, valeur, origine.
-    const entrees: Array<{ code: string; valeur: unknown; origine: OrigineValeur }> = [];
+    const entrees: Array<{
+      code: string;
+      valeur: unknown;
+      origine: OrigineValeur;
+    }> = [];
     // Valeur retenue par critère, la même pour le calcul et pour les conditions des
     // règles : sinon une règle lisait la ligne de réponse brute pendant que le score
     // utilisait la donnée automatique.
     const valeursRetenues = new Map<
       string,
-      { valueString: string | null; valueNumber: number | null; valueBoolean: boolean | null }
+      {
+        valueString: string | null;
+        valueNumber: number | null;
+        valueBoolean: boolean | null;
+      }
     >();
 
     // FIX 1: Load options and ranges for ALL nodes upfront
@@ -232,7 +253,12 @@ export class ScoringEngineV8 {
       if (origine !== "AUCUNE") {
         const v = choix.valeur;
         valeursRetenues.set(node.id, {
-          valueString: typeof v === "string" ? v : v instanceof Date ? v.toISOString() : null,
+          valueString:
+            typeof v === "string"
+              ? v
+              : v instanceof Date
+                ? v.toISOString()
+                : null,
           valueNumber: typeof v === "number" ? v : null,
           valueBoolean: typeof v === "boolean" ? v : null,
         });
@@ -246,7 +272,9 @@ export class ScoringEngineV8 {
       // aggregator (combine children). Per-domain granularity overrides the
       // default isScored-based behaviour when configured.
       const rootCode = rootCodeByNode.get(node.id);
-      const configuredLevel = rootCode ? domainGranularity[rootCode] : undefined;
+      const configuredLevel = rootCode
+        ? domainGranularity[rootCode]
+        : undefined;
       let treatAsLeaf: boolean;
       let treatAsAggregator: boolean;
       if (configuredLevel) {
@@ -276,7 +304,11 @@ export class ScoringEngineV8 {
 
         const scoreOut = ScoreCalculator.score(
           {
-            answer: valueSnapshot.resolvedValue as string | number | boolean | null,
+            answer: valueSnapshot.resolvedValue as
+              | string
+              | number
+              | boolean
+              | null,
             options: options.length > 0 ? options : undefined,
             ranges: ranges.length > 0 ? ranges : undefined,
           },
@@ -299,14 +331,25 @@ export class ScoringEngineV8 {
       }
 
       if (treatAsLeaf) {
-        entrees.push({ code: node.code, valeur: choix.valeur ?? null, origine });
+        entrees.push({
+          code: node.code,
+          valeur: choix.valeur ?? null,
+          origine,
+        });
         // Une donnée obligatoire absente n'est ni un zéro « normal » ni une non-
         // applicabilité : la note devient provisoire et la décision est bloquée.
-        if (node.isMandatory && (origine === "AUCUNE" || origine === "DEFAUT")) {
+        if (
+          node.isMandatory &&
+          (origine === "AUCUNE" || origine === "DEFAUT")
+        ) {
           donneesObligatoiresManquantes.push(node.code);
         }
         const derogation = derogationParNode.get(node.id);
-        if (derogation && derogation.overriddenScore !== null && derogation.overriddenScore !== undefined) {
+        if (
+          derogation &&
+          derogation.overriddenScore !== null &&
+          derogation.overriddenScore !== undefined
+        ) {
           const retenu = Math.max(0, Math.min(100, derogation.overriddenScore));
           derogations.push({
             overrideId: derogation.id,
@@ -321,11 +364,13 @@ export class ScoringEngineV8 {
         }
       } else if (treatAsAggregator) {
         const childIds = tree.childrenOf.get(node.id) || [];
-        const children = childIds.map((id) => nodeScores.get(id)).filter(Boolean) as NodeResult[];
+        const children = childIds
+          .map((id) => nodeScores.get(id))
+          .filter(Boolean) as NodeResult[];
         try {
           rawScore = AggregationEngine.aggregate(
             node.aggregationMethod ?? undefined,
-            children as any
+            children
           );
         } catch (e) {
           throw new Error(
@@ -399,7 +444,10 @@ export class ScoringEngineV8 {
       });
 
       for (const rule of rules) {
-        const verdict = evaluateCondition(rule.conditionExpression, conditionCtx);
+        const verdict = evaluateCondition(
+          rule.conditionExpression,
+          conditionCtx
+        );
 
         if (!verdict.evaluated) {
           // Une règle bloquante non évaluable ne cesse pas de protéger la décision.
@@ -455,7 +503,9 @@ export class ScoringEngineV8 {
     const sectorialOn = await isSectorialEnabled();
     let sectorWeighting: SectorWeighting | null = null;
     if (sectorialOn) {
-      sectorWeighting = await resolveSectorWeighting(evaluation.project?.secteur);
+      sectorWeighting = await resolveSectorWeighting(
+        evaluation.project?.secteur
+      );
     }
     // Calibrage sectoriel actif mais aucun profil pour le secteur du projet : la note
     // n'est pas finalisable (pondération de base appliquée sans le dire auparavant).
@@ -465,10 +515,14 @@ export class ScoringEngineV8 {
 
     // FIX 3: finalScore = weighted average across ALL domains.
     // Sectorial factors multiply each domain's base weight (no effect when null/1).
-    const baseTotalWeight = rootResults.reduce((s, r) => s + (r.weight ?? 0), 0);
+    const baseTotalWeight = rootResults.reduce(
+      (s, r) => s + (r.weight ?? 0),
+      0
+    );
     const baseRawFinal =
       baseTotalWeight > 0
-        ? rootResults.reduce((s, r) => s + r.rawScore * (r.weight ?? 0), 0) / baseTotalWeight
+        ? rootResults.reduce((s, r) => s + r.rawScore * (r.weight ?? 0), 0) /
+          baseTotalWeight
         : rootResults.reduce((s, r) => s + r.weightedScore, 0);
 
     const adjTotalWeight = rootResults.reduce(
@@ -484,7 +538,10 @@ export class ScoringEngineV8 {
         : baseRawFinal;
 
     const rawFinalScore = sectorWeighting ? adjRawFinal : baseRawFinal;
-    const finalScoreAdjusted = Math.max(0, Math.min(100, rawFinalScore - malusTotal));
+    const finalScoreAdjusted = Math.max(
+      0,
+      Math.min(100, rawFinalScore - malusTotal)
+    );
     const ratingResolution = await this.resolveRating(finalScoreAdjusted);
 
     let sectorial: SectorialTrace | undefined;
@@ -509,7 +566,11 @@ export class ScoringEngineV8 {
     // empreinte différente explique un écart (paramètre modifié, donnée source changée).
     let bareme: unknown = null;
     try {
-      bareme = (await getRatingScales()).map((b) => ({ label: b.label, min: b.minScore, max: b.maxScore }));
+      bareme = (await getRatingScales()).map((b) => ({
+        label: b.label,
+        min: b.minScore,
+        max: b.maxScore,
+      }));
     } catch {
       bareme = "illisible";
     }
@@ -521,7 +582,8 @@ export class ScoringEngineV8 {
       bareme,
     };
     const { createHash } = await import("crypto");
-    const empreinte = (v: unknown) => createHash("sha256").update(JSON.stringify(v)).digest("hex");
+    const empreinte = (v: unknown) =>
+      createHash("sha256").update(JSON.stringify(v)).digest("hex");
     const reproductibilite = {
       calculeLe: new Date().toISOString(),
       parametres,
@@ -668,7 +730,8 @@ export class ScoringEngineV8 {
   private static async avisIndicatif(rating: string): Promise<string> {
     try {
       const echelle = (await getRatingScales()).find((s) => s.label === rating);
-      if (echelle?.description) return `Grade ${rating} — ${echelle.description}`;
+      if (echelle?.description)
+        return `Grade ${rating} — ${echelle.description}`;
     } catch {
       // barème illisible : avis neutre ci-dessous
     }
@@ -681,11 +744,22 @@ export class ScoringEngineV8 {
    * laissait un score récent avec des détails anciens. Chaque calcul est en outre
    * journalisé (score, note, empreinte de la trace) : l'historique n'est plus écrasé.
    */
-  static async persistTrace(trace: EvaluationTrace, auteur: string | null = null): Promise<void> {
-    const results: Array<{ evaluationId: string; nodeId: string; data: NodeResult }> = [];
+  static async persistTrace(
+    trace: EvaluationTrace,
+    auteur: string | null = null
+  ): Promise<void> {
+    const results: Array<{
+      evaluationId: string;
+      nodeId: string;
+      data: NodeResult;
+    }> = [];
     const collectResults = (nodes: NodeResult[]) => {
       for (const node of nodes) {
-        results.push({ evaluationId: trace.evaluationId, nodeId: node.nodeId, data: node });
+        results.push({
+          evaluationId: trace.evaluationId,
+          nodeId: node.nodeId,
+          data: node,
+        });
         if (node.childResults) collectResults(node.childResults);
       }
     };
@@ -702,7 +776,9 @@ export class ScoringEngineV8 {
     } catch {
       // trace non JSON : empreinte sur le texte brut
     }
-    const empreinte = createHash("sha256").update(String(traceSansDate)).digest("hex");
+    const empreinte = createHash("sha256")
+      .update(String(traceSansDate))
+      .digest("hex");
 
     await prisma.$transaction([
       prisma.scoringEvaluation.update({

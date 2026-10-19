@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma-client";
+import type { Prisma } from "@prisma/client";
 
 export class ScoringVersionService {
   /**
@@ -98,7 +99,7 @@ export class ScoringVersionService {
       );
     }
 
-    const updateData: any = {
+    const updateData: Prisma.ScoringModelVersionUncheckedUpdateInput = {
       status: targetStatus,
       updatedAt: new Date(),
     };

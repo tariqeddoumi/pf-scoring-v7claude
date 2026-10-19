@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, errorResponse, validationError } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  errorResponse,
+  validationError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 import {
   verifierNoeudModifiable,
@@ -39,18 +44,31 @@ export async function POST(req: NextRequest) {
       }
 
       // Vérifier que le nœud existe
-      const criterion = await prisma.scoringNode.findUnique({ where: { id: nodeId } });
+      const criterion = await prisma.scoringNode.findUnique({
+        where: { id: nodeId },
+      });
 
       if (!criterion) {
-        return errorResponse("Critère introuvable", { status: 404, errorCode: "NOT_FOUND" });
+        return errorResponse("Critère introuvable", {
+          status: 404,
+          errorCode: "NOT_FOUND",
+        });
       }
 
       const verdict = await verifierNoeudModifiable(nodeId);
       if (!verdict.modifiable) return refusVersionFigee(verdict.message);
 
-      const LEAF_NODE_TYPES = ["CRITERION", "SUB_CRITERION", "SUB_SUB_CRITERION", "LEAF"];
+      const LEAF_NODE_TYPES = [
+        "CRITERION",
+        "SUB_CRITERION",
+        "SUB_SUB_CRITERION",
+        "LEAF",
+      ];
       if (!LEAF_NODE_TYPES.includes(criterion.nodeType)) {
-        return errorResponse("Les options ne peuvent être ajoutées qu'aux nœuds terminaux (critère, sous-critère, etc.)", { status: 400 });
+        return errorResponse(
+          "Les options ne peuvent être ajoutées qu'aux nœuds terminaux (critère, sous-critère, etc.)",
+          { status: 400 }
+        );
       }
 
       // Calculer le prochain orderIndex
@@ -65,7 +83,7 @@ export async function POST(req: NextRequest) {
       });
 
       return successResponse(option, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/OPTIONS] POST error:", error);
       return serverError("Erreur lors de la création de l'option");
     }
@@ -99,7 +117,7 @@ export async function PUT(req: NextRequest) {
       });
 
       return successResponse(option);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/OPTIONS] PUT error:", error);
       return serverError("Erreur lors de la mise à jour de l'option");
     }
@@ -126,7 +144,7 @@ export async function DELETE(req: NextRequest) {
       await prisma.scoringNodeOption.delete({ where: { id: optionId } });
 
       return successResponse({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/OPTIONS] DELETE error:", error);
       return serverError("Erreur lors de la suppression de l'option");
     }

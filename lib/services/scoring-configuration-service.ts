@@ -64,7 +64,7 @@ export interface RatingScale {
 }
 
 // Cache for configuration (in-memory, resets on restart)
-const configCache: Map<string, any> = new Map();
+const configCache: Map<string, unknown> = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const cacheTimes: Map<string, number> = new Map();
 
@@ -74,16 +74,16 @@ function isCacheValid(key: string): boolean {
   return Date.now() - cacheTime < CACHE_TTL;
 }
 
-function getCached(key: string) {
+function getCached<T>(key: string): T | null {
   if (isCacheValid(key)) {
-    return configCache.get(key);
+    return configCache.get(key) as T;
   }
   configCache.delete(key);
   cacheTimes.delete(key);
   return null;
 }
 
-function setCache(key: string, value: any) {
+function setCache(key: string, value: unknown) {
   configCache.set(key, value);
   cacheTimes.set(key, Date.now());
 }
@@ -92,7 +92,7 @@ function setCache(key: string, value: any) {
  * Get all answer types, sorted by displayOrder
  */
 export async function getAnswerTypes(): Promise<AnswerType[]> {
-  const cached = getCached("answerTypes");
+  const cached = getCached<AnswerType[]>("answerTypes");
   if (cached) return cached;
 
   const answerTypes = await prisma.$queryRaw<AnswerType[]>`
@@ -111,16 +111,18 @@ export async function getAnswerTypes(): Promise<AnswerType[]> {
 /**
  * Get a single answer type by ID
  */
-export async function getAnswerTypeById(id: string): Promise<AnswerType | null> {
+export async function getAnswerTypeById(
+  id: string
+): Promise<AnswerType | null> {
   const allTypes = await getAnswerTypes();
-  return allTypes.find(t => t.id === id) || null;
+  return allTypes.find((t) => t.id === id) || null;
 }
 
 /**
  * Get all aggregation methods, sorted by displayOrder
  */
 export async function getAggregationMethods(): Promise<AggregationMethod[]> {
-  const cached = getCached("aggregationMethods");
+  const cached = getCached<AggregationMethod[]>("aggregationMethods");
   if (cached) return cached;
 
   const methods = await prisma.$queryRaw<AggregationMethod[]>`
@@ -138,16 +140,18 @@ export async function getAggregationMethods(): Promise<AggregationMethod[]> {
 /**
  * Get a single aggregation method by ID
  */
-export async function getAggregationMethodById(id: string): Promise<AggregationMethod | null> {
+export async function getAggregationMethodById(
+  id: string
+): Promise<AggregationMethod | null> {
   const allMethods = await getAggregationMethods();
-  return allMethods.find(m => m.id === id) || null;
+  return allMethods.find((m) => m.id === id) || null;
 }
 
 /**
  * Get all weight modes, sorted by displayOrder
  */
 export async function getWeightModes(): Promise<WeightMode[]> {
-  const cached = getCached("weightModes");
+  const cached = getCached<WeightMode[]>("weightModes");
   if (cached) return cached;
 
   const modes = await prisma.$queryRaw<WeightMode[]>`
@@ -164,16 +168,18 @@ export async function getWeightModes(): Promise<WeightMode[]> {
 /**
  * Get a single weight mode by ID
  */
-export async function getWeightModeById(id: string): Promise<WeightMode | null> {
+export async function getWeightModeById(
+  id: string
+): Promise<WeightMode | null> {
   const allModes = await getWeightModes();
-  return allModes.find(m => m.id === id) || null;
+  return allModes.find((m) => m.id === id) || null;
 }
 
 /**
  * Get all score scales, sorted by displayOrder
  */
 export async function getScoreScales(): Promise<ScoreScale[]> {
-  const cached = getCached("scoreScales");
+  const cached = getCached<ScoreScale[]>("scoreScales");
   if (cached) return cached;
 
   const scales = await prisma.$queryRaw<ScoreScale[]>`
@@ -193,14 +199,14 @@ export async function getScoreScales(): Promise<ScoreScale[]> {
  */
 export async function getScaleById(id: string): Promise<ScoreScale | null> {
   const allScales = await getScoreScales();
-  return allScales.find(s => s.id === id) || null;
+  return allScales.find((s) => s.id === id) || null;
 }
 
 /**
  * Get all rating scales, sorted by displayOrder
  */
 export async function getRatingScales(): Promise<RatingScale[]> {
-  const cached = getCached("ratingScales");
+  const cached = getCached<RatingScale[]>("ratingScales");
   if (cached) return cached;
 
   const scales = await prisma.$queryRaw<RatingScale[]>`
@@ -218,13 +224,15 @@ export async function getRatingScales(): Promise<RatingScale[]> {
  * Get rating for a specific score
  * Returns the rating scale entry that matches the score range
  */
-export async function getRatingForScore(score: number): Promise<RatingScale | null> {
+export async function getRatingForScore(
+  score: number
+): Promise<RatingScale | null> {
   const allRatings = await getRatingScales();
 
   // Find the rating where minScore <= score <= maxScore
-  return allRatings.find(r =>
-    score >= r.minScore && score <= r.maxScore
-  ) || null;
+  return (
+    allRatings.find((r) => score >= r.minScore && score <= r.maxScore) || null
+  );
 }
 
 export interface RatingScaleInput {
@@ -259,7 +267,9 @@ export interface RatingScaleValidation {
  * en contient déjà (24,99 puis 25) et les refuser empêcherait toute correction — mais
  * ils sont remontés à l'administrateur.
  */
-export function validateRatingScales(scales: RatingScaleInput[]): RatingScaleValidation {
+export function validateRatingScales(
+  scales: RatingScaleInput[]
+): RatingScaleValidation {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -309,7 +319,9 @@ export function validateRatingScales(scales: RatingScaleInput[]): RatingScaleVal
 
   if (tries.length > 0) {
     if (tries[0].minScore > 0) {
-      warnings.push(`Le barème ne couvre pas les scores inférieurs à ${tries[0].minScore}.`);
+      warnings.push(
+        `Le barème ne couvre pas les scores inférieurs à ${tries[0].minScore}.`
+      );
     }
     const haut = tries[tries.length - 1].maxScore;
     if (haut < 100) {

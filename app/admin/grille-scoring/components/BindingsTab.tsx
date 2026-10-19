@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { apiGet, apiPost, apiDelete, messageErreurApi } from "@/lib/api-client";
 
@@ -27,24 +27,24 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
     bindingMode: "AUTO_EDITABLE",
   });
 
-  useEffect(() => {
-    loadBindings();
-  }, [nodeId, versionId]);
-
   // Les échecs passaient inaperçus : l'écran gardait l'ancien contenu et l'ajout ou
   // la suppression semblaient réussir.
   const [erreur, setErreur] = useState<string | null>(null);
 
-  const loadBindings = async () => {
+  const loadBindings = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await apiGet(`/api/admin/scoring/bindings?versionId=${versionId}&nodeId=${nodeId}`);
+      const res = await apiGet(
+        `/api/admin/scoring/bindings?versionId=${versionId}&nodeId=${nodeId}`
+      );
       if (res.ok) {
         const data = await res.json();
         setBindings(data.data || []);
         setErreur(null);
       } else {
-        setErreur(await messageErreurApi(res, "Lecture des liaisons impossible."));
+        setErreur(
+          await messageErreurApi(res, "Lecture des liaisons impossible.")
+        );
       }
     } catch (e) {
       console.error("Load bindings error:", e);
@@ -52,7 +52,11 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [nodeId, versionId]);
+
+  useEffect(() => {
+    loadBindings();
+  }, [loadBindings]);
 
   const handleAddBinding = async () => {
     if (!formData.sourceField) return;
@@ -67,7 +71,11 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
       if (res.ok) {
         const data = await res.json();
         setBindings([...bindings, data.data]);
-        setFormData({ sourceEntity: "PROJECT", sourceField: "", bindingMode: "AUTO_EDITABLE" });
+        setFormData({
+          sourceEntity: "PROJECT",
+          sourceField: "",
+          bindingMode: "AUTO_EDITABLE",
+        });
         setShowForm(false);
         setErreur(null);
       } else {
@@ -81,7 +89,9 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
 
   const handleDeleteBinding = async (bindingId: string) => {
     try {
-      const res = await apiDelete(`/api/admin/scoring/bindings?id=${bindingId}`);
+      const res = await apiDelete(
+        `/api/admin/scoring/bindings?id=${bindingId}`
+      );
       if (res.ok) {
         setBindings(bindings.filter((b) => b.id !== bindingId));
         setErreur(null);
@@ -106,20 +116,32 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
 
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {bindings.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Aucune liaison pour ce nœud</p>
+          <p className="text-muted-foreground text-sm">
+            Aucune liaison pour ce nœud
+          </p>
         ) : (
           bindings.map((binding) => (
-            <div key={binding.id} className="p-3 bg-card rounded border border-border">
+            <div
+              key={binding.id}
+              className="p-3 bg-card rounded border border-border"
+            >
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1">
-                  <p className="text-foreground font-medium">{binding.sourceEntity}</p>
-                  <p className="text-muted-foreground text-xs">{binding.sourceField}</p>
-                  <span className="text-xs bg-muted px-2 py-0.5 rounded inline-block mt-1">{binding.bindingMode}</span>
+                  <p className="text-foreground font-medium">
+                    {binding.sourceEntity}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {binding.sourceField}
+                  </p>
+                  <span className="text-xs bg-muted px-2 py-0.5 rounded inline-block mt-1">
+                    {binding.bindingMode}
+                  </span>
                 </div>
                 <button
                   onClick={() => handleDeleteBinding(binding.id)}
                   className="p-1 hover:bg-accent rounded text-destructive"
-                 aria-label="Supprimer">
+                  aria-label="Supprimer"
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -140,10 +162,14 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
 
       {showForm && (
         <div className="border-t border-border pt-4 space-y-3">
-          <h4 className="text-sm font-medium text-secondary-foreground">Nouvelle liaison</h4>
+          <h4 className="text-sm font-medium text-secondary-foreground">
+            Nouvelle liaison
+          </h4>
           <select
             value={formData.sourceEntity}
-            onChange={(e) => setFormData({ ...formData, sourceEntity: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, sourceEntity: e.target.value })
+            }
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           >
             <option>PROJECT</option>
@@ -154,7 +180,9 @@ export function BindingsTab({ nodeId, versionId }: BindingsTabProps) {
             type="text"
             placeholder="Champ source"
             value={formData.sourceField}
-            onChange={(e) => setFormData({ ...formData, sourceField: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, sourceField: e.target.value })
+            }
             className="w-full px-3 py-2 bg-card border border-input rounded text-foreground text-sm"
           />
           <div className="flex gap-2">

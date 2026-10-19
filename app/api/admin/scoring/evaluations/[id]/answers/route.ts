@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth-middleware';
-import { hasPermission } from '@/lib/services/permission-service';
-import type { UserRole } from '@/lib/permissions';
-import { ScoringEvaluationService } from '@/lib/services/scoring-evaluation-service';
-import { messagePublic } from '@/lib/erreur-publique';
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
+import { ScoringEvaluationService } from "@/lib/services/scoring-evaluation-service";
+import { messagePublic } from "@/lib/erreur-publique";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 /**
  * Handler for GET/POST /api/admin/scoring/evaluations/[id]/answers
@@ -11,32 +12,34 @@ import { messagePublic } from '@/lib/erreur-publique';
  */
 async function handleRequest(
   request: NextRequest,
-  user: any,
+  user: AuthPayload,
   params: { id: string }
 ) {
-  if (request.method === 'GET') {
+  if (request.method === "GET") {
     try {
-      const answers = await ScoringEvaluationService.getEvaluationAnswers(params.id);
+      const answers = await ScoringEvaluationService.getEvaluationAnswers(
+        params.id
+      );
 
       return NextResponse.json({
         success: true,
-        data: answers
+        data: answers,
       });
     } catch (error) {
-      console.error('[Answers GET]', error);
+      console.error("[Answers GET]", error);
       return NextResponse.json(
-        { error: 'Failed to fetch answers' },
+        { error: "Failed to fetch answers" },
         { status: 500 }
       );
     }
   }
 
-  if (request.method === 'POST') {
+  if (request.method === "POST") {
     // Même règle que la saisie principale : un compte en lecture seule ou un auditeur
     // ne renseigne pas les réponses d'une évaluation.
-    if (!hasPermission(user.role as UserRole, 'evaluation', 'update')) {
+    if (!hasPermission(user.role as UserRole, "evaluation", "update")) {
       return NextResponse.json(
-        { error: 'Vos droits ne permettent pas de saisir les réponses' },
+        { error: "Vos droits ne permettent pas de saisir les réponses" },
         { status: 403 }
       );
     }
@@ -48,11 +51,14 @@ async function handleRequest(
         valueNumber,
         valueBoolean,
         valueDate,
-        comment
+        comment,
       } = body;
-      if ('manualScore' in body) {
+      if ("manualScore" in body) {
         return NextResponse.json(
-          { error: 'Une note manuelle passe par une dérogation approuvée, pas par la saisie.' },
+          {
+            error:
+              "Une note manuelle passe par une dérogation approuvée, pas par la saisie.",
+          },
           { status: 400 }
         );
       }
@@ -60,8 +66,8 @@ async function handleRequest(
       if (!nodeId) {
         return NextResponse.json(
           {
-            error: 'Missing required fields',
-            errors: { nodeId: 'Node ID is required' }
+            error: "Missing required fields",
+            errors: { nodeId: "Node ID is required" },
           },
           { status: 400 }
         );
@@ -76,38 +82,38 @@ async function handleRequest(
         valueDate: valueDate ? new Date(valueDate) : undefined,
         // manualScore n'est plus accepté : une note manuelle passe par une dérogation
         comment,
-        recordedBy: user.userId
+        recordedBy: user.userId,
       });
 
       return NextResponse.json(
         {
           success: true,
-          data: answer
+          data: answer,
         },
         { status: 201 }
       );
-    } catch (error: any) {
-      console.error('[Answers POST]', error);
-      if (error.message.includes('not found')) {
+    } catch (error: unknown) {
+      console.error("[Answers POST]", error);
+      if (messageErreur(error)?.includes("not found")) {
         return NextResponse.json(
           { error: messagePublic(error, "Requête refusée") },
           { status: 404 }
         );
       }
-      if (error.message.includes('Can only')) {
+      if (messageErreur(error)?.includes("Can only")) {
         return NextResponse.json(
           { error: messagePublic(error, "Requête refusée") },
           { status: 400 }
         );
       }
       return NextResponse.json(
-        { error: 'Failed to record answer' },
+        { error: "Failed to record answer" },
         { status: 500 }
       );
     }
   }
 
-  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function GET(
@@ -115,9 +121,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return withAuth(request, (req, user) =>
-    handleRequest(req, user, { id })
-  );
+  return withAuth(request, (req, user) => handleRequest(req, user, { id }));
 }
 
 export async function POST(
@@ -125,7 +129,5 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return withAuth(request, (req, user) =>
-    handleRequest(req, user, { id })
-  );
+  return withAuth(request, (req, user) => handleRequest(req, user, { id }));
 }

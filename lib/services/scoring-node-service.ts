@@ -372,7 +372,7 @@ export class ScoringNodeService {
       data: {
         nodeId: data.nodeId,
         versionId: data.versionId,
-        ruleType: data.ruleType as any,
+        ruleType: data.ruleType,
         code: data.code,
         label: data.label,
         description: data.description,
@@ -400,7 +400,7 @@ export class ScoringNodeService {
       data: {
         nodeId: data.nodeId,
         conditionExpression: data.conditionExpression || "",
-        effectType: data.effectType as any,
+        effectType: data.effectType,
         isActive: true,
       },
     });
@@ -415,7 +415,7 @@ export class ScoringNodeService {
     action: string,
     nodeId: string,
     userId: string,
-    details: any
+    details: unknown
   ) {
     // Get the node to find the model and version
     const node = await prisma.scoringNode.findUnique({

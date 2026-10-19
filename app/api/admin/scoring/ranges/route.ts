@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+  errorResponse,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 import {
   verifierNoeudModifiable,
@@ -30,7 +35,12 @@ export async function POST(req: NextRequest) {
       const nodeId = body.nodeId || body.criterionId;
       const { minValue, maxValue, score, label } = body;
 
-      if (!nodeId || minValue === undefined || maxValue === undefined || score === undefined) {
+      if (
+        !nodeId ||
+        minValue === undefined ||
+        maxValue === undefined ||
+        score === undefined
+      ) {
         return validationError([
           { field: "nodeId", message: "Requis" },
           { field: "minValue", message: "Requis" },
@@ -41,23 +51,39 @@ export async function POST(req: NextRequest) {
 
       if (minValue > maxValue) {
         return validationError([
-          { field: "minValue", message: "Doit être inférieur ou égal à maxValue" },
+          {
+            field: "minValue",
+            message: "Doit être inférieur ou égal à maxValue",
+          },
         ]);
       }
 
       // Vérifier que le nœud existe
-      const criterion = await prisma.scoringNode.findUnique({ where: { id: nodeId } });
+      const criterion = await prisma.scoringNode.findUnique({
+        where: { id: nodeId },
+      });
 
       if (!criterion) {
-        return errorResponse("Critère introuvable", { status: 404, errorCode: "NOT_FOUND" });
+        return errorResponse("Critère introuvable", {
+          status: 404,
+          errorCode: "NOT_FOUND",
+        });
       }
 
       const verdict = await verifierNoeudModifiable(nodeId);
       if (!verdict.modifiable) return refusVersionFigee(verdict.message);
 
-      const LEAF_NODE_TYPES = ["CRITERION", "SUB_CRITERION", "SUB_SUB_CRITERION", "LEAF"];
+      const LEAF_NODE_TYPES = [
+        "CRITERION",
+        "SUB_CRITERION",
+        "SUB_SUB_CRITERION",
+        "LEAF",
+      ];
       if (!LEAF_NODE_TYPES.includes(criterion.nodeType)) {
-        return errorResponse("Les plages ne peuvent être ajoutées qu'aux nœuds terminaux (critère, sous-critère, etc.)", { status: 400 });
+        return errorResponse(
+          "Les plages ne peuvent être ajoutées qu'aux nœuds terminaux (critère, sous-critère, etc.)",
+          { status: 400 }
+        );
       }
 
       // Calculer le prochain orderIndex
@@ -68,11 +94,18 @@ export async function POST(req: NextRequest) {
       const orderIndex = (lastRange?.orderIndex ?? -1) + 1;
 
       const range = await prisma.scoringNodeRange.create({
-        data: { nodeId, minValue, maxValue, score, label: label || null, orderIndex },
+        data: {
+          nodeId,
+          minValue,
+          maxValue,
+          score,
+          label: label || null,
+          orderIndex,
+        },
       });
 
       return successResponse(range, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/RANGES] POST error:", error);
       return serverError("Erreur lors de la création de la plage");
     }
@@ -94,9 +127,16 @@ export async function PUT(req: NextRequest) {
         return validationError([{ field: "rangeId", message: "Requis" }]);
       }
 
-      if (body.minValue !== undefined && body.maxValue !== undefined && body.minValue > body.maxValue) {
+      if (
+        body.minValue !== undefined &&
+        body.maxValue !== undefined &&
+        body.minValue > body.maxValue
+      ) {
         return validationError([
-          { field: "minValue", message: "Doit être inférieur ou égal à maxValue" },
+          {
+            field: "minValue",
+            message: "Doit être inférieur ou égal à maxValue",
+          },
         ]);
       }
 
@@ -114,7 +154,7 @@ export async function PUT(req: NextRequest) {
       });
 
       return successResponse(range);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/RANGES] PUT error:", error);
       return serverError("Erreur lors de la mise à jour de la plage");
     }
@@ -141,7 +181,7 @@ export async function DELETE(req: NextRequest) {
       await prisma.scoringNodeRange.delete({ where: { id: rangeId } });
 
       return successResponse({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/SCORING/RANGES] DELETE error:", error);
       return serverError("Erreur lors de la suppression de la plage");
     }

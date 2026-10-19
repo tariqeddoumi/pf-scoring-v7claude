@@ -21,7 +21,7 @@ export async function GET(
       });
 
       return successResponse(criteria, { count: criteria.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/DOMAINS/[ID]/CRITERIA] GET error:", error);
       return serverError("Erreur lors de la récupération des critères");
     }

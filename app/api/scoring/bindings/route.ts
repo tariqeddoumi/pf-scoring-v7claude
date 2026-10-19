@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
-import { withAdminAuth, withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { withAdminAuth, withAuth } from "@/lib/auth-middleware";
 import { messagePublic } from "@/lib/erreur-publique";
 
 /**
@@ -8,10 +8,7 @@ import { messagePublic } from "@/lib/erreur-publique";
  * Create a new node data binding.
  * Links a scoring node to a source (CLIENT/PROJECT/etc) field with transform & mode.
  */
-async function handlePOST(
-  req: NextRequest,
-  user: AuthPayload
-) {
+async function handlePOST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
@@ -63,7 +60,9 @@ async function handlePOST(
         bindingMode: bindingMode || "AUTO_EDITABLE",
         dataType: dataType || null,
         transformType: transformType || "NONE",
-        transformConfigJson: transformConfigJson ? JSON.stringify(transformConfigJson) : null,
+        transformConfigJson: transformConfigJson
+          ? JSON.stringify(transformConfigJson)
+          : null,
         defaultValue: defaultValue || null,
         fallbackValue: fallbackValue || null,
         fallbackMessage: fallbackMessage || null,
@@ -97,10 +96,7 @@ async function handlePOST(
  * GET /api/scoring/bindings?nodeId=...
  * List bindings for a node, optionally filtered by source.
  */
-async function handleGET(
-  req: NextRequest,
-  user: AuthPayload
-) {
+async function handleGET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const nodeId = searchParams.get("nodeId");
@@ -108,7 +104,11 @@ async function handleGET(
 
     if (!nodeId) {
       return NextResponse.json(
-        { success: false, error: "nodeId required", errorCode: "VALIDATION_ERROR" },
+        {
+          success: false,
+          error: "nodeId required",
+          errorCode: "VALIDATION_ERROR",
+        },
         { status: 400 }
       );
     }
@@ -141,9 +141,9 @@ async function handleGET(
 
 export async function POST(req: NextRequest) {
   // Créer une liaison de la grille : réservé aux administrateurs.
-  return withAdminAuth(req, (r, user) => handlePOST(r, user));
+  return withAdminAuth(req, (r) => handlePOST(r));
 }
 
 export async function GET(req: NextRequest) {
-  return withAuth(req, (r, user) => handleGET(r, user));
+  return withAuth(req, (r) => handleGET(r));
 }

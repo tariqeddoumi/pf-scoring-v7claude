@@ -1,45 +1,44 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
 import {
-  getFieldConfig,
   updateFieldConfig,
   deleteFieldConfig,
   updateFormSection,
   deleteFormSection,
-} from '@/lib/services/field-config-service';
-import prisma from '@/lib/prisma';
-import { messagePublic } from '@/lib/erreur-publique';
+} from "@/lib/services/field-config-service";
+import prisma from "@/lib/prisma";
+import { messagePublic } from "@/lib/erreur-publique";
 
 async function handler(
   request: NextRequest,
-  user: any,
+  user: AuthPayload,
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
 
   // GET - Fetch specific field or section
-  if (request.method === 'GET') {
+  if (request.method === "GET") {
     try {
       // Try as field first
-      let result: any = await prisma.fieldConfiguration.findUnique({
+      const field = await prisma.fieldConfiguration.findUnique({
         where: { id },
       });
 
       // If not found, try as section
-      if (!result) {
-        result = await prisma.formSection.findUnique({
+      const result =
+        field ??
+        (await prisma.formSection.findUnique({
           where: { id },
           include: {
             fields: {
-              orderBy: { orderIndex: 'asc' },
+              orderBy: { orderIndex: "asc" },
             },
           },
-        });
-      }
+        }));
 
       if (!result) {
         return NextResponse.json(
-          { error: 'Field or section not found' },
+          { error: "Field or section not found" },
           { status: 404 }
         );
       }
@@ -48,20 +47,22 @@ async function handler(
         success: true,
         data: result,
       });
-    } catch (error: any) {
-      console.error('[Field Config GET by ID]', error);
+    } catch (error: unknown) {
+      console.error("[Field Config GET by ID]", error);
       return NextResponse.json(
-        { error: 'Failed to fetch field configuration' },
+        { error: "Failed to fetch field configuration" },
         { status: 500 }
       );
     }
   }
 
   // PUT - Update field or section
-  if (request.method === 'PUT') {
+  if (request.method === "PUT") {
     try {
       const body = await request.json();
-      const { type, ...updateData } = body;
+      // Le discriminant `type` n'est pas une colonne : il est retiré des données.
+      const updateData = { ...body };
+      delete updateData.type;
 
       // Determine if it's a field or section
       const field = await prisma.fieldConfiguration.findUnique({
@@ -74,7 +75,7 @@ async function handler(
 
       if (!field && !section) {
         return NextResponse.json(
-          { error: 'Field or section not found' },
+          { error: "Field or section not found" },
           { status: 404 }
         );
       }
@@ -93,17 +94,17 @@ async function handler(
         success: true,
         data: result,
       });
-    } catch (error: any) {
-      console.error('[Field Config PUT]', error);
+    } catch (error: unknown) {
+      console.error("[Field Config PUT]", error);
       return NextResponse.json(
-        { error: messagePublic(error, 'Failed to update field configuration') },
+        { error: messagePublic(error, "Failed to update field configuration") },
         { status: 500 }
       );
     }
   }
 
   // DELETE - Delete field or section
-  if (request.method === 'DELETE') {
+  if (request.method === "DELETE") {
     try {
       // Check if it's a field or section
       const field = await prisma.fieldConfiguration.findUnique({
@@ -116,7 +117,7 @@ async function handler(
 
       if (!field && !section) {
         return NextResponse.json(
-          { error: 'Field or section not found' },
+          { error: "Field or section not found" },
           { status: 404 }
         );
       }
@@ -129,18 +130,18 @@ async function handler(
 
       return NextResponse.json({
         success: true,
-        message: 'Field or section deleted successfully',
+        message: "Field or section deleted successfully",
       });
-    } catch (error: any) {
-      console.error('[Field Config DELETE]', error);
+    } catch (error: unknown) {
+      console.error("[Field Config DELETE]", error);
       return NextResponse.json(
-        { error: messagePublic(error, 'Failed to delete field configuration') },
+        { error: messagePublic(error, "Failed to delete field configuration") },
         { status: 500 }
       );
     }
   }
 
-  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
 
 export async function GET(

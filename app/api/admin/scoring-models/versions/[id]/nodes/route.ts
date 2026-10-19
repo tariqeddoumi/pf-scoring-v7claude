@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 
 /**
@@ -46,8 +50,11 @@ export async function GET(
       );
 
       // Build tree structure
-      const tree: any[] = [];
-      const byId = new Map<string, any>(
+      type NoeudArbre = (typeof nodesWithCounts)[number] & {
+        children: NoeudArbre[];
+      };
+      const tree: NoeudArbre[] = [];
+      const byId = new Map<string, NoeudArbre>(
         nodesWithCounts.map((n) => [n.id, { ...n, children: [] }])
       );
 
@@ -58,14 +65,17 @@ export async function GET(
         } else {
           const parent = byId.get(node.parentNodeId);
           if (parent && nodeEntry) {
-            (parent.children as any[]).push(nodeEntry);
+            parent.children.push(nodeEntry);
           }
         }
       }
 
       return successResponse(tree, { count: tree.length });
-    } catch (error: any) {
-      console.error("[ADMIN/SCORING-MODELS/VERSIONS/[ID]/NODES] GET error:", error);
+    } catch (error: unknown) {
+      console.error(
+        "[ADMIN/SCORING-MODELS/VERSIONS/[ID]/NODES] GET error:",
+        error
+      );
       return serverError("Erreur lors de la récupération des nœuds");
     }
   });
@@ -133,8 +143,11 @@ export async function POST(
       });
 
       return successResponse(node, { status: 201 });
-    } catch (error: any) {
-      console.error("[ADMIN/SCORING-MODELS/VERSIONS/[ID]/NODES] POST error:", error);
+    } catch (error: unknown) {
+      console.error(
+        "[ADMIN/SCORING-MODELS/VERSIONS/[ID]/NODES] POST error:",
+        error
+      );
       return serverError("Erreur lors de la création du nœud");
     }
   });

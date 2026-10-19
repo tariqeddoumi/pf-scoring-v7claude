@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
-import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { withAuth } from "@/lib/auth-middleware";
 import { messagePublic } from "@/lib/erreur-publique";
 
 /**
@@ -10,8 +10,7 @@ import { messagePublic } from "@/lib/erreur-publique";
  */
 async function handleGET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-  user: AuthPayload
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -24,7 +23,11 @@ async function handleGET(
 
     if (!evaluation) {
       return NextResponse.json(
-        { success: false, error: "Evaluation not found", errorCode: "NOT_FOUND" },
+        {
+          success: false,
+          error: "Evaluation not found",
+          errorCode: "NOT_FOUND",
+        },
         { status: 404 }
       );
     }
@@ -90,5 +93,5 @@ export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  return withAuth(req, (r, user) => handleGET(r, ctx, user));
+  return withAuth(req, (r) => handleGET(r, ctx));
 }

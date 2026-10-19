@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, hasMinimumRole } from "@/lib/auth-middleware";
-import { ProjectService, messageConflitProjet } from "@/lib/services/project-service";
+import { ZodError } from "zod";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import {
+  ProjectService,
+  messageConflitProjet,
+} from "@/lib/services/project-service";
 import { lirePagination } from "@/lib/validation-schemas";
 import { messagePublic } from "@/lib/erreur-publique";
+import { codeErreur, messageErreur } from "@/lib/erreur-inconnue";
 
 /**
  * GET /api/projects - List all projects (paginated)
  */
-async function handleGET(request: NextRequest, user: any) {
+async function handleGET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     // Une limite hors bornes se borne au lieu de faire échouer la requête : la
@@ -16,17 +21,12 @@ async function handleGET(request: NextRequest, user: any) {
     const status = searchParams.get("status");
     const secteur = searchParams.get("secteur");
 
-
     const filters = {
       ...(status && { status }),
       ...(secteur && { secteur }),
     };
 
-    const result = await ProjectService.getAllProjects(
-      page,
-      limit,
-      filters
-    );
+    const result = await ProjectService.getAllProjects(page, limit, filters);
 
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
@@ -45,11 +45,18 @@ async function handleGET(request: NextRequest, user: any) {
 /**
  * POST /api/projects - Create new project (analyst+)
  */
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: AuthPayload) {
   try {
     // Hiérarchie complète : read_only < auditor < risk_analyst < committee_member
     //                       < risk_manager < scoring_admin < system_admin
-    if (!["system_admin","scoring_admin","risk_manager","risk_analyst"].includes(user.role)) {
+    if (
+      ![
+        "system_admin",
+        "scoring_admin",
+        "risk_manager",
+        "risk_analyst",
+      ].includes(user.role)
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -78,15 +85,18 @@ async function handlePOST(request: NextRequest, user: any) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[PROJECTS] POST error:", error);
-    console.error("[PROJECTS] Error stack:", error.stack);
+    console.error(
+      "[PROJECTS] Error stack:",
+      error instanceof Error ? error.stack : undefined
+    );
 
     // Handle Zod validation errors
-    if (error.name === "ZodError") {
+    if (error instanceof ZodError) {
       const errors = error.flatten().fieldErrors;
       const formattedErrors = Object.entries(errors).map(
-        ([field, messages]: [string, any]) => ({
+        ([field, messages]) => ({
           field,
           message: Array.isArray(messages) ? messages[0] : messages,
         })
@@ -106,37 +116,41 @@ async function handlePOST(request: NextRequest, user: any) {
     }
 
     // Handle Prisma errors
-    if (error.code === "P2002") {
+    if (codeErreur(error) === "P2002") {
       return NextResponse.json(
         {
           success: false,
-          error: messageConflitProjet(error) ?? "Un projet portant ces identifiants existe déjà",
+          error:
+            messageConflitProjet(error) ??
+            "Un projet portant ces identifiants existe déjà",
           errorCode: "ERR_DUPLICATE",
         },
         { status: 409 }
       );
     }
 
-    if (error.code === "P2025") {
+    if (codeErreur(error) === "P2025") {
       return NextResponse.json(
         {
           success: false,
           error: "Client non trouvé",
           errorCode: "ERR_NOT_FOUND",
-          details: error.message,
+          details: messageErreur(error),
         },
         { status: 400 }
       );
     }
 
-    if (error.code === "P1001") {
+    if (codeErreur(error) === "P1001") {
       return NextResponse.json(
         {
           success: false,
           error: "Impossible de se connecter à la base de données",
           errorCode: "ERR_DB_CONNECTION",
           details:
-            process.env.NODE_ENV === "development" ? error.message : undefined,
+            process.env.NODE_ENV === "development"
+              ? messageErreur(error)
+              : undefined,
         },
         { status: 500 }
       );
@@ -149,7 +163,9 @@ async function handlePOST(request: NextRequest, user: any) {
         error: messagePublic(error, "Erreur lors de la création du projet"),
         errorCode: "ERR_API_001",
         debugInfo:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+          process.env.NODE_ENV === "development"
+            ? messageErreur(error)
+            : undefined,
       },
       { status: 500 }
     );
@@ -157,7 +173,7 @@ async function handlePOST(request: NextRequest, user: any) {
 }
 
 export async function GET(request: NextRequest) {
-  return withAuth(request, (req, user) => handleGET(req, user));
+  return withAuth(request, (req) => handleGET(req));
 }
 
 export async function POST(request: NextRequest) {

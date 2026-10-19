@@ -1,4 +1,8 @@
-import { BindingResolver, type BindingRow } from "../binding-resolver";
+import {
+  BindingResolver,
+  type BindingRow,
+  type SourceEntity,
+} from "../binding-resolver";
 
 describe("BindingResolver", () => {
   const mockBinding: BindingRow = {
@@ -18,7 +22,7 @@ describe("BindingResolver", () => {
     priority: 100,
   };
 
-  const mockPayloads = {
+  const mockPayloads: Record<SourceEntity, unknown> = {
     CLIENT: { nom: "ACME Corp", email: "info@acme.com" },
     PROJECT: { nom: "Solar Farm A", montant: 1000000 },
     EVALUATION: null,
@@ -26,7 +30,7 @@ describe("BindingResolver", () => {
     CALCULATED: null,
     EXTERNAL_REFERENCE: null,
     MANUAL: null,
-  } as any;
+  };
 
   test("resolveOne reads from source via sourcePath", () => {
     const result = BindingResolver.resolveOne(mockBinding, mockPayloads);
@@ -38,7 +42,11 @@ describe("BindingResolver", () => {
   });
 
   test("resolveOne uses fallbackValue when not available", () => {
-    const binding = { ...mockBinding, sourcePath: "missing.field", fallbackValue: "Default Name" };
+    const binding = {
+      ...mockBinding,
+      sourcePath: "missing.field",
+      fallbackValue: "Default Name",
+    };
     const result = BindingResolver.resolveOne(binding, mockPayloads);
 
     expect(result.isAvailable).toBe(false);
@@ -48,7 +56,11 @@ describe("BindingResolver", () => {
   });
 
   test("resolveOne rend indisponible une transformation non exécutée", () => {
-    const binding = { ...mockBinding, transformType: "FORMULA", fallbackValue: "1.4" };
+    const binding = {
+      ...mockBinding,
+      transformType: "FORMULA",
+      fallbackValue: "1.4",
+    };
     const result = BindingResolver.resolveOne(binding, mockPayloads);
     expect(result.isAvailable).toBe(false);
     expect(result.valueOrigin).toBe("NONE");

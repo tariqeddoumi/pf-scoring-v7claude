@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, errorResponse } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  errorResponse,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +17,7 @@ export async function GET(request: NextRequest) {
       const mode = config?.value ?? "AUTO_ASSIGN";
 
       return successResponse({ mode });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/CONFIG/COUNTRY_RISK_MODE] GET error:", error);
       return serverError("Erreur lors de la récupération de la configuration");
     }
@@ -40,7 +44,7 @@ export async function PATCH(request: NextRequest) {
       });
 
       return successResponse({ mode });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[ADMIN/CONFIG/COUNTRY_RISK_MODE] PATCH error:", error);
       return serverError("Erreur lors de la mise à jour");
     }

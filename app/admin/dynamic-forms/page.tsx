@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
-import { apiGet, apiPost, apiPut } from '@/lib/api-client';
+import { useState, useEffect } from "react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { apiGet, apiPost, apiPut } from "@/lib/api-client";
 import { PageHeader } from "@/components/ui/page-header";
 
 export default function DynamicFormsAdmin() {
   const [loading, setLoading] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [checkingStatus, setCheckingStatus] = useState(true);
 
   useEffect(() => {
@@ -19,17 +22,20 @@ export default function DynamicFormsAdmin() {
   const checkStatus = async () => {
     try {
       setCheckingStatus(true);
-      const config = (await apiGet('/api/config/public').then((res) =>
+      const config = (await apiGet("/api/config/public").then((res) =>
         res.ok ? res.json() : {}
-      )) as Record<string, any>;
-      setEnabled(config?.SCREENS_DYNAMIC_FORMS_ENABLED === 'true' || config?.SCREENS_DYNAMIC_FORMS_ENABLED === '1');
-
-      const projectConfig = await apiGet('/api/forms/configuration/project').then((res) =>
-        res.ok ? res.json() : { success: false }
+      )) as Record<string, unknown>;
+      setEnabled(
+        config?.SCREENS_DYNAMIC_FORMS_ENABLED === "true" ||
+          config?.SCREENS_DYNAMIC_FORMS_ENABLED === "1"
       );
+
+      const projectConfig = await apiGet(
+        "/api/forms/configuration/project"
+      ).then((res) => (res.ok ? res.json() : { success: false }));
       setInitialized(projectConfig.success === true);
     } catch (error) {
-      console.error('[Formulaires dynamiques] statut :', error);
+      console.error("[Formulaires dynamiques] statut :", error);
     } finally {
       setCheckingStatus(false);
     }
@@ -40,19 +46,22 @@ export default function DynamicFormsAdmin() {
       setLoading(true);
       setMessage(null);
 
-      const newValue = enabled ? 'false' : 'true';
-      const response = await apiPut('/api/admin/configuration/SCREENS_DYNAMIC_FORMS_ENABLED', {
-        value: newValue,
-      });
+      const newValue = enabled ? "false" : "true";
+      const response = await apiPut(
+        "/api/admin/configuration/SCREENS_DYNAMIC_FORMS_ENABLED",
+        {
+          value: newValue,
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Mise à jour du paramètre impossible');
+        throw new Error("Mise à jour du paramètre impossible");
       }
 
       setEnabled(!enabled);
       setMessage({
-        type: 'success',
-        text: `Formulaires dynamiques ${!enabled ? 'activés' : 'désactivés'}.`,
+        type: "success",
+        text: `Formulaires dynamiques ${!enabled ? "activés" : "désactivés"}.`,
       });
 
       // Reload config after delay
@@ -61,8 +70,11 @@ export default function DynamicFormsAdmin() {
       }, 1500);
     } catch (error) {
       setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Mise à jour du paramètre impossible',
+        type: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Mise à jour du paramètre impossible",
       });
     } finally {
       setLoading(false);
@@ -74,17 +86,17 @@ export default function DynamicFormsAdmin() {
       setLoading(true);
       setMessage(null);
 
-      const response = await apiPost('/api/admin/forms/initialize', {});
+      const response = await apiPost("/api/admin/forms/initialize", {});
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Initialisation impossible');
+        throw new Error(data.error || "Initialisation impossible");
       }
 
       setInitialized(true);
       setMessage({
-        type: 'success',
-        text: 'Configuration des formulaires installée en base.',
+        type: "success",
+        text: "Configuration des formulaires installée en base.",
       });
 
       // Reload status after delay
@@ -93,8 +105,9 @@ export default function DynamicFormsAdmin() {
       }, 1500);
     } catch (error) {
       setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Initialisation impossible',
+        type: "error",
+        text:
+          error instanceof Error ? error.message : "Initialisation impossible",
       });
     } finally {
       setLoading(false);
@@ -125,12 +138,12 @@ export default function DynamicFormsAdmin() {
       {message && (
         <div
           className={`flex items-center gap-3 p-4 rounded-lg border ${
-            message.type === 'success'
-              ? 'bg-success/10 border-green-500/50 text-success'
-              : 'bg-destructive/10 border-destructive/50 text-destructive'
+            message.type === "success"
+              ? "bg-success/10 border-green-500/50 text-success"
+              : "bg-destructive/10 border-destructive/50 text-destructive"
           }`}
         >
-          {message.type === 'success' ? (
+          {message.type === "success" ? (
             <CheckCircle2 size={20} />
           ) : (
             <AlertCircle size={20} />
@@ -145,17 +158,22 @@ export default function DynamicFormsAdmin() {
         <div className="bg-card border border-border rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Activation</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Activation
+              </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Formulaires de création et de modification des projets construits depuis la base
+                Formulaires de création et de modification des projets
+                construits depuis la base
               </p>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              enabled
-                ? 'bg-success/15 text-success'
-                : 'bg-warning/15 text-warning'
-            }`}>
-              {enabled ? 'Activés' : 'Désactivés'}
+            <div
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                enabled
+                  ? "bg-success/15 text-success"
+                  : "bg-warning/15 text-warning"
+              }`}
+            >
+              {enabled ? "Activés" : "Désactivés"}
             </div>
           </div>
 
@@ -164,8 +182,8 @@ export default function DynamicFormsAdmin() {
             disabled={loading}
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               enabled
-                ? 'bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-destructive-foreground'
-                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-primary-foreground'
+                ? "bg-destructive hover:bg-destructive/90 disabled:bg-secondary text-destructive-foreground"
+                : "bg-primary hover:bg-primary/90 disabled:bg-secondary text-primary-foreground"
             }`}
           >
             {loading ? (
@@ -174,16 +192,22 @@ export default function DynamicFormsAdmin() {
                 Mise à jour…
               </span>
             ) : (
-              `${enabled ? 'Désactiver' : 'Activer'} les formulaires dynamiques`
+              `${enabled ? "Désactiver" : "Activer"} les formulaires dynamiques`
             )}
           </button>
 
           <div className="text-xs text-muted-foreground space-y-1 mt-4">
-            <p><strong>Une fois activés :</strong></p>
+            <p>
+              <strong>Une fois activés :</strong>
+            </p>
             <ul className="list-disc list-inside space-y-1">
-              <li>les formulaires de projet suivent la configuration en base ;</li>
+              <li>
+                les formulaires de projet suivent la configuration en base ;
+              </li>
               <li>ils se personnalisent sans développement ;</li>
-              <li>sans configuration, les formulaires standard s&apos;affichent.</li>
+              <li>
+                sans configuration, les formulaires standard s&apos;affichent.
+              </li>
             </ul>
           </div>
         </div>
@@ -192,17 +216,21 @@ export default function DynamicFormsAdmin() {
         <div className="bg-card border border-border rounded-lg p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Installation de la configuration</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Installation de la configuration
+              </h3>
               <p className="text-sm text-muted-foreground mt-1">
                 Champs et sections par défaut des formulaires de projet
               </p>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              initialized
-                ? 'bg-success/15 text-success'
-                : 'bg-warning/15 text-warning'
-            }`}>
-              {initialized ? 'Installée' : 'À installer'}
+            <div
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                initialized
+                  ? "bg-success/15 text-success"
+                  : "bg-warning/15 text-warning"
+              }`}
+            >
+              {initialized ? "Installée" : "À installer"}
             </div>
           </div>
 
@@ -211,8 +239,8 @@ export default function DynamicFormsAdmin() {
             disabled={loading || initialized}
             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${
               initialized
-                ? 'bg-secondary text-muted-foreground cursor-not-allowed'
-                : 'bg-primary hover:bg-primary/90 disabled:bg-secondary text-primary-foreground'
+                ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                : "bg-primary hover:bg-primary/90 disabled:bg-secondary text-primary-foreground"
             }`}
           >
             {loading ? (
@@ -221,14 +249,16 @@ export default function DynamicFormsAdmin() {
                 Installation…
               </span>
             ) : initialized ? (
-              'Déjà installée'
+              "Déjà installée"
             ) : (
-              'Installer la configuration'
+              "Installer la configuration"
             )}
           </button>
 
           <div className="text-xs text-muted-foreground space-y-1 mt-4">
-            <p><strong>Cette opération :</strong></p>
+            <p>
+              <strong>Cette opération :</strong>
+            </p>
             <ul className="list-disc list-inside space-y-1">
               <li>crée les sections des formulaires de projet ;</li>
               <li>crée la configuration de chaque champ ;</li>
@@ -241,23 +271,40 @@ export default function DynamicFormsAdmin() {
 
       {/* Documentation */}
       <div className="bg-primary/10 border border-ring/50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-primary mb-4">Mode d&apos;emploi</h3>
+        <h3 className="text-lg font-semibold text-primary mb-4">
+          Mode d&apos;emploi
+        </h3>
         <div className="text-secondary-foreground space-y-2 text-sm">
-          <p><strong>1. Installer la configuration</strong></p>
+          <p>
+            <strong>1. Installer la configuration</strong>
+          </p>
           <ul className="list-disc list-inside ml-2 mb-3">
             <li>Cliquer sur « Installer la configuration ».</li>
-            <li>This imports field definitions from lib/field-config.ts into the database</li>
+            <li>
+              This imports field definitions from lib/field-config.ts into the
+              database
+            </li>
           </ul>
 
-          <p><strong>2. Activer</strong></p>
+          <p>
+            <strong>2. Activer</strong>
+          </p>
           <ul className="list-disc list-inside ml-2 mb-3">
             <li>Cliquer sur « Activer les formulaires dynamiques ».</li>
-            <li>Les écrans de création et de modification des projets utilisent alors la configuration en base.</li>
+            <li>
+              Les écrans de création et de modification des projets utilisent
+              alors la configuration en base.
+            </li>
           </ul>
 
-          <p><strong>3. Ajuster</strong></p>
+          <p>
+            <strong>3. Ajuster</strong>
+          </p>
           <ul className="list-disc list-inside ml-2">
-            <li>Sans configuration, les formulaires standard s&apos;affichent : rien ne casse.</li>
+            <li>
+              Sans configuration, les formulaires standard s&apos;affichent :
+              rien ne casse.
+            </li>
             <li>Les fonctions existantes sont conservées.</li>
             <li>Les champs se gèrent dans Paramétrage › Gestion des champs.</li>
           </ul>

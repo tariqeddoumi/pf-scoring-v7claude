@@ -1,7 +1,13 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
-import { successResponse, serverError, validationError, notFoundError } from "@/lib/api-response";
+import {
+  successResponse,
+  serverError,
+  validationError,
+  notFoundError,
+} from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import { codeErreur } from "@/lib/erreur-inconnue";
 
 export async function PATCH(
   request: NextRequest,
@@ -25,8 +31,8 @@ export async function PATCH(
       });
 
       return successResponse(country);
-    } catch (error: any) {
-      if (error.code === "P2025") {
+    } catch (error: unknown) {
+      if (codeErreur(error) === "P2025") {
         return notFoundError("Pays");
       }
       console.error("[ADMIN/COUNTRIES/[ID]] PATCH error:", error);

@@ -32,10 +32,11 @@ const DOMAIN_META: Record<string, { icon: string; color: string }> = {
 
 function getDomainMeta(code?: string, label?: string) {
   const key = Object.keys(DOMAIN_META).find(
-    (k) =>
-      code?.toUpperCase().includes(k) || label?.toUpperCase().includes(k)
+    (k) => code?.toUpperCase().includes(k) || label?.toUpperCase().includes(k)
   );
-  return key ? DOMAIN_META[key] : { icon: "📋", color: "text-muted-foreground" };
+  return key
+    ? DOMAIN_META[key]
+    : { icon: "📋", color: "text-muted-foreground" };
 }
 
 export function DomainSidebar({
@@ -44,9 +45,13 @@ export function DomainSidebar({
   onSelect,
   stats,
 }: DomainSidebarProps) {
-  const totalAnswered = Object.values(stats).reduce((s, d) => s + d.answered, 0);
+  const totalAnswered = Object.values(stats).reduce(
+    (s, d) => s + d.answered,
+    0
+  );
   const totalQuestions = Object.values(stats).reduce((s, d) => s + d.total, 0);
-  const globalProgress = totalQuestions > 0 ? (totalAnswered / totalQuestions) * 100 : 0;
+  const globalProgress =
+    totalQuestions > 0 ? (totalAnswered / totalQuestions) * 100 : 0;
 
   return (
     <div className="w-full max-h-72 lg:max-h-none lg:h-full bg-background border-b lg:border-b-0 lg:border-r border-border flex flex-col lg:w-64 flex-shrink-0">
@@ -56,7 +61,9 @@ export function DomainSidebar({
           Domaines de Scoring
         </h2>
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <span>{totalAnswered} / {totalQuestions} critères</span>
+          <span>
+            {totalAnswered} / {totalQuestions} critères
+          </span>
           <span>{Math.round(globalProgress)}%</span>
         </div>
         <div className="bg-muted rounded-full h-1.5">
@@ -69,8 +76,12 @@ export function DomainSidebar({
 
       {/* Domain list */}
       <div className="flex-1 overflow-y-auto py-2">
-        {domains.map((domain, index) => {
-          const stat = stats[domain.id] || { answered: 0, total: 0, score: null };
+        {domains.map((domain) => {
+          const stat = stats[domain.id] || {
+            answered: 0,
+            total: 0,
+            score: null,
+          };
           const isComplete = stat.total > 0 && stat.answered === stat.total;
           const isPartial = stat.answered > 0 && stat.answered < stat.total;
           const isCurrent = domain.id === currentDomainId;
@@ -98,8 +109,8 @@ export function DomainSidebar({
                         isPartial
                           ? "text-warning"
                           : isCurrent
-                          ? "text-primary"
-                          : "text-muted-foreground"
+                            ? "text-primary"
+                            : "text-muted-foreground"
                       }
                     />
                   )}
@@ -111,7 +122,9 @@ export function DomainSidebar({
                     <span className="text-base leading-none">{meta.icon}</span>
                     <span
                       className={`text-sm font-medium truncate ${
-                        isCurrent ? "text-foreground" : "text-secondary-foreground"
+                        isCurrent
+                          ? "text-foreground"
+                          : "text-secondary-foreground"
                       }`}
                     >
                       {domain.label}
@@ -127,8 +140,8 @@ export function DomainSidebar({
                             isComplete
                               ? "bg-success"
                               : isPartial
-                              ? "bg-warning"
-                              : "bg-secondary"
+                                ? "bg-warning"
+                                : "bg-secondary"
                           }`}
                           style={{
                             width: `${(stat.answered / stat.total) * 100}%`,
@@ -154,7 +167,10 @@ export function DomainSidebar({
                 )}
 
                 {isCurrent && (
-                  <ChevronRight size={14} className="text-primary flex-shrink-0" />
+                  <ChevronRight
+                    size={14}
+                    className="text-primary flex-shrink-0"
+                  />
                 )}
               </div>
             </button>
@@ -164,7 +180,11 @@ export function DomainSidebar({
 
       {/* Footer info */}
       <div className="p-4 border-t border-border text-xs text-muted-foreground">
-        {Object.values(stats).filter((s) => s.total > 0 && s.answered === s.total).length}{" "}
+        {
+          Object.values(stats).filter(
+            (s) => s.total > 0 && s.answered === s.total
+          ).length
+        }{" "}
         / {domains.length} domaines complétés
       </div>
     </div>

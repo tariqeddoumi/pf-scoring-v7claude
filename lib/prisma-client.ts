@@ -31,16 +31,16 @@ import {
 
 // Déclaration pour TypeScript : on ajoute "prisma" à l'espace global de Node.js
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 
 const prismaConfig: Prisma.PrismaClientOptions = {
   // En développement : afficher toutes les requêtes SQL dans la console (utile pour déboguer)
   // En production : n'afficher que les erreurs (moins de bruit dans les logs)
-  log: process.env.NODE_ENV === "development"
-    ? ["query", "error", "warn"]
-    : ["error"],
+  log:
+    process.env.NODE_ENV === "development"
+      ? ["query", "error", "warn"]
+      : ["error"],
   // Format lisible pour les messages d'erreur Prisma
   errorFormat: "pretty",
 };
@@ -62,17 +62,28 @@ export const prismaSysteme = base;
 
 /** Entité par défaut d'une création sans entité : la racine, si elle est unique. */
 async function racineUnique(): Promise<string | null> {
-  const racines = await base.entite.findMany({ where: { parentId: null }, select: { id: true }, take: 2 });
+  const racines = await base.entite.findMany({
+    where: { parentId: null },
+    select: { id: true },
+    take: 2,
+  });
   return racines.length === 1 ? racines[0].id : null;
 }
 
-async function entiteDuProjet(projectId: string | null): Promise<string | null> {
+async function entiteDuProjet(
+  projectId: string | null
+): Promise<string | null> {
   if (!projectId) return null;
-  const p = await base.project.findUnique({ where: { id: projectId }, select: { entiteId: true } });
+  const p = await base.project.findUnique({
+    where: { id: projectId },
+    select: { entiteId: true },
+  });
   return p?.entiteId ?? null;
 }
 
-async function entiteDeLEvaluation(evaluationId: string | null): Promise<string | null> {
+async function entiteDeLEvaluation(
+  evaluationId: string | null
+): Promise<string | null> {
   if (!evaluationId) return null;
   const e = await base.scoringEvaluation.findUnique({
     where: { id: evaluationId },
@@ -82,15 +93,28 @@ async function entiteDeLEvaluation(evaluationId: string | null): Promise<string 
 }
 
 const ENFANTS_D_EVALUATION = new Set([
-  "ScoringEvaluationAnswer", "ScoringDocument", "ScoringWorkflow", "ScoringOverride", "ScoringEvaluationNodeResult",
+  "ScoringEvaluationAnswer",
+  "ScoringDocument",
+  "ScoringWorkflow",
+  "ScoringOverride",
+  "ScoringEvaluationNodeResult",
 ]);
-const ENFANTS_DE_WORKFLOW = new Set(["ScoringWorkflowStep", "ScoringDecision", "ScoringComment", "ScoringApproval"]);
+const ENFANTS_DE_WORKFLOW = new Set([
+  "ScoringWorkflowStep",
+  "ScoringDecision",
+  "ScoringComment",
+  "ScoringApproval",
+]);
 
-async function entiteDuWorkflow(workflowId: string | null): Promise<string | null> {
+async function entiteDuWorkflow(
+  workflowId: string | null
+): Promise<string | null> {
   if (!workflowId) return null;
   const w = await base.scoringWorkflow.findUnique({
     where: { id: workflowId },
-    select: { evaluation: { select: { project: { select: { entiteId: true } } } } },
+    select: {
+      evaluation: { select: { project: { select: { entiteId: true } } } },
+    },
   });
   return w?.evaluation?.project?.entiteId ?? null;
 }
@@ -99,7 +123,11 @@ async function entiteDuWorkflow(workflowId: string | null): Promise<string | nul
  * Prépare une donnée de création : entité par défaut des clients et projets, et
  * contrôle que le dossier parent est dans le périmètre d'écriture.
  */
-async function preparerCreation(modele: string, data: Record<string, unknown>, p: Perimetre) {
+async function preparerCreation(
+  modele: string,
+  data: Record<string, unknown>,
+  p: Perimetre
+) {
   const verifier = (entiteId: string | null) => {
     if (!p.tout && !peutEcrire(p, entiteId)) throw new HorsPerimetreError();
   };
@@ -110,34 +138,56 @@ async function preparerCreation(modele: string, data: Record<string, unknown>, p
     // L'actionnariat d'un client ne s'écrit que sur un client de son périmètre d'écriture.
     if (!p.tout) {
       const clientId = reference(data, "clientId", "client");
-      const c = clientId ? await base.client.findUnique({ where: { id: clientId }, select: { entiteId: true } }) : null;
+      const c = clientId
+        ? await base.client.findUnique({
+            where: { id: clientId },
+            select: { entiteId: true },
+          })
+        : null;
       verifier(c?.entiteId ?? null);
     }
   } else if (modele === "Project") {
     // Un projet est porté par la banque de son client.
     const clientId = reference(data, "clientId", "client");
     if (clientId) {
-      const c = await base.client.findUnique({ where: { id: clientId }, select: { entiteId: true } });
+      const c = await base.client.findUnique({
+        where: { id: clientId },
+        select: { entiteId: true },
+      });
       if (c?.entiteId) data.entiteId = c.entiteId;
     }
     if (!data.entiteId) data.entiteId = p.entiteId ?? (await racineUnique());
     verifier(data.entiteId as string | null);
-  } else if (modele === "ScoringEvaluation" || modele === "Evaluation" || modele === "EvaluationPF") {
-    if (!p.tout) verifier(await entiteDuProjet(reference(data, "projectId", "project")));
+  } else if (
+    modele === "ScoringEvaluation" ||
+    modele === "Evaluation" ||
+    modele === "EvaluationPF"
+  ) {
+    if (!p.tout)
+      verifier(await entiteDuProjet(reference(data, "projectId", "project")));
   } else if (modele === "ProjectCredit") {
     // Un crédit prend la banque de son projet : l'unicité du numéro de dossier est par banque.
-    const entite = await entiteDuProjet(reference(data, "projectId", "project"));
+    const entite = await entiteDuProjet(
+      reference(data, "projectId", "project")
+    );
     data.entiteId = entite;
     if (!p.tout) verifier(entite);
   } else if (ENFANTS_D_EVALUATION.has(modele)) {
-    if (!p.tout) verifier(await entiteDeLEvaluation(reference(data, "evaluationId", "evaluation")));
+    if (!p.tout)
+      verifier(
+        await entiteDeLEvaluation(reference(data, "evaluationId", "evaluation"))
+      );
   } else if (ENFANTS_DE_WORKFLOW.has(modele)) {
-    if (!p.tout) verifier(await entiteDuWorkflow(reference(data, "workflowId", "workflow")));
+    if (!p.tout)
+      verifier(
+        await entiteDuWorkflow(reference(data, "workflowId", "workflow"))
+      );
   } else if (modele === "AuditLog") {
     // Une entrée de journal rattachée à un dossier ne s'écrit que sur un dossier visible :
     // sinon un utilisateur pourrait inscrire une action dans le journal d'une autre banque.
     const projectId = reference(data, "projectId", "project");
-    if (projectId && !p.tout && !peutLire(p, await entiteDuProjet(projectId))) throw new HorsPerimetreError();
+    if (projectId && !p.tout && !peutLire(p, await entiteDuProjet(projectId)))
+      throw new HorsPerimetreError();
   }
 }
 
@@ -153,29 +203,57 @@ const prisma = base.$extends({
       async $allOperations({ model, operation, args, query }) {
         const p = perimetreCourant();
         if (!p || !model || !(model in FILTRES)) return query(args);
-        const a = (argumentsFiltres(model, operation, args as Record<string, unknown>, p) ?? {}) as Record<string, unknown>;
+        const a = (argumentsFiltres(
+          model,
+          operation,
+          args as Record<string, unknown>,
+          p
+        ) ?? {}) as Record<string, unknown>;
         if (CREATIONS.has(operation)) {
           const donnees = Array.isArray(a.data) ? a.data : [a.data];
-          for (const d of donnees) if (d) await preparerCreation(model, d as Record<string, unknown>, p);
+          for (const d of donnees)
+            if (d)
+              await preparerCreation(model, d as Record<string, unknown>, p);
         } else if (operation === "upsert" && a.create) {
           await preparerCreation(model, a.create as Record<string, unknown>, p);
         }
-        if (operation === "update" || operation === "updateMany" || operation === "upsert") {
-          const donnees = (operation === "upsert" ? a.update : a.data) as Record<string, unknown> | undefined;
+        if (
+          operation === "update" ||
+          operation === "updateMany" ||
+          operation === "upsert"
+        ) {
+          const donnees = (operation === "upsert" ? a.update : a.data) as
+            | Record<string, unknown>
+            | undefined;
           // Un projet rattaché à un autre client passe dans la banque de ce client.
-          const clientId = model === "Project" && donnees ? reference(donnees, "clientId", "client") : null;
+          const clientId =
+            model === "Project" && donnees
+              ? reference(donnees, "clientId", "client")
+              : null;
           if (clientId && donnees) {
-            const c = await base.client.findUnique({ where: { id: clientId }, select: { entiteId: true } });
+            const c = await base.client.findUnique({
+              where: { id: clientId },
+              select: { entiteId: true },
+            });
             if (c?.entiteId) donnees.entiteId = c.entiteId;
           }
           // Transfert d'un client ou d'un projet : l'entité d'arrivée doit aussi être
           // dans le périmètre d'écriture.
           const cible = donnees?.entiteId;
-          if (!p.tout && typeof cible === "string" && !peutEcrire(p, cible)) throw new HorsPerimetreError();
+          if (!p.tout && typeof cible === "string" && !peutEcrire(p, cible))
+            throw new HorsPerimetreError();
           // Un projet qui change de banque emmène ses crédits (unicité du numéro par banque).
-          if (model === "Project" && operation === "update" && typeof cible === "string") {
+          if (
+            model === "Project" &&
+            operation === "update" &&
+            typeof cible === "string"
+          ) {
             const r = (await query(a as typeof args)) as { id?: string };
-            if (r?.id) await base.projectCredit.updateMany({ where: { projectId: r.id }, data: { entiteId: cible } });
+            if (r?.id)
+              await base.projectCredit.updateMany({
+                where: { projectId: r.id },
+                data: { entiteId: cible },
+              });
             return r;
           }
         }

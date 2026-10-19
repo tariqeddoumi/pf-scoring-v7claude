@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma-client";
+import type { Prisma } from "@prisma/client";
 
 /**
  * Comprehensive audit trail service for scoring system
@@ -11,7 +12,7 @@ export class ScoringAuditService {
     modelId: string,
     action: "CREATE" | "UPDATE" | "DELETE" | "PUBLISH" | "ARCHIVE",
     changedBy: string,
-    details: any
+    details: Record<string, unknown>
   ) {
     await prisma.scoringChangeLog.create({
       data: {
@@ -66,8 +67,8 @@ export class ScoringAuditService {
     versionId: string,
     action: "CREATE" | "UPDATE" | "DELETE" | "REORDER",
     changedBy: string,
-    oldValue?: any,
-    newValue?: any
+    oldValue?: unknown,
+    newValue?: unknown
   ) {
     await prisma.scoringChangeLog.create({
       data: {
@@ -93,8 +94,8 @@ export class ScoringAuditService {
     modelId: string,
     action: "CREATE" | "UPDATE",
     changedBy: string,
-    oldValue?: any,
-    newValue?: any
+    oldValue?: unknown,
+    newValue?: unknown
   ) {
     await prisma.scoringChangeLog.create({
       data: {
@@ -255,12 +256,13 @@ export class ScoringAuditService {
     startDate?: Date,
     endDate?: Date
   ): Promise<string> {
-    const where: any = { modelId };
+    const where: Prisma.ScoringChangeLogWhereInput = { modelId };
 
     if (startDate || endDate) {
-      where.changedAt = {};
-      if (startDate) where.changedAt.gte = startDate;
-      if (endDate) where.changedAt.lte = endDate;
+      const changedAt: Prisma.DateTimeFilter<"ScoringChangeLog"> = {};
+      if (startDate) changedAt.gte = startDate;
+      if (endDate) changedAt.lte = endDate;
+      where.changedAt = changedAt;
     }
 
     const logs = await prisma.scoringChangeLog.findMany({

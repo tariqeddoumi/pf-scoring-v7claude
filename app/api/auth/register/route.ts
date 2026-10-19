@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hashPassword, getTokenFromCookie, verifyToken } from "@/lib/auth";
-import { getErrorMessage } from "@/lib/error-handler";
 import prisma from "@/lib/prisma-client";
 import { etatDuCompte } from "@/lib/compte-actif";
 import { calculerPerimetre, chargerArbre } from "@/lib/entites/perimetre";
@@ -52,7 +51,10 @@ export async function POST(request: NextRequest) {
 
     // Le compte créé est rattaché à la banque de l'administrateur : un administrateur
     // de filiale ne crée pas de compte à accès global.
-    const perimetre = calculerPerimetre(await chargerArbre(), await etatDuCompte(payload.userId));
+    const perimetre = calculerPerimetre(
+      await chargerArbre(),
+      await etatDuCompte(payload.userId)
+    );
     const user = await prisma.user.create({
       data: {
         email,

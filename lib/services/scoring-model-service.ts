@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma-client";
+import type { Prisma } from "@prisma/client";
 
 export class ScoringModelService {
   /**
@@ -63,7 +64,7 @@ export class ScoringModelService {
     status?: "DRAFT" | "IN_VALIDATION" | "PUBLISHED" | "RETIRED" | "ARCHIVED";
     isActive?: boolean;
   }) {
-    const where: any = {};
+    const where: Prisma.ScoringModelWhereInput = {};
     if (filters?.status) where.status = filters.status;
     if (filters?.isActive !== undefined) where.isActive = filters.isActive;
 
@@ -155,7 +156,7 @@ export class ScoringModelService {
     action: string,
     modelId: string,
     userId: string,
-    details: any
+    details: unknown
   ) {
     await prisma.scoringChangeLog.create({
       data: {

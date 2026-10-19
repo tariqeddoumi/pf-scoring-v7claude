@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { ConfigurationDropdown } from "@/components/admin/ConfigurationDropdown";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 export interface NodeModalProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ export interface NodeModalProps {
   };
   parentDomainCode?: string;
   onClose: () => void;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: NonNullable<NodeModalProps["initialData"]>) => Promise<void>;
   versionId?: string;
 }
 
@@ -26,19 +27,19 @@ export default function NodeModal({
   isOpen,
   nodeType,
   initialData,
-  parentDomainCode,
   onClose,
   onSubmit,
-  versionId,
 }: NodeModalProps) {
-  const [formData, setFormData] = useState(initialData || {
-    code: "",
-    label: "",
-    shortLabel: "",
-    description: "",
-    weight: nodeType === "DOMAIN" ? 0.1 : 0,
-    answerType: "OPTION_SINGLE",
-  });
+  const [formData, setFormData] = useState(
+    initialData || {
+      code: "",
+      label: "",
+      shortLabel: "",
+      description: "",
+      weight: nodeType === "DOMAIN" ? 0.1 : 0,
+      answerType: "OPTION_SINGLE",
+    }
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,8 +51,8 @@ export default function NodeModal({
     try {
       await onSubmit(formData);
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Erreur lors de la sauvegarde");
+    } catch (err: unknown) {
+      setError(messageErreur(err) || "Erreur lors de la sauvegarde");
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,8 @@ export default function NodeModal({
           <button
             onClick={onClose}
             className="p-1 hover:bg-accent rounded"
-           aria-label="Fermer">
+            aria-label="Fermer"
+          >
             <X size={20} className="text-muted-foreground" />
           </button>
         </div>
@@ -85,13 +87,19 @@ export default function NodeModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="nodemodal-1" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="nodemodal-1"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Code
             </label>
-            <input id="nodemodal-1"
+            <input
+              id="nodemodal-1"
               type="text"
               value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, code: e.target.value })
+              }
               placeholder={nodeType === "DOMAIN" ? "D1" : "C1.1"}
               className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               required
@@ -100,13 +108,19 @@ export default function NodeModal({
           </div>
 
           <div>
-            <label htmlFor="nodemodal-2" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="nodemodal-2"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Libellé
             </label>
-            <input id="nodemodal-2"
+            <input
+              id="nodemodal-2"
               type="text"
               value={formData.label}
-              onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, label: e.target.value })
+              }
               placeholder="Nom du domaine/critère"
               className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
               required
@@ -114,25 +128,37 @@ export default function NodeModal({
           </div>
 
           <div>
-            <label htmlFor="nodemodal-3" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="nodemodal-3"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Libellé court
             </label>
-            <input id="nodemodal-3"
+            <input
+              id="nodemodal-3"
               type="text"
               value={formData.shortLabel}
-              onChange={(e) => setFormData({ ...formData, shortLabel: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, shortLabel: e.target.value })
+              }
               placeholder="Version abrégée"
               className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
             />
           </div>
 
           <div>
-            <label htmlFor="nodemodal-4" className="block text-sm font-medium text-secondary-foreground mb-1">
+            <label
+              htmlFor="nodemodal-4"
+              className="block text-sm font-medium text-secondary-foreground mb-1"
+            >
               Description
             </label>
-            <textarea id="nodemodal-4"
+            <textarea
+              id="nodemodal-4"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               placeholder="Description optionnelle"
               rows={2}
               className="w-full px-3 py-2 bg-muted border border-input rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring"
@@ -146,7 +172,9 @@ export default function NodeModal({
             <input
               type="number"
               value={formData.weight}
-              onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setFormData({ ...formData, weight: parseFloat(e.target.value) })
+              }
               min="0"
               max="1"
               step="0.01"
@@ -159,7 +187,9 @@ export default function NodeModal({
             <ConfigurationDropdown
               label="Type de réponse"
               value={formData.answerType}
-              onChange={(value) => setFormData({ ...formData, answerType: value })}
+              onChange={(value) =>
+                setFormData({ ...formData, answerType: value })
+              }
               configType="answerTypes"
               placeholder="Sélectionner un type de réponse..."
             />

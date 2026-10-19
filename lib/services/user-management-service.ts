@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma-client";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, UserRole } from "@prisma/client";
 
 /**
  * Service pour la gestion complète des utilisateurs
@@ -15,10 +15,7 @@ export class UserManagementService {
   /**
    * Récupère un utilisateur par ID (actif uniquement par défaut)
    */
-  static async getUserById(
-    id: string,
-    includeInactive: boolean = false
-  ) {
+  static async getUserById(id: string, includeInactive: boolean = false) {
     const where: Prisma.UserWhereInput = { id };
     if (!includeInactive) {
       where.isActive = true;
@@ -54,7 +51,7 @@ export class UserManagementService {
   ) {
     const where: Prisma.UserWhereInput = {};
 
-    if (filters.role) where.role = filters.role as any;
+    if (filters.role) where.role = filters.role as UserRole;
     if (filters.isActive !== undefined) where.isActive = filters.isActive;
     if (!filters.includeDeleted) {
       where.deletedAt = null;
@@ -94,7 +91,16 @@ export class UserManagementService {
     });
 
     // Audit
-    await this.auditAction(userId, userId, "LOGIN", null, null, undefined, ipAddress, userAgent);
+    await this.auditAction(
+      userId,
+      userId,
+      "LOGIN",
+      null,
+      null,
+      undefined,
+      ipAddress,
+      userAgent
+    );
 
     return user;
   }
@@ -173,7 +179,7 @@ export class UserManagementService {
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { role: newRole as any },
+      data: { role: newRole as UserRole },
     });
 
     // Audit
@@ -253,10 +259,7 @@ export class UserManagementService {
   /**
    * Récupère l'historique d'audit d'un utilisateur
    */
-  static async getUserAuditLog(
-    userId: string,
-    limit: number = 50
-  ) {
+  static async getUserAuditLog(userId: string, limit: number = 50) {
     return prisma.userAuditLog.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -282,7 +285,10 @@ export class UserManagementService {
   static async permanentlyDeleteUser(userId: string) {
     // L'effacement supprimerait en cascade les projets du compte : refusé s'il en a.
     const projets = await prisma.project.count({ where: { creePar: userId } });
-    if (projets > 0) throw new Error(`Effacement refusé : le compte a créé ${projets} projet(s). Désactivez-le plutôt.`);
+    if (projets > 0)
+      throw new Error(
+        `Effacement refusé : le compte a créé ${projets} projet(s). Désactivez-le plutôt.`
+      );
     // D'abord supprimer l'audit log
     await prisma.userAuditLog.deleteMany({
       where: { OR: [{ userId }, { performedById: userId }] },

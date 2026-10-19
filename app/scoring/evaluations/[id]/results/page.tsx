@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
@@ -16,7 +16,24 @@ interface NodeResult {
   normalizedScore: number;
   aggregationMethod?: string;
   explanation: string;
-  ruleImpacts: any[];
+  ruleImpacts: RuleImpact[];
+}
+
+interface RuleImpact {
+  ruleId: string;
+  ruleCode: string;
+  severity: string;
+}
+
+/** Réponse de /api/scoring/evaluations/[id]/trace (champs lus par l'écran). */
+interface EvaluationTrace {
+  finalScore?: number | null;
+  rating?: string | null;
+  recommendation?: string | null;
+  malusTotal?: number | null;
+  status?: string | null;
+  submittedAt?: string | null;
+  nodeResults?: NodeResult[];
 }
 
 function ResultsPageContenu() {
@@ -24,15 +41,11 @@ function ResultsPageContenu() {
   const router = useRouter();
   const evaluationId = params.id as string;
 
-  const [trace, setTrace] = useState<any>(null);
+  const [trace, setTrace] = useState<EvaluationTrace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTrace();
-  }, [evaluationId]);
-
-  const loadTrace = async () => {
+  const loadTrace = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await apiGet(
@@ -42,14 +55,26 @@ function ResultsPageContenu() {
       const { data } = await res.json();
       setTrace(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Chargement des résultats impossible");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Chargement des résultats impossible"
+      );
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [evaluationId]);
+
+  useEffect(() => {
+    loadTrace();
+  }, [loadTrace]);
 
   if (isLoading) {
-    return <div className="text-center py-8 text-muted-foreground">Chargement des résultats…</div>;
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Chargement des résultats…
+      </div>
+    );
   }
 
   if (error) {
@@ -78,24 +103,46 @@ function ResultsPageContenu() {
         <button
           onClick={() => router.back()}
           className="p-2 hover:bg-card rounded"
-         aria-label="Retour">
+          aria-label="Retour"
+        >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-[22px] font-semibold text-foreground">Trace de calcul</h1>
+        <h1 className="text-[22px] font-semibold text-foreground">
+          Trace de calcul
+        </h1>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <SummaryCard label="Score final" value={trace?.finalScore?.toFixed(1).replace(".", ",")} />
-        <SummaryCard label="Note" value={trace?.rating} color={ratingColor(trace?.rating || "")} />
-        <SummaryCard label="Total des malus" value={trace?.malusTotal?.toFixed(2).replace(".", ",")} />
-        <SummaryCard label="Règles déclenchées" value={String(trace?.nodeResults?.filter((r: NodeResult) => r.ruleImpacts?.length > 0).length || 0)} />
+        <SummaryCard
+          label="Score final"
+          value={trace?.finalScore?.toFixed(1).replace(".", ",")}
+        />
+        <SummaryCard
+          label="Note"
+          value={trace?.rating ?? undefined}
+          color={ratingColor(trace?.rating || "")}
+        />
+        <SummaryCard
+          label="Total des malus"
+          value={trace?.malusTotal?.toFixed(2).replace(".", ",")}
+        />
+        <SummaryCard
+          label="Règles déclenchées"
+          value={String(
+            trace?.nodeResults?.filter(
+              (r: NodeResult) => r.ruleImpacts?.length > 0
+            ).length || 0
+          )}
+        />
       </div>
 
       {/* Recommendation box */}
       {trace?.recommendation && (
         <div className="p-4 bg-accent border border-border rounded">
-          <h3 className="font-semibold text-accent-foreground mb-2">Recommandation</h3>
+          <h3 className="font-semibold text-accent-foreground mb-2">
+            Recommandation
+          </h3>
           <p className="text-sm">{trace.recommendation}</p>
         </div>
       )}
@@ -115,11 +162,16 @@ function ResultsPageContenu() {
           </thead>
           <tbody>
             {trace?.nodeResults?.map((result: NodeResult) => (
-              <tr key={result.nodeId} className="border-b border-border hover:bg-card/30">
+              <tr
+                key={result.nodeId}
+                className="border-b border-border hover:bg-card/30"
+              >
                 <td className="px-4 py-3">
                   <div>
                     <div className="font-medium">{result.nodeLabel}</div>
-                    <div className="text-xs text-muted-foreground">{result.nodeCode}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {result.nodeCode}
+                    </div>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-right text-warning">
@@ -129,7 +181,8 @@ function ResultsPageContenu() {
                   {result.weightedScore.toFixed(2).replace(".", ",")}
                 </td>
                 <td className="px-4 py-3 text-right text-foreground">
-                  {(result.normalizedScore * 100).toFixed(1).replace(".", ",")} %
+                  {(result.normalizedScore * 100).toFixed(1).replace(".", ",")}{" "}
+                  %
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">
                   {result.explanation}
@@ -137,7 +190,7 @@ function ResultsPageContenu() {
                 <td className="px-4 py-3">
                   {result.ruleImpacts?.length > 0 && (
                     <div className="text-xs space-y-1">
-                      {result.ruleImpacts.map((r: any) => (
+                      {result.ruleImpacts.map((r) => (
                         <div key={r.ruleId} className="text-warning">
                           {r.ruleCode} ({r.severity})
                         </div>
@@ -153,7 +206,9 @@ function ResultsPageContenu() {
 
       {/* Status info */}
       <div className="p-4 bg-card border border-border rounded text-sm">
-        <p>Statut : <StatutEvaluation statut={trace?.status} /></p>
+        <p>
+          Statut : <StatutEvaluation statut={trace?.status} />
+        </p>
         {trace?.submittedAt && (
           <p className="text-muted-foreground">
             Soumise le {new Date(trace.submittedAt).toLocaleString("fr-FR")}

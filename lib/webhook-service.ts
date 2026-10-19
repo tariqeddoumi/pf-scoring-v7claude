@@ -9,14 +9,32 @@ export type WebhookEvent =
   | "project.created"
   | "comment.created";
 
+/** Données d'un événement : objet libre, propre à chaque événement. */
+type DonneesWebhook = Record<string, unknown>;
+
+/** Champs lus par les abonnés par défaut (charge utile externe, non contrôlée champ à champ). */
+interface DonneesConnues {
+  evaluationId: string;
+  analyst_email?: string;
+  analyst_name: string;
+  reason?: string;
+  severity?: string;
+  type: string;
+  manager_email?: string | null;
+  project_name: string;
+}
+
 interface WebhookPayload {
   event: WebhookEvent;
   timestamp: string;
-  data: any;
+  data: DonneesWebhook;
 }
 
-/** Un abonné à un événement : il reçoit la charge utile et peut être asynchrone. */
-type GestionnaireWebhook = (payload: WebhookPayload) => void | Promise<void>;
+/**
+ * Un abonné à un événement : il reçoit les données de l'événement (et non
+ * l'enveloppe complète) et peut être asynchrone.
+ */
+type GestionnaireWebhook = (data: DonneesWebhook) => void | Promise<void>;
 
 export class WebhookService {
   private handlers: Map<WebhookEvent, GestionnaireWebhook[]> = new Map();
@@ -27,7 +45,8 @@ export class WebhookService {
 
   private registerDefaultHandlers() {
     // Evaluation workflows
-    this.on("evaluation.submitted", async (data: any) => {
+    this.on("evaluation.submitted", async (donnees) => {
+      const data = donnees as unknown as DonneesConnues;
       console.log("📤 Evaluation submitted:", data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationSubmitted(
@@ -38,7 +57,8 @@ export class WebhookService {
       }
     });
 
-    this.on("evaluation.validated", async (data: any) => {
+    this.on("evaluation.validated", async (donnees) => {
+      const data = donnees as unknown as DonneesConnues;
       console.log("✅ Evaluation validated:", data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationValidated(
@@ -48,7 +68,8 @@ export class WebhookService {
       }
     });
 
-    this.on("evaluation.rejected", async (data: any) => {
+    this.on("evaluation.rejected", async (donnees) => {
+      const data = donnees as unknown as DonneesConnues;
       console.log("❌ Evaluation rejected:", data.evaluationId);
       if (data.analyst_email) {
         await emailService.sendEvaluationRejected(
@@ -60,7 +81,8 @@ export class WebhookService {
     });
 
     // Alerts
-    this.on("alert.created", async (data: any) => {
+    this.on("alert.created", async (donnees) => {
+      const data = donnees as unknown as DonneesConnues;
       if (data.severity === "critical") {
         console.log("🚨 Critical alert:", data.type);
         // Send to manager email
@@ -82,7 +104,7 @@ export class WebhookService {
     this.handlers.get(event)!.push(handler);
   }
 
-  async emit(event: WebhookEvent, data: any) {
+  async emit(event: WebhookEvent, data: DonneesWebhook) {
     const handlers = this.handlers.get(event) || [];
     console.log(`🔔 Event: ${event} (${handlers.length} handlers)`);
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth-middleware";
+import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { ScoringQuestionnaireService } from "@/lib/services/scoring-questionnaire-service";
 import { hasMinimumRole } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
@@ -8,7 +8,7 @@ import { messagePublic } from "@/lib/erreur-publique";
 /**
  * GET /api/scoring/questionnaire - Get questionnaire nodes for default model
  */
-async function handleGET(request: NextRequest, user: any) {
+async function handleGET(request: NextRequest, user: AuthPayload) {
   try {
     // Une version explicite sert à l'éditeur de modèle, qui travaille sur un
     // brouillon et non sur la version publiée. Elle reste réservée aux
@@ -26,7 +26,13 @@ async function handleGET(request: NextRequest, user: any) {
       }
       modelVersion = await prisma.scoringModelVersion.findUnique({
         where: { id: versionDemandee },
-        select: { id: true, versionNumber: true, label: true, status: true, isPublished: true },
+        select: {
+          id: true,
+          versionNumber: true,
+          label: true,
+          status: true,
+          isPublished: true,
+        },
       });
     } else {
       modelVersion = await ScoringQuestionnaireService.getDefaultScoringModel();
@@ -53,14 +59,18 @@ async function handleGET(request: NextRequest, user: any) {
           versionNumber: modelVersion.versionNumber,
           label: modelVersion.label,
           status: (modelVersion as { status?: string }).status ?? "PUBLISHED",
-          isPublished: (modelVersion as { isPublished?: boolean }).isPublished ?? true,
+          isPublished:
+            (modelVersion as { isPublished?: boolean }).isPublished ?? true,
         },
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching questionnaire:", error);
-    return NextResponse.json({ error: messagePublic(error, "Requête refusée") }, { status: 400 });
+    return NextResponse.json(
+      { error: messagePublic(error, "Requête refusée") },
+      { status: 400 }
+    );
   }
 }
 

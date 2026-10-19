@@ -1,6 +1,9 @@
 import prisma from "@/lib/prisma-client";
 import { ScoringEngineV8 } from "./scoring";
-import { motifsRefusDecisionFavorable, motifsRefusSoumission } from "./scoring/decision-guard";
+import {
+  motifsRefusDecisionFavorable,
+  motifsRefusSoumission,
+} from "./scoring/decision-guard";
 import { ouvrirCircuit } from "./scoring/circuit";
 
 export class ScoringEvaluationService {
@@ -167,7 +170,9 @@ export class ScoringEvaluationService {
     });
     const motifs = motifsRefusSoumission(recalcule?.summaryJson ?? null);
     if (motifs.length > 0) {
-      throw new Error(`Only complete evaluations can be submitted — ${motifs.join(" ")}`);
+      throw new Error(
+        `Only complete evaluations can be submitted — ${motifs.join(" ")}`
+      );
     }
 
     const [updated] = await prisma.$transaction([
@@ -210,7 +215,10 @@ export class ScoringEvaluationService {
       },
       decideurId: approvedBy,
       soumisPar: (
-        await prisma.scoringWorkflow.findUnique({ where: { evaluationId }, select: { submittedBy: true } })
+        await prisma.scoringWorkflow.findUnique({
+          where: { evaluationId },
+          select: { submittedBy: true },
+        })
       )?.submittedBy,
     });
     if (motifs.length > 0) {
@@ -237,8 +245,15 @@ export class ScoringEvaluationService {
     });
     // le circuit de validation suit la décision (même état partout)
     await prisma.scoringWorkflow.updateMany({
-      where: { evaluationId: evaluationId, status: { notIn: ["APPROVED", "REJECTED"] } },
-      data: { status: "APPROVED", approvedAt: new Date(), approvedBy: approvedBy },
+      where: {
+        evaluationId: evaluationId,
+        status: { notIn: ["APPROVED", "REJECTED"] },
+      },
+      data: {
+        status: "APPROVED",
+        approvedAt: new Date(),
+        approvedBy: approvedBy,
+      },
     });
 
     return updated;
@@ -270,6 +285,17 @@ export class ScoringEvaluationService {
       data: {
         status: "brouillon",
         notes: reason,
+        rejectedAt: new Date(),
+        rejectionReason: reason,
+      },
+    });
+
+    // Le modèle n'a pas de colonne « rejeté par » : l'auteur du rejet est tracé dans l'audit.
+    await prisma.auditLog.create({
+      data: {
+        utilisateurId: rejectedBy,
+        action: "EVALUATION_REJETEE",
+        details: JSON.stringify({ evaluationId, motif: reason }),
       },
     });
 
@@ -283,7 +309,10 @@ export class ScoringEvaluationService {
    * rating, les malus, les règles déclenchées et l'éventuel blocage en proviennent,
    * et non plus d'une table de correspondance locale divergente.
    */
-  static async calculateScores(evaluationId: string, auteur: string | null = null) {
+  static async calculateScores(
+    evaluationId: string,
+    auteur: string | null = null
+  ) {
     const trace = await ScoringEngineV8.scoreEvaluation(evaluationId);
     await ScoringEngineV8.persistTrace(trace, auteur);
 

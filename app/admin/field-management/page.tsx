@@ -1,14 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   ArrowLeft,
   Plus,
   Edit2,
   Trash2,
-  Save,
-  X,
   AlertCircle,
   CheckCircle,
   Loader2,
@@ -16,8 +14,9 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
-} from 'lucide-react';
-import { apiGet, apiPost, apiDelete, apiPut } from '@/lib/api-client';
+} from "lucide-react";
+import { apiGet, apiPost, apiDelete, apiPut } from "@/lib/api-client";
+import { messageErreur } from "@/lib/erreur-inconnue";
 
 interface FormSection {
   id: string;
@@ -47,26 +46,26 @@ interface FieldConfig {
 }
 
 const ENTITIES = [
-  { label: 'Clients', value: 'client' },
-  { label: 'Projets', value: 'project' },
-  { label: 'Évaluations', value: 'evaluation' },
-  { label: 'Utilisateurs', value: 'user' },
+  { label: "Clients", value: "client" },
+  { label: "Projets", value: "project" },
+  { label: "Évaluations", value: "evaluation" },
+  { label: "Utilisateurs", value: "user" },
 ];
 
 const FIELD_TYPES = [
-  { label: 'Texte', value: 'text' },
-  { label: 'Email', value: 'email' },
-  { label: 'Téléphone', value: 'tel' },
-  { label: 'Nombre', value: 'number' },
-  { label: 'Date', value: 'date' },
-  { label: 'Sélection', value: 'select' },
-  { label: 'Texte long', value: 'textarea' },
-  { label: 'Case à cocher', value: 'checkbox' },
-  { label: 'Bouton radio', value: 'radio' },
+  { label: "Texte", value: "text" },
+  { label: "Email", value: "email" },
+  { label: "Téléphone", value: "tel" },
+  { label: "Nombre", value: "number" },
+  { label: "Date", value: "date" },
+  { label: "Sélection", value: "select" },
+  { label: "Texte long", value: "textarea" },
+  { label: "Case à cocher", value: "checkbox" },
+  { label: "Bouton radio", value: "radio" },
 ];
 
 export default function FieldManagementPage() {
-  const [selectedEntity, setSelectedEntity] = useState<string>('client');
+  const [selectedEntity, setSelectedEntity] = useState<string>("client");
   const [sections, setSections] = useState<FormSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,39 +74,39 @@ export default function FieldManagementPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set()
   );
-  const [editingField, setEditingField] = useState<string | null>(null);
+  const [, setEditingField] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const [newField, setNewField] = useState({
-    fieldName: '',
-    label: '',
-    fieldType: 'text',
+    fieldName: "",
+    label: "",
+    fieldType: "text",
     required: false,
-    placeholder: '',
-    helpText: '',
+    placeholder: "",
+    helpText: "",
   });
 
   // Fetch sections and fields
-  useEffect(() => {
-    fetchSections();
-  }, [selectedEntity]);
-
-  const fetchSections = async () => {
+  const fetchSections = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiGet(
         `/api/admin/field-configurations?entity=${selectedEntity}&type=sections`
       );
-      if (!response.ok) throw new Error('Chargement des sections impossible');
+      if (!response.ok) throw new Error("Chargement des sections impossible");
       const data = await response.json();
       setSections(data.data || []);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Chargement des sections impossible');
+    } catch (err: unknown) {
+      setError(messageErreur(err) || "Chargement des sections impossible");
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedEntity]);
+
+  useEffect(() => {
+    fetchSections();
+  }, [fetchSections]);
 
   const toggleSection = (sectionId: string) => {
     const newExpanded = new Set(expandedSections);
@@ -121,61 +120,70 @@ export default function FieldManagementPage() {
 
   const handleAddField = async (sectionId: string) => {
     if (!newField.fieldName || !newField.label) {
-      setError('Le nom et le libellé du champ sont obligatoires');
+      setError("Le nom et le libellé du champ sont obligatoires");
       return;
     }
 
     try {
-      const response = await apiPost('/api/admin/field-configurations', {
-        type: 'field',
+      const response = await apiPost("/api/admin/field-configurations", {
+        type: "field",
         entity: selectedEntity,
         sectionId,
         ...newField,
-        orderIndex: (sections.find((s) => s.id === sectionId)?.fields?.length || 0) + 1,
+        orderIndex:
+          (sections.find((s) => s.id === sectionId)?.fields?.length || 0) + 1,
       });
 
-      if (!response.ok) throw new Error('Ajout du champ impossible');
+      if (!response.ok) throw new Error("Ajout du champ impossible");
 
-      setSuccess('Champ ajouté');
+      setSuccess("Champ ajouté");
       setShowNewFieldForm(null);
       setNewField({
-        fieldName: '',
-        label: '',
-        fieldType: 'text',
+        fieldName: "",
+        label: "",
+        fieldType: "text",
         required: false,
-        placeholder: '',
-        helpText: '',
+        placeholder: "",
+        helpText: "",
       });
       fetchSections();
-    } catch (err: any) {
-      setError(err.message || 'Ajout du champ impossible');
+    } catch (err: unknown) {
+      setError(messageErreur(err) || "Ajout du champ impossible");
     }
   };
 
   const handleDeleteField = async (fieldId: string) => {
     try {
-      const response = await apiDelete(`/api/admin/field-configurations/${fieldId}`);
+      const response = await apiDelete(
+        `/api/admin/field-configurations/${fieldId}`
+      );
 
-      if (!response.ok) throw new Error('Suppression du champ impossible');
+      if (!response.ok) throw new Error("Suppression du champ impossible");
 
-      setSuccess('Champ supprimé');
+      setSuccess("Champ supprimé");
       setDeleteConfirm(null);
       fetchSections();
-    } catch (err: any) {
-      setError(err.message || 'Suppression du champ impossible');
+    } catch (err: unknown) {
+      setError(messageErreur(err) || "Suppression du champ impossible");
     }
   };
 
-  const handleToggleFieldVisibility = async (fieldId: string, visible: boolean) => {
+  const handleToggleFieldVisibility = async (
+    fieldId: string,
+    visible: boolean
+  ) => {
     try {
-      const response = await apiPut(`/api/admin/field-configurations/${fieldId}`, { visible: !visible });
+      const response = await apiPut(
+        `/api/admin/field-configurations/${fieldId}`,
+        { visible: !visible }
+      );
 
-      if (!response.ok) throw new Error('Mise à jour du champ impossible');
+      if (!response.ok) throw new Error("Mise à jour du champ impossible");
 
-      setSuccess('Visibilité du champ mise à jour');
+      setSuccess("Visibilité du champ mise à jour");
       fetchSections();
-    } catch (err: any) {
-      setError(err.message || 'Mise à jour du champ impossible');
+    } catch (err: unknown) {
+      setError(messageErreur(err) || "Mise à jour du champ impossible");
     }
   };
 
@@ -187,7 +195,8 @@ export default function FieldManagementPage() {
           <Link
             href="/admin"
             className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-           aria-label="Retour">
+            aria-label="Retour"
+          >
             <ArrowLeft size={20} />
           </Link>
           <div>
@@ -209,8 +218,8 @@ export default function FieldManagementPage() {
             onClick={() => setSelectedEntity(entity.value)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedEntity === entity.value
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:text-foreground'
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
             }`}
           >
             {entity.label}
@@ -237,7 +246,10 @@ export default function FieldManagementPage() {
       {loading && (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <Loader2 size={32} className="animate-spin text-primary mx-auto mb-4" />
+            <Loader2
+              size={32}
+              className="animate-spin text-primary mx-auto mb-4"
+            />
             <p className="text-muted-foreground">Chargement des champs...</p>
           </div>
         </div>
@@ -246,9 +258,12 @@ export default function FieldManagementPage() {
       {/* La page restait blanche quand aucun champ n'était configuré pour l'écran choisi. */}
       {!loading && sections.length === 0 && (
         <div className="rounded-lg border border-dashed border-border bg-card px-6 py-10 text-center">
-          <p className="font-medium text-foreground">Aucun champ configuré pour cet écran</p>
+          <p className="font-medium text-foreground">
+            Aucun champ configuré pour cet écran
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Les champs se créent en initialisant les formulaires dynamiques (Paramétrage › Formulaires dynamiques).
+            Les champs se créent en initialisant les formulaires dynamiques
+            (Paramétrage › Formulaires dynamiques).
           </p>
         </div>
       )}
@@ -268,7 +283,9 @@ export default function FieldManagementPage() {
               >
                 <div className="flex items-center gap-3 text-left">
                   <div>
-                    <h3 className="font-semibold text-foreground">{section.title}</h3>
+                    <h3 className="font-semibold text-foreground">
+                      {section.title}
+                    </h3>
                     {section.description && (
                       <p className="text-sm text-muted-foreground">
                         {section.description}
@@ -297,7 +314,9 @@ export default function FieldManagementPage() {
                       className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                     >
                       <div className="flex-1">
-                        <p className="font-medium text-foreground">{field.label}</p>
+                        <p className="font-medium text-foreground">
+                          {field.label}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {field.fieldName} ({field.fieldType})
                           {field.required && (
@@ -311,7 +330,7 @@ export default function FieldManagementPage() {
                             handleToggleFieldVisibility(field.id, field.visible)
                           }
                           className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                          title={field.visible ? 'Masquer' : 'Afficher'}
+                          title={field.visible ? "Masquer" : "Afficher"}
                         >
                           {field.visible ? (
                             <Eye size={18} />
@@ -322,13 +341,15 @@ export default function FieldManagementPage() {
                         <button
                           onClick={() => setEditingField(field.id)}
                           className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                         aria-label="Modifier">
+                          aria-label="Modifier"
+                        >
                           <Edit2 size={18} />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(field.id)}
                           className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                         aria-label="Supprimer">
+                          aria-label="Supprimer"
+                        >
                           <Trash2 size={18} />
                         </button>
                       </div>
@@ -380,10 +401,14 @@ export default function FieldManagementPage() {
                         </div>
 
                         <div>
-                          <label htmlFor="page-1" className="block text-sm font-medium text-foreground mb-1">
+                          <label
+                            htmlFor="page-1"
+                            className="block text-sm font-medium text-foreground mb-1"
+                          >
                             Type
                           </label>
-                          <select id="page-1"
+                          <select
+                            id="page-1"
                             value={newField.fieldType}
                             onChange={(e) =>
                               setNewField({

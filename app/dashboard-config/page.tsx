@@ -21,7 +21,11 @@ import {
   Users,
   Briefcase,
 } from "lucide-react";
-import { useDashboardConfig } from "@/lib/dashboard-config-context";
+import {
+  useDashboardConfig,
+  type DashboardTemplate,
+  type DashboardWidget,
+} from "@/lib/dashboard-config-context";
 
 const WIDGET_DESCRIPTIONS: Record<
   string,
@@ -99,7 +103,6 @@ export default function DashboardConfigPage() {
       newWidgets[draggedIndex],
     ];
 
-    const allWidgets = [...newWidgets, ...disabledWidgets];
     // This would normally call reorderWidgets, but we'll just update locally
     setDraggedWidget(null);
   };
@@ -118,7 +121,7 @@ export default function DashboardConfigPage() {
   };
 
   const handleLoadTemplate = (template: string) => {
-    loadTemplate(template as any);
+    loadTemplate(template as DashboardTemplate);
     setMessage({ type: "success", text: `Modèle "${template}" chargé` });
   };
 
@@ -188,10 +191,7 @@ export default function DashboardConfigPage() {
               Analyste
             </Button>
           </div>
-          <Button
-            onClick={() => setShowSaveModal(true)}
-            className="w-full"
-          >
+          <Button onClick={() => setShowSaveModal(true)} className="w-full">
             <Save className="w-4 h-4 mr-2" />
             Enregistrer cette configuration
           </Button>
@@ -218,7 +218,7 @@ export default function DashboardConfigPage() {
                   Aucun widget affiché
                 </p>
               ) : (
-                enabledWidgets.map((widget, idx) => (
+                enabledWidgets.map((widget) => (
                   <div
                     key={widget.id}
                     draggable
@@ -245,7 +245,10 @@ export default function DashboardConfigPage() {
                         <select
                           value={widget.size}
                           onChange={(e) =>
-                            resizeWidget(widget.id, e.target.value as any)
+                            resizeWidget(
+                              widget.id,
+                              e.target.value as DashboardWidget["size"]
+                            )
                           }
                           className="px-2 py-1 bg-card border border-input rounded text-xs text-secondary-foreground focus:border-ring focus:outline-none"
                         >

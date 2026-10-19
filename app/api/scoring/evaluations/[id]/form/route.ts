@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { ModelLoader } from "@/lib/services/scoring";
-import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import type { NodeMeta, ModelTree } from "@/lib/services/scoring/model-loader";
+import type { ScoringEvaluationAnswer } from "@prisma/client";
+import { withAuth } from "@/lib/auth-middleware";
 import { messagePublic } from "@/lib/erreur-publique";
 
 /**
@@ -11,10 +13,28 @@ import { messagePublic } from "@/lib/erreur-publique";
  * - Current answers
  * - Binding info (optional - for UI to show where value comes from)
  */
+type OptionResume = {
+  value: string;
+  label: string;
+  score: number;
+  quandChoisir?: string;
+};
+type RangeResume = {
+  minValue: number;
+  maxValue: number;
+  score: number;
+  label?: string;
+};
+type BindingResume = {
+  id: string;
+  sourceEntity: string;
+  sourcePath: string | null;
+  bindingMode: string;
+};
+
 async function handleGET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-  user: AuthPayload
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -27,7 +47,11 @@ async function handleGET(
 
     if (!evaluation) {
       return NextResponse.json(
-        { success: false, error: "Evaluation not found", errorCode: "NOT_FOUND" },
+        {
+          success: false,
+          error: "Evaluation not found",
+          errorCode: "NOT_FOUND",
+        },
         { status: 404 }
       );
     }
@@ -49,7 +73,11 @@ async function handleGET(
         where: { nodeId: { in: nodeIds }, isActive: true },
         orderBy: { orderIndex: "asc" },
         select: {
-          nodeId: true, value: true, code: true, label: true, score: true,
+          nodeId: true,
+          value: true,
+          code: true,
+          label: true,
+          score: true,
           // « quand choisir » : la phrase qui départage deux réponses voisines.
           // Elle vit en base depuis toujours et n'était pas transmise, si bien que
           // l'écran de saisie n'affichait que le libellé de l'option.
@@ -59,14 +87,17 @@ async function handleGET(
       prisma.scoringNodeRange.findMany({
         where: { nodeId: { in: nodeIds }, isActive: true },
         orderBy: { minValue: "asc" },
-        select: { nodeId: true, minValue: true, maxValue: true, score: true, label: true },
+        select: {
+          nodeId: true,
+          minValue: true,
+          maxValue: true,
+          score: true,
+          label: true,
+        },
       }),
     ]);
 
-    const optionsByNode = new Map<
-      string,
-      Array<{ value: string; label: string; score: number; quandChoisir?: string }>
-    >();
+    const optionsByNode = new Map<string, OptionResume[]>();
     for (const o of allOptions) {
       const list = optionsByNode.get(o.nodeId) ?? [];
       let quandChoisir: string | undefined;
@@ -86,10 +117,7 @@ async function handleGET(
       optionsByNode.set(o.nodeId, list);
     }
 
-    const rangesByNode = new Map<
-      string,
-      Array<{ minValue: number; maxValue: number; score: number; label?: string }>
-    >();
+    const rangesByNode = new Map<string, RangeResume[]>();
     for (const r of allRanges) {
       const list = rangesByNode.get(r.nodeId) ?? [];
       list.push({
@@ -102,15 +130,7 @@ async function handleGET(
     }
 
     // Load bindings (optional - for enriching UI)
-    const bindingsByNode = new Map<
-      string,
-      {
-        id: string;
-        sourceEntity: string;
-        sourcePath: string | null;
-        bindingMode: string;
-      }
-    >();
+    const bindingsByNode = new Map<string, BindingResume>();
 
     const bindings = await prisma.scoringNodeDataBinding.findMany({
       where: {
@@ -132,7 +152,14 @@ async function handleGET(
     const formNodes = Array.from(tree.nodesById.values())
       .filter((n) => n.depth === 0) // Start with roots
       .map((node) =>
-        buildNodeForForm(node, tree, answers, bindingsByNode, optionsByNode, rangesByNode)
+        buildNodeForForm(
+          node,
+          tree,
+          answers,
+          bindingsByNode,
+          optionsByNode,
+          rangesByNode
+        )
       );
 
     // Réponses à plat : l'atelier les consomme telles quelles pour reprendre
@@ -183,20 +210,28 @@ async function handleGET(
 }
 
 function buildNodeForForm(
-  node: any,
-  tree: any,
-  answers: any[],
-  bindingsByNode: Map<string, any>,
-  optionsByNode: Map<string, any[]>,
-  rangesByNode: Map<string, any[]>
-): any {
+  node: NodeMeta,
+  tree: ModelTree,
+  answers: ScoringEvaluationAnswer[],
+  bindingsByNode: Map<string, BindingResume>,
+  optionsByNode: Map<string, OptionResume[]>,
+  rangesByNode: Map<string, RangeResume[]>
+): Record<string, unknown> {
   const answer = answers.find((a) => a.nodeId === node.id);
   const binding = bindingsByNode.get(node.id);
-  const children = (tree.childrenOf.get(node.id) || [])
-    .map((childId: string) => {
-      const child = tree.nodesById.get(childId);
-      return buildNodeForForm(child, tree, answers, bindingsByNode, optionsByNode, rangesByNode);
-    });
+  const children = (tree.childrenOf.get(node.id) || []).map(
+    (childId: string) => {
+      const child = tree.nodesById.get(childId)!;
+      return buildNodeForForm(
+        child,
+        tree,
+        answers,
+        bindingsByNode,
+        optionsByNode,
+        rangesByNode
+      );
+    }
+  );
 
   return {
     id: node.id,
@@ -235,7 +270,7 @@ function buildNodeForForm(
           bindingMode: binding.bindingMode,
         }
       : null,
-    children: children.filter((c: any) => c != null),
+    children: children.filter((c) => c != null),
   };
 }
 
@@ -243,5 +278,5 @@ export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  return withAuth(req, (r, user) => handleGET(r, ctx, user));
+  return withAuth(req, (r) => handleGET(r, ctx));
 }

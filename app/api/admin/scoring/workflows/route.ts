@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth, withMinimumRole } from '@/lib/auth-middleware';
-import { successResponse, serverError, forbiddenError } from '@/lib/api-response';
+import { NextRequest } from "next/server";
+import { withMinimumRole } from "@/lib/auth-middleware";
+import { successResponse, serverError } from "@/lib/api-response";
 // Client cloisonné par banque : un client Prisma créé ici contournait le filtre
 // d'entité et exposait les dossiers des autres banques.
-import prisma from '@/lib/prisma-client';
+import prisma from "@/lib/prisma-client";
+import type { Prisma } from "@prisma/client";
 
 /**
  * La lecture des circuits était réservée aux administrateurs du modèle : un analyste
@@ -12,15 +13,14 @@ import prisma from '@/lib/prisma-client';
  * est ouverte à partir du rôle d'analyste ; les décisions restent réservées.
  */
 export async function GET(request: NextRequest) {
-  return withMinimumRole('risk_analyst', request, async () => {
+  return withMinimumRole("risk_analyst", request, async () => {
     try {
       const { searchParams } = new URL(request.url);
-      const status = searchParams.get('status');
-      const projectId = searchParams.get('projectId');
-      const limit = parseInt(searchParams.get('limit') || '50');
-      const offset = parseInt(searchParams.get('offset') || '0');
+      const status = searchParams.get("status");
+      const limit = parseInt(searchParams.get("limit") || "50");
+      const offset = parseInt(searchParams.get("offset") || "0");
 
-      const whereClause: any = {};
+      const whereClause: Prisma.ScoringWorkflowWhereInput = {};
       if (status) whereClause.status = status;
 
       const workflows = await prisma.scoringWorkflow.findMany({
@@ -30,37 +30,33 @@ export async function GET(request: NextRequest) {
             include: {
               project: true,
               analyst: {
-                select: { id: true, email: true, nom: true, prenom: true }
-              }
-            }
+                select: { id: true, email: true, nom: true, prenom: true },
+              },
+            },
           },
           steps: {
-            orderBy: { stepNumber: 'asc' }
+            orderBy: { stepNumber: "asc" },
           },
           decisions: {
-            orderBy: { decidedAt: 'desc' },
-            take: 1
+            orderBy: { decidedAt: "desc" },
+            take: 1,
           },
           approvals: {
-            where: { status: 'PENDING' }
-          }
+            where: { status: "PENDING" },
+          },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: limit,
-        skip: offset
-      });
-
-      const total = await prisma.scoringWorkflow.count({
-        where: whereClause
+        skip: offset,
       });
 
       return successResponse(workflows, {
         count: workflows.length,
-        status: 200
+        status: 200,
       });
-    } catch (error: any) {
-      console.error('[Workflows GET]', error);
-      return serverError('Erreur lors de la récupération des workflows');
+    } catch (error: unknown) {
+      console.error("[Workflows GET]", error);
+      return serverError("Erreur lors de la récupération des workflows");
     }
   });
 }
