@@ -10,7 +10,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatutProjet } from "@/components/ui/status-badge";
-import type { QuestionnaireNode } from "@/lib/services/scoring-questionnaire-service";
+import { ORDRE_DOMAINES, PARAMETRES_DEFAUT } from "@/lib/modele-pf/parametres";
 
 interface Projet {
   id: string;
@@ -24,7 +24,6 @@ interface Projet {
 interface Brouillon {
   id: string;
   projectId: string;
-  avancement?: { repondues: number; total: number };
 }
 
 /**
@@ -35,13 +34,14 @@ interface Brouillon {
  * déjà ouverts — on pouvait ainsi créer un second brouillon sur un dossier à moitié
  * saisi. Il proposait en outre une « recommandation initiale » présélectionnée sur
  * « Approuver » avant toute analyse, qui n'était de toute façon jamais enregistrée.
+ *
+ * L'évaluation est le scoring Project Finance (parcours en 13 blocs) : elle se crée sur le
+ * projet choisi et s'ouvre aussitôt dans l'écran de scoring.
  */
 export default function NouvelleEvaluationPage() {
   const router = useRouter();
   const [projets, setProjets] = useState<Projet[]>([]);
   const [brouillons, setBrouillons] = useState<Brouillon[]>([]);
-  const [questionnaire, setQuestionnaire] = useState<QuestionnaireNode[]>([]);
-  const [version, setVersion] = useState<{ id: string; label?: string; versionNumber?: number } | null>(null);
   const [libelleSecteur, setLibelleSecteur] = useState<Record<string, string>>({});
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -52,27 +52,16 @@ export default function NouvelleEvaluationPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [resProjets, resEvals, resQuestionnaire, resSecteurs] = await Promise.all([
+        const [resProjets, resEvals, resSecteurs] = await Promise.all([
           apiGet("/api/projects?limit=200"),
-          apiGet("/api/evaluations?limit=200"),
-          apiGet("/api/scoring/questionnaire"),
+          apiGet("/api/evaluations?limit=200&status=brouillon"),
           apiGet("/api/reference/sectors"),
         ]);
 
         if (resProjets.ok) setProjets((await resProjets.json()).data ?? []);
         if (resEvals.ok) {
           const liste = (await resEvals.json()).data ?? [];
-          setBrouillons(
-            liste.filter(
-              (e: { status: string; isArchived?: boolean }) =>
-                e.status === "brouillon" && !e.isArchived
-            )
-          );
-        }
-        if (resQuestionnaire.ok) {
-          const q = await resQuestionnaire.json();
-          setQuestionnaire(q.data ?? []);
-          setVersion(q.modelVersion ?? (q.modelVersionId ? { id: q.modelVersionId } : null));
+          setBrouillons(liste.filter((e: { status: string }) => e.status === "brouillon"));
         }
         if (resSecteurs.ok) {
           const liste: { code: string; label: string }[] = (await resSecteurs.json()).data ?? [];
@@ -104,27 +93,18 @@ export default function NouvelleEvaluationPage() {
   }, [projets, recherche, libelleSecteur]);
 
   const lancer = async (projet: Projet) => {
-    if (!version?.id) {
-      setErreur(
-        "Aucune version de modèle publiée : une évaluation ne serait pas reproductible."
-      );
-      return;
-    }
     setEnCours(projet.id);
     setErreur(null);
     try {
-      const res = await apiPost("/api/scoring/evaluations", {
-        projectId: projet.id,
-        modelVersionId: version.id,
-        // Le contexte saisi ici était jeté : le formulaire ne l'envoyait pas.
-        notes: contexte.trim() || undefined,
+      const res = await apiPost(`/api/projects/${projet.id}/evaluations-pf`, {
+        titre: contexte.trim() || undefined,
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || "Création de l'évaluation impossible.");
       }
-      const { data } = await res.json();
-      router.push(`/evaluations/${data.id}/saisie`);
+      const { id } = await res.json();
+      router.push(`/scoring-pf/${id}`);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : "Création impossible.");
       setEnCours(null);
@@ -139,8 +119,6 @@ export default function NouvelleEvaluationPage() {
     );
   }
 
-  const nbCriteres = questionnaire.reduce((s, d) => s + (d.children?.length ?? 0), 0);
-
   return (
     <div>
       <PageHeader
@@ -152,17 +130,6 @@ export default function NouvelleEvaluationPage() {
       {erreur && (
         <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">
           {erreur}
-        </div>
-      )}
-
-      {!version?.id && (
-        <div className="mb-4 rounded-lg border border-warning/40 bg-warning-subtle px-4 py-3 text-sm text-warning">
-          Aucun modèle de scoring publié. Une évaluation ne peut être créée tant
-          qu&apos;une version n&apos;est pas publiée —{" "}
-          <Link href="/admin/scoring" className="underline">
-            gérer les versions du modèle
-          </Link>
-          .
         </div>
       )}
 
@@ -230,23 +197,15 @@ export default function NouvelleEvaluationPage() {
                         second sur le même dossier, ce que rien n'empêchait. */}
                     {brouillon ? (
                       <Link
-                        href={`/evaluations/${brouillon.id}/saisie`}
+                        href={`/scoring-pf/${brouillon.id}`}
                         className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-primary/40 bg-accent px-3 text-sm font-semibold text-accent-foreground transition-colors hover:bg-primary/90 hover:text-primary-foreground"
                       >
                         Reprendre la saisie
-                        {brouillon.avancement?.total ? (
-                          <span className="tabulaire text-[12.5px] font-normal">
-                            {brouillon.avancement.repondues}/{brouillon.avancement.total}
-                          </span>
-                        ) : null}
                       </Link>
                     ) : (
                       <button
                         onClick={() => lancer(p)}
-                        disabled={!version?.id || enCours !== null}
-                        title={
-                          !version?.id ? "Aucune version de modèle publiée" : undefined
-                        }
+                        disabled={enCours !== null}
                         className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {occupe ? (
@@ -265,54 +224,44 @@ export default function NouvelleEvaluationPage() {
         </div>
 
         <div className="space-y-4">
-          <SectionCard titre="Contexte (facultatif)">
-            <textarea
+          <SectionCard titre="Intitulé (facultatif)">
+            <input
+              type="text"
               value={contexte}
               onChange={(e) => setContexte(e.target.value)}
-              rows={3}
-              placeholder="Origine du dossier, points d'attention connus…"
-              aria-label="Contexte de l'évaluation"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
+              maxLength={200}
+              placeholder="Ex. : montage de base, variante restructurée…"
+              aria-label="Intitulé de l'évaluation"
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none"
             />
             <p className="mt-2 text-[12px] text-muted-foreground">
-              Ce texte est enregistré avec l&apos;évaluation créée et reste modifiable
-              pendant la saisie.
+              Utile pour distinguer plusieurs évaluations d&apos;un même projet ; modifiable pendant la saisie.
             </p>
           </SectionCard>
 
-          <SectionCard titre="Modèle appliqué" description="Modèle de notation Project Finance en vigueur">
-            {questionnaire.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun modèle actif.</p>
-            ) : (
-              <>
-                <ul className="space-y-1.5">
-                  {questionnaire.map((d) => (
-                    <li key={d.id} className="flex items-baseline justify-between gap-3 text-[12.5px]">
-                      <span className="text-foreground">{d.label}</span>
-                      <span className="tabulaire shrink-0 text-muted-foreground">
-                        {d.weight != null
-                          ? `${String(d.weight).replace(".", ",")} %`
-                          : "—"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                {/* Le panneau annonçait « 28 critères » quand la saisie en demande 84 :
-                    le questionnaire est tronqué au niveau critère, chaque critère étant
-                    noté par ses sous-critères. Le libellé le dit maintenant. */}
-                <p className="mt-3 border-t border-border pt-3 text-[12px] text-muted-foreground">
-                  {questionnaire.length} domaines · {nbCriteres} critères, notés
-                  sous-critère par sous-critère à la saisie.
-                </p>
-              </>
-            )}
+          <SectionCard titre="Modèle appliqué" description="Scoring Project Finance — poids en construction / montée en charge / exploitation">
+            <ul className="space-y-1.5">
+              {ORDRE_DOMAINES.map((d) => (
+                <li key={d} className="flex items-baseline justify-between gap-3 text-[12.5px]">
+                  <span className="text-foreground">
+                    {d} · {PARAMETRES_DEFAUT.libellesDomaines[d]}
+                  </span>
+                  <span className="tabulaire shrink-0 text-muted-foreground">
+                    {(["P1", "P2", "P3"] as const).map((ph) => Math.round(PARAMETRES_DEFAUT.poidsDomaines[ph][d] * 100)).join(" / ")} %
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 border-t border-border pt-3 text-[12px] text-muted-foreground">
+              Poids candidats du modèle ; ceux en vigueur dans votre banque se règlent dans l&apos;administration du modèle PF.
+            </p>
           </SectionCard>
 
           <SectionCard titre="Déroulé">
             <ol className="list-inside list-decimal space-y-1.5 text-[12.5px] text-muted-foreground">
               <li>Choisir le projet dans la liste</li>
-              <li>Renseigner les critères, domaine par domaine</li>
-              <li>Calculer la note et lire la trace</li>
+              <li>Renseigner les 13 blocs (pièces et lecture par l&apos;IA en appui)</li>
+              <li>Lire le score, la note, les plafonds et les verrous</li>
               <li>Soumettre à validation</li>
             </ol>
           </SectionCard>

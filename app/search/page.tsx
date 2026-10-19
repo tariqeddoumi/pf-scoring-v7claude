@@ -158,7 +158,7 @@ function Recherche() {
               statut: e.status,
               montant: e.project?.montant,
               date: e.updatedAt ?? e.createdAt,
-              lien: `/evaluations/${e.id}`,
+              lien: `/scoring-pf/${e.id}`,
             });
           }
         }
