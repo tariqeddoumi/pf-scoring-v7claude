@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma-client";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
-import { saisieSchema } from "@/lib/modele-pf/saisie";
+import { relireSaisie } from "@/lib/modele-pf/saisie";
 import { FORMAT_PROPOSITIONS, libelleChamp, valeursDeLaSaisie, type ValeurChamp } from "@/lib/modele-pf/champs-ia";
 import type { AnalysePF } from "@/lib/modele-pf/ia";
 import { piecesDe, refus } from "@/lib/modele-pf/acces";
@@ -27,7 +27,7 @@ async function exporter(req: NextRequest, user: AuthPayload, id: string) {
   });
   if (!e) return refus(404, "Scoring introuvable");
   const contenu = req.nextUrl.searchParams.get("contenu") === "saisie" ? "saisie" : "propositions";
-  const saisie = saisieSchema.parse(e.saisie);
+  const saisie = relireSaisie(e.saisie);
   const analyse = e.analyseIa as unknown as AnalysePF | null;
 
   let lignes: { cle: string; valeur: ValeurChamp; source: string; confiance: string }[];

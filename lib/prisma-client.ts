@@ -172,6 +172,12 @@ const prisma = base.$extends({
           // dans le périmètre d'écriture.
           const cible = donnees?.entiteId;
           if (!p.tout && typeof cible === "string" && !peutEcrire(p, cible)) throw new HorsPerimetreError();
+          // Un projet qui change de banque emmène ses crédits (unicité du numéro par banque).
+          if (model === "Project" && operation === "update" && typeof cible === "string") {
+            const r = (await query(a as typeof args)) as { id?: string };
+            if (r?.id) await base.projectCredit.updateMany({ where: { projectId: r.id }, data: { entiteId: cible } });
+            return r;
+          }
         }
         return query(a as typeof args);
       },

@@ -29,7 +29,7 @@ const SEGMENTS: Record<string, string> = {
   search: "Recherche",
   compare: "Comparaison",
   analytics: "Analytique",
-  monitoring: "Monitoring",
+  monitoring: "Suivi des projets",
   alerts: "Alertes",
   audit: "Journal d'audit",
   methodology: "Méthodologie",
@@ -49,6 +49,10 @@ const SEGMENTS: Record<string, string> = {
   "country-risk": "Risque pays",
   "dynamic-forms": "Formulaires dynamiques",
   "field-management": "Champs de formulaire",
+  "modele-pf": "Modèle Project Finance",
+  "scoring-pf": "Scoring Project Finance",
+  flux: "Simulation des flux",
+  "changer-mot-de-passe": "Mot de passe",
 };
 
 /** Un segment qui ressemble à un identifiant n'a pas sa place dans le fil. */
@@ -102,8 +106,8 @@ export function Navbar({ onOuvrirMenu }: { onOuvrirMenu?: () => void }) {
         href="/search"
         className="hidden h-9 w-64 items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm text-muted-foreground transition-colors hover:border-ring lg:flex"
       >
-        <Search size={15} />
-        Rechercher un client, un projet…
+        <Search size={15} className="shrink-0" />
+        <span className="truncate">Rechercher un client, un projet…</span>
       </Link>
 
       <UserProfile />

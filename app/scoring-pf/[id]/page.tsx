@@ -138,7 +138,14 @@ export default function ScoringPFPage() {
   }, []);
 
   const codes = useMemo(() => d ? { codeClientT24: d.projet.client?.codeClientT24, radical: d.projet.client?.radical, codeProjet: d.projet.codeProjet } : undefined, [d]);
-  const calcul = useMemo(() => (saisie && d ? calculer(saisie, d.parametres, codes) : null), [saisie, d, codes]);
+  // Calcul en direct pour les rôles qui voient les notes ; pour les autres, le résultat
+  // (masqué) du serveur, rafraîchi à chaque enregistrement : la note n'est jamais
+  // calculée dans leur navigateur.
+  const calcul = useMemo(() => {
+    if (!saisie || !d) return null;
+    if (d.voirScores) return calculer(saisie, d.parametres, codes);
+    return d.resultat ? { resultat: d.resultat as ResultatPF, controles: d.controles } : null;
+  }, [saisie, d, codes]);
   const manquants = useMemo(() => new Set((calcul?.controles ?? []).map((c) => c.cible ?? "")), [calcul]);
 
   function allerA(c: Controle) {

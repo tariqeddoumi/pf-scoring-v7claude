@@ -83,7 +83,7 @@ export default function ParametresModelePFPage() {
   return (
     <div>
       <PageHeader
-        retour={{ href: "/admin", libelle: "Administration" }}
+        retour={{ href: "/admin", libelle: "Paramétrage" }}
         titre="Paramètres du modèle Project Finance"
         description="Valeurs candidates du modèle, à ajuster après validation par les experts. Les valeurs modifiées sont signalées."
         actions={admin && (
@@ -109,7 +109,8 @@ export default function ParametresModelePFPage() {
         </div>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      {/* min-w-0 : sans lui, une carte de grille prend la largeur de son tableau et la page déborde sur téléphone. */}
+      <div className="grid gap-4 xl:grid-cols-2 [&>*]:min-w-0">
         <SectionCard titre="Seuils DSCR par régime de revenus" description="Critique, vigilance, favorable (exploitation stabilisée)." sansPadding>
           <table className="w-full text-[13px]">
             <thead className="bg-surface text-left text-[11.5px] uppercase tracking-wide text-muted-foreground">

@@ -67,7 +67,8 @@ export default function DiagnosticPage() {
         );
       }
 
-      const diagnosticData = data as DiagnosticResponse;
+      // La route répond { success, data } ; l'écran lisait la racine et restait vide.
+      const diagnosticData = (data?.data ?? data) as DiagnosticResponse;
       if (diagnosticData.tests) {
         setTests(diagnosticData.tests);
       }
@@ -134,7 +135,7 @@ export default function DiagnosticPage() {
             </Button>
           </Link>
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold">Diagnostic Système</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Diagnostic du système</h1>
             <p className="text-muted-foreground">
               Tests de santé et configuration de l&apos;application
             </p>
@@ -178,14 +179,14 @@ export default function DiagnosticPage() {
                       : "border-destructive/30 bg-destructive/5"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     {env.defined ? (
                       <CheckCircle2 className="h-5 w-5 text-success" />
                     ) : (
                       <XCircle className="h-5 w-5 text-destructive" />
                     )}
-                    <div>
-                      <p className="font-medium">{env.name}</p>
+                    <div className="min-w-0">
+                      <p className="break-all font-mono text-[13px] font-medium">{env.name}</p>
                       {env.value && env.defined && (
                         <p className="text-xs text-muted-foreground">
                           {env.value.length > 50
@@ -196,7 +197,7 @@ export default function DiagnosticPage() {
                     </div>
                   </div>
                   <span
-                    className={`text-sm font-medium ${env.defined ? "text-success" : "text-destructive"}`}
+                    className={`shrink-0 whitespace-nowrap text-sm font-medium ${env.defined ? "text-success" : "text-destructive"}`}
                   >
                     {env.defined ? "✓ Défini" : "✗ Manquant"}
                   </span>
@@ -212,7 +213,7 @@ export default function DiagnosticPage() {
 
         {/* Diagnostic Tests */}
         <Card className="border-border bg-card p-6">
-          <h2 className="mb-4 text-xl font-semibold">Tests de Diagnostic</h2>
+          <h2 className="mb-4 text-xl font-semibold">Tests de diagnostic</h2>
           <div className="space-y-3">
             {tests.length > 0 ? (
               tests.map((test, idx) => (

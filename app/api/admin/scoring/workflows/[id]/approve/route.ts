@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/auth-middleware';
+import { withAuth } from '@/lib/auth-middleware';
+import { hasPermission } from '@/lib/services/permission-service';
+import type { UserRole } from '@/lib/permissions';
 import { successResponse, serverError, notFoundError, validationError } from '@/lib/api-response';
 import prisma from '@/lib/prisma-client';
 import { getAppConfigKey } from '@/lib/services/app-config-service';
@@ -23,7 +25,13 @@ import {
  * est renvoyé en 409 avec ses motifs, sans enregistrer de décision.
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  return withAdminAuth(request, async (req, user) => {
+  // Décision ouverte aux rôles qui approuvent (gestionnaire des risques, comité,
+  // administrateur système) : la route exigeait un administrateur, l'écran proposait
+  // le formulaire au comité et la décision était refusée.
+  return withAuth(request, async (req, user) => {
+    if (!hasPermission(user.role as UserRole, 'evaluation', 'approve')) {
+      return NextResponse.json({ success: false, error: "Vos droits ne permettent pas de rendre une décision" }, { status: 403 });
+    }
     try {
       const { id } = await params;
       const body = await request.json();

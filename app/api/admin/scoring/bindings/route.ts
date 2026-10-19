@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { withAdminAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError, validationError } from "@/lib/api-response";
 import prisma from "@/lib/prisma-client";
+import { refusSiVersionFigee, verifierNoeudModifiable } from "@/lib/services/scoring/version-guard";
 
 export async function GET(req: NextRequest) {
   return withAdminAuth(req, async () => {
@@ -65,6 +66,8 @@ export async function POST(req: NextRequest) {
         description,
       } = body;
 
+      const figeeNoeud = nodeId ? await refusSiVersionFigee(verifierNoeudModifiable(nodeId)) : null;
+      if (figeeNoeud) return figeeNoeud;
       if (!versionId || !nodeId || !sourceEntity) {
         return validationError([
           { field: "versionId", message: "Requis" },
@@ -124,6 +127,9 @@ export async function PUT(req: NextRequest) {
       if (!bindingId) {
         return validationError([{ field: "id", message: "Required query param" }]);
       }
+      const liaison = await prisma.scoringNodeDataBinding.findUnique({ where: { id: bindingId }, select: { nodeId: true } });
+      const figee = liaison ? await refusSiVersionFigee(verifierNoeudModifiable(liaison.nodeId)) : null;
+      if (figee) return figee;
 
       const body = await req.json();
       const {
@@ -177,6 +183,9 @@ export async function DELETE(req: NextRequest) {
       if (!bindingId) {
         return validationError([{ field: "id", message: "Required query param" }]);
       }
+      const liaison = await prisma.scoringNodeDataBinding.findUnique({ where: { id: bindingId }, select: { nodeId: true } });
+      const figee = liaison ? await refusSiVersionFigee(verifierNoeudModifiable(liaison.nodeId)) : null;
+      if (figee) return figee;
 
       await prisma.scoringNodeDataBinding.delete({
         where: { id: bindingId },

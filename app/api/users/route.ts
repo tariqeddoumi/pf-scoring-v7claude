@@ -5,14 +5,20 @@ import { lirePagination } from "@/lib/validation-schemas";
 import { PERIMETRE_VIDE } from "@/lib/entites/perimetre";
 import { filtreComptes } from "@/lib/entites/utilisateurs";
 import { messagePublic } from "@/lib/erreur-publique";
+import { hasPermission } from "@/lib/services/permission-service";
+import type { UserRole } from "@/lib/permissions";
 
 /**
  * GET /api/users - List all users (paginated)
  */
 async function handleGET(request: NextRequest, user: any) {
   try {
-    if (!hasMinimumRole(user.role, "risk_manager")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Les rôles qui saisissent des clients reçoivent seulement les noms (choix du
+    // gestionnaire dans la fiche client) : la liste leur était refusée et le champ
+    // restait vide.
+    const complet = hasMinimumRole(user.role, "risk_manager");
+    if (!complet && !hasPermission(user.role as UserRole, "client", "create")) {
+      return NextResponse.json({ error: "Vos droits ne permettent pas de consulter les utilisateurs" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -21,14 +27,18 @@ async function handleGET(request: NextRequest, user: any) {
     const { page, limit } = lirePagination(searchParams, 50);
 
     // Comptes de la branche de l'utilisateur seulement (gestionnaires proposés à la saisie).
-    const result = await UserService.getAllUsers(page, limit, filtreComptes(user.perimetre ?? PERIMETRE_VIDE));
-
+    const result = await UserService.getAllUsers(page, limit, {
+      ...filtreComptes(user.perimetre ?? PERIMETRE_VIDE), isActive: true, deletedAt: null,
+    });
+    if (!complet) {
+      return NextResponse.json({ ...result, data: result.data.map((u) => ({ id: u.id, nom: u.nom, prenom: u.prenom })) }, { status: 200 });
+    }
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
     // La route répondait 400 à toute erreur, y compris une panne de base : l'écran
     // lisait « requête invalide » là où le serveur était en défaut, et le message
     // brut ne disait rien d'exploitable.
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     console.error("[LISTE] GET error:", message);
     return NextResponse.json(
       { success: false, error: "Erreur lors de la récupération de la liste" },

@@ -3,14 +3,28 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiPost } from "@/lib/api-client";
+import { useAppConfig } from "@/components/providers/app-config-provider";
 
 function LoginPageContent() {
   const router = useRouter();
+  // Même nom et même logo que la barre latérale (paramétrage de l'outil).
+  const { config } = useAppConfig();
+  const nomAppli = config.APP_NAME || "Scoring PF";
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Retour de la connexion externe (OAuth) : le jeton arrive dans le fragment d'URL.
+  useEffect(() => {
+    const f = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const jeton = f.get("jeton");
+    if (!jeton) return;
+    localStorage.setItem("auth_token", jeton);
+    window.history.replaceState(null, "", "/login");
+    router.replace(f.get("changer") ? "/changer-mot-de-passe" : "/dashboard");
+  }, [router]);
 
   useEffect(() => {
     const errorParam = searchParams.get("error");
@@ -88,8 +102,15 @@ function LoginPageContent() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="text-4xl">📊</div>
-            <h1 className="text-3xl font-bold text-foreground">PF Scoring</h1>
+            {config.APP_LOGO_URL ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={config.APP_LOGO_URL} alt="" className="h-10 w-10 rounded-md object-contain" />
+            ) : (
+              <span aria-hidden className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
+                {nomAppli.split(/\s+/).map((m) => m[0]).join("").slice(0, 2).toUpperCase()}
+              </span>
+            )}
+            <h1 className="text-3xl font-bold text-foreground">{nomAppli}</h1>
           </div>
           <p className="text-muted-foreground">
             Application de Scoring Project Finance
@@ -118,16 +139,14 @@ function LoginPageContent() {
               disabled={loading}
               className="w-full px-4 py-3 bg-card border border-border text-foreground rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-accent transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>🔵</span>
               Continuer avec Google
             </button>
 
             <button
               onClick={() => handleOAuthLogin("microsoft")}
               disabled={loading}
-              className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-card border border-border text-foreground rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-accent transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>⊞</span>
               Continuer avec Microsoft
             </button>
           </div>
@@ -194,11 +213,8 @@ function LoginPageContent() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-muted-foreground text-sm">
-          <p>PF Scoring • Scoring Project Finance Conforme IFC, EBRD, Basel</p>
-          <p className="mt-2">Banque Marocaine • Monnaie: MAD</p>
-          <p className="mt-3 text-xs text-muted-foreground">
-            v1.0.1 • Build {new Date().toISOString().split("T")[0]}
-          </p>
+          <p>Scoring Project Finance conforme IFC, BERD, Bâle et Bank Al-Maghrib</p>
+          <p className="mt-2">Montants en dirhams (MAD)</p>
         </div>
       </div>
     </div>

@@ -37,13 +37,13 @@ async function testDatabaseConnection(): Promise<DiagnosticTest> {
     // Test Prisma connection with a simple query
     await prisma.user.count();
     return {
-      name: "Connexion à la Base de Données",
+      name: "Connexion à la base de données",
       status: "success",
       message: "Connexion à la base de données établie avec succès",
     };
   } catch (error: unknown) {
     return {
-      name: "Connexion à la Base de Données",
+      name: "Connexion à la base de données",
       status: "error",
       message: "Impossible de se connecter à la base de données",
       details: {
@@ -60,7 +60,7 @@ async function testUserCount(): Promise<DiagnosticTest> {
     const analysts = await prisma.user.count({ where: { role: "risk_analyst" } });
 
     return {
-      name: "Statistiques Utilisateurs",
+      name: "Statistiques des utilisateurs",
       status: "success",
       message: `${count} utilisateur(s) trouvé(s) dans la base de données`,
       details: {
@@ -71,7 +71,7 @@ async function testUserCount(): Promise<DiagnosticTest> {
     };
   } catch (error: unknown) {
     return {
-      name: "Statistiques Utilisateurs",
+      name: "Statistiques des utilisateurs",
       status: "error",
       message: "Impossible de récupérer les statistiques des utilisateurs",
       details: {
@@ -92,7 +92,7 @@ async function testProjectCount(): Promise<DiagnosticTest> {
     });
 
     return {
-      name: "Statistiques Projets",
+      name: "Statistiques des projets",
       status: "success",
       message: `${count} projet(s) trouvé(s) dans la base de données`,
       details: {
@@ -104,7 +104,7 @@ async function testProjectCount(): Promise<DiagnosticTest> {
     };
   } catch (error: unknown) {
     return {
-      name: "Statistiques Projets",
+      name: "Statistiques des projets",
       status: "error",
       message: "Impossible de récupérer les statistiques des projets",
       details: {
@@ -180,7 +180,7 @@ function testApplicationURL(): DiagnosticTest {
 
   if (!baseUrl) {
     return {
-      name: "URL de l'Application",
+      name: "Adresse de l’application",
       status: "warning",
       message: "NEXT_PUBLIC_BASE_URL non défini",
     };
@@ -189,13 +189,13 @@ function testApplicationURL(): DiagnosticTest {
   try {
     new URL(baseUrl);
     return {
-      name: "URL de l'Application",
+      name: "Adresse de l’application",
       status: "success",
       message: `URL de l'application définie: ${baseUrl}`,
     };
   } catch {
     return {
-      name: "URL de l'Application",
+      name: "Adresse de l’application",
       status: "error",
       message: `URL de l'application invalide: ${baseUrl}`,
     };
@@ -211,7 +211,7 @@ function testNodeEnvironment(): DiagnosticTest {
       : "warning";
 
   return {
-    name: "Environment Node",
+    name: "Environnement Node.js",
     status: status as "success" | "warning",
     message: `NODE_ENV: ${nodeEnv}`,
   };

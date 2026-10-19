@@ -80,9 +80,14 @@ export async function messageErreurApi(
   parDefaut = "Chargement impossible."
 ): Promise<string> {
   if (res.status === 401) return "Votre session a expiré : reconnectez-vous.";
-  if (res.status === 403) return "Vos droits ne permettent pas cette consultation.";
   try {
-    const corps = await res.json();
+    const corps = await res.clone().json();
+    // Refus d'accès : l'explication du serveur (« délégation insuffisante… », « réservé
+    // aux administrateurs de la plateforme ») vaut mieux qu'un message générique.
+    if (res.status === 403) {
+      const motif = typeof corps?.error === "string" && corps.error.trim() && !/^forbidden$/i.test(corps.error.trim()) ? corps.error.trim() : null;
+      return motif ?? "Vos droits ne permettent pas cette consultation.";
+    }
     const detail =
       corps?.error ??
       corps?.message ??
@@ -95,5 +100,6 @@ export async function messageErreurApi(
   } catch {
     /* corps illisible : le message générique suffit */
   }
+  if (res.status === 403) return "Vos droits ne permettent pas cette consultation.";
   return `${parDefaut} (erreur ${res.status})`;
 }

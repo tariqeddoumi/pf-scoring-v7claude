@@ -89,9 +89,7 @@ export async function setAppConfig(
       },
     });
 
-    // Invalidate cache
-    configCache = null;
-    cacheExpiry = 0;
+    invalidateCache();
   } catch (error) {
     console.error(`[AppConfigService] Failed to set key ${key}:`, error);
     throw error;
@@ -101,14 +99,21 @@ export async function setAppConfig(
 /**
  * Get public configuration only (for UI)
  */
+let publicCache: AppConfig | null = null;
+let publicExpiry = 0;
+
+/** Paramétrage public, lu à chaque rendu de page : gardé 30 secondes. */
 export async function getPublicConfig(): Promise<AppConfig> {
+  if (publicCache && publicExpiry > Date.now()) return publicCache;
   try {
     const configs = await prisma.appConfiguration.findMany({
       where: { isPublic: true },
     });
-    return Object.fromEntries(
+    publicCache = Object.fromEntries(
       configs.map((c) => [c.key, c.value])
     );
+    publicExpiry = Date.now() + 30_000;
+    return publicCache;
   } catch (error) {
     console.error('[AppConfigService] Failed to fetch public config:', error);
     return {};
@@ -121,4 +126,6 @@ export async function getPublicConfig(): Promise<AppConfig> {
 export function invalidateCache(): void {
   configCache = null;
   cacheExpiry = 0;
+  publicCache = null;
+  publicExpiry = 0;
 }

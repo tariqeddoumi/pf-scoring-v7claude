@@ -4,7 +4,7 @@ import { withAuth } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
-import { updateClientSchema } from "@/lib/validation-schemas";
+import { seulementFournis, updateClientSchema } from "@/lib/validation-schemas";
 import {
   donneesClient,
   ecritureActionnaires,
@@ -154,7 +154,7 @@ export async function PUT(
         attestationT24,
         attestationGroupeT24,
         ...saisie
-      } = validation.data;
+      } = seulementFournis(validation.data, body);
       const attClient = lireAttestation(attestationT24, "client", user.userId);
       const attGroupe = lireAttestation(
         attestationGroupeT24,
@@ -244,6 +244,11 @@ export async function PUT(
         if (transfert) {
           await tx.project.updateMany({
             where: { clientId: id },
+            data: { entiteId: entiteId! },
+          });
+          // … et les crédits de ces projets (unicité du numéro de dossier par banque).
+          await tx.projectCredit.updateMany({
+            where: { project: { clientId: id } },
             data: { entiteId: entiteId! },
           });
         }

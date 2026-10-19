@@ -405,7 +405,9 @@ export default function AdminUsersPage() {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (activeFilter !== "all") params.set("active", activeFilter === "active" ? "true" : "false");
+      // Le serveur ne liste que les comptes actifs par défaut : « Tous » doit le dire,
+      // sinon un compte désactivé n'apparaissait plus et ne pouvait être réactivé.
+      params.set("active", activeFilter === "active" ? "true" : "false");
       const response = await apiGet(`/api/admin/users?${params}`);
       const data = await response.json();
       setUsers(data.data || []);

@@ -192,7 +192,7 @@ export default function FieldManagementPage() {
           </Link>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Gestion des Champs
+              Champs de formulaire
             </h1>
             <p className="text-muted-foreground mt-1">
               Personnalisez les champs de saisie pour chaque entité
@@ -240,6 +240,16 @@ export default function FieldManagementPage() {
             <Loader2 size={32} className="animate-spin text-primary mx-auto mb-4" />
             <p className="text-muted-foreground">Chargement des champs...</p>
           </div>
+        </div>
+      )}
+
+      {/* La page restait blanche quand aucun champ n'était configuré pour l'écran choisi. */}
+      {!loading && sections.length === 0 && (
+        <div className="rounded-lg border border-dashed border-border bg-card px-6 py-10 text-center">
+          <p className="font-medium text-foreground">Aucun champ configuré pour cet écran</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Les champs se créent en initialisant les formulaires dynamiques (Paramétrage › Formulaires dynamiques).
+          </p>
         </div>
       )}
 

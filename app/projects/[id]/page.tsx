@@ -11,6 +11,7 @@ import { SectionCard } from "@/components/ui/section-card";
 import { KpiCard } from "@/components/ui/kpi-card";
 import { Note, StatutEvaluation, StatutProjet } from "@/components/ui/status-badge";
 import { usePermission } from "@/lib/hooks/usePermission";
+import { hasMinimumRole, type UserRole } from "@/lib/permissions";
 import { useVoirScores } from "@/components/providers/visibilite-scores";
 import { CreditsProjet } from "@/components/project/CreditsProjet";
 import { ScoringsPF } from "@/components/project/ScoringsPF";
@@ -30,7 +31,7 @@ interface Projet {
   coutTotal?: number;
   financement?: number;
   apportPropre?: number;
-  taux?: number;
+  taux?: number | null;
   dureeCredit?: number;
   typeCredit?: string;
   tauxCouverture?: number;
@@ -79,7 +80,7 @@ export default function ProjectDetailPage() {
   const voirScores = useVoirScores();
   const params = useParams();
   const router = useRouter();
-  const { can } = usePermission();
+  const { can, user } = usePermission();
   const id = String(params?.id ?? "");
 
   const [projet, setProjet] = useState<Projet | null>(null);
@@ -147,6 +148,9 @@ export default function ProjectDetailPage() {
   }
 
   const derniere = evaluations[0];
+  // Même règle que le serveur : le créateur du projet, ou à partir du gestionnaire des
+  // risques. Les boutons ne sont plus proposés à qui recevrait un refus.
+  const peutIntervenir = !!user && (user.id === projet.creePar || hasMinimumRole(user.role as UserRole, "risk_manager"));
   const secteur = projet.secteur
     ? (libelleSecteur[projet.secteur] ?? projet.secteur)
     : null;
@@ -259,7 +263,7 @@ export default function ProjectDetailPage() {
               <Champ libelle="Type de crédit" valeur={projet.typeCredit} />
               <Champ
                 libelle="Taux"
-                valeur={projet.taux !== undefined ? `${String(projet.taux).replace(".", ",")} %` : undefined}
+                valeur={projet.taux !== undefined && projet.taux !== null ? `${String(projet.taux).replace(".", ",")} %` : undefined}
               />
               {/* Le DSCR est un multiple de l'échéance, pas un pourcentage. */}
               <Champ
@@ -274,7 +278,7 @@ export default function ProjectDetailPage() {
             </Grille>
           </SectionCard>
 
-          <CreditsProjet projetId={projet.id} modifiable={can("project", "update")} />
+          <CreditsProjet projetId={projet.id} modifiable={peutIntervenir && can("project", "update")} />
 
           <SectionCard titre="Calendrier">
             <Grille>
@@ -304,7 +308,7 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <ScoringsPF projetId={projet.id} peutCreer={can("evaluation", "create")} />
+          <ScoringsPF projetId={projet.id} peutCreer={peutIntervenir && can("evaluation", "create")} />
 
           <SectionCard
             titre="Évaluations"

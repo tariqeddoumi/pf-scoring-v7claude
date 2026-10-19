@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2, Check, X } from "lucide-react";
 import type { ScoringNode, ScoringNodeOption, ScoringNodeRange } from "@/lib/types/scoring-grid";
-import { apiPut, apiPost, apiDelete } from "@/lib/api-client";
+import { apiPut, apiPost, apiDelete, messageErreurApi } from "@/lib/api-client";
 import { RulesTab } from "./RulesTab";
 import { BindingsTab } from "./BindingsTab";
 
@@ -23,7 +23,7 @@ export function NodeDetailsPanel({
   onDirtyChange,
 }: NodeDetailsPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>("properties");
-  const [isSaving, setIsSaving] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col h-full">
@@ -53,14 +53,21 @@ export function NodeDetailsPanel({
 
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto p-6">
+        {/* Les échecs d'enregistrement n'étaient écrits que dans la console. */}
+        {erreur && (
+          <p role="alert" className="mb-4 flex items-start justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {erreur}
+            <button type="button" aria-label="Fermer" onClick={() => setErreur(null)}><X size={14} /></button>
+          </p>
+        )}
         {activeTab === "properties" && (
-          <PropertiesTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} />
+          <PropertiesTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} onErreur={setErreur} />
         )}
         {activeTab === "options" && (
-          <OptionsTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} />
+          <OptionsTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} onErreur={setErreur} />
         )}
         {activeTab === "ranges" && (
-          <RangesTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} />
+          <RangesTab node={node} onNodeUpdate={onNodeUpdate} onDirtyChange={onDirtyChange} onErreur={setErreur} />
         )}
         {activeTab === "rules" && <RulesTab nodeId={node.id} versionId={versionId} />}
         {activeTab === "bindings" && <BindingsTab nodeId={node.id} versionId={versionId} />}
@@ -78,7 +85,7 @@ interface PropertiesTabProps {
   onDirtyChange: (dirty: boolean) => void;
 }
 
-function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps) {
+function PropertiesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: PropertiesTabProps & { onErreur: (m: string) => void }) {
   const [formData, setFormData] = useState(node);
 
   const handleChange = (field: keyof ScoringNode, value: any) => {
@@ -89,11 +96,11 @@ function PropertiesTab({ node, onNodeUpdate, onDirtyChange }: PropertiesTabProps
   const handleSave = async () => {
     try {
       const res = await apiPut(`/api/admin/scoring/nodes/${node.id}`, formData);
-      if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de la sauvegarde"));
       onNodeUpdate(formData);
       onDirtyChange(false);
     } catch (e) {
-      console.error("Save error:", e);
+      onErreur(e instanceof Error ? e.message : "Enregistrement impossible");
     }
   };
 
@@ -188,7 +195,7 @@ interface OptionsTabProps {
   onDirtyChange: (dirty: boolean) => void;
 }
 
-function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
+function OptionsTab({ node, onNodeUpdate, onDirtyChange, onErreur }: OptionsTabProps & { onErreur: (m: string) => void }) {
   const [options, setOptions] = useState<ScoringNodeOption[]>(node.options || []);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newOption, setNewOption] = useState<Partial<ScoringNodeOption>>({});
@@ -198,24 +205,24 @@ function OptionsTab({ node, onNodeUpdate, onDirtyChange }: OptionsTabProps) {
 
     try {
       const res = await apiPost(`/api/admin/scoring/nodes/${node.id}/options`, newOption);
-      if (!res.ok) throw new Error("Erreur lors de l'ajout");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de l'ajout"));
       const data = await res.json();
       setOptions([...options, data.data]);
       setNewOption({});
       onDirtyChange(true);
     } catch (e) {
-      console.error("Add option error:", e);
+      onErreur(e instanceof Error ? e.message : "Enregistrement impossible");
     }
   };
 
   const handleDeleteOption = async (optionId: string) => {
     try {
       const res = await apiDelete(`/api/admin/scoring/nodes/${node.id}/options/${optionId}`);
-      if (!res.ok) throw new Error("Erreur lors de la suppression");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de la suppression"));
       setOptions(options.filter((o) => o.id !== optionId));
       onDirtyChange(true);
     } catch (e) {
-      console.error("Delete option error:", e);
+      onErreur(e instanceof Error ? e.message : "Enregistrement impossible");
     }
   };
 
@@ -296,7 +303,7 @@ interface RangesTabProps {
   onDirtyChange: (dirty: boolean) => void;
 }
 
-function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
+function RangesTab({ node, onNodeUpdate, onDirtyChange, onErreur }: RangesTabProps & { onErreur: (m: string) => void }) {
   const [ranges, setRanges] = useState<ScoringNodeRange[]>(node.ranges || []);
   const [newRange, setNewRange] = useState<Partial<ScoringNodeRange>>({});
 
@@ -305,24 +312,24 @@ function RangesTab({ node, onNodeUpdate, onDirtyChange }: RangesTabProps) {
 
     try {
       const res = await apiPost(`/api/admin/scoring/nodes/${node.id}/ranges`, newRange);
-      if (!res.ok) throw new Error("Erreur lors de l'ajout");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de l'ajout"));
       const data = await res.json();
       setRanges([...ranges, data.data]);
       setNewRange({});
       onDirtyChange(true);
     } catch (e) {
-      console.error("Add range error:", e);
+      onErreur(e instanceof Error ? e.message : "Enregistrement impossible");
     }
   };
 
   const handleDeleteRange = async (rangeId: string) => {
     try {
       const res = await apiDelete(`/api/admin/scoring/nodes/${node.id}/ranges/${rangeId}`);
-      if (!res.ok) throw new Error("Erreur lors de la suppression");
+      if (!res.ok) throw new Error(await messageErreurApi(res, "Erreur lors de la suppression"));
       setRanges(ranges.filter((r) => r.id !== rangeId));
       onDirtyChange(true);
     } catch (e) {
-      console.error("Delete range error:", e);
+      onErreur(e instanceof Error ? e.message : "Enregistrement impossible");
     }
   };
 

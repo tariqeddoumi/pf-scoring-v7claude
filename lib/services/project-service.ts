@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma-client";
 import {
   createProjectSchema,
   updateProjectSchema,
+  seulementFournis,
 } from "@/lib/validation-schemas";
 import type { z } from "zod";
 import { Prisma } from "@prisma/client";
@@ -171,7 +172,7 @@ export class ProjectService {
     data: z.infer<typeof updateProjectSchema>,
     updatedBy: string
   ) {
-    const validated = updateProjectSchema.parse(data);
+    const validated = seulementFournis(updateProjectSchema.parse(data), data);
 
     // Extract date strings and convert to Date objects; remove undefined fields
     const { debutConstruction, finConstruction, clientId, ...rest } = validated as any;

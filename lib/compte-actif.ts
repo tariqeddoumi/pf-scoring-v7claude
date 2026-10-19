@@ -47,3 +47,20 @@ export async function roleDuCompteActif(userId: string): Promise<string | null> 
 export function oublierCompte(userId: string): void {
   cacheComptes.delete(userId);
 }
+
+/**
+ * Suppression d'un compte : désactivation datée, jamais d'effacement. Effacer la ligne
+ * supprimait en cascade les projets du compte (et leurs évaluations, crédits et scorings)
+ * ainsi que son journal d'audit. Le compte désactivé ne se connecte plus et n'a plus
+ * accès à rien ; ses dossiers et sa trace restent.
+ */
+export async function supprimerCompte(userId: string) {
+  const { prismaSysteme: prisma } = await import("./prisma-client");
+  const compte = await prisma.user.update({
+    where: { id: userId },
+    data: { isActive: false, deletedAt: new Date() },
+    select: { id: true, email: true, nom: true, prenom: true },
+  });
+  oublierCompte(userId);
+  return compte;
+}

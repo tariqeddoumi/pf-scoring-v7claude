@@ -6,6 +6,7 @@ import type { UserRole } from "@/lib/permissions";
 import { extensionAcceptee, EXTENSIONS_ACCEPTEES } from "@/lib/services/ia-documents/conversion";
 import { cheminPiece, lienDepot, stockageConfigure, TAILLE_MAX_FICHIER } from "@/lib/services/ia-documents/stockage";
 import { derniereAnalyse } from "@/lib/services/ia-documents/dossier";
+import { configIA, configurationIncomplete } from "@/lib/services/ia-documents/fournisseurs";
 import { messagePublic } from "@/lib/erreur-publique";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -48,7 +49,8 @@ async function handleGET(_req: NextRequest, { params }: Ctx, user: AuthPayload) 
       analyse,
       configuration: {
         stockage: stockageConfigure(),
-        ia: Boolean(process.env.ANTHROPIC_API_KEY),
+        // Fournisseur du paramétrage (Claude, OpenAI, Azure…), pas seulement la clé Anthropic.
+        ia: configurationIncomplete(await configIA()) === null,
         extensions: EXTENSIONS_ACCEPTEES,
         tailleMax: TAILLE_MAX_FICHIER,
       },

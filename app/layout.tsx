@@ -14,6 +14,15 @@ export const metadata: Metadata = {
     "Application de Scoring Project Finance - Conforme IFC, EBRD, Basel, Bank Al-Maghrib",
 };
 
+/**
+ * Rendu à chaque requête : le nom de l'outil, la couleur et le thème viennent du
+ * paramétrage en base. Pré-rendues à la compilation, les pages statiques gardaient le
+ * paramétrage du moment de la compilation (souvent les valeurs par défaut) pendant que
+ * les pages dynamiques — fiches client et projet, scoring — prenaient le paramétrage
+ * réel : deux apparences et deux noms d'outil selon l'écran.
+ */
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({
   children,
 }: Readonly<{

@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sansGeneration } from "@/lib/libelle-modele";
+import { ROLE_LABELS } from "@/lib/ui-constants";
 
 interface AdminSection {
   id: string;
@@ -55,7 +56,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "modele-pf",
     famille: "modele",
-    title: "Modèle Project Finance ★",
+    title: "Modèle Project Finance",
     description:
       "Seuils DSCR par régime, écarts sectoriels, poids des domaines et du noyau, plafonds de note et seuils des règles",
     href: "/admin/modele-pf",
@@ -65,7 +66,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "configuration",
     famille: "exploitation",
-    title: "Paramétrage de l'outil ★",
+    title: "Paramétrage de l'outil",
     description:
       "Nom affiché, logo, couleurs, police et thème — appliqués en direct dans toute l'application",
     href: "/admin/configuration",
@@ -75,7 +76,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "scoring-granularity",
     famille: "modele",
-    title: "Granularité du Scoring ★",
+    title: "Granularité du scoring",
     description: "Configurez le niveau de saisie des scores (domaine, critère ou sous-critère) par domaine",
     href: "/admin/scoring/granularity",
     icon: "📐",
@@ -84,7 +85,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "bareme",
     famille: "modele",
-    title: "Barème de notation ★",
+    title: "Barème de notation",
     description:
       "Correspondance score → note (AAA…D) appliquée par le moteur à chaque calcul",
     href: "/admin/bareme",
@@ -94,7 +95,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "regles",
     famille: "modele",
-    title: "Règles et seuils rédhibitoires ★",
+    title: "Règles et seuils rédhibitoires",
     description:
       "Vue d'ensemble des règles du modèle, dont les seuils NO-GO, et des règles sans effet",
     href: "/admin/regles",
@@ -104,7 +105,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "secteurs",
     famille: "referentiels",
-    title: "Calibrage sectoriel ★",
+    title: "Calibrage sectoriel",
     description:
       "Facteurs de pondération par secteur, points d'alerte et tests de résistance",
     href: "/admin/secteurs",
@@ -114,7 +115,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "scoring",
     famille: "modele",
-    title: "Modèle de scoring PF",
+    title: "Grille générique (constructeur)",
     description: "Visualisez les domaines, critères et barèmes du modèle actif",
     href: "/admin/scoring",
     icon: "📊",
@@ -123,7 +124,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "grille-scoring",
     famille: "modele",
-    title: "Paramétrage de la grille ★",
+    title: "Paramétrage de la grille générique",
     description: "Éditeur hiérarchique complet — domaines, critères, sous-critères, options et plages numériques",
     href: "/admin/grille-scoring",
     icon: "🎛️",
@@ -132,7 +133,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "country-risk",
     famille: "referentiels",
-    title: "Risque Pays",
+    title: "Risque pays",
     description: "Configurez les scores de risque par pays",
     href: "/admin/country-risk",
     icon: "🌍",
@@ -141,7 +142,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "diagnostic",
     famille: "exploitation",
-    title: "Diagnostic Système",
+    title: "Diagnostic du système",
     description: "Tests de santé et vérification de la configuration",
     href: "/admin/diagnostic",
     icon: "🔍",
@@ -168,7 +169,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "users",
     famille: "exploitation",
-    title: "Gestion des Utilisateurs",
+    title: "Gestion des utilisateurs",
     description: "Gérez les utilisateurs et leurs rôles",
     href: "/admin/users",
     icon: "👥",
@@ -177,7 +178,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "dynamic-forms",
     famille: "formulaires",
-    title: "Formulaires Dynamiques ★",
+    title: "Formulaires dynamiques",
     description: "Activez les formulaires rendus depuis la base de données, sans code",
     href: "/admin/dynamic-forms",
     icon: "📝",
@@ -186,7 +187,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: "field-management",
     famille: "formulaires",
-    title: "Gestion des Champs de Formulaire ★",
+    title: "Champs de formulaire",
     description: "Personnalisez les champs, sections et options des formulaires",
     href: "/admin/field-management",
     icon: "🏷️",
@@ -356,11 +357,11 @@ export default function AdminPage() {
 
         {/* Quick Stats */}
         <Card className="mt-8 p-6">
-          <h2 className="font-semibold mb-4">Résumé du Système</h2>
+          <h2 className="font-semibold mb-4">Résumé du système</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Rôle Actuel</p>
-              <p className="text-2xl font-bold capitalize">{state.user.role}</p>
+              <p className="text-sm text-muted-foreground">Rôle actuel</p>
+              <p className="break-words text-lg font-bold">{ROLE_LABELS[state.user.role] ?? state.user.role}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Domaines actifs</p>
@@ -372,7 +373,7 @@ export default function AdminPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Version publiée</p>
-              <p className="text-2xl font-bold text-foreground">{state.modelVersion}</p>
+              <p className="break-words text-lg font-bold text-foreground">{state.modelVersion}</p>
             </div>
           </div>
         </Card>

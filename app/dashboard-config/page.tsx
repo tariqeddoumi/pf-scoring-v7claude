@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   Eye,
   EyeOff,
@@ -47,7 +48,7 @@ const WIDGET_DESCRIPTIONS: Record<
     description: "Centre d'alertes avec signalisation",
   },
   distribution: {
-    name: "Distribution Ratings",
+    name: "Répartition des notes",
     description: "Répartition des ratings AAA→D",
   },
   exposure: {
@@ -125,20 +126,16 @@ export default function DashboardConfigPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Personnalisation Tableau de Bord
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Configurez votre tableau de bord personnalisé
-        </p>
-      </div>
+      <PageHeader
+        retour={{ href: "/dashboard", libelle: "Tableau de bord" }}
+        titre="Personnalisation du tableau de bord"
+        description="Choisissez les indicateurs affichés et leur disposition."
+      />
 
       {/* Message */}
       {message && (
         <div
-          className={`p-4 rounded-lg flex items-center gap-3 ${message.type === "success" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-destructive/10 text-destructive border border-destructive/20"}`}
+          className={`p-4 rounded-lg flex items-center gap-3 ${message.type === "success" ? "bg-success/10 text-success border border-success/20" : "bg-destructive/10 text-destructive border border-destructive/20"}`}
         >
           {message.text}
         </div>
@@ -149,7 +146,7 @@ export default function DashboardConfigPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Layout className="w-5 h-5 text-primary" />
-            Modèles Prédéfinis
+            Modèles prédéfinis
           </CardTitle>
           <CardDescription>
             Chargez un modèle ou créez votre propre configuration
@@ -162,18 +159,18 @@ export default function DashboardConfigPage() {
               className={
                 activeTemplate === "default"
                   ? "bg-primary hover:bg-primary/90 justify-start"
-                  : "bg-muted hover:bg-secondary justify-start border border-input"
+                  : "bg-muted text-foreground hover:bg-secondary justify-start border border-input"
               }
             >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Par Défaut
+              Par défaut
             </Button>
             <Button
               onClick={() => handleLoadTemplate("executive")}
               className={
                 activeTemplate === "executive"
                   ? "bg-primary hover:bg-primary/90 justify-start"
-                  : "bg-muted hover:bg-secondary justify-start border border-input"
+                  : "bg-muted text-foreground hover:bg-secondary justify-start border border-input"
               }
             >
               <Briefcase className="w-4 h-4 mr-2" />
@@ -184,7 +181,7 @@ export default function DashboardConfigPage() {
               className={
                 activeTemplate === "analyst"
                   ? "bg-primary hover:bg-primary/90 justify-start"
-                  : "bg-muted hover:bg-secondary justify-start border border-input"
+                  : "bg-muted text-foreground hover:bg-secondary justify-start border border-input"
               }
             >
               <Users className="w-4 h-4 mr-2" />
@@ -193,10 +190,10 @@ export default function DashboardConfigPage() {
           </div>
           <Button
             onClick={() => setShowSaveModal(true)}
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            className="w-full"
           >
             <Save className="w-4 h-4 mr-2" />
-            Enregistrer Configuration Personnalisée
+            Enregistrer cette configuration
           </Button>
         </CardContent>
       </Card>
@@ -313,7 +310,7 @@ export default function DashboardConfigPage() {
                       <Button
                         size="sm"
                         onClick={() => toggleWidget(widget.id)}
-                        className="bg-emerald-600 hover:bg-emerald-700 p-1 h-auto flex-shrink-0"
+                        className="p-1 h-auto flex-shrink-0"
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
@@ -358,7 +355,7 @@ export default function DashboardConfigPage() {
       {showSaveModal && (
         <Card className="bg-card border-cyan-600 fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 md:w-96 z-50">
           <CardHeader>
-            <CardTitle>Enregistrer Configuration Personnalisée</CardTitle>
+            <CardTitle>Enregistrer cette configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <input

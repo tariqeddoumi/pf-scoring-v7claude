@@ -305,7 +305,8 @@ model Project {
   /// Banque (entité) qui porte le dossier — celle du client
   entiteId                    String?       @db.Uuid
 
-  user        User         @relation(fields: [creePar], references: [id], onDelete: Cascade)
+  // Restrict : un compte se désactive, il ne s'efface pas avec ses dossiers.
+  user        User         @relation(fields: [creePar], references: [id], onDelete: Restrict)
   entite      Entite?      @relation("EntiteProjets", fields: [entiteId], references: [id], onDelete: Restrict)
   client      Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
   scorings    Scoring[]

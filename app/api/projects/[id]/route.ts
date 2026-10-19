@@ -3,6 +3,7 @@ import { withAuth, hasMinimumRole, type AuthPayload } from "@/lib/auth-middlewar
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import { ProjectService, messageConflitProjet } from "@/lib/services/project-service";
+import { messagePublic } from "@/lib/erreur-publique";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -21,7 +22,7 @@ async function handleGET(request: NextRequest, user: AuthPayload, params: { id: 
 
     return NextResponse.json(project, { status: 200 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -65,7 +66,7 @@ async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: 
   } catch (error: unknown) {
     const conflit = messageConflitProjet(error);
     if (conflit) return NextResponse.json({ error: conflit }, { status: 409 });
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -99,7 +100,7 @@ async function handleDELETE(request: NextRequest, user: AuthPayload, params: { i
 
     return NextResponse.json({ message: "Project deleted" }, { status: 200 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getErrorMessage } from "@/lib/error-handler";
+import { messagePublic } from "@/lib/erreur-publique";
 import { createToken } from "@/lib/auth";
 import prisma from "@/lib/prisma-client";
 
@@ -107,15 +107,22 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get("code");
     const state = searchParams.get("state");
+    const base = process.env.NEXT_PUBLIC_BASE_URL!;
+    const retourLogin = (message: string) => {
+      const u = new URL(base);
+      u.pathname = "/login";
+      u.searchParams.set("error", message);
+      const r = NextResponse.redirect(u);
+      r.cookies.delete({ name: "oauth_state", path: "/api/auth/oauth" });
+      return r;
+    };
 
-    if (!code) {
-      return NextResponse.json(
-        { error: "No authorization code" },
-        { status: 400 }
-      );
-    }
+    // Anti-CSRF : l'état renvoyé par le fournisseur doit être celui émis par oauth-init.
+    const attendu = request.cookies.get("oauth_state")?.value;
+    if (!state || !attendu || state !== attendu) return retourLogin("Connexion expirée ou invalide : recommencez.");
+    if (!code) return retourLogin("Connexion annulée.");
 
-    const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/oauth/${provider}`;
+    const redirectUri = `${base}/api/auth/oauth/${provider}`;
 
     // Échange du code pour le token
     const accessToken = await exchangeCodeForToken(provider, code, redirectUri);
@@ -123,72 +130,33 @@ export async function GET(
     // Récupération des infos utilisateur
     const oauthUser = await getUserInfo(provider, accessToken);
 
-    // Chercher ou créer l'utilisateur
-    let user = await prisma.user.findUnique({
-      where: { email: oauthUser.email },
+    // Seuls les comptes déjà ouverts par un administrateur se connectent ainsi. La route
+    // créait un compte « analyste » pour toute adresse Google ou Microsoft, sans banque
+    // de rattachement — donc avec accès à toutes les banques.
+    const user = await prisma.user.findUnique({ where: { email: oauthUser.email } });
+    if (!user) return retourLogin("Aucun compte n'est ouvert pour cette adresse : contactez l'administrateur.");
+    if (!user.isActive || user.deletedAt) return retourLogin("Ce compte est désactivé. Contactez l'administrateur.");
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { oauthProvider: provider, oauthId: oauthUser.id, avatar: oauthUser.avatar, lastLoginAt: new Date() },
     });
 
-    if (!user) {
-      const [prenom, ...nomParts] = oauthUser.name.split(" ");
-      user = await prisma.user.create({
-        data: {
-          email: oauthUser.email,
-          nom: nomParts.join(" ") || "Utilisateur",
-          prenom: prenom,
-          role: "risk_analyst",
-          password: "", // Pas de mot de passe pour OAuth
-          oauthProvider: provider,
-          oauthId: oauthUser.id,
-          avatar: oauthUser.avatar,
-        },
-      });
-    } else {
-      // Mettre à jour les infos OAuth
-      await prisma.user.update({
-        where: { email: oauthUser.email },
-        data: {
-          oauthProvider: provider,
-          oauthId: oauthUser.id,
-          avatar: oauthUser.avatar,
-        },
-      });
-    }
+    const token = await createToken({ userId: user.id, email: user.email, role: user.role });
 
-    // Un compte désactivé ou supprimé ne reçoit pas de session.
-    if (!user.isActive || user.deletedAt) {
-      return NextResponse.json(
-        { error: "Ce compte est désactivé. Contactez l'administrateur.", errorCode: "ERR_AUTH_DISABLED" },
-        { status: 403 }
-      );
-    }
-
-    // Créer le token JWT
-    const token = await createToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
-
-    // Rediriger vers le dashboard avec le token
-    const dashboardUrl = new URL(process.env.NEXT_PUBLIC_BASE_URL!);
-    dashboardUrl.pathname = "/dashboard";
-    dashboardUrl.searchParams.set("token", token);
-
-    const response = NextResponse.redirect(dashboardUrl);
-    response.cookies.set("auth_token", token, {
-      httpOnly: false, // Allow JavaScript to read for Bearer token
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 86400,
-      path: "/",
-    });
-
+    // Le jeton passe par le fragment d'URL : il n'est ni envoyé au serveur, ni écrit dans
+    // les journaux, ni transmis dans l'en-tête Referer. La page de connexion le range.
+    const u = new URL(base);
+    u.pathname = "/login";
+    u.hash = `jeton=${encodeURIComponent(token)}${user.mustChangePassword ? "&changer=1" : ""}`;
+    const response = NextResponse.redirect(u);
+    response.cookies.delete({ name: "oauth_state", path: "/api/auth/oauth" });
     return response;
   } catch (error: unknown) {
     console.error("OAuth error:", error);
     const errorUrl = new URL(process.env.NEXT_PUBLIC_BASE_URL!);
     errorUrl.pathname = "/login";
-    errorUrl.searchParams.set("error", getErrorMessage(error));
+    errorUrl.searchParams.set("error", messagePublic(error, "Connexion externe impossible"));
     return NextResponse.redirect(errorUrl);
   }
 }

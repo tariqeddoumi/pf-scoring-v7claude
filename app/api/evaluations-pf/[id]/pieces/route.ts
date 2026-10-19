@@ -44,7 +44,9 @@ async function declarer(req: NextRequest, user: AuthPayload, id: string) {
   piece.chemin = cheminPiece(`pf-${id}`, piece.id, nom);
   try {
     const lien = await lienDepot(piece.chemin, type || undefined);
-    await prisma.evaluationPF.update({ where: { id }, data: { pieces: [...pieces, piece] as unknown as Prisma.InputJsonValue } });
+    // Écrit sur la version lue : deux dépôts simultanés ne s'écrasent pas la liste.
+    const n = await prisma.evaluationPF.updateMany({ where: { id, statut: "brouillon", updatedAt: a.e.updatedAt }, data: { pieces: [...pieces, piece] as unknown as Prisma.InputJsonValue } });
+    if (n.count !== 1) return refus(409, "Le scoring a changé pendant le dépôt : réessayez.");
     return NextResponse.json({ pieceId: piece.id, url: lien.url, methode: lien.methode, entetes: lien.entetes });
   } catch (err) {
     return refus(502, messagePublic(err, "Lien de dépôt impossible"));

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, hasMinimumRole, type AuthPayload } from "@/lib/auth-middleware";
 import { EvaluationService } from "@/lib/services/evaluation-service";
+import { messagePublic } from "@/lib/erreur-publique";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -25,7 +26,7 @@ async function handleGET(request: NextRequest, user: AuthPayload, params: { id: 
 
     return NextResponse.json({ data: evaluation }, { status: 200 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -64,7 +65,7 @@ async function handlePUT(request: NextRequest, user: AuthPayload, params: { id: 
 
     return NextResponse.json({ data: evaluation }, { status: 200 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -82,7 +83,7 @@ async function handleDELETE(request: NextRequest, user: AuthPayload, params: { i
 
     return NextResponse.json(result, { status: 200 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

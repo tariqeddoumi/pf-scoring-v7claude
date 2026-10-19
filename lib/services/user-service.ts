@@ -3,9 +3,11 @@ import prisma from "@/lib/prisma-client";
 import {
   createUserSchema,
   updateUserSchema,
+  seulementFournis,
   changeUserRoleSchema,
 } from "@/lib/validation-schemas";
 import type { z } from "zod";
+import { supprimerCompte } from "@/lib/compte-actif";
 
 export class UserService {
   /**
@@ -101,7 +103,7 @@ export class UserService {
     data: z.infer<typeof updateUserSchema>,
     updatedBy: string
   ) {
-    const validated = updateUserSchema.parse(data);
+    const validated = seulementFournis(updateUserSchema.parse(data), data);
 
     const user = await prisma.user.update({
       where: { id },
@@ -155,7 +157,7 @@ export class UserService {
       throw new Error("User not found");
     }
 
-    await prisma.user.delete({ where: { id } });
+    await supprimerCompte(id);
 
     await prisma.auditLog.create({
       data: {

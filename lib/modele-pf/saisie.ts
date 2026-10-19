@@ -205,3 +205,19 @@ export function situations(cle: string, secteur: string | null): string[] {
   return optionsReferentiel(cle, secteur);
 }
 export { NIVEAUX_LIBELLES };
+
+/**
+ * Relit une saisie stockée. Si elle ne passe plus le schéma (saisie enregistrée sous une
+ * version antérieure du formulaire), chaque bloc valide est conservé et seul le bloc
+ * fautif reprend sa valeur vide : l'écran s'ouvre, et rien d'autre n'est perdu.
+ */
+export function relireSaisie(brut: unknown): SaisiePF {
+  const v = saisieSchema.safeParse(brut);
+  if (v.success) return v.data;
+  const source = brut && typeof brut === "object" ? (brut as Record<string, unknown>) : {};
+  const garde: Record<string, unknown> = {};
+  for (const [cle, champ] of Object.entries(saisieSchema.shape)) {
+    if (cle in source && (champ as z.ZodTypeAny).safeParse(source[cle]).success) garde[cle] = source[cle];
+  }
+  return saisieSchema.parse(garde);
+}

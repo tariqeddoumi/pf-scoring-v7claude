@@ -103,3 +103,16 @@ export async function verifierPlageModifiable(
   if (!range) return { modifiable: false, message: "Plage introuvable" };
   return verifierNoeudModifiable(range.nodeId);
 }
+
+/**
+ * Réponse 409 si la version est figée (publiée ou validée), sinon null. Pour les routes
+ * d'édition unitaire (nœud, option, plage, liaison) qui écrivaient sans ce contrôle :
+ * l'éditeur de grille ouvre la version publiée par défaut, et une modification rendait
+ * les notes déjà attribuées impossibles à reproduire.
+ */
+export async function refusSiVersionFigee(verdict: Promise<VerdictVersion>) {
+  const v = await verdict;
+  if (v.modifiable) return null;
+  const { errorResponse } = await import("@/lib/api-response");
+  return errorResponse(v.message ?? "Version non modifiable : créez une nouvelle version", { status: 409, errorCode: "ERR_VERSION_PUBLIEE" });
+}

@@ -33,7 +33,7 @@ async function handleGET(request: NextRequest, user: any) {
     // La route répondait 400 à toute erreur, y compris une panne de base : l'écran
     // lisait « requête invalide » là où le serveur était en défaut, et le message
     // brut ne disait rien d'exploitable.
-    const message = error instanceof Error ? error.message : String(error);
+    const message = messagePublic(error, "Requête refusée");
     console.error("[LISTE] GET error:", message);
     return NextResponse.json(
       { success: false, error: "Erreur lors de la récupération de la liste" },
