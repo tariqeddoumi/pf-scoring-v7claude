@@ -47,12 +47,9 @@ export function cn(...inputs: ClassValue[]): string {
  * @param montant - Montant en MAD (nombre entier ou décimal)
  */
 export function formatMAD(montant: number): string {
-  return new Intl.NumberFormat("fr-MA", {
-    style: "currency",
-    currency: "MAD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(montant);
+  // Séparateur de milliers français (espace) : la locale fr-MA écrit « 95.000.000 MAD »,
+  // lu comme une décimale et incohérent avec les montants abrégés du reste de l'outil.
+  return `${new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(montant)} MAD`;
 }
 
 /**

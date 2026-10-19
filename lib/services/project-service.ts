@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma-client";
+import { completerNotesProjets } from "@/lib/modele-pf/note-projet";
 import {
   createProjectSchema,
   updateProjectSchema,
@@ -118,7 +119,7 @@ export class ProjectService {
 
     // No need to log reads for performance
 
-    return project;
+    return project ? (await completerNotesProjets([project]))[0] : project;
   }
 
   /**
@@ -175,7 +176,7 @@ export class ProjectService {
     ]);
 
     return {
-      data: projects,
+      data: await completerNotesProjets(projects),
       pagination: {
         page,
         limit,
@@ -285,9 +286,11 @@ export class ProjectService {
 
     // La suppression d'un projet efface ses évaluations en cascade : elle est refusée
     // dès qu'une évaluation a quitté le brouillon (pièce du dossier de crédit).
-    const evaluationsEngagees = await prisma.scoringEvaluation.count({
-      where: { projectId: id, status: { not: "brouillon" } },
-    });
+    const [anciennes, scoringsPF] = await Promise.all([
+      prisma.scoringEvaluation.count({ where: { projectId: id, status: { not: "brouillon" } } }),
+      prisma.evaluationPF.count({ where: { projectId: id, statut: { not: "brouillon" } } }),
+    ]);
+    const evaluationsEngagees = anciennes + scoringsPF;
     if (evaluationsEngagees > 0) {
       throw new Error(
         `Suppression refusée : ${evaluationsEngagees} évaluation(s) soumise(s), validée(s) ou rejetée(s) sont rattachées au projet. Archivez-le plutôt.`

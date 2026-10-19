@@ -3,13 +3,21 @@ import { ZodError } from "zod";
 import { withAuth, withAdminAuth } from "@/lib/auth-middleware";
 import { messagePublic } from "@/lib/erreur-publique";
 import { chargerParametres, enregistrerParametres, anomaliesParametres } from "@/lib/modele-pf/serveur";
-import { PARAMETRES_DEFAUT } from "@/lib/modele-pf/parametres";
+import { PARAMETRES_DEFAUT, parametresVisibles } from "@/lib/modele-pf/parametres";
+import { peutVoirScores } from "@/lib/score-visibility";
 
 /** GET — paramètres du modèle en vigueur, valeurs candidates d'origine et anomalies éventuelles. */
 export async function GET(req: NextRequest) {
-  return withAuth(req, async () => {
+  return withAuth(req, async (_r, user) => {
+    // La conversion et le niveau des plafonds révèlent les notes : masqués pour les rôles
+    // qui ne voient pas les scores, comme dans l'écran de scoring.
+    const voir = peutVoirScores(user.role);
     const parametres = await chargerParametres();
-    return NextResponse.json({ parametres, defaut: PARAMETRES_DEFAUT, anomalies: anomaliesParametres(parametres) });
+    return NextResponse.json({
+      parametres: parametresVisibles(parametres, voir),
+      defaut: parametresVisibles(PARAMETRES_DEFAUT, voir),
+      anomalies: anomaliesParametres(parametres),
+    });
   });
 }
 

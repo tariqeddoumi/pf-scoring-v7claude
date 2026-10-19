@@ -199,3 +199,73 @@ export const LIBELLES_TYPE: Record<TypeAlerte, string> = {
   regle_inevaluable: "Règle non évaluée",
   publication_bloquee: "Publication bloquée",
 };
+
+/** Scoring Project Finance tel qu'il est lu en base : verrous et plafonds actifs de son résultat. */
+export interface ScoringPFPourAlertes {
+  id: string;
+  projectId: string | null;
+  projectName: string;
+  statut: string;
+  updatedAt: Date | string;
+  verrousActifs: string[];
+  plafondsActifs: string[];
+  libellesVerrous: Record<string, { libelle: string; stade: string }>;
+  libellesPlafonds: Record<string, { libelle: string; niveau: number }>;
+}
+
+/**
+ * Alertes des scorings PF : une exclusion (X) ou un blocage (B) est critique, un plafond
+ * actif (C) appelle la vigilance. Le plafond révèle une note : l'appelant le réserve aux
+ * rôles qui voient les scores (type « score_faible »).
+ */
+export function deriverAlertesPF(scorings: ScoringPFPourAlertes[]): Alerte[] {
+  const alertes: Alerte[] = [];
+  for (const s of scorings) {
+    const date = new Date(s.updatedAt).toISOString();
+    const commun = {
+      evaluationId: s.id,
+      projectId: s.projectId,
+      projectName: s.projectName,
+      date,
+      lienAction: `/scoring-pf/${s.id}`,
+      clos: s.statut === "valide" || s.statut === "rejete",
+    };
+    const exclusions = s.verrousActifs.filter((c) => c.startsWith("X"));
+    const blocages = s.verrousActifs.filter((c) => c.startsWith("B"));
+    if (exclusions.length) {
+      alertes.push({
+        ...commun,
+        id: `${s.id}:exclusion`,
+        type: "blocage",
+        severite: "critique",
+        titre: "Dossier hors périmètre : aucune note produite",
+        message: exclusions.map((c) => `${c} — ${s.libellesVerrous[c]?.libelle ?? c}`).join(" ; "),
+      });
+    }
+    if (blocages.length) {
+      alertes.push({
+        ...commun,
+        id: `${s.id}:blocage`,
+        type: "blocage",
+        severite: "critique",
+        titre: "Note provisoire : stade bloqué",
+        message: blocages
+          .map((c) => `${c} — ${s.libellesVerrous[c]?.libelle ?? c} (bloque : ${s.libellesVerrous[c]?.stade ?? "?"})`)
+          .join(" ; "),
+      });
+    }
+    if (s.plafondsActifs.length) {
+      alertes.push({
+        ...commun,
+        id: `${s.id}:plafond`,
+        type: "score_faible",
+        severite: "vigilance",
+        titre: s.plafondsActifs.length === 1 ? "Plafond de note actif" : `${s.plafondsActifs.length} plafonds de note actifs`,
+        message: s.plafondsActifs
+          .map((c) => `${c} — ${s.libellesPlafonds[c]?.libelle ?? c} (note ≤ ${s.libellesPlafonds[c]?.niveau ?? "?"})`)
+          .join(" ; "),
+      });
+    }
+  }
+  return alertes;
+}

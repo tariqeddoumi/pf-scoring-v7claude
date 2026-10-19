@@ -5,8 +5,8 @@ import prisma from "@/lib/prisma-client";
 import { messagePublic } from "@/lib/erreur-publique";
 import { peutVoirScores } from "@/lib/score-visibility";
 import { relireSaisie, saisieSchema } from "@/lib/modele-pf/saisie";
-import type { ParametresModele } from "@/lib/modele-pf/parametres";
-import { piecesDe } from "@/lib/modele-pf/acces";
+import { parametresVisibles, type ParametresModele } from "@/lib/modele-pf/parametres";
+import { dernierRejet, intervenantsScoring, piecesDe } from "@/lib/modele-pf/acces";
 import { chargerParametres, calculerEvaluation, peutSaisir, peutDecider, resultatVisible } from "@/lib/modele-pf/serveur";
 
 interface RouteParams { params: Promise<{ id: string }> }
@@ -26,7 +26,12 @@ async function charger(id: string) {
   return prisma.evaluationPF.findUnique({ where: { id }, include: inclure });
 }
 
-function reponse(e: Charge, user: AuthPayload, P: Awaited<ReturnType<typeof chargerParametres>>) {
+function reponse(
+  e: Charge,
+  user: AuthPayload,
+  P: Awaited<ReturnType<typeof chargerParametres>>,
+  extra: { intervenants?: string[]; rejet?: { motif: string | null; le: Date } | null } = {}
+) {
   const saisie = relireSaisie(e.saisie);
   const codes = { codeClientT24: e.project.client?.codeClientT24, radical: e.project.client?.radical, codeProjet: e.project.codeProjet };
   const calc = calculerEvaluation(saisie, P, codes);
@@ -40,13 +45,14 @@ function reponse(e: Charge, user: AuthPayload, P: Awaited<ReturnType<typeof char
     controles: calc.controles,
     voirScores: voir,
     // Sans visibilité des notes : ni barème de conversion, ni niveau des plafonds.
-    parametres: voir ? P : { ...P, conversion: [], plafonds: Object.fromEntries(Object.entries(P.plafonds).map(([k, v]) => [k, { ...v, niveau: 0 }])) },
+    parametres: parametresVisibles(P, voir),
     droits: {
       saisir: e.statut === "brouillon" && peutSaisir(user.role, user.userId, [e.creePar, e.project.creePar]),
-      decider: e.statut === "soumis" && peutDecider(user.role, user.userId, [e.creePar, e.modifiePar, e.project.creePar]),
+      decider: e.statut === "soumis" && peutDecider(user.role, user.userId, extra.intervenants ?? [e.creePar, e.modifiePar, e.project.creePar]),
       rouvrir: (e.statut === "soumis" || e.statut === "rejete") && peutSaisir(user.role, user.userId, [e.creePar, e.project.creePar]),
     },
     analyseIa: e.analyseIa ?? null,
+    dernierRejet: extra.rejet ?? null,
     // Le chemin de stockage reste côté serveur.
     pieces: piecesDe(e.pieces).map((p) => ({ id: p.id, nom: p.nom, taille: p.taille, type: p.type, deposeLe: p.deposeLe })),
   };
@@ -59,7 +65,8 @@ async function lire(_req: NextRequest, user: AuthPayload, id: string) {
   // Un scoring soumis ou validé se relit avec les paramètres de son calcul : la note reste
   // reproductible même si le paramétrage change ensuite.
   const P = e.statut !== "brouillon" && e.parametres ? (e.parametres as unknown as ParametresModele) : await chargerParametres();
-  return NextResponse.json(reponse(e, user, P));
+  const [intervenants, rejet] = await Promise.all([intervenantsScoring(e), dernierRejet(id)]);
+  return NextResponse.json(reponse(e, user, P, { intervenants, rejet }));
 }
 
 /** PUT — enregistre la saisie (brouillon seulement) ; le serveur recalcule et conserve le résultat. */
@@ -88,6 +95,11 @@ async function enregistrer(req: NextRequest, user: AuthPayload, id: string) {
       },
     });
     if (ecrit.count !== 1) return NextResponse.json({ error: "Ce scoring n'est plus modifiable : il a été soumis entre-temps." }, { status: 409 });
+    // modifiePar ne garde que le dernier rédacteur : chaque nouveau contributeur est tracé
+    // pour être écarté de la décision (séparation des fonctions).
+    if (e.modifiePar !== user.userId) {
+      await prisma.auditLog.create({ data: { projectId: e.projectId, utilisateurId: user.userId, action: "SCORING_PF_CONTRIBUTION", details: JSON.stringify({ evaluationId: id }) } });
+    }
     const maj = (await charger(id))!;
     return NextResponse.json(reponse(maj, user, P));
   } catch (err) {
@@ -103,7 +115,10 @@ async function supprimer(_req: NextRequest, user: AuthPayload, id: string) {
   if (!peutSaisir(user.role, user.userId, [e.creePar, e.project.creePar])) {
     return NextResponse.json({ error: "Vos droits ne permettent pas de supprimer ce scoring" }, { status: 403 });
   }
-  await prisma.evaluationPF.delete({ where: { id } });
+  // Suppression conditionnelle : le scoring a pu être soumis entre la lecture et la suppression.
+  if ((await prisma.evaluationPF.deleteMany({ where: { id, statut: "brouillon" } })).count !== 1) {
+    return NextResponse.json({ error: "Seul un brouillon se supprime" }, { status: 409 });
+  }
   await prisma.auditLog.create({ data: { projectId: e.projectId, utilisateurId: user.userId, action: "SCORING_PF_SUPPRIME", details: JSON.stringify({ evaluationId: id }) } });
   return NextResponse.json({ ok: true });
 }

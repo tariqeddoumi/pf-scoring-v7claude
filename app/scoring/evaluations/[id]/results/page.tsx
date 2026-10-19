@@ -175,10 +175,10 @@ function ResultsPageContenu() {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-right text-warning">
-                  {result.rawScore.toFixed(2).replace(".", ",")}
+                  {result.rawScore != null ? result.rawScore.toFixed(2).replace(".", ",") : "—"}
                 </td>
                 <td className="px-4 py-3 text-right text-primary">
-                  {result.weightedScore.toFixed(2).replace(".", ",")}
+                  {result.weightedScore != null ? result.weightedScore.toFixed(2).replace(".", ",") : "—"}
                 </td>
                 <td className="px-4 py-3 text-right text-foreground">
                   {(result.normalizedScore * 100).toFixed(1).replace(".", ",")}{" "}

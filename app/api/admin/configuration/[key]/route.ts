@@ -1,6 +1,7 @@
 import { motifLogoInvalide } from "@/lib/logo";
 import { NextRequest, NextResponse } from "next/server";
-import { withAdminAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { withAdminAuth, hasMinimumRole, type AuthPayload } from "@/lib/auth-middleware";
+import { CLE_PARAMETRES } from "@/lib/modele-pf/serveur";
 import prisma from "@/lib/prisma-client";
 import { setAppConfig } from "@/lib/services/app-config-service";
 
@@ -40,11 +41,31 @@ async function handleGet(key: string) {
  */
 async function handlePut(request: NextRequest, key: string, user: AuthPayload) {
   try {
+    // La configuration est commune à toutes les banques (adresse et clé de l'IA, matrice de
+    // délégation, T24…) : un administrateur du modèle d'une filiale pouvait la réécrire, par
+    // exemple rediriger l'IA vers un serveur tiers avec la clé d'API et les pièces des dossiers.
+    if (!hasMinimumRole(user.role, "system_admin") || !user.perimetre?.tout) {
+      return NextResponse.json(
+        { error: "Seul un administrateur système du groupe modifie la configuration commune" },
+        { status: 403 }
+      );
+    }
+    // Les paramètres du modèle PF passent par leur écran, qui contrôle leur cohérence.
+    if (key === CLE_PARAMETRES) {
+      return NextResponse.json(
+        { error: "Les paramètres du modèle se modifient dans l'administration du modèle PF" },
+        { status: 400 }
+      );
+    }
     const body = await request.json();
     const { value } = body;
 
     if (value === undefined || value === null) {
       return NextResponse.json({ error: "Value is required" }, { status: 400 });
+    }
+
+    if (key === "IA_URL_BASE" && String(value).trim() && !/^https:\/\/[^\s]+$/.test(String(value).trim())) {
+      return NextResponse.json({ error: "L'adresse de l'IA doit commencer par https://" }, { status: 400 });
     }
 
     if (key === "APP_LOGO_URL") {

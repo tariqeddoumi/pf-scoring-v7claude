@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
-import { EvaluationService } from "@/lib/services/evaluation-service";
 import { lirePagination } from "@/lib/validation-schemas";
 import { messagePublic } from "@/lib/erreur-publique";
 import { hasPermission } from "@/lib/services/permission-service";
@@ -8,7 +7,7 @@ import type { UserRole } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { peutVoirScores } from "@/lib/score-visibility";
 import { chargerParametres } from "@/lib/modele-pf/serveur";
-import { gradeDeLaNote } from "@/lib/modele-pf/parametres";
+import { fusionnerParametres, gradeDeLaNote } from "@/lib/modele-pf/parametres";
 
 /**
  * GET /api/evaluations — liste des évaluations, c'est-à-dire des scorings Project Finance
@@ -47,7 +46,7 @@ async function handleGET(request: NextRequest, user: AuthPayload) {
         take: limit,
         select: {
           id: true, projectId: true, titre: true, statut: true, scoreGlobal: true, noteCalculee: true,
-          noteApprouvee: true, statutNote: true, regimeRetenu: true, soumisLe: true, createdAt: true, updatedAt: true,
+          noteApprouvee: true, statutNote: true, parametres: true, regimeRetenu: true, soumisLe: true, createdAt: true, updatedAt: true,
           creePar: true,
           project: {
             select: { id: true, nom: true, montant: true, secteur: true, codeProjet: true, client: { select: { id: true, nom: true } } },
@@ -71,10 +70,13 @@ async function handleGET(request: NextRequest, user: AuthPayload) {
         titre: e.titre,
         status: e.statut,
         finalScore: e.scoreGlobal,
-        rating: gradeDeLaNote(note, P),
+        // Un dossier soumis ou décidé garde la correspondance des grades de sa soumission,
+        // comme l'écran de scoring qui le relit avec ses paramètres figés.
+        rating: gradeDeLaNote(note, e.statut !== "brouillon" && e.parametres ? fusionnerParametres(e.parametres as never) : P),
         ...(voir && { noteCalculee: e.noteCalculee, noteApprouvee: e.noteApprouvee }),
-        // Le statut de note commence par « Hors périmètre » (exclusion) ou « Note provisoire » (blocage).
-        recommendation: e.statutNote,
+        // Le statut de note commence par « Hors périmètre » (exclusion) ou « Note provisoire »
+        // (blocage) ; il ne contient pas la note et reste visible de tous les rôles.
+        statutNote: e.statutNote,
         regimeRetenu: e.regimeRetenu,
         submittedAt: e.soumisLe,
         createdAt: e.createdAt,
@@ -98,40 +100,11 @@ async function handleGET(request: NextRequest, user: AuthPayload) {
   }
 }
 
-/**
- * POST /api/evaluations - Create new evaluation (analyst+)
- */
-async function handlePOST(request: NextRequest, user: AuthPayload) {
-  try {
-    // Tout rôle qui lit les évaluations : le comité (décideur), l'auditeur et la lecture
-    // seule recevaient 403 alors que le détail d'une évaluation leur est ouvert. Les
-    // notes restent masquées selon le rôle (withAuth).
-    if (!hasPermission(user.role as UserRole, "evaluation", "read")) {
-      return NextResponse.json(
-        { error: "Vos droits ne permettent pas de consulter les évaluations" },
-        { status: 403 }
-      );
-    }
-
-    const body = await request.json();
-    const evaluation = await EvaluationService.createEvaluation(
-      body,
-      user.userId
-    );
-
-    return NextResponse.json(evaluation, { status: 201 });
-  } catch (error: unknown) {
-    return NextResponse.json(
-      { error: messagePublic(error, "Requête refusée") },
-      { status: 400 }
-    );
-  }
-}
-
 export async function GET(request: NextRequest) {
   return withAuth(request, (req, user) => handleGET(req, user));
 }
 
-export async function POST(request: NextRequest) {
-  return withAuth(request, (req, user) => handlePOST(req, user));
+/** L'ancienne création (moteur générique) est retirée : un scoring se crée sur le projet. */
+export function POST() {
+  return NextResponse.json({ error: "Route retirée : utilisez POST /api/projects/[id]/evaluations-pf." }, { status: 410 });
 }

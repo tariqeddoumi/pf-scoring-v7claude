@@ -10,7 +10,7 @@ import { hasPermission } from "@/lib/services/permission-service";
 import { anomaliesParametres, fusionnerParametres, GRADES, PARAMETRES_DEFAUT, type ParametresModele } from "./parametres";
 
 export { anomaliesParametres };
-import { calculer, type SaisiePF } from "./saisie";
+import { calculer, relireSaisie, type SaisiePF } from "./saisie";
 import type { ResultatPF } from "./moteur";
 
 export const CLE_PARAMETRES = "MODELE_PF_PARAMETRES";
@@ -96,4 +96,22 @@ export function peutSaisir(role: string, userId: string, auteurs: (string | null
  */
 export function peutDecider(role: string, userId: string, intervenants: (string | null | undefined)[]): boolean {
   return !intervenants.includes(userId) && hasPermission(role as UserRole, "evaluation", "approve");
+}
+
+/**
+ * Résultat d'un scoring pour les synthèses (alertes, analyses) : celui enregistré, ou à
+ * défaut recalculé depuis la saisie — les scorings installés par script n'en ont pas.
+ */
+export function resultatCourant(
+  e: { resultat: unknown; saisie: unknown; project?: { codeProjet?: string | null; client?: { codeClientT24?: string | null; radical?: string | null } | null } | null },
+  P: ParametresModele
+): Partial<ResultatPF> {
+  if (e.resultat && typeof e.resultat === "object") return e.resultat as Partial<ResultatPF>;
+  try {
+    return calculerEvaluation(relireSaisie(e.saisie), P, {
+      codeClientT24: e.project?.client?.codeClientT24, radical: e.project?.client?.radical, codeProjet: e.project?.codeProjet,
+    }).resultat;
+  } catch {
+    return {};
+  }
 }

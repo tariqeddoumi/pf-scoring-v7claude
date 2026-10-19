@@ -71,6 +71,9 @@ async function getUserInfo(
 
     if (!response.ok) throw new Error("Failed to fetch Google user info");
     const data = await response.json();
+    // Le compte est retrouvé par son adresse : une adresse non vérifiée par Google ne prouve
+    // pas que la personne la possède.
+    if (data.verified_email !== true && data.email_verified !== true) throw new Error("Adresse Google non vérifiée");
 
     return {
       id: data.id,
@@ -89,7 +92,9 @@ async function getUserInfo(
 
     return {
       id: data.id,
-      email: data.userPrincipalName || data.mail,
+      // Le nom principal est contrôlé par l'annuaire ; « mail » est déclaratif et permettait
+      // de se présenter sous l'adresse d'un autre (attaque dite nOAuth).
+      email: data.userPrincipalName,
       name: data.displayName,
       provider: "microsoft",
     };
@@ -136,6 +141,10 @@ export async function GET(
     const user = await prisma.user.findUnique({ where: { email: oauthUser.email } });
     if (!user) return retourLogin("Aucun compte n'est ouvert pour cette adresse : contactez l'administrateur.");
     if (!user.isActive || user.deletedAt) return retourLogin("Ce compte est désactivé. Contactez l'administrateur.");
+    // Une fois associé, le compte n'accepte que la même identité chez le même fournisseur.
+    if (user.oauthProvider === provider && user.oauthId && user.oauthId !== oauthUser.id) {
+      return retourLogin("Cette identité ne correspond pas au compte déjà associé : contactez l'administrateur.");
+    }
 
     await prisma.user.update({
       where: { id: user.id },

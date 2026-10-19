@@ -122,6 +122,9 @@ export async function PUT(
       if (role !== undefined && !VALID_ROLES.includes(role)) {
         errors.push({ field: "role", message: "Rôle invalide" });
       }
+      if (role !== undefined && role !== cible.role && cible.id === admin.userId) {
+        errors.push({ field: "role", message: "Vous ne pouvez pas modifier votre propre rôle" });
+      }
       if (!roleAttribuable(admin.role, role, String(cible.role))) {
         errors.push({
           field: "role",
@@ -149,6 +152,8 @@ export async function PUT(
           ...(prenom !== undefined && { prenom }),
           ...(role !== undefined && { role }),
           ...(isActive !== undefined && { isActive }),
+          // Réactiver un compte supprimé lève la suppression : sinon il restait refusé.
+          ...(isActive === true && { deletedAt: null }),
           ...(entite?.ok && { entiteId: entite.entiteId }),
           ...(porteeEcriture !== undefined && { porteeEcriture }),
         },
@@ -187,6 +192,9 @@ export async function PATCH(
 
       if (!VALID_ROLES.includes(role)) {
         return validationError([{ field: "role", message: "Rôle invalide" }]);
+      }
+      if (cible.id === admin.userId && role !== cible.role) {
+        return validationError([{ field: "role", message: "Vous ne pouvez pas modifier votre propre rôle" }]);
       }
       if (!roleAttribuable(admin.role, role, String(cible.role))) {
         return validationError([

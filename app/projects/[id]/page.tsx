@@ -49,6 +49,8 @@ interface Projet {
   structureCapitalePrincipale?: string;
   scoreGlobal?: number | null;
   grade?: string | null;
+  /** Note du dernier scoring, pas encore validée par le comité. */
+  noteProposee?: boolean;
   codeProjet?: string | null;
   creePar?: string;
   client?: { id: string; nom: string; email?: string; telephone?: string; codeClientT24?: string | null; radical?: string | null } | null;
@@ -225,7 +227,9 @@ export default function ProjectDetailPage() {
           precision={
             partFondsPropres !== null
               ? `${partFondsPropres.toFixed(0)} % de fonds propres`
-              : "Coût total non renseigné"
+              : projet.coutTotal
+                ? "Fonds propres non renseignés"
+                : "Coût total non renseigné"
           }
           ton={
             partFondsPropres !== null && partFondsPropres < 20 ? "alerte" : "neutre"
@@ -236,7 +240,9 @@ export default function ProjectDetailPage() {
           valeur={projet.grade ?? "—"}
           precision={
             projet.scoreGlobal !== null && projet.scoreGlobal !== undefined
-              ? `Score ${projet.scoreGlobal.toFixed(1).replace(".", ",")} / 100`
+              ? `Score ${projet.scoreGlobal.toFixed(1).replace(".", ",")} / 100${
+                  projet.noteProposee ? " · proposée, non validée" : ""
+                }`
               : "Aucune évaluation calculée"
           }
         />}
@@ -315,8 +321,8 @@ export default function ProjectDetailPage() {
               <p className="flex items-start gap-2 text-sm text-destructive">
                 <Ban size={16} className="mt-0.5 shrink-0" />
                 <span>
-                  La dernière évaluation a été rejetée. Ouvrez-la pour consulter le
-                  motif et les règles déclenchées.
+                  La dernière évaluation a été rejetée par le comité. Ouvrez-la pour
+                  consulter le motif du rejet.
                 </span>
               </p>
             </SectionCard>

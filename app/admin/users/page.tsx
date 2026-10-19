@@ -51,11 +51,11 @@ interface EntiteChoix {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const ROLE_LABELS: Record<string, string> = {
-  system_admin: "Super Admin",
-  scoring_admin: "Admin Scoring",
-  risk_manager: "Gestionnaire Risque",
-  committee_member: "Membre Comité",
-  risk_analyst: "Analyste Risque",
+  system_admin: "Administrateur système",
+  scoring_admin: "Administrateur du modèle",
+  risk_manager: "Responsable des risques",
+  committee_member: "Membre du comité",
+  risk_analyst: "Analyste risques",
   auditor: "Auditeur",
   read_only: "Lecture seule",
 };
@@ -501,7 +501,7 @@ export default function AdminUsersPage() {
             <div>
               <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
                 <Shield size={20} className="text-primary shrink-0" />
-                Gestion des Utilisateurs
+                Gestion des utilisateurs
               </h1>
               <p className="text-sm text-muted-foreground">Gérez les comptes, rôles et accès</p>
             </div>

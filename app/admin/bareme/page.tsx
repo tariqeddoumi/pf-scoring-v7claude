@@ -66,7 +66,7 @@ export default function BaremePage() {
   const router = useRouter();
   const [paliers, setPaliers] = useState<Palier[]>([]);
   const [initial, setInitial] = useState<Palier[]>([]);
-  const [dossiers, setDossiers] = useState<{ nom: string; score: number }[]>([]);
+  const dossiers: { nom: string; score: number }[] = [];
   const [chargement, setChargement] = useState(true);
   const [enregistrement, setEnregistrement] = useState(false);
   const [enregistre, setEnregistre] = useState(false);
@@ -84,20 +84,9 @@ export default function BaremePage() {
       setPaliers(data);
       setInitial(data);
 
-      // Les dossiers notés se placent sur l'échelle : on voit ce qu'un déplacement
-      // de seuil ferait, au lieu de le deviner.
-      const resEvals = await apiGet("/api/evaluations?limit=200");
-      if (resEvals.ok) {
-        const liste = (await resEvals.json()).data ?? [];
-        setDossiers(
-          liste
-            .filter((e: { finalScore: number | null }) => e.finalScore != null)
-            .map((e: { finalScore: number; project?: { nom?: string } }) => ({
-              nom: e.project?.nom ?? "Dossier",
-              score: e.finalScore,
-            }))
-        );
-      }
+      // Les scorings PF ne sont pas notés par ce barème (leur conversion se règle dans
+      // l'administration du modèle PF) : les y projeter laissait croire qu'un seuil
+      // déplacé ici changeait leur note.
     } catch {
       setErreurs(["Impossible de charger le barème."]);
     } finally {
@@ -243,6 +232,12 @@ export default function BaremePage() {
         description="Correspondance entre le score final (0–100) et la note. Le moteur lit ce barème à chaque calcul : une modification vaut pour les évaluations calculées ensuite, sans toucher aux notes déjà enregistrées."
         retour={{ href: "/admin", libelle: "Paramétrage" }}
       />
+
+      <div className="mb-4 rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted-foreground">
+        Ce barème note l&apos;ancien questionnaire générique. Les évaluations Project Finance se
+        convertissent en note puis en grade selon la table du modèle PF, réglée dans{" "}
+        <a href="/admin/modele-pf" className="font-medium text-primary underline">l&apos;administration du modèle PF</a>.
+      </div>
 
       {erreurs.length > 0 && (
         <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive-subtle px-4 py-3 text-sm text-destructive">

@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { hasPermission } from "@/lib/permissions";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useAppConfig } from "@/components/providers/app-config-provider";
 import { useVoirScores } from "@/components/providers/visibilite-scores";
 
@@ -36,6 +38,8 @@ interface Entree {
   alerte?: boolean;
   /** Écran consacré aux scores : masqué pour les rôles qui ne les voient pas. */
   scores?: boolean;
+  /** Permission exigée pour voir l'entrée (lib/permissions). */
+  permission?: string;
 }
 
 const GROUPES: { titre: string; entrees: Entree[] }[] = [
@@ -54,7 +58,7 @@ const GROUPES: { titre: string; entrees: Entree[] }[] = [
       { icone: CheckCircle, libelle: "Évaluations", href: "/evaluations", compteur: "aTraiter" },
       // L'écran des circuits de validation n'était relié à rien : aucune entrée de
       // menu, aucun lien depuis une autre page.
-      { icone: GitBranch, libelle: "Validations", href: "/workflows" },
+      { icone: GitBranch, libelle: "Validations", href: "/evaluations?onglet=aValider" },
     ],
   },
   {
@@ -71,7 +75,7 @@ const GROUPES: { titre: string; entrees: Entree[] }[] = [
     titre: "Référence",
     entrees: [
       { icone: BookOpen, libelle: "Méthodologie", href: "/methodology" },
-      { icone: ScrollText, libelle: "Journal d'audit", href: "/audit" },
+      { icone: ScrollText, libelle: "Journal d'audit", href: "/audit", permission: "audit:read" },
     ],
   },
 ];
@@ -100,6 +104,7 @@ export function Sidebar({
   onFermer?: () => void;
 }) {
   const voirScores = useVoirScores();
+  const { user: utilisateur } = useCurrentUser();
   const pathname = usePathname() || "/";
   const { config, entite } = useAppConfig();
   const nomAppli = config.APP_NAME || "Scoring PF";
@@ -184,7 +189,7 @@ export function Sidebar({
             <p className="px-2.5 pb-1.5 pt-4 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
               {groupe.titre}
             </p>
-            {groupe.entrees.filter((e) => voirScores || !e.scores).map((e) => {
+            {groupe.entrees.filter((e) => (voirScores || !e.scores) && (!e.permission || (!!utilisateur && hasPermission(utilisateur.role, e.permission)))).map((e) => {
               const Icone = e.icone;
               const active = estActive(e.href);
               const n = e.compteur ? compteurs[e.compteur] : 0;

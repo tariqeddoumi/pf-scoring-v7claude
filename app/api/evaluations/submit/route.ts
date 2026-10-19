@@ -1,49 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
-import { EvaluationService } from "@/lib/services/evaluation-service";
-import { messagePublic } from "@/lib/erreur-publique";
+import { NextResponse } from "next/server";
 
 /**
- * POST /api/evaluations/submit - Submit evaluation for validation
+ * Route historique de l'ancien moteur de questionnaire, retirée : aucun écran ne l'appelait,
+ * sa validation ignorait la délégation par montant et écrasait le grade du projet par
+ * celui de l'ancien moteur. Le circuit se fait sur le scoring PF :
+ * POST /api/evaluations-pf/[id]/statut.
  */
-async function handlePOST(request: NextRequest, user: AuthPayload) {
-  try {
-    if (
-      ![
-        "system_admin",
-        "scoring_admin",
-        "risk_manager",
-        "risk_analyst",
-      ].includes(user.role)
-    ) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const body = await request.json();
-    const { id, ...submitData } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Evaluation ID required" },
-        { status: 400 }
-      );
-    }
-
-    const evaluation = await EvaluationService.submitEvaluation(
-      id,
-      submitData,
-      user.userId
-    );
-
-    return NextResponse.json(evaluation, { status: 200 });
-  } catch (error: unknown) {
-    return NextResponse.json(
-      { error: messagePublic(error, "Requête refusée") },
-      { status: 400 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  return withAuth(request, (req, user) => handlePOST(req, user));
+export function POST() {
+  return NextResponse.json(
+    { error: "Route retirée : utilisez POST /api/evaluations-pf/[id]/statut (soumettre, valider, rejeter, rouvrir)." },
+    { status: 410 }
+  );
 }

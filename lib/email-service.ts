@@ -11,7 +11,7 @@ const TEMPLATES = {
       <p>Bonjour,</p>
       <p>L'évaluation <strong>${evalId}</strong> a été soumise par ${name}.</p>
       <p>
-        <a href="https://pf-scoring.app/evaluations/${evalId}"
+        <a href="https://pf-scoring.app/scoring-pf/${evalId}"
            style="background: #00a8cc; color: white; padding: 10px 20px;
                   text-decoration: none; border-radius: 4px;">
           Voir l'évaluation

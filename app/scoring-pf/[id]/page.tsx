@@ -30,6 +30,7 @@ interface Donnees {
   voirScores: boolean; parametres: ParametresModele;
   droits: { saisir: boolean; decider: boolean; rouvrir: boolean };
   analyseIa: AnalysePF | null; pieces: unknown[];
+  dernierRejet: { motif: string | null; le: string } | null;
 }
 
 const ONGLETS = [
@@ -264,6 +265,15 @@ export default function ScoringPFPage() {
         </SectionCard>
       )}
 
+      {/* Le motif du rejet n'était consigné qu'au journal d'audit : l'analyste qui rouvrait le
+          dossier ne savait pas ce que le comité demandait de corriger. */}
+      {d.dernierRejet && (d.statut === "rejete" || d.statut === "brouillon") && (
+        <p className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+          <strong>Rejeté par le comité le {new Date(d.dernierRejet.le).toLocaleDateString("fr-FR")}</strong>
+          {d.dernierRejet.motif ? ` — motif : ${d.dernierRejet.motif}` : ""}
+        </p>
+      )}
+
       {message && (
         <p role={message.ton === "erreur" ? "alert" : "status"}
           className={cn("mb-3 rounded-md border px-3 py-2 text-[13px]", message.ton === "erreur" ? "border-destructive/40 bg-destructive/10 text-destructive" : "border-success/40 bg-success/10 text-success")}>
@@ -275,17 +285,19 @@ export default function ScoringPFPage() {
       <div className="sticky top-0 z-20 -mx-1 mb-4 rounded-lg border border-border bg-card/95 px-3 py-2 shadow-sm backdrop-blur">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12.5px]">
           <span className="font-mono text-muted-foreground">
-            {d.projet.client?.codeClientT24 ?? "T24 ?"} · {d.projet.client?.radical ?? "radical ?"} · {d.projet.codeProjet ?? "code projet ?"}
+            Code T24 {d.projet.client?.codeClientT24 ?? "?"} · Radical {d.projet.client?.radical ?? "?"} · Projet {d.projet.codeProjet ?? "?"}
           </span>
           {voir && (
             <>
-              <Indic libelle="Note approuvée" valeur={r.noteApprouvee === null ? "—" : `${r.noteApprouvee}${typeof r.noteApprouvee === "number" ? ` · ${gradeDeLaNote(r.noteApprouvee, d.parametres) ?? ""}` : ""}`} fort />
+              {/* « Approuvée » au sens du modèle (après plafonds) : tant que le comité n'a pas
+                  validé, c'est une proposition. */}
+              <Indic libelle={d.statut === "valide" ? "Note validée" : "Note proposée"} valeur={r.noteApprouvee === null ? "—" : `${r.noteApprouvee}${typeof r.noteApprouvee === "number" ? ` · ${gradeDeLaNote(r.noteApprouvee, d.parametres) ?? ""}` : ""}`} fort />
               <Indic libelle="Score" valeur={r.score === null ? "—" : r.score.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} />
-              <Indic libelle="Calculée" valeur={r.noteCalculee === null ? "—" : String(r.noteCalculee)} />
+              <Indic libelle="Note calculée" valeur={r.noteCalculee === null ? "—" : String(r.noteCalculee)} />
               <Indic libelle="Plafond" valeur={r.plafondsActifs.length ? `${r.plafond} (${r.plafondsActifs.join(", ")})` : "—"} />
             </>
           )}
-          <Indic libelle="Régime" valeur={r.regimeRetenu ?? "—"} />
+          <Indic libelle="Régime d'analyse" valeur={r.regimeRetenu ? `${r.regimeRetenu} (${{ S: "simplifié", M: "standard", L: "approfondi" }[r.regimeRetenu] ?? ""})` : "—"} />
           <Indic libelle="Complétude" valeur={fmtPct(r.completude, 0)} />
           {r.verrousActifs.length > 0 && <Indic libelle="Verrous" valeur={r.verrousActifs.join(", ")} alerte />}
           <button type="button" onClick={() => setVoirControles(!voirControles)} aria-expanded={voirControles}

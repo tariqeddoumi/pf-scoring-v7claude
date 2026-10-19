@@ -11,7 +11,9 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma-client";
 import { withAuth } from "@/lib/auth-middleware";
 import { successResponse, serverError } from "@/lib/api-response";
-import { deriverAlertes } from "@/lib/services/alert-derivation";
+import { deriverAlertes, deriverAlertesPF } from "@/lib/services/alert-derivation";
+import { chargerParametres, resultatCourant } from "@/lib/modele-pf/serveur";
+import { fusionnerParametres, type ParametresModele } from "@/lib/modele-pf/parametres";
 import { peutVoirScores } from "@/lib/score-visibility";
 
 export async function GET(req: NextRequest) {
@@ -33,7 +35,37 @@ export async function GET(req: NextRequest) {
         take: 200,
       });
 
-      const alertes = deriverAlertes(
+      // Scorings Project Finance : verrous et plafonds actifs de leur dernier calcul.
+      const [scorings, P] = await Promise.all([
+        prisma.evaluationPF.findMany({
+          select: {
+            id: true, projectId: true, statut: true, updatedAt: true, resultat: true, parametres: true, saisie: true,
+            project: { select: { nom: true, codeProjet: true, client: { select: { codeClientT24: true, radical: true } } } },
+          },
+          orderBy: { updatedAt: "desc" },
+          take: 200,
+        }),
+        chargerParametres(),
+      ]);
+      const alertesPF = deriverAlertesPF(
+        scorings.map((s) => {
+          const Ps: ParametresModele = s.statut !== "brouillon" && s.parametres ? fusionnerParametres(s.parametres as never) : P;
+          const r = resultatCourant(s, Ps) as { verrousActifs?: unknown; plafondsActifs?: unknown };
+          return {
+            id: s.id,
+            projectId: s.projectId,
+            projectName: s.project?.nom ?? "Projet sans nom",
+            statut: s.statut,
+            updatedAt: s.updatedAt,
+            verrousActifs: Array.isArray(r.verrousActifs) ? r.verrousActifs.map(String) : [],
+            plafondsActifs: Array.isArray(r.plafondsActifs) ? r.plafondsActifs.map(String) : [],
+            libellesVerrous: Ps.verrous,
+            libellesPlafonds: Ps.plafonds,
+          };
+        })
+      );
+
+      const alertes = [...alertesPF, ...deriverAlertes(
         evaluations.map((ev) => ({
           id: ev.id,
           projectId: ev.projectId,
@@ -44,7 +76,7 @@ export async function GET(req: NextRequest) {
           updatedAt: ev.updatedAt,
           summaryJson: ev.summaryJson,
         }))
-      );
+      )];
 
       // Une alerte « score faible » révèle le score : réservée aux rôles qui le voient.
       const visibles = peutVoirScores(user.role) ? alertes : alertes.filter((a) => a.type !== "score_faible");

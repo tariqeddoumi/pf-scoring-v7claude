@@ -49,6 +49,17 @@ const ACTIONS: Record<string, string> = {
   STATUS_TRANSITION: "Transition de statut",
   VERSION_STATUS_TRANSITION: "Changement d'état d'une version du modèle",
   VERSION_PUBLISHED: "Publication d'une version du modèle",
+  SCORING_PF_CREE: "Création d'une évaluation",
+  SCORING_PF_CONTRIBUTION: "Contribution à la saisie d'une évaluation",
+  SCORING_PF_SOUMETTRE: "Soumission au comité",
+  SCORING_PF_VALIDER: "Validation par le comité",
+  SCORING_PF_REJETER: "Rejet par le comité",
+  SCORING_PF_ROUVRIR: "Remise en saisie d'une évaluation",
+  SCORING_PF_SUPPRIME: "Suppression d'une évaluation",
+  SCORING_PF_ANALYSE_IA: "Lecture des pièces par l'IA",
+  SCORING_PF_PROPOSITIONS_IA: "Décision sur les propositions de l'IA",
+  EVALUATION_REJETEE: "Rejet d'une évaluation",
+  PROFIL_MODIFIE: "Modification du profil",
 };
 
 const libelleAction = (code: string) =>
@@ -100,6 +111,8 @@ function detailsLisibles(details: string | null, avecProjet: boolean): string | 
     if (typeof valeur === "object") continue;
     // Le nom du dossier est déjà affiché en lien : ne pas le répéter.
     if (avecProjet && (cle === "projectName" || cle === "projectId")) continue;
+    // Identifiant technique : l'évaluation se retrouve par le projet affiché en lien.
+    if (cle === "evaluationId") continue;
     morceaux.push(`${etiquette(cle)} : ${lisible(valeur)}`);
   }
   return morceaux.join(" · ") || null;
@@ -119,6 +132,15 @@ const ETIQUETTES: Record<string, string> = {
   rating: "Note",
   status: "Statut",
   version: "Version",
+  statutNote: "Statut de la note",
+  origine: "Origine",
+  pieces: "Pièces lues",
+  propositions: "Propositions",
+  manquants: "Éléments manquants",
+  acceptees: "Acceptées",
+  rejetees: "Rejetées",
+  modele: "Modèle d'IA",
+  champs: "Champs",
 };
 
 const etiquette = (cle: string) => ETIQUETTES[cle] ?? cle;

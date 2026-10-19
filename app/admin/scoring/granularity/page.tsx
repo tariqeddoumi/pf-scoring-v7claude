@@ -74,7 +74,7 @@ export default function GranularitePage() {
   const [chargement, setChargement] = useState(true);
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [config, setConfig] = useState<ConfigGranularite>({});
-  const [brouillons, setBrouillons] = useState<{ nom: string; avancement?: string }[]>([]);
+  const brouillons: { nom: string; avancement?: string }[] = [];
   const [modifications, setModifications] = useState<ConfigGranularite>({});
   const [enregistrement, setEnregistrement] = useState(false);
   const [enregistre, setEnregistre] = useState(false);
@@ -120,29 +120,8 @@ export default function GranularitePage() {
           setConfig(data.data?.value ? JSON.parse(data.data.value) : {});
         }
 
-        // Les saisies en cours sont les premières touchées par un changement.
-        const resEvals = await apiGet("/api/evaluations?limit=200");
-        if (resEvals.ok) {
-          const evaluations = (await resEvals.json()).data ?? [];
-          setBrouillons(
-            evaluations
-              .filter(
-                (e: { status: string; isArchived?: boolean }) =>
-                  e.status === "brouillon" && !e.isArchived
-              )
-              .map(
-                (e: {
-                  project?: { nom?: string };
-                  avancement?: { repondues: number; total: number };
-                }) => ({
-                  nom: e.project?.nom ?? "Dossier",
-                  avancement: e.avancement
-                    ? `${e.avancement.repondues}/${e.avancement.total}`
-                    : undefined,
-                })
-              )
-          );
-        }
+        // La granularité ne pilote que l'ancien questionnaire : les scorings PF (seule
+        // évaluation en usage) ne la lisent pas, aucune saisie en cours n'est donc touchée.
       } catch {
         setErreur("Erreur lors du chargement des données.");
       } finally {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
+import { hasPermission } from "@/lib/permissions";
 import prisma from "@/lib/prisma-client";
 import { HorsPerimetreError } from "@/lib/entites/filtre-prisma";
 
@@ -13,7 +14,12 @@ import { HorsPerimetreError } from "@/lib/entites/filtre-prisma";
  * l'inverse : une trace imputable à une personne identifiée.
  */
 
-async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest, user: AuthPayload) {
+  // Le journal (qui a fait quoi, sur quel dossier) est réservé aux rôles qui ont le droit
+  // de le lire ; l'analyste ne l'a pas.
+  if (!hasPermission(user.role, "audit:read")) {
+    return NextResponse.json({ error: "Vos droits ne permettent pas de consulter le journal d'audit" }, { status: 403 });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
@@ -21,8 +27,10 @@ async function handleGET(request: NextRequest) {
     const action = searchParams.get("action");
     const depuis = searchParams.get("depuis");
     const jusqua = searchParams.get("jusqua");
-    const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 500);
-    const offset = parseInt(searchParams.get("offset") || "0");
+    // Un paramètre non numérique faisait échouer la requête (NaN) : il prend sa valeur par défaut.
+    const lu = (v: string | null, defaut: number) => (Number.isFinite(Number(v)) && v !== null && v !== "" ? Math.max(0, Math.floor(Number(v))) : defaut);
+    const limit = Math.min(lu(searchParams.get("limit"), 100) || 100, 500);
+    const offset = lu(searchParams.get("offset"), 0);
 
     const where: Record<string, unknown> = {};
     if (projectId) where.projectId = projectId;
@@ -101,7 +109,7 @@ async function handlePOST(request: NextRequest, user: AuthPayload) {
 }
 
 export async function GET(request: NextRequest) {
-  return withAuth(request, (req) => handleGET(req));
+  return withAuth(request, (req, user) => handleGET(req, user));
 }
 
 export async function POST(request: NextRequest) {
