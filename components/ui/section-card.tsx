@@ -39,7 +39,7 @@ export function SectionCard({
       )}
       {/* Sans marge intérieure, le contenu est souvent un tableau : il défile dans la carte
           au lieu d'élargir la page sur téléphone. */}
-      <div className={sansPadding ? "overflow-x-auto" : "p-4"}>{children}</div>
+      <div className={sansPadding ? "defilement-x overflow-x-auto" : "p-4"}>{children}</div>
     </section>
   );
 }

@@ -9,7 +9,7 @@ import { cn, formatDateTime } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { calculer, type Controle, type SaisiePF } from "@/lib/modele-pf/saisie";
-import type { ParametresModele } from "@/lib/modele-pf/parametres";
+import { gradeDeLaNote, type ParametresModele } from "@/lib/modele-pf/parametres";
 import type { ResultatPF } from "@/lib/modele-pf/moteur";
 import type { AnalysePF } from "@/lib/modele-pf/ia";
 import { fmtPct } from "@/components/scoring-pf/champs";
@@ -279,7 +279,7 @@ export default function ScoringPFPage() {
           </span>
           {voir && (
             <>
-              <Indic libelle="Note approuvée" valeur={r.noteApprouvee === null ? "—" : String(r.noteApprouvee)} fort />
+              <Indic libelle="Note approuvée" valeur={r.noteApprouvee === null ? "—" : `${r.noteApprouvee}${typeof r.noteApprouvee === "number" ? ` · ${gradeDeLaNote(r.noteApprouvee, d.parametres) ?? ""}` : ""}`} fort />
               <Indic libelle="Score" valeur={r.score === null ? "—" : r.score.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} />
               <Indic libelle="Calculée" valeur={r.noteCalculee === null ? "—" : String(r.noteCalculee)} />
               <Indic libelle="Plafond" valeur={r.plafondsActifs.length ? `${r.plafond} (${r.plafondsActifs.join(", ")})` : "—"} />

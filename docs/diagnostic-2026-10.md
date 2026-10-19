@@ -64,11 +64,23 @@ Le reste — colonnes, types, clés uniques par banque, clés étrangères — e
   d'Ariane avec des identifiants techniques, rôle affiché en code (`System_admin`),
   boutons illisibles, refus d'accès sans explication.
 
+## Mise en production (19 octobre 2026)
+
+- Migration du modèle PF appliquée en base de production.
+- Sécurité par ligne (RLS) activée sur les 80 tables `BP_PF_`, index ajoutés ; vérifié :
+  la clé publique (`anon`) ne voit plus aucune ligne, l'application lit normalement.
+- Contrainte `RESTRICT` sur le créateur d'un projet : en attente d'approbation dans
+  l'outil (l'application ne supprime déjà plus de comptes, elle les désactive).
+- Grille générique traduite en français en base (311 valeurs) ; chaque valeur d'origine
+  est conservée dans `BP_PF_traduction_sauvegarde` (retour arrière possible). Table de
+  traduction : `prisma/data/traduction-grille-generique.json` ; SQL rejouable sur une
+  autre base : `python3 scripts/db/traduire-grille.py`.
+- Correspondance note PF → échelle de la banque : un pour un (10 → AAA, 9 → AA, 8 → A,
+  7 → BBB, 6 → BB, 5 → B, 4 → CCC, 3 → CC, 2 → C, 1 → D), modifiable dans
+  Paramétrage › Modèle Project Finance ; le grade est reporté sur le projet à la validation.
+  À confirmer par les experts.
+
 ## Restent à décider
 
-1. **Appliquer les deux migrations** en production (`20261019…` et `20261020…`).
-2. **Correspondance note PF (1 à 10) ↔ échelle AAA → D** : une note PF validée est
-   aujourd'hui écrite dans `Project.grade`, qui attend une lettre (badge rouge, absente
-   des répartitions) ; à valider avec les experts.
-3. **Traduction de la grille générique** en base (données de production).
-4. Routes sans écran (liste dans le rapport de l'audit) : à retirer ou à conserver.
+1. Validation par les experts de la correspondance des grades.
+2. Routes sans écran (liste dans le rapport de l'audit) : à retirer ou à conserver.

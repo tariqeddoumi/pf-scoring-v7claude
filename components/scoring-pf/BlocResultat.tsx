@@ -2,7 +2,7 @@
 
 import { SectionCard } from "@/components/ui/section-card";
 import { cn } from "@/lib/utils";
-import { ORDRE_DOMAINES, ORDRE_PLAFONDS, ORDRE_VERROUS, type CodeVerrou } from "@/lib/modele-pf/parametres";
+import { gradeDeLaNote, ORDRE_DOMAINES, ORDRE_PLAFONDS, ORDRE_VERROUS, type CodeVerrou } from "@/lib/modele-pf/parametres";
 import { AVIS, DECISIONS, justificationExigee } from "@/lib/modele-pf/saisie";
 import { Champ, Liste, OuiNon, Texte, Calcule, fmtNombre, fmtPct, type PropsBloc } from "./champs";
 
@@ -97,7 +97,7 @@ export function BlocResultat({ s, modifier, r, P, lecture, voirScores, manquants
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {voirScores && <Calcule libelle="Note calculée" valeur={r.noteCalculee ?? "—"} />}
           {voirScores && <Calcule libelle="Plafond retenu" valeur={r.plafondsActifs.length ? `${r.plafond} (${r.plafondsActifs.join(", ")})` : "Aucun"} ton={r.plafondsActifs.length ? "vigilance" : undefined} />}
-          {voirScores && <Calcule libelle="Note approuvée" valeur={r.noteApprouvee === null ? "—" : `${r.noteApprouvee}${typeof r.noteApprouvee === "number" ? ` — ${r.libelle}` : ""}`} />}
+          {voirScores && <Calcule libelle="Note approuvée" valeur={r.noteApprouvee === null ? "—" : `${r.noteApprouvee}${typeof r.noteApprouvee === "number" ? ` — ${r.libelle} (${gradeDeLaNote(r.noteApprouvee, P) ?? "—"})` : ""}`} />}
           <Calcule libelle="Régime d'analyse" valeur={r.regimeRetenu ?? "—"} />
         </div>
         <p className={cn("mt-3 text-[13px] font-medium", r.statut.startsWith("Note validable") ? "text-success" : "text-warning")}>{r.statut}</p>
