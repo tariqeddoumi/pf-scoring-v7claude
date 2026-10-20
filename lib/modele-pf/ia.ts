@@ -78,7 +78,10 @@ export function criteresIA(s: SaisiePF): CritereGrille[] {
       criteres.push({ ...base, options: opts.map((o) => { const [v, ...d] = o.split(" — "); return { value: v, label: d.join(" — ") || v }; }),
         description: "Choisis la situation décrite qui correspond aux pièces ; « Info. insuffisante » si elles ne permettent pas de trancher. Justifie avec les faits constatés." });
     } else if (c.type === "ouinon" || c.type === "liste") {
-      criteres.push({ ...base, options: c.valeurs!.map((v) => ({ value: v, label: v })) });
+      criteres.push({ ...base, options: c.valeurs!.map((v) => ({ value: v, label: v })),
+        // Sans repère, l'IA répondait « absent » : la note manquait, la complétude tombait sous 100 %
+        // et le dossier se retrouvait plafonné (B7, C15) alors que le LLCR figurait dans les pièces.
+        ...(c.cle === "n3_llcr" && { description: "Note du LLCR hors phase de construction : celle retenue par l'analyse des prêteurs si une pièce la donne ; sinon 100 si le LLCR dépasse nettement le seuil DSCR favorable du dossier, 80 s'il le dépasse, 50 s'il se situe entre les seuils critique et favorable, 20 s'il est sous le seuil critique. « Info. insuffisante » si le LLCR n'est pas donné." }) });
     } else if (c.type === "nombre" || c.type === "pourcentage") {
       criteres.push({ ...base, answerType: "NUMERIC",
         description: c.type === "pourcentage" ? "Pourcentage exprimé en fraction (0,15 pour 15 %)." : c.libelle.includes("MMAD") ? "Montant en millions de dirhams (MMAD)." : undefined });
