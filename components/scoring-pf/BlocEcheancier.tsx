@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardPaste, ListOrdered, Plus, Trash2 } from "lucide-react";
+import { Calculator, ClipboardPaste, ListOrdered, Plus, Trash2 } from "lucide-react";
 import { SectionCard } from "@/components/ui/section-card";
 import { cn } from "@/lib/utils";
 import type { ResultatPeriode } from "@/lib/modele-pf/moteur";
+import { SCENARIOS_REFERENCE, calculerChoc } from "@/lib/modele-pf/scenarios";
 import { Champ, Nombre, Texte, Calcule, CLASSE_SAISIE, fmtX, fmtNombre, type PropsBloc } from "./champs";
 
 const MAX_PERIODES = 60;
@@ -67,6 +68,8 @@ export function BlocEcheancier({ s, modifier, r, P, lecture, manquants }: PropsB
           </Champ>
         </div>
       </SectionCard>
+
+      <AideScenario s={s} modifier={modifier} lecture={lecture} />
 
       <SectionCard
         titre="Bloc 6 · Échéancier daté"
@@ -163,6 +166,82 @@ export function BlocEcheancier({ s, modifier, r, P, lecture, manquants }: PropsB
         <Calcule libelle="CFADS négatifs" valeur={fmtNombre(r.cfadsNegatifs, 0)} ton={r.cfadsNegatifs > 0 ? "alerte" : undefined} />
       </div>
     </div>
+  );
+}
+
+/** Scénario de référence du secteur et passage des hypothèses (recettes, charges) au choc sur les CFADS. */
+function AideScenario({ s, modifier, lecture }: Pick<PropsBloc, "s" | "modifier" | "lecture">) {
+  const ref = s.secteur ? SCENARIOS_REFERENCE[s.secteur] : null;
+  const [recettes, setRecettes] = useState<number | null>(null);
+  const [charges, setCharges] = useState<number | null>(null);
+  const [baisse, setBaisse] = useState<number | null>(ref ? ref.baisseRecettes * 100 : null);
+  const [hausse, setHausse] = useState<number | null>(ref ? ref.hausseCharges * 100 : null);
+  const [secteurVu, setSecteurVu] = useState(s.secteur);
+  // Changement de secteur : on repart des hypothèses de référence du nouveau secteur.
+  if (secteurVu !== s.secteur) {
+    setSecteurVu(s.secteur);
+    setBaisse(ref ? ref.baisseRecettes * 100 : null);
+    setHausse(ref ? ref.hausseCharges * 100 : null);
+  }
+  const calcul = recettes !== null && charges !== null && baisse !== null && hausse !== null
+    ? calculerChoc(recettes, charges, baisse / 100, hausse / 100) : null;
+  const pourcent = (v: number) => `${fmtNombre(v * 100, 1)} %`;
+
+  return (
+    <SectionCard titre="Bloc 6 · Du scénario au choc" description="Le choc se calcule : on refait le compte d'une année type avec les hypothèses défavorables.">
+      <div className="space-y-4">
+        {ref ? (
+          <div className="rounded border border-border bg-surface px-3 py-2.5 text-[12.5px]">
+            <p className="font-semibold text-foreground">Scénario de référence du secteur · {ref.risque}</p>
+            <p className="mt-0.5 text-foreground">{ref.description}</p>
+            <p className="mt-1 text-muted-foreground">Source des chiffres : {ref.source}</p>
+            <p className="mt-1 text-[11.5px] text-muted-foreground">Valeurs candidates, à valider par le comité de validation du modèle. Adaptez-les au projet en justifiant l&apos;écart.</p>
+            {!lecture && (
+              <button type="button" onClick={() => modifier((x) => { x.descriptionStress = ref.description; })}
+                className="mt-1.5 text-[12.5px] font-semibold text-primary hover:underline">
+                Reprendre cette description
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="text-[12.5px] text-muted-foreground">Choisissez le secteur du projet (bloc 1) pour afficher son scénario de référence.</p>
+        )}
+
+        {!lecture && (
+          <>
+            <div className="grid gap-3 sm:grid-cols-4">
+              <Champ cible="aide-recettes" libelle="Recettes d'une année type" aide="MMAD, scénario central">
+                <Nombre cible="aide-recettes" valeur={recettes} min={0} onChange={setRecettes} />
+              </Champ>
+              <Champ cible="aide-charges" libelle="Charges d'exploitation" aide="MMAD, même année">
+                <Nombre cible="aide-charges" valeur={charges} min={0} onChange={setCharges} />
+              </Champ>
+              <Champ cible="aide-baisse" libelle="Baisse des recettes">
+                <Nombre cible="aide-baisse" valeur={baisse} suffixe="%" min={0} max={100} onChange={setBaisse} />
+              </Champ>
+              <Champ cible="aide-hausse" libelle="Hausse des charges">
+                <Nombre cible="aide-hausse" valeur={hausse} suffixe="%" min={0} max={200} onChange={setHausse} />
+              </Champ>
+            </div>
+            {recettes !== null && charges !== null && !calcul && (
+              <p className="text-[12.5px] text-warning">Les recettes doivent dépasser les charges pour calculer un choc.</p>
+            )}
+            {calcul && recettes !== null && charges !== null && baisse !== null && hausse !== null && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded border border-border px-3 py-2.5 text-[12.5px]">
+                <p className="tabulaire">
+                  CFADS central {fmtNombre(calcul.cfadsCentral)} → stressé {fmtNombre(calcul.cfadsStresse)} · choc = ({fmtNombre(recettes * baisse / 100)} de recettes perdues
+                  {" "}+ {fmtNombre(charges * hausse / 100)} de charges en plus) ÷ {fmtNombre(calcul.cfadsCentral)} = <strong>{pourcent(calcul.choc)}</strong>
+                </p>
+                <button type="button" onClick={() => modifier((x) => { x.choc = Math.round(calcul.choc * 1000) / 1000; })}
+                  className="inline-flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-xs font-semibold text-primary-foreground">
+                  <Calculator size={14} /> Appliquer ce choc
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </SectionCard>
   );
 }
 
