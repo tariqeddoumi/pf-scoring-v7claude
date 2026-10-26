@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma-client";
 import { messagePublic } from "@/lib/erreur-publique";
 import { peutVoirScores } from "@/lib/score-visibility";
 import { relireSaisie, saisieSchema } from "@/lib/modele-pf/saisie";
+import { fusionnerOrigines } from "@/lib/modele-pf/origines";
 import { parametresVisibles, type ParametresModele } from "@/lib/modele-pf/parametres";
 import { dernierRejet, intervenantsScoring, piecesDe } from "@/lib/modele-pf/acces";
 import { chargerParametres, calculerEvaluation, peutSaisir, peutDecider, resultatVisible } from "@/lib/modele-pf/serveur";
@@ -83,6 +84,8 @@ async function enregistrer(req: NextRequest, user: AuthPayload, id: string) {
     if (!v.success) {
       return NextResponse.json({ error: "Saisie invalide", erreurs: v.error.issues.slice(0, 20).map((i) => ({ chemin: i.path.join("."), message: i.message })) }, { status: 400 });
     }
+    // Les origines « IA » sont celles écrites par le serveur à l'acceptation des propositions.
+    v.data.origines = fusionnerOrigines(v.data.origines, relireSaisie(e.saisie).origines);
     const P = await chargerParametres();
     const calc = calculerEvaluation(v.data, P, { codeClientT24: e.project.client?.codeClientT24, radical: e.project.client?.radical, codeProjet: e.project.codeProjet });
     // Écrit seulement si le scoring est toujours au brouillon (il a pu être soumis entre-temps).

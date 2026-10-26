@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { SectionCard } from "@/components/ui/section-card";
 import { Champ, Nombre, OuiNon, Calcule, CLASSE_SAISIE, fmtNombre, fmtPct, type PropsBloc } from "./champs";
+import { MarqueOrigine, ResumeOrigines } from "./origine";
 
 export interface CreditPF { id: string; numero: string; nature: string; montant: number | null; devise: string; dureeAns: number | null; role: string | null }
 
@@ -23,6 +24,7 @@ export function BlocFinancement({ s, modifier, r, P, lecture, manquants, credits
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div id="pf-emplois" className="scroll-mt-40">
             <h3 className="mb-2 text-[13px] font-semibold text-foreground">Emplois (besoin à terminaison){m("emplois") && <Badge />}</h3>
+            <ResumeOrigines prefixe={/^emploi\./} className="mb-2 border-0 px-0 py-0" />
             <Lignes
               lignes={s.emplois}
               lecture={lecture}
@@ -31,6 +33,7 @@ export function BlocFinancement({ s, modifier, r, P, lecture, manquants, credits
               max={20}
               rendu={(e, i) => (
                 <>
+                  <MarqueOrigine cles={[`emploi.${i + 1}.libelle`, `emploi.${i + 1}.montant`]} />
                   <input aria-label={`Emploi ${i + 1}`} value={e.libelle} disabled={lecture} placeholder="Libellé" maxLength={200}
                     onChange={(ev) => modifier((x) => { x.emplois[i].libelle = ev.target.value; })} className={`${CLASSE_SAISIE} min-w-0 flex-[1_1_12rem]`} />
                   <div className="w-36 shrink-0">
@@ -43,6 +46,7 @@ export function BlocFinancement({ s, modifier, r, P, lecture, manquants, credits
           </div>
           <div id="pf-ressources" className="scroll-mt-40">
             <h3 className="mb-2 text-[13px] font-semibold text-foreground">Ressources engagées{m("ressources") && <Badge />}</h3>
+            <ResumeOrigines prefixe={/^ressource\./} className="mb-2 border-0 px-0 py-0" />
             <Lignes
               lignes={s.ressources}
               lecture={lecture}
@@ -51,6 +55,7 @@ export function BlocFinancement({ s, modifier, r, P, lecture, manquants, credits
               max={20}
               rendu={(e, i) => (
                 <>
+                  <MarqueOrigine cles={[`ressource.${i + 1}.libelle`, `ressource.${i + 1}.montant`, `ressource.${i + 1}.nature`]} />
                   <input aria-label={`Ressource ${i + 1}`} value={e.libelle} disabled={lecture} placeholder="Libellé" maxLength={200}
                     onChange={(ev) => modifier((x) => { x.ressources[i].libelle = ev.target.value; })} className={`${CLASSE_SAISIE} min-w-0 flex-[1_1_12rem]`} />
                   <select aria-label={`Nature de la ressource ${i + 1}`} value={e.nature ?? ""} disabled={lecture}

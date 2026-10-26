@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { situations, type Niveau } from "@/lib/modele-pf/saisie";
 import { Texte } from "./champs";
+import { OrigineChamp } from "./origine";
 
 const TONS = ["border-success/60 bg-success/10", "border-success/40 bg-success/5", "border-warning/60 bg-warning/10", "border-destructive/60 bg-destructive/10", "border-border bg-surface"];
 
@@ -41,6 +42,7 @@ export function ChoixSituation({ cle, libelle, secteur, niveau, commentaire, onN
           );
         })}
       </div>
+      <OrigineChamp cle={cle} />
       <div className="mt-2">
         <label htmlFor={`pf-champ-${cle}-commentaire`} className="mb-1 block text-[12px] font-medium text-foreground">
           {aideCommentaire ?? "Commentaire"}{exige && <span className="ml-0.5 text-destructive">*</span>}
@@ -48,6 +50,7 @@ export function ChoixSituation({ cle, libelle, secteur, niveau, commentaire, onN
         <Texte cible={`${cle}-commentaire`} valeur={commentaire} onChange={onCommentaire} lecture={lecture} lignes={2} max={2000}
           manquant={exige && !commentaire.trim()}
           placeholder={exige ? "Exigé : faits constatés et pièces à l'appui" : "Faits constatés, pièces à l'appui"} />
+        <OrigineChamp cle={/^N[4-6]$/.test(cle) ? `${cle}.justification` : `${cle}.commentaire`} />
       </div>
     </fieldset>
   );

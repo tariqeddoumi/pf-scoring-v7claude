@@ -66,10 +66,13 @@ describe("propositions de l'IA pour les 13 blocs", () => {
   s.secteur = "ENR";
   const criteres = criteresIA(s);
 
-  it("demande les champs simples, la grille et les listes, sans les commentaires déduits", () => {
+  it("demande les champs simples, la grille, les listes et les commentaires de domaine, sans les commentaires déduits", () => {
     const codes = criteres.map((c) => c.code);
     expect(codes).toEqual(expect.arrayContaining(["regime", "llcr", "D1.1", "N4", "verrou.X1", "liste.echeancier", "secteur.1.valeur"]));
-    expect(codes.some((c) => c.endsWith(".commentaire") || c.endsWith(".justification"))).toBe(false);
+    expect(codes.some((c) => /^D\d\.\d\.commentaire$/.test(c) || c.endsWith(".justification"))).toBe(false);
+    // Le commentaire de chaque domaine est rédigé par l'IA à partir des pièces.
+    expect(codes).toEqual(expect.arrayContaining(["D1.commentaire", "D9.commentaire"]));
+    expect(criteres.find((c) => c.code === "choc")?.description).toContain("CFADS central");
     expect(codes).not.toContain("bloc13.avis");
     expect(criteres.find((c) => c.code === "D1.1")?.options).toHaveLength(5);
   });

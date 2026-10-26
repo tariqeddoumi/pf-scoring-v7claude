@@ -61,8 +61,18 @@ const LISTES: Record<string, { libelle: string; bloc: number; format: string; ma
     format: "période (ex. S1 2028) ; CFADS du cas central en MMAD ; service de la dette en MMAD ; CFADS du cas défavorable en MMAD si le modèle le donne" },
 };
 
-/** Champs que l'IA ne propose pas : appréciation de l'analyste, ou déduits d'une autre réponse. */
-const EXCLUS = /^(emploi|ressource|hypothese|echeance)\.|\.commentaire$|\.justification$|^secteur\.\d+\.source$|^bloc13\.(avis|avis\.motif|justif)$/;
+/**
+ * Champs que l'IA ne propose pas : avis et justification des écarts (appréciation propre de
+ * l'analyste), ou champs déduits d'une autre réponse (lignes des listes, commentaire d'un
+ * sous-critère, justification de N4 à N6, source d'une donnée sectorielle).
+ */
+const EXCLUS = /^(emploi|ressource|hypothese|echeance)\.|^D\d\.\d\.commentaire$|\.justification$|^secteur\.\d+\.source$|^bloc13\.(avis|avis\.motif|justif)$/;
+
+/** Consignes propres à certains champs. */
+const CONSIGNES: Record<string, string> = {
+  choc: "Baisse du CFADS dans le scénario défavorable, en fraction (0,14 pour 14 %). Si le modèle financier ou le rapport des prêteurs donne un cas défavorable, calcule (CFADS central − CFADS défavorable) ÷ CFADS central sur une année type. Sinon, à partir des hypothèses défavorables documentées (P90 de l'étude de productible, cas bas de l'étude de trafic ou de marché, hausse de charges…) : (recettes perdues + charges supplémentaires) ÷ CFADS central. Indique le calcul et les pièces dans la justification.",
+  "choc.description": "Scénario défavorable en une phrase : le risque principal du projet et les hypothèses chiffrées retenues (ex. « Production P90 (− 8 %) et charges + 10 % »), tels que les pièces les donnent.",
+};
 
 /** Critères transmis à l'IA pour ce dossier. */
 export function criteresIA(s: SaisiePF): CritereGrille[] {
@@ -72,7 +82,7 @@ export function criteresIA(s: SaisiePF): CritereGrille[] {
     if (EXCLUS.test(c.cle)) continue;
     const m = c.cle.match(/^secteur\.(\d+)\.valeur$/);
     if (m && !champsSect[Number(m[1]) - 1]) continue;
-    const base = { id: c.cle, code: c.cle, label: libelleChamp(c.cle, s) };
+    const base = { id: c.cle, code: c.cle, label: libelleChamp(c.cle, s), ...(CONSIGNES[c.cle] && { description: CONSIGNES[c.cle] }) };
     if (c.type === "situation") {
       const opts = situations(c.cle, s.secteur);
       criteres.push({ ...base, options: opts.map((o) => { const [v, ...d] = o.split(" — "); return { value: v, label: d.join(" — ") || v }; }),
@@ -84,7 +94,10 @@ export function criteresIA(s: SaisiePF): CritereGrille[] {
         ...(c.cle === "n3_llcr" && { description: "Note du LLCR hors phase de construction : celle retenue par l'analyse des prêteurs si une pièce la donne ; sinon 100 si le LLCR dépasse nettement le seuil DSCR favorable du dossier, 80 s'il le dépasse, 50 s'il se situe entre les seuils critique et favorable, 20 s'il est sous le seuil critique. « Info. insuffisante » si le LLCR n'est pas donné." }) });
     } else if (c.type === "nombre" || c.type === "pourcentage") {
       criteres.push({ ...base, answerType: "NUMERIC",
-        description: c.type === "pourcentage" ? "Pourcentage exprimé en fraction (0,15 pour 15 %)." : c.libelle.includes("MMAD") ? "Montant en millions de dirhams (MMAD)." : undefined });
+        description: CONSIGNES[c.cle] ?? (c.type === "pourcentage" ? "Pourcentage exprimé en fraction (0,15 pour 15 %)." : c.libelle.includes("MMAD") ? "Montant en millions de dirhams (MMAD)." : undefined) });
+    } else if (/^D\d\.commentaire$/.test(c.cle)) {
+      criteres.push({ ...base, answerType: "TEXT",
+        description: "Commentaire de synthèse du domaine pour le comité : faits constatés dans les pièces, points forts et points de vigilance, pièces citées. Trois à cinq phrases ; « absent » si les pièces ne couvrent pas le domaine." });
     } else {
       criteres.push({ ...base, answerType: "TEXT" });
     }

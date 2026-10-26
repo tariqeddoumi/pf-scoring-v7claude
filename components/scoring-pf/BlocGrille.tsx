@@ -7,6 +7,7 @@ import { DOMAINES_GRILLE, type DomaineGrille } from "@/lib/modele-pf/parametres"
 import { estSectoriel } from "@/lib/modele-pf/referentiel";
 import { Texte, fmtNombre, fmtPct, type PropsBloc } from "./champs";
 import { ChoixSituation } from "./ChoixSituation";
+import { OrigineChamp } from "./origine";
 
 /** Bloc 8 : grille à situations, par domaine (D7 est le noyau, saisi à part). */
 export function BlocGrille({ s, modifier, r, P, lecture, voirScores, manquants, cible }: PropsBloc & { cible?: string | null }) {
@@ -67,6 +68,7 @@ export function BlocGrille({ s, modifier, r, P, lecture, voirScores, manquants, 
                   <label htmlFor={`pf-champ-comm-${dom}`} className="mb-1 block text-[12px] font-medium text-foreground">Commentaire du domaine</label>
                   <Texte cible={`comm-${dom}`} valeur={s.commentairesDomaines[dom] ?? ""} lecture={lecture} lignes={2}
                     onChange={(t) => modifier((x) => { x.commentairesDomaines[dom] = t; })} />
+                  <OrigineChamp cle={`${dom}.commentaire`} />
                 </div>
               </div>
             )}

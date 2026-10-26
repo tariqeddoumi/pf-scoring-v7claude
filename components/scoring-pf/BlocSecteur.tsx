@@ -3,6 +3,7 @@
 import { SectionCard } from "@/components/ui/section-card";
 import { champsSecteur } from "@/lib/modele-pf/referentiel";
 import { CLASSE_SAISIE, Calcule, fmtX, type PropsBloc } from "./champs";
+import { MarqueOrigine, ResumeOrigines } from "./origine";
 import { Lignes } from "./BlocFinancement";
 
 /** Blocs 4 et 5 : données propres au secteur (avec leur source) et hypothèses d'exploitation. */
@@ -24,10 +25,12 @@ export function BlocSecteur({ s, modifier, r, P, lecture }: PropsBloc) {
           <p className="text-sm text-muted-foreground">Aucune donnée sectorielle tant que le secteur n’est pas choisi.</p>
         ) : (
           <div className="space-y-2">
+            <ResumeOrigines prefixe={/^secteur\.\d+\.valeur$/} className="mb-2 border-0 px-0 py-0" />
             {champs.map((c, i) => (
               <div key={c.libelle} className="grid items-center gap-2 sm:grid-cols-[minmax(0,1.2fr)_10rem_minmax(0,1fr)]">
-                <label htmlFor={`pf-champ-secteur-${i}`} className="text-[13px] text-foreground">
-                  {c.libelle}{c.unite && <span className="text-muted-foreground"> ({c.unite})</span>}
+                <label htmlFor={`pf-champ-secteur-${i}`} className="flex items-center gap-1.5 text-[13px] text-foreground">
+                  <MarqueOrigine cles={[`secteur.${i + 1}.valeur`, `secteur.${i + 1}.source`]} />
+                  <span>{c.libelle}{c.unite && <span className="text-muted-foreground"> ({c.unite})</span>}</span>
                 </label>
                 <input id={`pf-champ-secteur-${i}`} value={donnee(i).valeur === null ? "" : String(donnee(i).valeur)} disabled={lecture} maxLength={200}
                   onChange={(e) => {
@@ -50,6 +53,7 @@ export function BlocSecteur({ s, modifier, r, P, lecture }: PropsBloc) {
       </SectionCard>
 
       <SectionCard titre="Bloc 5 · Hypothèses d'exploitation" description="Hypothèses clés du modèle financier du sponsor, telles que la banque les retient.">
+        <ResumeOrigines prefixe={/^hypothese\./} className="mb-2 border-0 px-0 py-0" />
         <Lignes
           lignes={s.hypotheses}
           lecture={lecture}
@@ -59,6 +63,7 @@ export function BlocSecteur({ s, modifier, r, P, lecture }: PropsBloc) {
           retirer={(i) => modifier((x) => { x.hypotheses.splice(i, 1); })}
           rendu={(h, i) => (
             <>
+              <MarqueOrigine cles={[`hypothese.${i + 1}.libelle`, `hypothese.${i + 1}.valeur`]} />
               <input aria-label={`Hypothèse ${i + 1}`} value={h.libelle} disabled={lecture} maxLength={200} placeholder="Hypothèse (ex. productible P90)"
                 onChange={(e) => modifier((x) => { x.hypotheses[i].libelle = e.target.value; })} className={CLASSE_SAISIE} />
               <input aria-label={`Valeur de l'hypothèse ${i + 1}`} value={h.valeur} disabled={lecture} maxLength={300} placeholder="Valeur retenue"

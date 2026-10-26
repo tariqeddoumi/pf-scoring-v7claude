@@ -6,6 +6,7 @@ import { SectionCard } from "@/components/ui/section-card";
 import { cn } from "@/lib/utils";
 import type { ResultatPeriode } from "@/lib/modele-pf/moteur";
 import { SCENARIOS_REFERENCE, calculerChoc } from "@/lib/modele-pf/scenarios";
+import { MarqueOrigine, ResumeOrigines } from "./origine";
 import { Champ, Nombre, Texte, Calcule, CLASSE_SAISIE, fmtX, fmtNombre, type PropsBloc } from "./champs";
 
 const MAX_PERIODES = 60;
@@ -40,7 +41,17 @@ export function BlocEcheancier({ s, modifier, r, P, lecture, manquants }: PropsB
       .map((c) => ({ libelle: (c[0] ?? "").trim().slice(0, 60), cfads: lireNombre(c[1]), service: lireNombre(c[2]), cfadsStresse: lireNombre(c[3]) }))
       .filter((p) => p.cfads !== null || p.service !== null)
       .slice(0, MAX_PERIODES);
-    modifier((x) => { x.periodes = lues.map((p) => ({ ...p, service: p.service === null ? null : Math.max(0, p.service) })); });
+    const le = new Date().toISOString();
+    modifier((x) => {
+      x.periodes = lues.map((p) => ({ ...p, service: p.service === null ? null : Math.max(0, p.service) }));
+      // L'échéancier collé remplace le précédent : ses origines aussi.
+      for (const cle of Object.keys(x.origines)) if (cle.startsWith("echeance.")) delete x.origines[cle];
+      x.periodes.forEach((p, i) => {
+        for (const [k, v] of [["libelle", p.libelle], ["cfads", p.cfads], ["service", p.service], ["cfads_stresse", p.cfadsStresse]] as const) {
+          if (v !== null && v !== "") x.origines[`echeance.${i + 1}.${k}`] = { type: "collage", valeur: v, source: "Échéancier collé depuis Excel", detail: "", confiance: null, le, par: "" };
+        }
+      });
+    });
     setInfo(`${lues.length} période(s) reprise(s)${lignes.length > lues.length ? `, ${lignes.length - lues.length} ligne(s) ignorée(s) (en-têtes ou au-delà de ${MAX_PERIODES})` : ""}.`);
     setCollage(null);
   }
@@ -95,6 +106,7 @@ export function BlocEcheancier({ s, modifier, r, P, lecture, manquants }: PropsB
           </div>
         )}
         {info && <p role="status" className="border-b border-border px-4 py-2 text-[12.5px] text-muted-foreground">{info}</p>}
+        <ResumeOrigines prefixe={/^echeance\./} />
         <div id="pf-periodes" className="scroll-mt-40">
           <table className="w-full min-w-[640px] text-[13px]">
             <thead className="bg-surface text-left text-[11.5px] uppercase tracking-wide text-muted-foreground">
@@ -115,7 +127,12 @@ export function BlocEcheancier({ s, modifier, r, P, lecture, manquants }: PropsB
                 const rp = parLigne[i];
                 return (
                   <tr key={i} className="border-t border-border">
-                    <td className="px-2 py-1 text-right text-muted-foreground tabulaire">{i + 1}</td>
+                    <td className="px-2 py-1 text-right text-muted-foreground tabulaire">
+                      <span className="inline-flex items-center gap-1">
+                        <MarqueOrigine cles={[`echeance.${i + 1}.libelle`, `echeance.${i + 1}.cfads`, `echeance.${i + 1}.service`, `echeance.${i + 1}.cfads_stresse`]} />
+                        {i + 1}
+                      </span>
+                    </td>
                     <td className="px-2 py-1">
                       <input aria-label={`Libellé de la période ${i + 1}`} value={p.libelle} disabled={lecture} maxLength={60}
                         onChange={(e) => modifier((x) => { x.periodes[i].libelle = e.target.value; })} className={`${CLASSE_SAISIE} w-28`} />
@@ -197,7 +214,11 @@ function AideScenario({ s, modifier, lecture }: Pick<PropsBloc, "s" | "modifier"
             <p className="mt-1 text-muted-foreground">Source des chiffres : {ref.source}</p>
             <p className="mt-1 text-[11.5px] text-muted-foreground">Valeurs candidates, à valider par le comité de validation du modèle. Adaptez-les au projet en justifiant l&apos;écart.</p>
             {!lecture && (
-              <button type="button" onClick={() => modifier((x) => { x.descriptionStress = ref.description; })}
+              <button type="button" onClick={() => modifier((x) => {
+                x.descriptionStress = ref.description;
+                x.origines["choc.description"] = { type: "reference", valeur: ref.description, source: `Scénario de référence du secteur ${s.secteur}`,
+                  detail: `Source des chiffres : ${ref.source}`, confiance: null, le: new Date().toISOString(), par: "" };
+              })}
                 className="mt-1.5 text-[12.5px] font-semibold text-primary hover:underline">
                 Reprendre cette description
               </button>
@@ -232,7 +253,13 @@ function AideScenario({ s, modifier, lecture }: Pick<PropsBloc, "s" | "modifier"
                   CFADS central {fmtNombre(calcul.cfadsCentral)} → stressé {fmtNombre(calcul.cfadsStresse)} · choc = ({fmtNombre(recettes * baisse / 100)} de recettes perdues
                   {" "}+ {fmtNombre(charges * hausse / 100)} de charges en plus) ÷ {fmtNombre(calcul.cfadsCentral)} = <strong>{pourcent(calcul.choc)}</strong>
                 </p>
-                <button type="button" onClick={() => modifier((x) => { x.choc = Math.round(calcul.choc * 1000) / 1000; })}
+                <button type="button" onClick={() => modifier((x) => {
+                  x.choc = Math.round(calcul.choc * 1000) / 1000;
+                  x.origines.choc = { type: "calcul", valeur: x.choc,
+                    source: `recettes ${fmtNombre(recettes)} MMAD (− ${fmtNombre(baisse)} %), charges ${fmtNombre(charges)} MMAD (+ ${fmtNombre(hausse)} %)`,
+                    detail: `CFADS central ${fmtNombre(calcul.cfadsCentral)} → stressé ${fmtNombre(calcul.cfadsStresse)} MMAD ; choc = (recettes perdues + charges supplémentaires) ÷ CFADS central = ${pourcent(calcul.choc)}.`,
+                    confiance: null, le: new Date().toISOString(), par: "" };
+                })}
                   className="inline-flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-xs font-semibold text-primary-foreground">
                   <Calculator size={14} /> Appliquer ce choc
                 </button>

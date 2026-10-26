@@ -41,6 +41,11 @@ async function decider(req: NextRequest, user: AuthPayload, id: string) {
       if (d.decision === "acceptee") {
         const n = normaliser(p.cle, p.valeur);
         if (!n.ok || !ecrireChamp(saisie, p.cle, n.valeur)) continue;
+        // L'écran affiche sous le champ d'où vient la valeur (pièce, emplacement, justification).
+        saisie.origines[p.cle] = {
+          type: "ia", valeur: n.valeur, source: p.source.slice(0, 500), detail: p.justification.slice(0, 2000),
+          confiance: p.confiance, le: maintenant, par: user.userId,
+        };
       }
       p.decision = d.decision;
       p.decidePar = user.userId;
