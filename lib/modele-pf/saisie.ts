@@ -196,7 +196,12 @@ export function controlesSaisie(s: SaisiePF, r: ResultatPF, P: ParametresModele 
       const x = s.climat.aleas[a];
       if (x?.niveau === "Élevé" && !x.adaptation) ajoute(14, `Adaptation financée ? (${LIBELLES_ALEAS[a]})`, "climat.aleas");
     }
-    if (r.climat.niveauTransition === null) ajoute(14, "Données de transition : émissions, actif fossile, exportations MACF", "climat.emissions");
+    // Chaque donnée de transition est exigée : le niveau n'est établi que si elles sont toutes connues.
+    if (s.climat.emissions === null) ajoute(14, "Transition : émissions scopes 1 et 2", "climat.emissions");
+    if (s.climat.exportMacf === null) ajoute(14, "Transition : exportations soumises au MACF", "climat.export_macf");
+    if (s.climat.actifFossile === null) ajoute(14, "Transition : actif dépendant des énergies fossiles ?", "climat.actif_fossile");
+    if ((s.climat.actifFossile === "Oui" || r.climat.niveauTransition === "Élevé") && s.climat.planTransition === null)
+      ajoute(14, "Transition : plan de transition crédible et financé ?", "climat.plan_transition");
     if (r.climat.expositionRetenue === "Oui" && r.climat.dscrMinClimatique === null) ajoute(14, "Scénario climatique : baisse du CFADS (site exposé)", "climat.choc");
   }
   if (!s.bloc13.synthese.trim()) ajoute(13, "Synthèse de l'analyste", "synthese");

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sources VBA de l'outil de scoring PF V8, version 3 (encodage cp1252 : pas de symbole hors Windows-1252).
+"""Sources VBA de l'outil de scoring PF V8, version 4 (encodage cp1252 : pas de symbole hors Windows-1252).
 
 Les adresses entre accolades ({P_FIRST}, {CK_FIRST}...) sont remplacées à la construction
 par celles de la mise en page du dossier (build_tool.R).
@@ -8,7 +8,7 @@ par celles de la mise en page du dossier (build_tool.R).
 MOD_OUTIL = r'''Option Explicit
 
 ' =====================================================================
-'  Outil de scoring Project Finance V8 - version 3 - macros de pilotage
+'  Outil de scoring Project Finance V8 - version 4 - macros de pilotage
 '  Toutes les notes sont calculees par les FORMULES des onglets : les
 '  macros creent, dupliquent, controlent, preparent l'echeancier,
 '  exportent et tracent. Les feuilles sont protegees SANS mot de passe.

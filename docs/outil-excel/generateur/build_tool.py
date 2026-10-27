@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Construit l'outil Excel/VBA de scoring Project Finance V8, version 3.
+"""Construit l'outil Excel/VBA de scoring Project Finance V8, version 4.
 
 Dix-huit dossiers préchargés (six cas d'origine, douze cas sectoriels), codes client T24,
 radical et projet, crédits du projet, données sectorielles, listes de situations
 descriptives (référentiel des niveaux), bloc 13 « Commentaires et conditions », fiche
 comité, comparaison de deux dossiers, concordance des notes de référence et import des
-propositions de l'IA.
+propositions de l'IA. Version 4 : volet climatique (section 14 de chaque dossier : aléas,
+transition, scénario climatique, fiche 2/W/2025) et règles du lot 2, activables par le
+paramètre « Lot 2 actif » de l'onglet Paramètres (inactif par défaut).
 
 Usage : python build_tool.py [--sans-vba]
 """
@@ -22,7 +24,8 @@ import modules_vba
 
 SANS_VBA = "--sans-vba" in sys.argv
 ICI = os.path.dirname(os.path.abspath(__file__))
-SORTIE = os.path.join(ICI, "Outil_Scoring_PF_V8_v3.xlsx" if SANS_VBA else "Outil_Scoring_PF_V8_v3.xlsm")
+LOT2 = "--lot2" in sys.argv          # variante de contrôle : « Lot 2 actif » à Oui (jamais livrée)
+SORTIE = os.path.join(ICI, ("Outil_Scoring_PF_V8_v4" + ("_lot2" if LOT2 else "")) + (".xlsx" if SANS_VBA else ".xlsm"))
 EXEMPLE_IA = os.path.join(ICI, "exemple_propositions_IA.xlsx")
 MAX_DOSSIERS = 40
 MODULES_TEST = []          # modules VBA ajoutés par les tests (jamais dans le classeur livré)
@@ -84,7 +87,10 @@ PLAFONDS = [("C1", "DSCR minimum de base inférieur à 1,05x sur une échéance"
             ("C12", "Capacité résiduelle du sponsor insuffisante pour l'appel d'equity restant", 6),
             ("C13", "Opérateur non remplaçable et contrat O&M expirant plus de 5 ans avant la dette", 7),
             ("C14", "Exposition du groupe bancaire sur un facteur commun au-delà de la limite interne", 6),
-            ("C15", "Note issue d'une évaluation partielle (statut provisoire)", 6)]
+            ("C15", "Note issue d'une évaluation partielle (statut provisoire)", 6),
+            ("C16", "Risque de transition élevé sans plan de transition crédible (volet climatique, lot 2)", 6),
+            ("C17", "Au moins deux aléas climatiques pertinents élevés sans adaptation financée (volet climatique, lot 2)", 5)]
+IDX_C15 = 14              # rang de C15 dans PLAFONDS (statut « évaluation partielle »)
 EXCLUSIONS = [("X1", "Activité interdite par la loi marocaine ou par la politique d'exclusion de la banque"),
               ("X2", "Autorisation légalement indispensable juridiquement impossible à obtenir"),
               ("X3", "Contrepartie clé sous sanctions ou signalée au titre du dispositif LBC-FT"),
@@ -125,6 +131,10 @@ QUAL_ACHETEUR = ["≥ BBB−", "< BBB−", "Non noté"]
 NATURES = ["Dette senior", "Dette subordonnée", "Fonds propres", "Quasi-fonds propres",
            "Engagement sponsor", "Ligne dédiée engagée", "Subvention encaissée", "Autre ressource"]
 
+# Volet climatique : même référentiel que l'outil web (cas_climat.json, exporté de lib/modele-pf)
+CLIMAT = cas_tous.CLIMAT
+ALEAS = [(a["code"], a["libelle"], a["effets"]) for a in CLIMAT["aleas"]]
+NIVEAUX_ALEA = ["Faible", "Moyen", "Élevé"]
 NATURES_CREDIT = complements.NATURES_CREDIT
 DEVISES = complements.DEVISES
 AVIS = complements.AVIS
@@ -221,7 +231,7 @@ R["b_last"] = R["b_first"] + 7
 R["pl_title"] = R["b_last"] + 2
 R["pl_hdr"] = R["pl_title"] + 1
 R["c_first"] = R["pl_hdr"] + 1
-R["c_last"] = R["c_first"] + 14
+R["c_last"] = R["c_first"] + len(PLAFONDS) - 1
 R["plafond"] = R["c_last"] + 1
 R["na_title"] = R["plafond"] + 2
 R["na"] = R["na_title"] + 1
@@ -229,7 +239,18 @@ R["statut"] = R["na"] + 1
 R["b13_title"] = R["statut"] + 2
 for _i, _k in enumerate(("synthese", "forces", "faiblesses", "conditions", "justif", "avis", "decision")):
     R[_k] = R["b13_title"] + 1 + _i
-R["fin"] = R["decision"]
+# 14 · volet climatique
+_c = R["decision"] + 2
+R.update(clim_title=_c, clim_intro=_c + 1, clim_loc=_c + 2, alea_hdr=_c + 3, alea_first=_c + 4,
+         alea_last=_c + 3 + len(ALEAS), clim_expo=_c + 4 + len(ALEAS), clim_sans=_c + 5 + len(ALEAS),
+         clim_ecart=_c + 6 + len(ALEAS))
+_c = R["clim_ecart"] + 2
+R.update(trans_hdr=_c, emis=_c + 1, macf=_c + 2, fossile=_c + 3, plan_trans=_c + 4, niv_trans=_c + 5, note_d95=_c + 6)
+_c = R["note_d95"] + 2
+R.update(scen_hdr=_c, choc_clim=_c + 1, desc_clim=_c + 2, dclim=_c + 3)
+_c = R["dclim"] + 2
+R.update(lot2_hdr=_c, lot2_etat=_c + 1, expo_ret=_c + 2, stress_ret=_c + 3)
+R["fin"] = R["stress_ret"]
 
 # Colonnes masquées : J (type de ligne), K (sous-critère requis), L (clé), M (ligne du référentiel),
 # P:R (check-list ; P sert aussi au lien « sous-critère à noter »), S (rang de la situation choisie),
@@ -238,8 +259,8 @@ CK_COL_LIB, CK_COL_ADR, CK_COL_OK = 15, 16, 17
 R["ck_first"] = 14
 B6_INDEX = 4 + 5          # rang de B6 dans X1..X4, B1..B8
 
-SECTION_NAV = [("1 · Identification", "s1"), ("3 · Sources", "s3"), ("6 · Échéancier", "s6"), ("7 · Noyau", "s7"),
-               ("8 · Grille", "s8"), ("11 · Plafonds", "pl_title"), ("13 · Commentaires", "b13_title")]
+SECTION_NAV = [("3 · Sources", "s3"), ("6 · Échéancier", "s6"), ("7 · Noyau", "s7"),
+               ("8 · Grille", "s8"), ("11 · Plafonds", "pl_title"), ("13 · Commentaires", "b13_title"), ("14 · Climat", "clim_title")]
 
 # Contrôles de format des codes (formules Excel, pour la validation et la check-list)
 CHIFFRES = '"0123456789"'
@@ -269,6 +290,25 @@ def flag_justif():
     return (f'OR(COUNTIF($E${R["c_first"]}:$E${R["c_last"]},"Oui")>0,COUNTIF($F${R["x_first"]}:$F${R["b_last"]},"Oui")>0,'
             f'SUMPRODUCT(($J${g1}:$J${g2}="SC")*($K${g1}:$K${g2}=1)*($S${g1}:$S${g2}=5))>0,'
             f'COUNTIF($S${R["n1"] + 3}:$S${R["n6"]},5)>0)')
+
+
+def _checklist_climat(b):
+    """Saisies du volet climatique exigées quand le lot 2 est actif (comme l'outil web)."""
+    a1, a2 = R["alea_first"], R["alea_last"]
+    lot2 = 'P_Lot2<>"Oui"'
+    return [
+        ("14 · Fiche climat : exposition des aléas présélectionnés", f"E{a1}",
+         f'OR({lot2},SUMPRODUCT(($D${a1}:$D${a2}="Oui")*($E${a1}:$E${a2}=""))=0)', None),
+        ("14 · Adaptation financée des aléas élevés", f"H{a1}",
+         f'OR({lot2},SUMPRODUCT(($E${a1}:$E${a2}="Élevé")*($H${a1}:$H${a2}=""))=0)', None),
+        ("14 · Transition : émissions scopes 1 et 2", "emis", f'OR({lot2},ISNUMBER({b("emis")}))'),
+        ("14 · Transition : exportations soumises au MACF", "macf", f'OR({lot2},ISNUMBER({b("macf")}))'),
+        ("14 · Transition : actif dépendant des énergies fossiles ?", "fossile", f'OR({lot2},{b("fossile")}<>"")'),
+        ("14 · Transition : plan de transition ?", "plan_trans",
+         f'OR({lot2},AND({b("fossile")}<>"Oui",{b("niv_trans")}<>"Élevé"),{b("plan_trans")}<>"")'),
+        ("14 · Scénario climatique (site exposé)", "choc_clim",
+         f'OR({lot2},{b("expo_ret")}<>"Oui",ISNUMBER({b("dclim")}))'),
+    ]
 
 
 def _checklist():
@@ -333,7 +373,9 @@ def _checklist():
         ("7 · Durée résiduelle de la dette", "duree_dette", nombre("duree_dette")),
         ("7 · Solution documentée (contrat plus court que la dette) ?", "solution",
          f'OR(NOT(AND({nombre("duree_contrat")},{nombre("duree_dette")})),N({b("duree_contrat")})>=N({b("duree_dette")}),{rempli("solution")})'),
-        ("7 · Plan d'adaptation climatique financé ? (C11)", "plan_adapt", f'OR({b("climat")}<>"Oui",{rempli("plan_adapt")})'),
+        # Lot 2 : l'adaptation se renseigne aléa par aléa dans la section 14.
+        ("7 · Plan d'adaptation climatique financé ? (C11)", "plan_adapt",
+         f'OR({b("climat")}<>"Oui",{rempli("plan_adapt")},AND(P_Lot2="Oui",{b("clim_expo")}<>""))'),
         ("7 · Capacité résiduelle du sponsor (C12)", "sponsor", rempli("sponsor")),
         ("7 · Opérateur remplaçable ? (C13)", "operateur", rempli("operateur")),
         ("7 · Écart fin O&M / fin de dette (opérateur non remplaçable)", "ecart_om", f'OR({b("operateur")}<>"Non",{nombre("ecart_om")})'),
@@ -343,6 +385,7 @@ def _checklist():
         ("8 · Commentaire exigé (situation Critique ou Info. insuffisante)",
          f'="H"&IF(COUNT($T${g1}:$T${g2})=0,{g1 + 1},MIN($T${g1}:$T${g2}))', f"COUNT($T${g1}:$T${g2})=0", None),
         ("10 · Verrous X1 à B8 : répondre Oui ou Non", f"E{x1}", f"COUNTBLANK($E${x1}:$E${b8})=0", None),
+        *_checklist_climat(b),
         ("13 · Synthèse de l'analyste", f"B{R['synthese']}", f'$B${R["synthese"]}<>""', f"B{R['synthese']}:H{R['synthese']}"),
         ("13 · Justification des écarts (plafond, verrou ou info. insuffisante)", f"B{R['justif']}",
          f'OR(NOT({flag_justif()}),$B${R["justif"]}<>"")', f"B{R['justif']}:H{R['justif']}"),
@@ -475,6 +518,25 @@ AIDE = {
     "avis_txt": ("Motif de l'avis", "Motif et réserves de l'avis risques."),
     "decision": ("Décision du comité", "À renseigner après le comité : accord, accord sous conditions, ajournement ou refus."),
     "decision_txt": ("Date et références", "Date du comité, numéro de procès-verbal, réserves particulières."),
+    "clim_loc": ("Localisation du site", "Commune, province ou coordonnées : sert à lire les cartes d'aléas."),
+    "alea_niv": ("Exposition à l'aléa", "Faible, Moyen ou Élevé, d'après l'étude d'impact, l'étude climat, le rapport "
+                                         "du conseiller technique ou une carte d'aléas. Vide = non évalué."),
+    "alea_src": ("Source", "Pièce et page, ou carte d'aléas consultée."),
+    "alea_adapt": ("Adaptation financée ?", "Oui si une mesure d'adaptation à cet aléa est prévue et financée dans le "
+                                            "budget du projet (digue, surélévation, refroidissement, irrigation…)."),
+    "emis": ("Émissions (tCO2e/an)", "Émissions annuelles en exploitation, scopes 1 et 2. Repères : 25 000 t "
+                                     "(quantification SFI) et 100 000 t (alternatives, Principes de l'Équateur)."),
+    "macf": ("Exportations MACF", "Part du chiffre d'affaires exportée vers l'UE en produits couverts par le MACF "
+                                  "(ciment, acier, aluminium, engrais, hydrogène, électricité). 0 % si aucune."),
+    "fossile": ("Actif fossile ?", "Oui si la production, le combustible ou le procédé principal dépend des énergies "
+                                   "fossiles."),
+    "plan_trans": ("Plan de transition ?", "Oui si un plan de réduction des émissions ou de sortie des énergies fossiles "
+                                           "est documenté, daté et financé."),
+    "choc_clim": ("Scénario climatique", "Baisse du CFADS sous un aléa plausible pour le site, par exemple 20% : "
+                                         "(recettes perdues + charges en plus) ÷ CFADS central."),
+    "desc_clim": ("Description", "L'aléa retenu et ses effets chiffrés sur les recettes et les charges."),
+    "lot2": ("Lot 2 du volet climatique", "Non : la fiche climat est analysée sans effet sur la note. Oui : elle entre "
+                                          "dans la note. À activer après validation par le comité."),
 }
 for _k, (_t, _m) in AIDE.items():
     assert len(_t) <= 32, _k
@@ -519,7 +581,7 @@ def validation(ws, plage, cle, liste=None, num=None, formule=None, erreur=None):
 
 def ecrire_classeur():
     wb = xlsxwriter.Workbook(SORTIE)
-    wb.set_properties({"title": "Outil de scoring Project Finance V8 — version 3", "subject": "Scoring PF — Maroc",
+    wb.set_properties({"title": "Outil de scoring Project Finance V8 — version 4", "subject": "Scoring PF — Maroc",
                        "comments": "Dossiers d'étude fictifs. Paramètres candidats non approuvés."})
     F = formats(wb)
 
@@ -810,7 +872,7 @@ def parametres(wb, ws, F):
 
     # Plafonds
     r = hi + 3
-    ws.write(r - 1, 7, "Plafonds de note C1 à C15", F["labb"])
+    ws.write(r - 1, 7, f"Plafonds de note C1 à C{len(PLAFONDS)}", F["labb"])
     for c, h in enumerate(["Code", "Fait générateur", "Plafond"]):
         ws.write(r, 7 + c, h, F["hdr"])
     for i, (code, fait, niv) in enumerate(PLAFONDS):
@@ -848,6 +910,40 @@ def parametres(wb, ws, F):
     lo, hi = r + 2, r + 1 + i
     nom("P_SCCle", f"$H${lo}:$H${hi}"); nom("P_SCPoids", f"$J${lo}:$J${hi}")
 
+    # Volet climatique (lot 2) : interrupteur, poids de D9, repères de transition
+    r = hi + 3
+    ws.write(r - 1, 7, "Volet climatique — lot 2 (règles dans la note)", F["labb"])
+    for c, h in enumerate(["Nom", "Paramètre", "Valeur"]):
+        ws.write(r, 7 + c, h, F["hdr"])
+    lot2 = CLIMAT["lot2"]
+    lignes = [("P_Lot2", "Lot 2 actif : exposition déduite des aléas, C11 révisé, C16, C17, D9.5 calculé, scénario "
+                         "climatique dans N2. À activer après validation par le comité.", "Oui" if LOT2 else "Non", "txt"),
+              ("P_D9L2_1", "Poids de D9.1 dans D9 (lot 2)", lot2["poidsD9"][0], "pct"),
+              ("P_D9L2_2", "Poids de D9.2 dans D9 (lot 2)", lot2["poidsD9"][1], "pct"),
+              ("P_D9L2_3", "Poids de D9.3 dans D9 (lot 2)", lot2["poidsD9"][2], "pct"),
+              ("P_D9L2_4", "Poids de D9.4 « risques physiques résiduels » dans D9 (lot 2)", lot2["poidsD9"][3], "pct"),
+              ("P_D95", "Poids de D9.5 « risque de transition » (calculé) dans D9 (lot 2)", lot2["poidsTransition"], "pct"),
+              ("P_EmisQuant", "Transition moyenne au-delà de ces émissions (tCO₂e/an, SFI NP3)", CLIMAT["seuils"]["emissionsQuantification"], "int"),
+              ("P_EmisAlt", "Transition élevée au-delà de ces émissions (tCO₂e/an, Principes de l'Équateur)", CLIMAT["seuils"]["emissionsAlternatives"], "int"),
+              ("P_MACF", "Transition élevée à partir de cette part du CA exportée sous MACF", CLIMAT["seuils"]["macfSignificatif"], "pct")]
+    for i, (n, lib, v, typ) in enumerate(lignes):
+        rr = r + 1 + i
+        ws.write(rr, 7, n, F["lab"]); ws.write(rr, 8, lib, F["txt"])
+        if typ == "txt":
+            ws.write_string(rr, 9, v, F["param"])
+            ws.data_validation(rr, 9, rr, 9, {"validate": "list", "source": ["Oui", "Non"],
+                                              "input_title": AIDE["lot2"][0], "input_message": AIDE["lot2"][1]})
+            ws.conditional_format(rr, 9, rr, 9, {"type": "cell", "criteria": "==", "value": '"Oui"', "format": F["ambre"]})
+        else:
+            ws.write_number(rr, 9, v, F["param_pct"] if typ == "pct" else F["param"])
+        nom(n, f"$J${rr + 1}")
+        ws.set_row(rr, 30 if i == 0 else None)
+    wb.define_name("P_D9L2", f"='Paramètres'!$J${r + 3}:$J${r + 6}")
+    rt = r + 1 + len(lignes)
+    ws.write(rt, 8, "Total des poids de D9 au lot 2 (doit valoir 100 %)", F["labb"])
+    ws.write_formula(rt, 9, f"=SUM(J{r + 3}:J{r + 7})", F["pct"])
+    ws.conditional_format(rt, 9, rt, 9, {"type": "formula", "criteria": f"=ROUND(J{rt + 1},4)<>1", "format": F["rouge"]})
+
     # Listes
     r = last_anc + 4
     ws.write(r - 1, 0, "Listes de choix", F["labb"])
@@ -859,7 +955,8 @@ def parametres(wb, ws, F):
               ("L_NatureCredit", NATURES_CREDIT),
               ("L_Devise", DEVISES),
               ("L_Avis", AVIS),
-              ("L_Decision", DECISIONS)]
+              ("L_Decision", DECISIONS),
+              ("L_NiveauAlea", NIVEAUX_ALEA)]
     for k, (n, vals) in enumerate(listes):
         rr = r + (k // 5) * 12
         col = k % 5
@@ -868,6 +965,23 @@ def parametres(wb, ws, F):
             ws.write(rr + 1 + i, col, v, F["lab"])
         lettre = "ABCDE"[col]
         nom(n, f"${lettre}${rr + 2}:${lettre}${rr + 1 + len(vals)}")
+    # Aléas climatiques présélectionnés par secteur (volet climatique, section 14)
+    r = r + 26
+    ws.write(r - 1, 0, "Aléas climatiques présélectionnés par secteur (« Oui » = évalué d'office)", F["labb"])
+    ws.write(r, 0, "Secteur", F["hdr"])
+    for j, (_a, lib, _e) in enumerate(ALEAS):
+        ws.write(r, 1 + j, lib.split(",")[0].split(" et ")[0], F["hdr"])
+    ws.write(r, 1 + len(ALEAS), "Scénario climatique de référence", F["hdr"])
+    ws.set_row(r, 30)
+    for i, (code, _l, _d) in enumerate(SECTEURS):
+        ws.write(r + 1 + i, 0, code, F["lab"])
+        for j, (a, _lib, _e) in enumerate(ALEAS):
+            ws.write(r + 1 + i, 1 + j, "Oui" if a in CLIMAT["aleasParSecteur"][code] else "", F["param"])
+        ws.write(r + 1 + i, 1 + len(ALEAS), CLIMAT["scenarios"][code]["description"], F["param"])
+    lo, hi = r + 2, r + 1 + len(SECTEURS)
+    nom("P_AleaSec", f"$A${lo}:$A${hi}")
+    nom("P_AleaPresel", f"$B${lo}:${'ABCDEFG'[len(ALEAS)]}${hi}")
+    nom("P_ScenClim", f"${'ABCDEFGH'[1 + len(ALEAS)]}${lo}:${'ABCDEFGH'[1 + len(ALEAS)]}${hi}")
     ws.freeze_panes(3, 0)
     ws.protect("", {"format_columns": True, "format_rows": True})
 
@@ -985,13 +1099,13 @@ def dossier(wb, ws, F, d):
     ws.set_column("J:M", 10, None, {"hidden": True})
     ws.set_column("N:N", 24)
     ws.set_column("O:O", 3)
-    ws.set_column("P:T", 10, None, {"hidden": True})
+    ws.set_column("P:U", 10, None, {"hidden": True})
     ws.freeze_panes(12, 0)
     ws.set_landscape(); ws.fit_to_pages(1, 0); ws.set_paper(9)
     ws.repeat_rows(0, 10)
     ws.hide_gridlines(2)
     ws.write("J1", "MODELE" if vierge else "DOSSIER_V8", F["hidden"])
-    ws.write("K1", "V3", F["hidden"])
+    ws.write("K1", "V4", F["hidden"])
     # Feuille protégée sans mot de passe : seules les cellules jaunes sont modifiables.
     ws.protect("", {"format_columns": True, "format_rows": True})
 
@@ -1188,7 +1302,7 @@ def dossier(wb, ws, F, d):
     nbV = f'COUNTIF($F${R["x_first"]}:$F${R["b_last"]},"Oui")'
     nbP = f'COUNTIF($E${R["c_first"]}:$E${R["c_last"]},"Oui")'
     L = (f'OR(B{rb["capex"]}>P_L_CAPEX,N(B{rb["expo"]})>P_L_EXPO,B{rb["regime"]}="R4",B{rb["premiere"]}="Oui",'
-         f'N(B{rb["fx"]})>0,B{rb["consortium"]}="Oui",B{rb["plus20"]}="Oui",B{rb["climat"]}="Oui",N(B{rb["nbcp"]})>P_L_NBCP)')
+         f'N(B{rb["fx"]})>0,B{rb["consortium"]}="Oui",B{rb["plus20"]}="Oui",B{rb["expo_ret"]}="Oui",N(B{rb["nbcp"]})>P_L_NBCP)')
     S = (f'AND(B{rb["capex"]}<=P_S_CAPEX,B{rb["expo"]}<>"",N(B{rb["expo"]})<=P_S_EXPO,OR(B{rb["regime"]}="R1",B{rb["regime"]}="R2"),'
          f'B{rb["techno"]}="Oui",B{rb["mad"]}="Oui",B{rb["duree"]}<>"",N(B{rb["duree"]})<=P_S_DUREE,'
          f'OR(B{rb["phase"]}<>"P1",B{rb["epc18"]}="Oui"),B{rb["unique"]}="Oui",{nbV}=0)')
@@ -1203,7 +1317,7 @@ def dossier(wb, ws, F, d):
         f'IF(N(B{rb["fx"]})>0,"devises non intégralement couvertes ; ","")',
         f'IF(B{rb["consortium"]}="Oui","opération consortiale ; ","")',
         f'IF(B{rb["plus20"]}="Oui","contrat de revenus > 20 ans ; ","")',
-        f'IF(B{rb["climat"]}="Oui","risque climatique élevé ; ","")',
+        f'IF(B{rb["expo_ret"]}="Oui","risque climatique élevé ; ","")',
         f'IF(N(B{rb["nbcp"]})>P_L_NBCP,"plus de "&P_L_NBCP&" contreparties clés ; ","")'])
     ws.merge_range(rp - 1, 2, rp - 1, 7, "", F["calc_txt"])
     fx(f"C{rp}", f'=IF(B{rp}="","",IF(B{rp}="L","Escalade : "&{motifs},IF(B{rp}="S","Toutes les conditions du régime simplifié sont réunies.","Régime standard par défaut : une condition du régime S manque, aucune condition d\'escalade.")))', F["calc_txt"])
@@ -1358,6 +1472,7 @@ def dossier(wb, ws, F, d):
         fx(f"E{r}", f'=IF(B{r}="","",IF(C{r}=0,"Différé",IF(B{r}<0,"Critique",{classe(f"D{r}")})))', F["calc"])
         val(p[3] if (p and len(p) > 3) else None, F["in_num"], r, 5)
         fx(f"G{r}", f'=IF(OR(B{r}="",C{r}="",C{r}=0),"",IF(F{r}<>"",F{r},B{r}*(1-$B${R["choc"]}))/C{r})', F["num3"])
+        fx(f"U{r}", f'=IF(OR(B{r}="",C{r}="",N(C{r})=0,NOT(ISNUMBER($B${R["choc_clim"]}))),"",B{r}*(1-$B${R["choc_clim"]})/C{r})', F["hidden"])
         if i % 2 == 1:
             fx(f"H{r}", f'=IF(AND($B${R["period"]}="Semestrielle",B{r}<>"",B{r-1}<>"",N(C{r})+N(C{r-1})>0),(B{r}+B{r-1})/(C{r}+C{r-1}),"")', F["num3"])
         else:
@@ -1379,7 +1494,10 @@ def dossier(wb, ws, F, d):
     fx(f"E{R['dmin']}", f'=IF(D{R["dmin"]}="","",IF(F{R["dmin"]}>0,"Critique",{classe("D"+str(R["dmin"]))}))', F["calc"])
     fx(f"F{R['dmin']}", f'=COUNTIF(B{pf}:B{pl},"<0")', F["hidden"])
     ws.write(R["dstress"] - 1, 0, "DSCR minimum sous scénario défavorable", F["labb"])
-    fx(f"D{R['dstress']}", f'=IF(COUNT(G{pf}:G{pl})=0,"",MIN(G{pf}:G{pl}))', F["kpi3"])
+    # Lot 2 : sur un site exposé, le DSCR stressé retenu est le plus bas des scénarios financier et climatique.
+    clim = f'AND(P_Lot2="Oui",$B${R["expo_ret"]}="Oui",ISNUMBER($B${R["dclim"]}))'
+    fx(f"D{R['dstress']}", f'=IF({clim},IF(COUNT(G{pf}:G{pl})=0,$B${R["dclim"]},MIN(MIN(G{pf}:G{pl}),$B${R["dclim"]})),'
+                           f'IF(COUNT(G{pf}:G{pl})=0,"",MIN(G{pf}:G{pl})))', F["kpi3"])
     fx(f"E{R['dstress']}", f'=IF(D{R["dstress"]}="","",{classe("D"+str(R["dstress"]))})', F["calc"])
     ws.write(R["dmoy"] - 1, 0, "DSCR moyen sur l'horizon (indicatif — jamais retenu)", F["lab"])
     fx(f"D{R['dmoy']}", f'=IF(SUM(C{pf}:C{pl})=0,"",SUM(B{pf}:B{pl})/SUM(C{pf}:C{pl}))', F["num3"])
@@ -1426,7 +1544,7 @@ def dossier(wb, ws, F, d):
     }
     mesures = {
         0: f'=IF({dm}="","",IF($F${R["dmin"]}>0,"CFADS négatif sur au moins une période : Critique d\'office","DSCR minimum "&FIXED({dm},3)&" face au seuil critique "&FIXED($B${rs},2)&" du couple "&$B${R["regime"]}&" × "&$B${R["secteur"]}))',
-        1: f'=IF({ds}="","","DSCR stressé minimum "&FIXED({ds},3)&" — "&$C${R["choc"]})',
+        1: f'=IF({ds}="","","DSCR stressé minimum "&FIXED({ds},3)&IF($B${R["stress_ret"]}="climatique"," — scénario climatique retenu (section 14)"," — "&$C${R["choc"]}))',
         2: f'=IF($B${R["phase"]}="P1",IF($B${R["couv"]}="","","Phase P1 : test de financement à terminaison, couverture "&FIXED($B${R["couv"]}*100,1)&" %"),"LLCR "&IF($B${R["llcr"]}="","non renseigné",FIXED($B${R["llcr"]},2))&" — note N3 saisie ligne {R["n3_saisi"]}")',
     }
     n_lib = d.get("n_lib", {})
@@ -1500,23 +1618,35 @@ def dossier(wb, ws, F, d):
         ws.write(h - 1, 0, f"{dm_} — {lib}", F["labb"])
         ws.write_blank(h - 1, 1, None, F["lab"])
         fx(f"C{h}", f'=IFERROR(INDEX(P_PoidsDom,{idx_dom[dm_] + 1},MATCH($B${R["phase"]},P_PoidsHdr,0)),"")', F["pct"])
-        fx(f"D{h}", f'=IF(N(C{h})=0,"",SUMPRODUCT(B{s1}:B{s2},C{s1}:C{s2})+P_InfoInsuff*SUMPRODUCT((1-ISNUMBER(B{s1}:B{s2}))*C{s1}:C{s2}))', F["kpi"])
+        d95 = f'+IF(P_Lot2="Oui",IF(ISNUMBER($B${R["note_d95"]}),$B${R["note_d95"]},P_InfoInsuff)*P_D95,0)' if dm_ == "D9" else ""
+        fx(f"D{h}", f'=IF(N(C{h})=0,"",SUMPRODUCT(B{s1}:B{s2},C{s1}:C{s2})+P_InfoInsuff*SUMPRODUCT((1-ISNUMBER(B{s1}:B{s2}))*C{s1}:C{s2}){d95})', F["kpi"])
         fusion(h, 4, 7, F["in_wrap"], comm.get(dm_, ""))
         validation(ws, f"E{h}", "comm")
         if comm.get(dm_):
             ws.set_row(h - 1, 45)
         ws.write(h - 1, 9, "DOM", F["hidden"])
         fx(f"K{h}", f"=IF(N(C{h})>0,1,0)", F["hidden"])
-        fx(f"M{h}", f"=N(C{h})*SUMPRODUCT(ISNUMBER(B{s1}:B{s2})*C{s1}:C{s2})", F["hidden"])
+        m95 = f'+IF(AND(P_Lot2="Oui",ISNUMBER($B${R["note_d95"]})),P_D95,0)' if dm_ == "D9" else ""
+        fx(f"M{h}", f"=N(C{h})*(SUMPRODUCT(ISNUMBER(B{s1}:B{s2})*C{s1}:C{s2}){m95})", F["hidden"])
+        if dm_ == "D9":
+            ws.write_comment(h - 1, 0, "Lot 2 du volet climatique actif : D9 reçoit le sous-critère calculé D9.5 « risque de "
+                                       "transition » (section 14) et les poids D9.1 à D9.4 du lot 2 (onglet Paramètres).",
+                             {"x_scale": 2})
         notes = grille.get(dm_, [])
         for j, (sl, _) in enumerate(SOUS_CRITERES[dm_]):
             r = s1 + j
             cle = f"{dm_}.{j + 1}"
-            ws.write(r - 1, 0, "      " + sl, F["lab_w"])
+            if cle == "D9.4":
+                fx(f"A{r}", f'=IF(P_Lot2="Oui","      Risques physiques résiduels (lot 2 : voir section 14)","      {sl}")', F["lab_w"])
+            else:
+                ws.write(r - 1, 0, "      " + sl, F["lab_w"])
             note = notes[j] if j < len(notes) else None
             fusion(r, 4, 6, F["in_choix"], REF.choix(cle, secteur, note) if d else None)
             choix_formules(r, cle, cle in REF.SECTEURS_DESC)
-            fx(f"C{r}", f'=INDEX(P_SCPoids,MATCH(L{r},P_SCCle,0))', F["pct"])
+            if dm_ == "D9":
+                fx(f"C{r}", f'=IF(P_Lot2="Oui",INDEX(P_D9L2,{j + 1}),INDEX(P_SCPoids,MATCH(L{r},P_SCCle,0)))', F["pct"])
+            else:
+                fx(f"C{r}", f'=INDEX(P_SCPoids,MATCH(L{r},P_SCCle,0))', F["pct"])
             ws.write_blank(r - 1, 3, None, F["lab"])
             val(sc_comm.get(cle, ""), F["in_wrap"], r, 7)
             validation(ws, f"H{r}", "sc_comm")
@@ -1536,7 +1666,10 @@ def dossier(wb, ws, F, d):
     fx(f"B{R['couv_pond']}", f'=IF(SUMIF(J{g1}:J{g2},"DOM",C{g1}:C{g2})=0,"",SUM(M{g1}:M{g2})/SUMIF(J{g1}:J{g2},"DOM",C{g1}:C{g2}))', F["pct"])
     ws.write(R["compl_crit"] - 1, 0, "Complétude des critères requis : N1 à N6 et sous-critères de la phase (100 % exigé)", F["lab_w"])
     n1, n6 = R["n1"], R["n6"]
-    fx(f"B{R['compl_crit']}", f'=IF(SUMIF(J{g1}:J{g2},"SC",K{g1}:K{g2})=0,"",(COUNT(B{n1}:B{n6})+SUMPRODUCT((J{g1}:J{g2}="SC")*(K{g1}:K{g2}=1)*ISNUMBER(B{g1}:B{g2})))/(6+SUMIF(J{g1}:J{g2},"SC",K{g1}:K{g2})))', F["pct"])
+    k9 = f'$K${dict((dd, hh) for dd, hh, _, _ in GRILLE)["D9"]}'
+    t95 = f'AND(P_Lot2="Oui",{k9}=1)'
+    fx(f"B{R['compl_crit']}", f'=IF(SUMIF(J{g1}:J{g2},"SC",K{g1}:K{g2})=0,"",(COUNT(B{n1}:B{n6})+SUMPRODUCT((J{g1}:J{g2}="SC")*(K{g1}:K{g2}=1)*ISNUMBER(B{g1}:B{g2}))'
+                              f'+IF({t95},IF(ISNUMBER($B${R["note_d95"]}),1,0),0))/(6+SUMIF(J{g1}:J{g2},"SC",K{g1}:K{g2})+IF({t95},1,0)))', F["pct"])
 
     # ---------------------------------------------------------------- 9 agrégation
     section(R["agr_title"], "9 · AGRÉGATION ET NOTE CALCULÉE")
@@ -1599,7 +1732,7 @@ def dossier(wb, ws, F, d):
                                  "« Non » déclenche le blocage.", {"x_scale": 2})
 
     # ---------------------------------------------------------------- 11 plafonds
-    section(R["pl_title"], "11 · PLAFONDS DE NOTE C1 À C15 — déclenchés par les données, jamais saisis")
+    section(R["pl_title"], f"11 · PLAFONDS DE NOTE C1 À C{len(PLAFONDS)} — déclenchés par les données, jamais saisis")
     for c, h in enumerate(["Code et fait générateur", "Donnée observée", "Seuil", "", "Actif", "Plafond", "Plafond effectif"]):
         if h:
             ws.write(R["pl_hdr"] - 1, c, h, F["hdr"])
@@ -1620,14 +1753,21 @@ def dossier(wb, ws, F, d):
         "C9": (f'={B("quote")}', "=P_C9", f'=IF({B("quote")}="","n.r.",IF({B("quote")}>P_C9,"Oui","Non"))'),
         "C10": (f'=IF({B("part_ach")}="","",FIXED({B("part_ach")}*100,0)&" % — "&{B("qual")})', "=P_C10",
                 f'=IF(OR({B("part_ach")}="",{B("qual")}=""),"n.r.",IF(AND({B("part_ach")}>P_C10,{B("qual")}<>INDEX(L_QualAch,1)),"Oui","Non"))'),
-        "C11": (f'={B("climat")}', '="élevé sans plan"', f'=IF({B("climat")}="","n.r.",IF(AND({B("climat")}="Oui",{B("plan_adapt")}<>"Oui"),"Oui","Non"))'),
+        # Lot 2 : un aléa élevé déclenche C11 s'il n'a pas d'adaptation financée (section 14).
+        "C11": (f'={B("expo_ret")}', '="élevé sans plan"',
+                f'=IF(AND(P_Lot2="Oui",COUNTIF($E${R["alea_first"]}:$E${R["alea_last"]},"Élevé")>0),IF(N({B("clim_sans")})>0,"Oui","Non"),'
+                f'IF({B("expo_ret")}="","n.r.",IF(AND({B("expo_ret")}="Oui",{B("plan_adapt")}<>"Oui"),"Oui","Non")))'),
         "C12": (f'={B("sponsor")}', '="insuffisante"', f'=IF({B("sponsor")}="","n.r.",IF({B("sponsor")}="Non","Oui","Non"))'),
         "C13": (f'=IF({B("operateur")}="","",{B("operateur")}&IF({B("ecart_om")}="",""," — écart "&{B("ecart_om")}&" ans"))', "=P_C13",
                 f'=IF({B("operateur")}="","n.r.",IF(AND({B("operateur")}="Non",N({B("ecart_om")})>P_C13),"Oui","Non"))'),
         "C14": (f'={B("facteur")}', '="au-delà limite"', f'=IF({B("facteur")}="","n.r.",IF({B("facteur")}="Oui","Oui","Non"))'),
         "C15": (f'=$B${R["couv_pond"]}', "=P_COUV", f'=IF(OR($B${R["couv_pond"]}="",$B${R["compl_crit"]}=""),"n.r.",IF(OR($B${R["couv_pond"]}<P_COUV,$B${R["compl_crit"]}<1),"Oui","Non"))'),
+        "C16": (f'={B("niv_trans")}', '="élevé sans plan"',
+                f'=IF(P_Lot2<>"Oui","n.a.",IF({B("niv_trans")}="","n.r.",IF(AND({B("niv_trans")}="Élevé",{B("plan_trans")}<>"Oui"),"Oui","Non")))'),
+        "C17": (f'={B("clim_sans")}', '="≥ 2 aléas"',
+                f'=IF(P_Lot2<>"Oui","n.a.",IF({B("clim_expo")}="","n.r.",IF(N({B("clim_sans")})>=2,"Oui","Non")))'),
     }
-    fmt_obs = {"C1": "num3", "C2": "num3", "C3": "num3", "C4": "num2", "C6": "pct", "C7": "num1", "C8": "pct", "C9": "pct", "C15": "pct"}
+    fmt_obs = {"C1": "num3", "C2": "num3", "C3": "num3", "C4": "num2", "C6": "pct", "C7": "num1", "C8": "pct", "C9": "pct", "C15": "pct", "C17": "int"}
     for i, (c, fait, niv) in enumerate(PLAFONDS):
         r = R["c_first"] + i
         o, s, act = obs[c]
@@ -1641,6 +1781,7 @@ def dossier(wb, ws, F, d):
         fx(f"G{r}", f'=IF(E{r}="Oui",F{r},10)', F["int"])
         ws.conditional_format(f"E{r}", {"type": "cell", "criteria": "==", "value": '"Oui"', "format": F["rouge"]})
         ws.conditional_format(f"E{r}", {"type": "cell", "criteria": "==", "value": '"n.r."', "format": F["ambre"]})
+        ws.conditional_format(f"A{r}:G{r}", {"type": "formula", "criteria": f'=$E${r}="n.a."', "format": F["gris"]})
     ws.write(R["plafond"] - 1, 0, "PLAFOND LE PLUS CONTRAIGNANT (10 = aucun)", F["labb"])
     fx(f"B{R['plafond']}", f"=MIN(G{R['c_first']}:G{R['c_last']})", F["kpi"])
 
@@ -1656,7 +1797,7 @@ def dossier(wb, ws, F, d):
     ws.merge_range(R["statut"] - 1, 1, R["statut"] - 1, 7, "", F["kpi_txt"])
     fx(f"B{R['statut']}", (f'=IF(B{R["note_calc"]}="","Dossier incomplet",IF({nX}>0,"Hors périmètre — aucune note produite",'
                             f'IF({nB}>0,"Note provisoire — stade bloqué : "&TRIM({stades}),'
-                            f'IF(E{R["c_last"]}="Oui","Note provisoire — évaluation partielle (C15)","Note validable, à soumettre au comité"))))'), F["kpi_txt"])
+                            f'IF(E{R["c_first"] + IDX_C15}="Oui","Note provisoire — évaluation partielle (C15)","Note validable, à soumettre au comité"))))'), F["kpi_txt"])
 
     # ---------------------------------------------------------------- 13 commentaires et conditions
     section(R["b13_title"], "13 · COMMENTAIRES ET CONDITIONS — alimente la fiche comité")
@@ -1684,6 +1825,7 @@ def dossier(wb, ws, F, d):
         fusion(r, 3, 7, F["in_wrap"], vt)
         validation(ws, f"D{r}", key + "_txt")
         ws.set_row(r - 1, 30)
+    climat_section(ws, F, d, val, fx, section, fusion)
     ws.print_area(0, 0, R["fin"] - 1, 7)
 
     # ---------------------------------------------------------------- check-list (colonnes P:R masquées)
@@ -1697,6 +1839,111 @@ def dossier(wb, ws, F, d):
         fx(f"R{r}", f"=IF({ok},1,0)", F["hidden"])
         if cf:
             ws.conditional_format(cf, {"type": "formula", "criteria": f"=NOT({ok})", "format": F["manquant"]})
+
+
+def climat_section(ws, F, d, val, fx, section, fusion):
+    """Section 14 · volet climatique : aléas, transition, scénario climatique, effet du lot 2."""
+    c = d.get("climat") or {}
+    aleas = c.get("aleas") or {}
+    B = lambda k: f"$B${R[k]}"
+    section(R["clim_title"], "14 · VOLET CLIMATIQUE — fiche des risques physiques et de transition (directive BAM 2/W/2025)")
+    ws.merge_range(R["clim_intro"] - 1, 0, R["clim_intro"] - 1, 7, "", F["calc_txt"])
+    fx(f"A{R['clim_intro']}", '=IF(P_Lot2="Oui","Lot 2 actif (onglet Paramètres) : la fiche entre dans la note — exposition '
+                              'déduite des aléas, C11, C16, C17, D9.5 et scénario climatique dans N2.",'
+                              '"Lot 1 : la fiche est analysée sans effet sur la note ; la case « site à risque climatique élevé » '
+                              '(section 2) reste la donnée du calcul.")', F["calc_txt"])
+    ws.set_row(R["clim_intro"] - 1, 30)
+    ws.write(R["clim_loc"] - 1, 0, "Localisation du site", F["lab_w"])
+    fusion(R["clim_loc"], 1, 7, F["in_wrap"], c.get("localisation") or None)
+    validation(ws, f"B{R['clim_loc']}", "clim_loc")
+    h = R["alea_hdr"]
+    for col, t in ((0, "Aléa"), (3, "Aléa du secteur"), (4, "Exposition"), (7, "Adaptation financée ?")):
+        ws.write(h - 1, col, t, F["hdr"])
+    ws.merge_range(h - 1, 1, h - 1, 2, "Effets typiques", F["hdr"])
+    ws.merge_range(h - 1, 5, h - 1, 6, "Source (pièce, page, carte)", F["hdr"])
+    ws.set_row(h - 1, 30)
+    for i, (code, lib, effets) in enumerate(ALEAS):
+        r = R["alea_first"] + i
+        x = aleas.get(code) or {}
+        ws.write(r - 1, 0, lib, F["lab_w"])
+        ws.merge_range(r - 1, 1, r - 1, 2, effets, F["calc_txt"])
+        fx(f"D{r}", f'=IFERROR(IF(INDEX(P_AleaPresel,MATCH($B${R["secteur"]},P_AleaSec,0),{i + 1})="Oui","Oui",""),"")', F["calc"])
+        val(x.get("niveau"), F["in_c"], r, 4)
+        validation(ws, f"E{r}", "alea_niv", liste="=L_NiveauAlea")
+        fusion(r, 5, 6, F["in_wrap"], x.get("source") or None)
+        validation(ws, f"F{r}", "alea_src")
+        val(x.get("adaptation"), F["in_c"], r, 7)
+        validation(ws, f"H{r}", "alea_adapt", liste="=L_OuiNon")
+        ws.set_row(r - 1, 45)
+        ws.conditional_format(f"E{r}", {"type": "cell", "criteria": "==", "value": '"Élevé"', "format": F["rouge"]})
+        ws.conditional_format(f"E{r}", {"type": "cell", "criteria": "==", "value": '"Moyen"', "format": F["ambre"]})
+        ws.conditional_format(f"E{r}", {"type": "formula", "criteria": f'=AND(P_Lot2="Oui",$D${r}="Oui",$E${r}="")', "format": F["manquant"]})
+        ws.conditional_format(f"H{r}", {"type": "formula", "criteria": f'=AND(P_Lot2="Oui",$E${r}="Élevé",$H${r}="")', "format": F["manquant"]})
+    a1, a2 = R["alea_first"], R["alea_last"]
+    ws.write(R["clim_expo"] - 1, 0, "Exposition déduite de la fiche (au moins un aléa élevé)", F["labb"])
+    fx(f"B{R['clim_expo']}", f'=IF(COUNTA(E{a1}:E{a2})=0,"",IF(COUNTIF(E{a1}:E{a2},"Élevé")>0,"Oui","Non"))', F["calc"])
+    ws.write(R["clim_sans"] - 1, 0, "Aléas élevés sans adaptation financée", F["lab_w"])
+    fx(f"B{R['clim_sans']}", f'=SUMPRODUCT((E{a1}:E{a2}="Élevé")*(H{a1}:H{a2}<>"Oui"))', F["int"])
+    ws.merge_range(R["clim_ecart"] - 1, 0, R["clim_ecart"] - 1, 7, "", F["calc_txt"])
+    fx(f"A{R['clim_ecart']}", f'=IF(AND({B("clim_expo")}="Oui",{B("climat")}="Non"),"Écart : la fiche signale un aléa élevé, '
+                              f'mais la section 2 déclare le site non exposé — corrigez l\'un ou l\'autre, ou justifiez l\'écart.",'
+                              f'IF(AND({B("climat")}="Oui",COUNTIF(D{a1}:D{a2},"Oui")>0,SUMPRODUCT((D{a1}:D{a2}="Oui")*(E{a1}:E{a2}=""))=0,'
+                              f'{B("clim_expo")}="Non"),"Écart : la section 2 déclare le site exposé, mais aucun aléa n\'est évalué élevé.",""))',
+       F["calc_txt"])
+    ws.conditional_format(f"A{R['clim_ecart']}", {"type": "formula", "criteria": f'=$A${R["clim_ecart"]}<>""', "format": F["ambre"]})
+    ws.conditional_format(f"B{R['clim_expo']}", {"type": "cell", "criteria": "==", "value": '"Oui"', "format": F["rouge"]})
+
+    # transition
+    ws.merge_range(R["trans_hdr"] - 1, 0, R["trans_hdr"] - 1, 7, "Risque de transition", F["hdr"])
+    champs = [("emis", "Émissions annuelles, scopes 1 et 2 (tCO₂e/an)", c.get("emissions"), "in_num", None, "pos"),
+              ("macf", "Exportations vers l'UE soumises au MACF (% du CA)", c.get("exportMacf"), "in_pct", None, "pct"),
+              ("fossile", "Actif dépendant des énergies fossiles ?", c.get("actifFossile"), "in_c", "=L_OuiNon", None),
+              ("plan_trans", "Plan de transition crédible et financé ?", c.get("planTransition"), "in_c", "=L_OuiNon", None)]
+    for key, lab, v, fmt, liste, num in champs:
+        r = R[key]
+        ws.write(r - 1, 0, lab, F["lab_w"])
+        val(v, F[fmt], r, 1)
+        validation(ws, f"B{r}", key, liste=liste, num=num)
+    em, mc, fo, pt = B("emis"), B("macf"), B("fossile"), B("plan_trans")
+    connu = f'AND(ISNUMBER({em}),ISNUMBER({mc}),{fo}<>"")'
+    eleve = f'OR(AND(ISNUMBER({em}),N({em})>P_EmisAlt),AND(ISNUMBER({mc}),N({mc})>=P_MACF),AND({fo}="Oui",{pt}<>"Oui"))'
+    moyen = f'OR(AND(ISNUMBER({em}),N({em})>P_EmisQuant),AND(ISNUMBER({mc}),N({mc})>0),AND({fo}="Oui",{pt}="Oui"))'
+    ws.write(R["niv_trans"] - 1, 0, "Niveau de transition (calculé)", F["labb"])
+    fx(f"B{R['niv_trans']}", f'=IF(NOT({connu}),"",IF({eleve},"Élevé",IF({moyen},"Moyen","Faible")))', F["calc"])
+    ws.conditional_format(f"B{R['niv_trans']}", {"type": "cell", "criteria": "==", "value": '"Élevé"', "format": F["rouge"]})
+    ws.conditional_format(f"B{R['niv_trans']}", {"type": "cell", "criteria": "==", "value": '"Moyen"', "format": F["ambre"]})
+    nt = B("niv_trans")
+    ws.write(R["note_d95"] - 1, 0, "D9.5 « risque de transition » : note (lot 2)", F["lab_w"])
+    fx(f"B{R['note_d95']}", f'=IF({nt}="","{REF.INFO}",IF({nt}="Faible",P_Ancre_TF,IF({nt}="Moyen",P_Ancre_F,IF({pt}="Oui",P_Ancre_V,P_Ancre_C))))', F["calc"])
+    ws.merge_range(R["note_d95"] - 1, 2, R["note_d95"] - 1, 7, "Faible 100 · Moyen 80 · Élevé avec plan 50 · Élevé sans plan 20 · "
+                   "non renseigné : info. insuffisante. Entre dans D9 quand le lot 2 est actif.", F["calc_txt"])
+
+    # scénario climatique
+    ws.merge_range(R["scen_hdr"] - 1, 0, R["scen_hdr"] - 1, 7, "Scénario climatique", F["hdr"])
+    ws.write(R["choc_clim"] - 1, 0, "Baisse du CFADS sous le scénario climatique (%)", F["lab_w"])
+    val(c.get("chocClimatique"), F["in_pct"], R["choc_clim"], 1)
+    validation(ws, f"B{R['choc_clim']}", "choc_clim", num="choc")
+    ws.merge_range(R["choc_clim"] - 1, 2, R["choc_clim"] - 1, 7, "", F["calc_txt"])
+    fx(f"C{R['choc_clim']}", f'=IFERROR("Référence du secteur : "&INDEX(P_ScenClim,MATCH($B${R["secteur"]},P_AleaSec,0)),"")', F["calc_txt"])
+    ws.write(R["desc_clim"] - 1, 0, "Description du scénario climatique", F["lab_w"])
+    fusion(R["desc_clim"], 1, 7, F["in_wrap"], c.get("descriptionClimatique") or None)
+    validation(ws, f"B{R['desc_clim']}", "desc_clim")
+    ws.set_row(R["desc_clim"] - 1, 30)
+    pf, pl = R["p_first"], R["p_last"]
+    ws.write(R["dclim"] - 1, 0, "DSCR minimum sous le scénario climatique", F["labb"])
+    fx(f"B{R['dclim']}", f'=IF(COUNT(U{pf}:U{pl})=0,"",MIN(U{pf}:U{pl}))', F["kpi3"])
+
+    # effet du lot 2
+    ws.merge_range(R["lot2_hdr"] - 1, 0, R["lot2_hdr"] - 1, 7, "Effet sur la note (lot 2)", F["hdr"])
+    ws.write(R["lot2_etat"] - 1, 0, "Lot 2 du volet climatique", F["lab_w"])
+    fx(f"B{R['lot2_etat']}", '=IF(P_Lot2="Oui","Actif","Inactif")', F["calc"])
+    ws.write(R["expo_ret"] - 1, 0, "Exposition retenue par le calcul", F["labb"])
+    fx(f"B{R['expo_ret']}", f'=IF(AND(P_Lot2="Oui",{B("clim_expo")}<>""),{B("clim_expo")},{B("climat")})', F["calc"])
+    ws.merge_range(R["expo_ret"] - 1, 2, R["expo_ret"] - 1, 7, "", F["calc_txt"])
+    fx(f"C{R['expo_ret']}", f'=IF(AND(P_Lot2="Oui",{B("clim_expo")}<>""),"Déduite de la fiche des aléas.","Case de la section 2.")', F["calc_txt"])
+    ws.write(R["stress_ret"] - 1, 0, "Scénario retenu pour N2", F["lab_w"])
+    fx(f"B{R['stress_ret']}", f'=IF(P_Lot2<>"Oui","",IF(AND({B("expo_ret")}="Oui",ISNUMBER({B("dclim")}),'
+                              f'OR(COUNT(G{pf}:G{pl})=0,{B("dclim")}<MIN(G{pf}:G{pl}))),"climatique","financier"))', F["calc"])
 
 
 # ===================================================================== Synthèse
@@ -1879,7 +2126,10 @@ def fiche(wb, ws, F, defaut):
         ("DSRA (mois de service)", f"B{R['dsra']}", "num1", "=P_C7", "num1", None),
         ("CAPEX du projet (MMAD)", f"B{R['capex']}", "num", None, None, None),
         ("Exposition de la banque (MMAD)", f"B{R['expo']}", "num", None, None, None),
+        # Volet climatique (section 14) : exposition retenue, niveau de transition, DSCR sous le scénario climatique
+        ("Climat : exposition · transition · DSCR climatique", f"B{R['expo_ret']}", "calc", f"B{R['niv_trans']}", "calc", f"B{R['dclim']}"),
     ]
+    assert 29 + len(indic) - 1 < 40
     for k, (lib, adr, fmt, rep, fmt_rep, appr) in enumerate(indic):
         r = 29 + k
         ws.write(r - 1, 0, lib, F["lab"])
@@ -2051,11 +2301,14 @@ def resultats_reference():
     """Résultats du moteur de référence pour les dix-huit dossiers préchargés."""
     out = {}
     for d in cas_tous.CAS:
-        r = moteur_reference.evaluer(d)
-        out[d["onglet"]] = dict(
-            note=r["note_approuvee"] if r["note_approuvee"] is not None else "—",
-            note_calc=r["note_calculee"], score=r["score"], regime=r["regime_retenu"], plafond=r["plafond"],
-            verrous=" ".join(r["verrous_actifs"]) or "Aucun", statut=r["statut"])
+        res = {}
+        for mode, lot2 in (("", False), ("_l2", True)):
+            r = moteur_reference.evaluer(d, lot2=lot2)
+            res.update({f"note{mode}": r["note_approuvee"] if r["note_approuvee"] is not None else "—",
+                        f"note_calc{mode}": r["note_calculee"], f"score{mode}": r["score"], f"regime{mode}": r["regime_retenu"],
+                        f"plafond{mode}": r["plafond"], f"verrous{mode}": " ".join(r["verrous_actifs"]) or "Aucun",
+                        f"statut{mode}": r["statut"]})
+        out[d["onglet"]] = res
     return out
 
 
@@ -2081,14 +2334,15 @@ def concordance(ws, F):
         e = ref[k]
         lit = lambda adr: f'=IFERROR(INDIRECT("\'{k}\'!{adr}"),"onglet absent")'
         ws.write_url(r - 1, 0, f"internal:'{k}'!A1", F["lien_b"], k)
-        val = lambda col, v, fmt: (ws.write_number(r - 1, col, v, F[fmt]) if isinstance(v, (int, float))
-                                   else ws.write_string(r - 1, col, v, F[fmt]))
-        val(1, e["note"], "int"); ws.write_formula(r - 1, 2, lit(f"B{R['na']}"), F["int"])
-        val(3, e["note_calc"], "int"); ws.write_formula(r - 1, 4, lit(f"B{R['note_calc']}"), F["int"])
-        val(5, round(e["score"], 4), "num2"); ws.write_formula(r - 1, 6, lit(f"B{R['global']}"), F["num2"])
-        val(7, e["regime"], "calc"); ws.write_formula(r - 1, 8, lit(f"B{R['prop']}"), F["calc"])
-        val(9, e["plafond"], "int"); ws.write_formula(r - 1, 10, lit(f"B{R['plafond']}"), F["int"])
-        val(11, e["verrous"], "calc_txt"); ws.write_formula(r - 1, 12, lit("B9"), F["calc_txt"])
+        # Valeur attendue selon le paramètre « Lot 2 actif » (deux jeux de référence du moteur Python).
+        q = lambda v: f'"{v}"' if isinstance(v, str) else repr(round(v, 4) if isinstance(v, float) else v)
+        val = lambda col, cle, fmt: ws.write_formula(r - 1, col, f'=IF(P_Lot2="Oui",{q(e[cle + "_l2"])},{q(e[cle])})', F[fmt])
+        val(1, "note", "int"); ws.write_formula(r - 1, 2, lit(f"B{R['na']}"), F["int"])
+        val(3, "note_calc", "int"); ws.write_formula(r - 1, 4, lit(f"B{R['note_calc']}"), F["int"])
+        val(5, "score", "num2"); ws.write_formula(r - 1, 6, lit(f"B{R['global']}"), F["num2"])
+        val(7, "regime", "calc"); ws.write_formula(r - 1, 8, lit(f"B{R['prop']}"), F["calc"])
+        val(9, "plafond", "int"); ws.write_formula(r - 1, 10, lit(f"B{R['plafond']}"), F["int"])
+        val(11, "verrous", "calc_txt"); ws.write_formula(r - 1, 12, lit("B9"), F["calc_txt"])
         ok = (f'AND(B{r}&""=C{r}&"",D{r}&""=E{r}&"",ISNUMBER(G{r}),ABS(F{r}-N(G{r}))<0.005,H{r}=I{r},'
               f'J{r}&""=K{r}&"",L{r}=M{r})')
         ws.write_formula(r - 1, 13, f'=IF({ok},"Conforme","Écart")', F["calc"])
@@ -2103,8 +2357,9 @@ def concordance(ws, F):
                                  "format": F["rouge"]})
     ws.merge_range(rl + 1, 0, rl + 1, 13,
                    "La note approuvée attendue vaut « — » pour un dossier hors périmètre (exclusion X). Le score est comparé à "
-                   "0,005 près. Le moteur de référence (moteur_reference.py) reproduit les formules des sections 1 à 12 et "
-                   "sert aussi à vérifier le classeur après chaque construction.", F["wrap"])
+                   "0,005 près. Le moteur de référence (moteur_reference.py) reproduit les formules des sections 1 à 12 et 14 ; "
+                   "les valeurs attendues suivent le paramètre « Lot 2 actif » (deux jeux de référence). Il sert aussi à "
+                   "vérifier le classeur après chaque construction.", F["wrap"])
     ws.set_row(rl + 1, 30)
     ws.freeze_panes(r0, 1)
     ws.set_landscape(); ws.set_paper(9); ws.fit_to_pages(1, 1)
@@ -2207,6 +2462,18 @@ def liste_champs_ia():
     for key, lib in (("synthese", "Synthèse de l'analyste"), ("forces", "Forces"), ("faiblesses", "Faiblesses et mitigants"),
                      ("conditions", "Conditions proposées"), ("justif", "Justification des écarts")):
         add(f"bloc13.{key}", f"Bloc 13 — {lib}", f"B{R[key]}", "texte")
+    add("climat.localisation", "Climat — localisation du site", f"B{R['clim_loc']}", "texte")
+    for i, (code, lib, _e) in enumerate(ALEAS):
+        r = R["alea_first"] + i
+        add(f"climat.alea.{code}.niveau", f"Climat — {lib} : exposition", f"E{r}", "liste:L_NiveauAlea", ", ".join(NIVEAUX_ALEA))
+        add(f"climat.alea.{code}.source", f"Climat — {lib} : source", f"F{r}", "texte")
+        add(f"climat.alea.{code}.adaptation", f"Climat — {lib} : adaptation financée", f"H{r}", "liste:L_OuiNon", "Oui, Non")
+    add("climat.emissions", "Climat — émissions scopes 1 et 2 (tCO₂e/an)", f"B{R['emis']}", "nombre")
+    add("climat.export_macf", "Climat — exportations UE soumises au MACF", f"B{R['macf']}", "pourcentage", "0,25 = 25 %")
+    add("climat.actif_fossile", "Climat — actif dépendant des énergies fossiles", f"B{R['fossile']}", "liste:L_OuiNon", "Oui, Non")
+    add("climat.plan_transition", "Climat — plan de transition crédible et financé", f"B{R['plan_trans']}", "liste:L_OuiNon", "Oui, Non")
+    add("climat.choc", "Climat — scénario climatique : baisse du CFADS", f"B{R['choc_clim']}", "pourcentage", "0,2 = 20 %")
+    add("climat.choc.description", "Climat — description du scénario climatique", f"B{R['desc_clim']}", "texte")
     add("bloc13.avis", "Bloc 13 — avis risques", f"B{R['avis']}", "liste:L_Avis", ", ".join(AVIS))
     add("bloc13.avis.motif", "Bloc 13 — motif de l'avis", f"D{R['avis']}", "texte")
     return c
@@ -2304,6 +2571,14 @@ def exemple_propositions():
         ("premiere", "Non", f"{EXP}, p. 8", "Élevée"), ("consortium", "Non", f"{MI}, p. 20", "Moyenne"),
         ("plus20", "Non", f"{PPA}, art. 6", "Élevée"), ("climat", "Non", f"{EXP}, p. 31", "Moyenne"),
         ("nbcp", 3, f"{MI}, p. 9", "Moyenne"),
+        ("climat.localisation", "Province de Ouarzazate", f"{EXP}, p. 30", "Élevée"),
+        ("climat.alea.chaleur.niveau", "Élevé", f"{EXP}, p. 31", "Moyenne"),
+        ("climat.alea.chaleur.adaptation", "Oui", f"{EXP}, p. 32", "Moyenne"),
+        ("climat.alea.vents.niveau", "Moyen", f"{EXP}, p. 31", "Moyenne"),
+        ("climat.emissions", 900, f"{EXP}, p. 34", "Moyenne"), ("climat.export_macf", 0, f"{PPA}, art. 2", "Élevée"),
+        ("climat.actif_fossile", "Non", f"{EXP}, p. 34", "Élevée"),
+        ("climat.choc", 0.06, f"{EXP}, p. 33", "Faible"),
+        ("climat.choc.description", "Canicule prolongée et vents de sable : production − 5 %, nettoyage + 5 %", f"{EXP}, p. 33", "Faible"),
         ("emploi.1.libelle", "Contrat EPC", f"{MI}, p. 18", "Élevée"), ("emploi.1.montant", 395, f"{MI}, p. 18", "Élevée"),
         ("emploi.2.libelle", "Raccordement", f"{MI}, p. 18", "Élevée"), ("emploi.2.montant", 22, f"{MI}, p. 18", "Élevée"),
         ("emploi.3.libelle", "Frais, intérêts intercalaires, DSRA", f"{MI}, p. 18", "Élevée"),
@@ -2361,8 +2636,8 @@ def accueil(ws, F, nb_lignes=MAX_DOSSIERS):
     ws.set_column("E:F", 9); ws.set_column("G:G", 10); ws.set_column("H:H", 40); ws.set_column("I:I", 62)
     ws.set_column("J:J", 2); ws.set_column("K:K", 34)
     ws.write("B2", "Outil de scoring Project Finance — modèle V8", F["titre"])
-    ws.write("B3", "Version 3 · dix-huit dossiers préchargés · situations descriptives · commentaires et conditions · "
-                   "comparaison · concordance · import des propositions de l'IA.", F["sous"])
+    ws.write("B3", "Version 4 · dix-huit dossiers préchargés · situations descriptives · commentaires et conditions · "
+                   "volet climatique (section 14, lot 2 activable) · comparaison · concordance · import des propositions de l'IA.", F["sous"])
 
     def bandeau(row, titre):
         ws.merge_range(row - 1, 1, row - 1, 8, titre, F["section"])
@@ -2451,7 +2726,12 @@ def accueil(ws, F, nb_lignes=MAX_DOSSIERS):
         "boutons sont inactifs. Pour créer un dossier sans macros : clic droit sur un onglet › Afficher › Modèle, puis clic droit "
         "sur Modèle › Déplacer ou copier › Créer une copie ; renommez la copie et tapez son nom en ligne 4 de la Synthèse.",
         "Automatique : seuils DSCR (régime + secteur + phase), DSCR par échéance et stressé, N1 à N3, notes de la grille et de "
-        "N4 à N6 déduites des situations choisies, plafonds C1 à C15, verrous B3 et B7, régime S / M / L avec escalade.",
+        "N4 à N6 déduites des situations choisies, plafonds C1 à C17, verrous B3 et B7, régime S / M / L avec escalade.",
+        "Volet climatique (section 14 de chaque dossier) : aléas présélectionnés selon le secteur, exposition, source et "
+        "adaptation ; transition (émissions, MACF, actif fossile, plan) ; scénario climatique et DSCR climatique ; fiche de la "
+        "directive BAM 2/W/2025. Le paramètre « Lot 2 actif » (onglet Paramètres, « Non » par défaut) fait entrer la fiche dans "
+        "la note : exposition déduite, C11 révisé, C16, C17, D9.5 et scénario climatique dans N2. À activer après validation "
+        "par le comité.",
         "Onglets : Référentiel des niveaux (situations de chaque sous-critère, variantes sectorielles), Comparaison (deux dossiers "
         "côte à côte), Concordance (notes de référence des 18 cas), Champs IA (format du fichier de propositions), Revue IA, "
         "Diagnostic (corrections apportées) et Journal (trace des actions).",
@@ -2535,6 +2815,20 @@ DIAG_V2 = [
      "Onglet « Fiche comité » imprimable avec graphique des domaines ; boutons « Préparer l'échéancier » et « Effacer l'échéancier »."),
 ]
 
+# Évolutions de la version 4 (volet climatique, aligné sur l'outil web)
+DIAG_V4 = [
+    ("Climat", "Élevée", "Le risque climatique tenait en une case Oui/Non sans méthode ni source ; la sécheresse des cas agro-industriels était traitée comme un simple aléa financier.",
+     "Section 14 : six aléas présélectionnés selon le secteur, exposition, source et adaptation par aléa ; exposition déduite de la fiche et alerte d'écart avec la section 2."),
+    ("Climat", "Moyenne", "Aucune mesure du risque de transition (émissions, MACF, actif fossile).",
+     "Données de transition et niveau calculé (repères 25 000 et 100 000 tCO₂e, MACF ≥ 20 % du CA) ; sous-critère D9.5 calculé au lot 2."),
+    ("Stress", "Moyenne", "Le stress test ignorait les scénarios climatiques.",
+     "Scénario climatique de référence par secteur, DSCR climatique calculé ; au lot 2, N2 retient le plus bas des deux scénarios sur un site exposé."),
+    ("Plafonds", "Moyenne", "Un seul plafond climatique (C11), en tout ou rien.",
+     "C11 révisé (adaptation par aléa), C16 (transition élevée sans plan, note max. 6) et C17 (au moins deux aléas élevés sans adaptation, note max. 5), actifs au lot 2."),
+    ("Concordance", "Faible", "La concordance ne connaissait qu'un jeu de notes de référence.",
+     "Deux jeux de référence (lot 2 inactif et actif) suivant le paramètre « Lot 2 actif » ; moteur de référence et outil web concordants sur les 18 cas dans les deux cas."),
+]
+
 # Défauts de la version 2, corrigés dans la version 3
 DIAG_V3 = [
     ("Cas d'étude", "Moyenne", "Les six dossiers fournis n'étaient pas complets : « Nombre de contreparties clés » vide partout, exposition de la banque vide en C2, durée du contrat de revenus vide en C2, C4A, C4B et C5. La ligne « À SAISIR » de dossiers présentés comme exemples n'était donc jamais à zéro.",
@@ -2603,7 +2897,9 @@ def diagnostic(ws, F):
     for titre, liste, entete in (("Version 2 de l'outil : défauts de la première version corrigés", DIAG_V2,
                                   ["N°", "Zone", "Gravité", "Défaut constaté (version 1)", "Correction (version 2)"]),
                                  ("Version 3 de l'outil : défauts de la version 2 corrigés et améliorations", DIAG_V3,
-                                  ["N°", "Zone", "Gravité", "Défaut constaté (version 2)", "Correction (version 3)"])):
+                                  ["N°", "Zone", "Gravité", "Défaut constaté (version 2)", "Correction (version 3)"]),
+                                 ("Version 4 de l'outil : volet climatique", DIAG_V4,
+                                  ["N°", "Zone", "Gravité", "Limite constatée (version 3)", "Évolution (version 4)"])):
         r = rr + 2
         ws.write(r, 1, titre, F["labb"])
         for c, h in enumerate(entete):

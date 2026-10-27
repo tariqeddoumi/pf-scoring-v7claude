@@ -113,7 +113,7 @@ function bloc13(k: "synthese" | "forces" | "faiblesses" | "conditions" | "justif
 
 const SIMPLES = champsSimples();
 
-/** Fiche climat (bloc 14 de l'outil web ; l'outil Excel ne la connaît pas encore). */
+/** Fiche climat (bloc 14 ; section 14 des dossiers de l'outil Excel depuis sa version 4). */
 const CLIMAT_SIMPLES: Record<string, Def> = {
   "climat.localisation": { libelle: "Climat — localisation du site", bloc: 14, type: "texte", lire: (s) => s.climat.localisation, ecrire: (s, v) => { s.climat.localisation = txt(v).slice(0, 200); } },
   "climat.emissions": { libelle: "Climat — émissions scopes 1 et 2 (tCO₂e par an)", bloc: 14, type: "nombre", lire: (s) => s.climat.emissions, ecrire: (s, v) => { const n = num(v); s.climat.emissions = n === null ? null : Math.max(0, n); } },
@@ -124,8 +124,6 @@ const CLIMAT_SIMPLES: Record<string, Def> = {
   "climat.choc.description": { libelle: "Climat — description du scénario climatique", bloc: 14, type: "texte", lire: (s) => s.climat.descriptionClimatique, ecrire: (s, v) => { s.climat.descriptionClimatique = txt(v).slice(0, 500); } },
 };
 
-/** Champs propres à l'outil web, hors du fichier d'échange avec l'outil Excel. */
-export const estChampWebSeul = (cle: string) => cle.startsWith("climat.");
 
 const niveauLibelle = (n: Niveau | null | undefined) => (n ? NIVEAUX_LIBELLES[n - 1] : null);
 const niveauDe = (v: ValeurChamp | null): Niveau | null => {
@@ -342,7 +340,6 @@ export function afficherValeur(cle: string, v: ValeurChamp | null): string {
 export function valeursDeLaSaisie(s: SaisiePF): { cle: string; valeur: ValeurChamp }[] {
   const out: { cle: string; valeur: ValeurChamp }[] = [];
   for (const c of tousLesChamps()) {
-    if (estChampWebSeul(c.cle)) continue;
     const v = lireChamp(s, c.cle);
     if (v !== null) out.push({ cle: c.cle, valeur: c.cle === "n3_llcr" && /^\d+$/.test(String(v)) ? Number(v) : v });
   }

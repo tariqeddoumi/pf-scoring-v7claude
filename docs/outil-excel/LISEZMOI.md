@@ -1,7 +1,7 @@
-# Outil de scoring Project Finance V8 — Excel / VBA (version 3)
+# Outil de scoring Project Finance V8 — Excel / VBA (version 4)
 
-- `Outil_Scoring_PF_V8_v3.xlsm` : l'outil avec ses macros.
-- `Outil_Scoring_PF_V8_v3.xlsx` : la même chose sans macros (tout se calcule, il n'y a pas de boutons).
+- `Outil_Scoring_PF_V8_v4.xlsm` : l'outil avec ses macros.
+- `Outil_Scoring_PF_V8_v4.xlsx` : la même chose sans macros (tout se calcule, il n'y a pas de boutons).
 - `exemple_propositions_IA.xlsx` : un fichier de propositions de l'IA, au format attendu, pour essayer
   « Nouveau dossier depuis l'IA » (projet fictif de 60 MWc).
 
@@ -18,6 +18,29 @@ les listes, la protection et les macros.
 4. Grille D1 à D9 et indicateurs N4 à N6 : choisissez dans la liste la **situation** qui décrit le dossier ; la note
    (100, 80, 50, 20) s'affiche à côté. Une situation Critique ou « Info. insuffisante » exige un commentaire.
 5. Rédigez le **bloc 13 « Commentaires et conditions »**, puis **Contrôler la saisie** et **Fiche comité** (PDF).
+
+## Nouveautés de la version 4 : volet climatique
+
+- **Section 14 « Volet climatique »** de chaque dossier (lien « 14 · Climat » de la navigation) :
+  - six aléas (chaleur, sécheresse, inondation, submersion marine, feux, vents), **présélectionnés selon le secteur**,
+    avec exposition (Faible, Moyen, Élevé), source et adaptation financée ; exposition déduite et **alerte d'écart**
+    avec la case « site à risque climatique élevé » de la section 2 ;
+  - **risque de transition** : émissions des scopes 1 et 2, exportations vers l'UE soumises au MACF, actif fossile, plan
+    de transition, et niveau calculé (repères 25 000 et 100 000 tCO₂e par an, MACF ≥ 20 % du CA) ;
+  - **scénario climatique** : baisse du CFADS (référence du secteur affichée) et DSCR minimum climatique ;
+  - c'est aussi la fiche de la **directive BAM 2/W/2025** (grands emprunteurs).
+- **Lot 2** : le paramètre **« Lot 2 actif »** de l'onglet **Paramètres** (« Non » par défaut) fait entrer la fiche dans
+  la note : exposition déduite des aléas, C11 révisé (adaptation par aléa), **C16** (transition élevée sans plan, note
+  max. 6), **C17** (au moins deux aléas élevés sans adaptation, note max. 5), sous-critère calculé **D9.5** « risque de
+  transition » (poids de D9 du lot 2 dans l'onglet Paramètres) et, sur un site exposé, scénario climatique pris dans N2.
+  À activer seulement après validation par le comité de validation du modèle.
+- **Concordance** : deux jeux de notes de référence (lot 2 inactif et actif), choisis selon le paramètre ; « 18 / 18 »
+  attendu dans les deux cas. Les règles sont identiques à celles de l'outil web (même fiche climat des 18 cas).
+- **Propositions de l'IA** : les champs de la fiche climat (`climat.*`) s'importent comme les autres (onglet Champs IA).
+- Fiche comité : ligne « Climat : exposition · transition · DSCR climatique ».
+
+Avec le lot 2 inactif, les notes des 18 dossiers sont inchangées. Avec le lot 2 actif, une seule note change :
+l'huilerie d'olives (AGR) passe de 8 à 6 (C11 : sécheresse élevée sans adaptation).
 
 ## Nouveautés de la version 3
 
@@ -70,9 +93,13 @@ l'onglet **Champs IA** avec la cellule alimentée et les valeurs admises. Les po
   - `moteur_reference.py` recalcule chaque dossier en Python (notes de l'onglet Concordance) ;
   - `verifier.py` compare un classeur recalculé au moteur de référence :
     ```
-    soffice --headless --convert-to xlsx --outdir /tmp/recalc Outil_Scoring_PF_V8_v3.xlsx
-    python verifier.py /tmp/recalc/Outil_Scoring_PF_V8_v3.xlsx
+    soffice --headless --convert-to xlsx --outdir /tmp/recalc Outil_Scoring_PF_V8_v4.xlsx
+    python verifier.py /tmp/recalc/Outil_Scoring_PF_V8_v4.xlsx
     ```
     (LibreOffice réglé sur « toujours recalculer » au chargement.) Résultat attendu : `0 écart(s) sur 18 dossiers`.
+    Pour le lot 2 : `python build_tool.py --sans-vba --lot2` (variante « Lot 2 actif », non livrée), recalcul, puis
+    `python verifier.py --lot2 …/Outil_Scoring_PF_V8_v4_lot2.xlsx`.
+  - `cas_climat.json` : fiches climat des 18 cas et référentiel climatique, exportés de l'outil web
+    (`npx tsx scripts/docs/exporter-climat-excel.ts`) ; le moteur de référence et le classeur les lisent.
 
 Les dossiers, sociétés, codes et numéros de crédit sont **fictifs** ; les paramètres sont des **candidats** à valider.

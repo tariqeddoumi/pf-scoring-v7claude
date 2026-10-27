@@ -9,6 +9,8 @@ Le format est celui du moteur de référence (moteur_reference.evaluer), enrichi
 données de présentation : codes T24 et projet, crédits, données sectorielles, bloc 13.
 Tous les dossiers, sociétés, codes et numéros sont FICTIFS.
 """
+import json
+import os
 import re
 import cas_data
 import cas_sectoriels
@@ -130,5 +132,11 @@ for _d in CAS:
         _b.setdefault("synthese", _d["lecture"])
         _b.setdefault("conditions", "\n".join("• " + t for t in _d["comite"]))
     _d.setdefault("sc_comm", {})
+# Fiches climat fictives (volet climatique, bloc 14), exportées de l'outil web
+# (scripts/docs/exporter-climat-excel.ts) : même source pour les deux outils.
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "cas_climat.json"), encoding="utf-8") as _f:
+    CLIMAT = json.load(_f)
+for _d in CAS:
+    _d["climat"] = CLIMAT["fiches"].get(_d["onglet"], {})
 PAR_ONGLET = {d["onglet"]: d for d in CAS}
 assert len(CAS) == 18 and len(PAR_ONGLET) == 18

@@ -18,7 +18,7 @@ const TON_NIVEAU: Record<string, string> = { Élevé: "text-destructive", Moyen:
  * transition, scénario climatique indicatif et fiche 2/W/2025. Sans effet sur la note :
  * la case « site à risque climatique élevé » du bloc 2 reste la donnée du moteur.
  */
-export function BlocClimat({ s, modifier, r, P, lecture, projet }: PropsBloc & { projet: { nom: string; codeProjet: string | null } }) {
+export function BlocClimat({ s, modifier, r, P, lecture, voirScores, projet }: PropsBloc & { projet: { nom: string; codeProjet: string | null } }) {
   const c = s.climat;
   const e = evaluerClimat(c, s.secteur, s.climatEleve, r.periodes.filter((p) => p.service > 0), r.seuils);
   const presel = s.secteur ? ALEAS_PAR_SECTEUR[s.secteur] : [];
@@ -132,7 +132,7 @@ export function BlocClimat({ s, modifier, r, P, lecture, projet }: PropsBloc & {
         </div>
       </SectionCard>
 
-      <SectionCard titre="Bloc 14 · Risque de transition" description="Exposition du projet aux politiques climatiques : émissions, prix du carbone, mécanisme d'ajustement carbone aux frontières de l'UE (MACF), actifs fossiles.">
+      <SectionCard titre="Bloc 14 · Risque de transition" description="Exposition du projet aux politiques climatiques : émissions, prix du carbone, mécanisme d'ajustement carbone aux frontières de l'UE (MACF), actifs fossiles. Le niveau s'établit quand les émissions, les exportations MACF et l'actif fossile sont renseignés.">
         <Grille2>
           <Champ cible="climat.emissions" libelle="Émissions annuelles, scopes 1 et 2"
             aide={`Repères : quantification au-delà de ${SEUILS_CLIMAT.emissionsQuantification.toLocaleString("fr-FR")} t (SFI), analyse des alternatives au-delà de ${SEUILS_CLIMAT.emissionsAlternatives.toLocaleString("fr-FR")} t (Principes de l'Équateur).`}>
@@ -220,7 +220,8 @@ export function BlocClimat({ s, modifier, r, P, lecture, projet }: PropsBloc & {
             <div>
               <p className="font-semibold text-foreground">Effet sur la note</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                <li>D9.5 « risque de transition » : niveau {lot2.niveauTransition ?? "non renseigné"} → note {typeof lot2.noteTransition === "number" ? fmtNombre(lot2.noteTransition, 0) : "Info. insuffisante"} ({fmtNombre(P.climat.poidsTransition * 100, 0)} % de D9)</li>
+                <li>D9.5 « risque de transition » : niveau {lot2.niveauTransition ?? "non renseigné"}
+                  {voirScores && <> → note {typeof lot2.noteTransition === "number" ? fmtNombre(lot2.noteTransition, 0) : "Info. insuffisante"} ({fmtNombre(P.climat.poidsTransition * 100, 0)} % de D9)</>}</li>
                 {(["C11", "C16", "C17"] as const).map((c) => (
                   <li key={c}><span className="font-mono font-semibold text-foreground">{c}</span> · {P.plafonds[c].libelle} : {r.plafonds[c] === "Oui" ? <strong className="text-destructive">actif</strong> : r.plafonds[c] === "Non" ? "non" : "donnée manquante"}</li>
                 ))}
@@ -232,7 +233,7 @@ export function BlocClimat({ s, modifier, r, P, lecture, projet }: PropsBloc & {
             {e.apercuLot2.length ? (
               <ul className="mt-1 space-y-0.5">
                 {e.apercuLot2.map((p) => (
-                  <li key={p.code} className="text-muted-foreground"><span className="font-mono font-semibold text-foreground">{p.code}</span> · {p.libelle} : note limitée à {fmtNombre(p.noteMax, 0)}</li>
+                  <li key={p.code} className="text-muted-foreground"><span className="font-mono font-semibold text-foreground">{p.code}</span> · {p.libelle}{voirScores && <> : note limitée à {fmtNombre(p.noteMax, 0)}</>}</li>
                 ))}
               </ul>
             ) : (

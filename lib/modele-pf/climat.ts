@@ -150,7 +150,9 @@ export function evaluerClimat(c: ClimatPF, secteur: CodeSecteur | null, climatEl
 
   const motifsTransition: string[] = [];
   let niveauTransition: NiveauTransition | null = null;
-  const connu = c.emissions !== null || c.exportMacf !== null || c.actifFossile !== null;
+  // Niveau établi seulement quand les trois données sont connues : une donnée manquante pourrait
+  // révéler un risque élevé (sinon une seule émission nulle suffirait à donner « Faible »).
+  const connu = c.emissions !== null && c.exportMacf !== null && c.actifFossile !== null;
   if (connu) {
     const eleve: string[] = [], moyen: string[] = [];
     if (c.emissions !== null) {

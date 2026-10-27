@@ -2,15 +2,18 @@
 """Vérifie un classeur recalculé (par Excel ou LibreOffice) face au moteur de référence.
 
 Usage :
-    soffice --headless --convert-to xlsx --outdir /tmp/recalc Outil_Scoring_PF_V8_v3.xlsx
-    python verifier.py /tmp/recalc/Outil_Scoring_PF_V8_v3.xlsx
+    soffice --headless --convert-to xlsx --outdir /tmp/recalc Outil_Scoring_PF_V8_v4.xlsx
+    python verifier.py /tmp/recalc/Outil_Scoring_PF_V8_v4.xlsx
+    python verifier.py --lot2 /tmp/recalc/Outil_Scoring_PF_V8_v4_lot2.xlsx   (variante « Lot 2 actif »,
+                                                                         python build_tool.py --sans-vba --lot2)
 
 LibreOffice doit recalculer au chargement (Outils › Options › Calc › Formule : « Toujours
 recalculer »), sinon les valeurs lues sont celles du cache, vides pour un fichier généré.
 
-Contrôles : pour chacun des dix-huit dossiers, score, notes, plafonds C1 à C15, verrous,
-régime, statut, noyau N1 à N6 et indicateurs identiques au moteur ; aucune saisie
-obligatoire manquante ; aucune valeur d'erreur dans le classeur ; concordance à 18 / 18.
+Contrôles : pour chacun des dix-huit dossiers, score, notes, plafonds C1 à C17, verrous,
+régime, statut, noyau N1 à N6, indicateurs et volet climatique (section 14) identiques au
+moteur ; aucune saisie obligatoire manquante ; aucune valeur d'erreur dans le classeur ;
+concordance à 18 / 18.
 """
 import sys
 import openpyxl
@@ -25,7 +28,7 @@ def proche(a, b, tol=1e-6):
     return isinstance(a, (int, float)) and abs(a - b) <= tol
 
 
-def verifier(chemin):
+def verifier(chemin, lot2=False):
     wb = openpyxl.load_workbook(chemin, data_only=True)
     R = bt.R
     pb = []
@@ -40,7 +43,8 @@ def verifier(chemin):
     # 2. chaque dossier face au moteur
     for d in cas_tous.CAS:
         ws = wb[d["onglet"]]
-        r = mr.evaluer(d)
+        r = mr.evaluer(d, lot2=lot2)
+        ec = mr.evaluer_climat(d["climat"], d["secteur"], r["periodes"])
         v = lambda adr: "" if ws[adr].value is None else ws[adr].value
         k = d["onglet"]
 
@@ -76,6 +80,15 @@ def verifier(chemin):
                 egal(f"score {dom}", lu, "")
             else:
                 egal(f"score {dom}", lu, float(att), 1e-9)
+        # volet climatique (section 14)
+        expo = "" if ec["expo_deduite"] is None else ("Oui" if ec["expo_deduite"] else "Non")
+        egal("exposition déduite", v(f"B{R['clim_expo']}"), expo)
+        egal("aléas élevés sans adaptation", v(f"B{R['clim_sans']}"), len(ec["sans_adapt"]))
+        egal("niveau de transition", v(f"B{R['niv_trans']}"), ec["niveau_transition"] or "")
+        egal("DSCR climatique", v(f"B{R['dclim']}"), float(ec["dscr_climatique"]) if ec["dscr_climatique"] is not None else "")
+        egal("exposition retenue", v(f"B{R['expo_ret']}"), r["climat_eleve_retenu"] or "")
+        if lot2:
+            egal("note D9.5", v(f"B{R['note_d95']}"), r["note_d95"] if r["note_d95"] is not None else "Info. insuffisante")
         ra = R["a_saisir"]
         egal("saisies manquantes", v(f"B{ra}"), 0)
         if v(f"B{ra}") != 0:
@@ -95,7 +108,7 @@ def verifier(chemin):
 
 
 if __name__ == "__main__":
-    probs = verifier(sys.argv[1])
+    probs = verifier(sys.argv[-1], lot2="--lot2" in sys.argv)
     for p in probs:
         print("ÉCART  " + p)
     print(f"{len(probs)} écart(s) sur {len(cas_tous.CAS)} dossiers")

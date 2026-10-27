@@ -4,7 +4,7 @@
  * la fiche climat entre dans la note. Impact mesuré sur les 18 cas avec leurs fiches fictives.
  */
 import { PARAMETRES_DEFAUT, anomaliesParametres, fusionnerParametres, type ParametresModele } from "@/lib/modele-pf/parametres";
-import { surchargeSchema } from "@/lib/modele-pf/serveur";
+import { surchargeSchema, resultatVisible } from "@/lib/modele-pf/serveur";
 import { calculer, saisieVide } from "@/lib/modele-pf/saisie";
 import { impactLot2 } from "@/scripts/docs/impact-climat-lot2";
 
@@ -78,10 +78,30 @@ describe("saisie avec le lot 2 actif", () => {
     expect(libelles).toEqual(expect.arrayContaining([
       "Fiche climat : exposition des aléas présélectionnés",
       "Adaptation financée ? (Stress hydrique et sécheresse)",
-      "Données de transition : émissions, actif fossile, exportations MACF",
+      "Transition : émissions scopes 1 et 2",
+      "Transition : exportations soumises au MACF",
+      "Transition : actif dépendant des énergies fossiles ?",
       "Scénario climatique : baisse du CFADS (site exposé)",
     ]));
     expect(calculer(s).controles.some((c) => c.bloc === 14)).toBe(false);
+  });
+
+  it("n'établit pas la transition sur une seule donnée (pas de D9.5 maximal par défaut)", () => {
+    const s = saisieVide();
+    s.climat.emissions = 0;
+    const { resultat, controles } = calculer(s, actif);
+    expect(resultat.climat?.niveauTransition).toBeNull();
+    expect(resultat.climat?.noteTransition).toBe("Info. insuffisante");
+    expect(controles.map((c) => c.libelle)).toEqual(expect.arrayContaining(["Transition : exportations soumises au MACF"]));
+  });
+
+  it("masque la note D9.5 aux rôles qui ne voient pas les scores", () => {
+    const s = saisieVide();
+    s.climat.emissions = 0; s.climat.exportMacf = 0; s.climat.actifFossile = "Non";
+    const r = calculer(s, actif).resultat;
+    expect(r.climat?.noteTransition).toBe(100);
+    expect(resultatVisible(r, "analyst")?.climat?.noteTransition).toBeNull();
+    expect(resultatVisible(r, "analyst")?.climat?.niveauTransition).toBe("Faible");
   });
 
   it("garde la case du bloc 2 quand la fiche n'évalue aucun aléa", () => {

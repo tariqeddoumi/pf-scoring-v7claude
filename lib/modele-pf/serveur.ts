@@ -66,6 +66,8 @@ export function resultatVisible(r: ResultatPF | null, role: string): Partial<Res
   if (!r || peutVoirScores(role)) return r;
   const copie: Partial<ResultatPF> = { ...r };
   for (const k of CLES_NOTE) delete copie[k];
+  // Note calculée du sous-critère D9.5 (volet climatique, lot 2) : masquée comme les autres notes.
+  if (r.climat) copie.climat = { ...r.climat, noteTransition: null };
   return copie;
 }
 
