@@ -5,11 +5,21 @@ l'application : nouveau scoring vide → dépôt des 9 pièces du cas (`docs/cas
 analyse → comparaison de chaque proposition avec la saisie de référence du cas → acceptation de
 toutes les propositions → note, verrous et plafonds obtenus, comparés aux résultats attendus.
 
+La saisie de référence comprend la fiche climat fictive du cas (bloc 14, `lib/modele-pf/cas-climat.ts`),
+que portent les pièces : tableau des aléas, localisation, risque de transition et scénario climatique
+dans la synthèse EIES et climat (08), aléas examinés par l'ingénieur indépendant (05). Le pilote
+affiche pour chaque cas `climat x/y` : champs climat renseignés dans la fiche (sources exclues) et
+retrouvés à l'identique.
+
 Le banc remplace le modèle d'IA par un **lecteur déterministe** (`serveurs.mjs`) qui répond au
 format compatible OpenAI à partir du texte des pièces extrait par l'application, et fournit un
 stockage S3 minimal en mémoire. Il valide donc toute la chaîne (dépôt, stockage, extraction du
 texte, découpage en lots, schéma de réponse, propositions, application, calcul) et le fait que les
 pièces portent l'information ; il ne mesure pas la qualité de lecture d'un vrai modèle.
+
+Importé depuis un script (`import { repondre } from "./serveurs.mjs"`), le module n'ouvre aucun
+port : on peut ainsi faire tourner le lecteur hors ligne sur le texte des pièces (extrait par
+`pdfEnTexte`, comme l'application) et passer ses réponses à `construirePropositionsPF`.
 
 ## Lancer
 
@@ -22,7 +32,15 @@ pièces portent l'information ; il ne mesure pas la qualité de lecture d'un vra
 5. `JETON=<jeton administrateur> npx tsx scripts/banc-ia/pilote.ts [filtre]` — une ligne par cas ;
    `BANC_IA_TRACE` choisit le dossier des traces (texte reçu, résultats).
 
-## Résultat au 19 octobre 2026
+## Résultats
+
+Au 27 octobre 2026, vérification hors ligne (lecteur importé, texte des pièces extrait par la
+chaîne de l'application, critères et lots de `criteresIA` et `repartirEnLots`, sans base ni
+serveur) : fiche climat retrouvée en entier pour 18 cas sur 18 (185 champs sur 185), aucune
+valeur climat proposée hors de la fiche ; propositions des autres blocs identiques à celles des
+pièces précédentes.
+
+Au 19 octobre 2026 (banc complet) :
 
 18 cas sur 18 : note, verrous et plafonds identiques aux résultats attendus. Restent non lus, par
 construction : la synthèse de l'analyste (bloc 13), propre à l'analyste.

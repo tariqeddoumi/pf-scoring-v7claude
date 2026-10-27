@@ -1,9 +1,13 @@
 // Serveurs de test locaux : stockage S3 minimal (4998) et « lecteur » compatible OpenAI (4999)
 // qui répond à la place du modèle en lisant le texte des pièces transmis par l'application.
+// Importé (et non lancé), le module n'ouvre aucun port et expose seulement `repondre`.
 import http from "node:http";
+import { pathToFileURL } from "node:url";
+
+const lance = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
 
 const objets = new Map();
-http.createServer((req, res) => {
+if (lance) http.createServer((req, res) => {
   const cle = decodeURIComponent(req.url.split("?")[0]);
   if (req.method === "PUT") {
     const morceaux = [];
@@ -27,6 +31,9 @@ const norm = (t) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’']/g
 const SECTEURS = { "energies renouvelables": "ENR", "eau et dessalement": "EAU", "telecom et data centers": "TEL", transport: "TRA",
   "ports et logistique": "POR", sante: "SAN", "thermique et gaz": "ETH", "immobilier de rendement": "IMMO-REND", industrie: "IND",
   "agro-industrie": "AGR", "tourisme et hotellerie": "TOU", "mines et extraction": "MIN" };
+// Libellés des aléas tels que les pièces les écrivent (lib/modele-pf/climat.ts, LIBELLES_ALEAS).
+const ALEAS = { chaleur: "Chaleur extrême", secheresse: "Stress hydrique et sécheresse", inondation: "Inondation et crue",
+  submersion: "Submersion marine et élévation du niveau de la mer", feux: "Feux de forêt", vents: "Tempêtes, vents violents, vents de sable" };
 const nombre = (t) => { const m = String(t).replace(/ | /g, " ").match(/-?\d[\d ]*(?:,\d+)?/); return m ? Number(m[0].replace(/ /g, "").replace(",", ".")) : null; };
 
 function lireCriteres(consigne) {
@@ -41,7 +48,7 @@ function lireCriteres(consigne) {
   return out;
 }
 
-function repondre(docs, consigne) {
+export function repondre(docs, consigne) {
   const vide = { synthese: "", documents: [], criteres: [], questions: [] };
   if (consigne.includes("VOLET : CONTRÔLE")) {
     const bord = docs.find((d) => /Bordereau/.test(d.nom));
@@ -62,8 +69,49 @@ function repondre(docs, consigne) {
   const num = (code, etiquette, facteur = 1) => { const a = apres(etiquette, 40); const n = a == null ? null : nombre(a); return n == null ? absent(code) : res(code, { valeurNombre: n * facteur }, etiquette); };
   const phrase = (code, si, sinon) => plat.includes(norm(si)) ? res(code, { optionChoisie: "Oui" }, si) : sinon && plat.includes(norm(sinon)) ? res(code, { optionChoisie: "Non" }, sinon) : absent(code);
 
+  // Fiche climat (bloc 14) : sections « Risques climatiques physiques », « Risque de transition » et
+  // « Scénario climatique » de la synthèse EIES et climat. Une valeur « non documenté » reste absente.
+  const toutC = tout.replace(/\s+/g, " ");
+  const debClimat = toutC.indexOf("Risques climatiques physiques");
+  const entre = (debut, fin) => {
+    if (debClimat < 0) return null;
+    const i = toutC.indexOf(debut, debClimat); if (i < 0) return null;
+    const j = fin ? toutC.indexOf(fin, i + debut.length) : -1;
+    const v = toutC.slice(i + debut.length, j < 0 ? i + debut.length + 160 : j).trim();
+    return !v || norm(v).startsWith("non documente") ? null : v;
+  };
+  const climat = (k) => {
+    const alea = k.match(/^climat\.alea\.([a-z]+)\.(niveau|adaptation)$/);
+    if (alea) {
+      const lib = ALEAS[alea[1]];
+      const i = debClimat < 0 ? -1 : plat.indexOf("source / etude adaptation financee", plat.indexOf("risques climatiques physiques"));
+      const fin = plat.indexOf("risque de transition", i);
+      const table = i < 0 ? "" : plat.slice(i, fin < 0 ? undefined : fin);
+      const j = lib ? table.indexOf(norm(lib)) : -1;
+      if (j < 0) return absent(k);
+      // Ligne du tableau : niveau, source (sans « oui » ni « non »), adaptation financée.
+      const m = table.slice(j + norm(lib).length).match(/^\s*(faible|moyen|eleve)\b.*?\b(oui|non documente|non)\b/);
+      if (!m) return absent(k);
+      if (alea[2] === "niveau") return res(k, { optionChoisie: { faible: "Faible", moyen: "Moyen", eleve: "Élevé" }[m[1]] }, lib);
+      return m[2] === "non documente" ? absent(k) : res(k, { optionChoisie: m[2] === "oui" ? "Oui" : "Non" }, lib);
+    }
+    const oN = (v, motif) => { const n = v == null ? "" : norm(v); return /^oui\b/.test(n) ? res(k, { optionChoisie: "Oui" }, motif) : /^non\b/.test(n) ? res(k, { optionChoisie: "Non" }, motif) : absent(k); };
+    const nb = (v, motif, facteur = 1) => { const n = v == null ? null : nombre(v); return n == null ? absent(k) : res(k, { valeurNombre: n * facteur }, motif); };
+    switch (k) {
+      case "climat.localisation": { const v = entre("Localisation du site", "Aléa Niveau"); return v ? res(k, { valeurTexte: v }, "Localisation du site") : absent(k); }
+      case "climat.emissions": return nb(entre("Émissions de gaz à effet de serre, scopes 1 et 2", "Exportations vers l'UE"), "Émissions de gaz à effet de serre");
+      case "climat.export_macf": return nb(entre("Exportations vers l'UE soumises au MACF", "Dépendance aux énergies fossiles"), "Exportations vers l'UE", 0.01);
+      case "climat.actif_fossile": return oN(entre("Dépendance aux énergies fossiles", "Plan de transition"), "Dépendance aux énergies fossiles");
+      case "climat.plan_transition": return oN(entre("Plan de transition crédible et financé", "Scénario climatique"), "Plan de transition");
+      case "climat.choc": return nb(entre("Baisse du CFADS sous le scénario climatique"), "Baisse du CFADS sous le scénario climatique", 0.01);
+      case "climat.choc.description": { const v = entre("Scénario climatique retenu", "Baisse du CFADS sous le scénario climatique"); return v ? res(k, { valeurTexte: v }, "Scénario climatique retenu") : absent(k); }
+      default: return absent(k);
+    }
+  };
+
   const criteres = lireCriteres(consigne).map((c) => {
     const k = c.code;
+    if (k.startsWith("climat.")) return climat(k);
     if (/^(D\d\.\d|N[4-6])$/.test(k)) {
       const cible = norm(`${k} · `);
       for (let i = plat.indexOf(cible); i >= 0; i = plat.indexOf(cible, i + 1)) {
@@ -169,7 +217,7 @@ function repondre(docs, consigne) {
 }
 
 let appels = 0;
-http.createServer((req, res) => {
+if (lance) http.createServer((req, res) => {
   const morceaux = [];
   req.on("data", (c) => morceaux.push(c));
   req.on("end", async () => {
