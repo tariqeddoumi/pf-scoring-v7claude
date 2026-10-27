@@ -1,0 +1,600 @@
+{
+  "aleas": [
+    {
+      "code": "chaleur",
+      "libelle": "Chaleur extrême",
+      "effets": "Rendement des panneaux et des turbines, refroidissement, fréquentation"
+    },
+    {
+      "code": "secheresse",
+      "libelle": "Stress hydrique et sécheresse",
+      "effets": "Récoltes, eau de process, eau de refroidissement"
+    },
+    {
+      "code": "inondation",
+      "libelle": "Inondation et crue",
+      "effets": "Dommages, arrêt d'exploitation, accès coupé"
+    },
+    {
+      "code": "submersion",
+      "libelle": "Submersion marine et élévation du niveau de la mer",
+      "effets": "Prises d'eau, quais, installations côtières"
+    },
+    {
+      "code": "feux",
+      "libelle": "Feux de forêt",
+      "effets": "Dommages, coupures de réseau"
+    },
+    {
+      "code": "vents",
+      "libelle": "Tempêtes, vents violents, vents de sable",
+      "effets": "Dommages, encrassement des panneaux, arrêt des quais"
+    }
+  ],
+  "aleasParSecteur": {
+    "ENR": [
+      "chaleur",
+      "feux",
+      "vents"
+    ],
+    "EAU": [
+      "submersion",
+      "vents",
+      "chaleur"
+    ],
+    "TEL": [
+      "chaleur",
+      "inondation"
+    ],
+    "TRA": [
+      "inondation",
+      "feux"
+    ],
+    "POR": [
+      "submersion",
+      "vents"
+    ],
+    "SAN": [
+      "inondation",
+      "chaleur"
+    ],
+    "ETH": [
+      "chaleur",
+      "secheresse"
+    ],
+    "IMMO-REND": [
+      "inondation",
+      "chaleur"
+    ],
+    "IND": [
+      "secheresse",
+      "inondation"
+    ],
+    "AGR": [
+      "secheresse",
+      "chaleur"
+    ],
+    "TOU": [
+      "chaleur",
+      "secheresse",
+      "submersion",
+      "feux"
+    ],
+    "MIN": [
+      "secheresse",
+      "inondation"
+    ]
+  },
+  "scenarios": {
+    "ENR": {
+      "description": "Canicule prolongée et vents de sable : production − 5 %, charges de nettoyage + 5 %",
+      "baisseRecettes": 0.05,
+      "hausseCharges": 0.05
+    },
+    "EAU": {
+      "description": "Tempête : prise d'eau indisponible un mois (redevance − 8 %), réparations (charges + 5 %)",
+      "baisseRecettes": 0.08,
+      "hausseCharges": 0.05
+    },
+    "TEL": {
+      "description": "Canicule : surcoût de refroidissement (charges + 15 %)",
+      "baisseRecettes": 0,
+      "hausseCharges": 0.15
+    },
+    "TRA": {
+      "description": "Crue : section coupée deux mois (trafic − 10 %), réparations (charges + 10 %)",
+      "baisseRecettes": 0.1,
+      "hausseCharges": 0.1
+    },
+    "POR": {
+      "description": "Tempête : quais arrêtés trois semaines (− 6 %), réparations (charges + 10 %)",
+      "baisseRecettes": 0.06,
+      "hausseCharges": 0.1
+    },
+    "SAN": {
+      "description": "Inondation : pénalités de disponibilité (− 3 %), remise en état (charges + 10 %)",
+      "baisseRecettes": 0.03,
+      "hausseCharges": 0.1
+    },
+    "ETH": {
+      "description": "Canicule et restriction d'eau de refroidissement (− 8 %), prix du carbone (charges + 15 %)",
+      "baisseRecettes": 0.08,
+      "hausseCharges": 0.15
+    },
+    "IMMO-REND": {
+      "description": "Inondation : locaux indisponibles deux mois (loyers − 15 %), réparations (charges + 10 %)",
+      "baisseRecettes": 0.15,
+      "hausseCharges": 0.1
+    },
+    "IND": {
+      "description": "Sécheresse : restrictions d'eau de process (volumes − 10 %), coût de l'eau et du carbone (charges + 10 %)",
+      "baisseRecettes": 0.1,
+      "hausseCharges": 0.1
+    },
+    "AGR": {
+      "description": "Sécheresse sur deux campagnes consécutives : récolte − 35 %, charges + 5 %",
+      "baisseRecettes": 0.35,
+      "hausseCharges": 0.05
+    },
+    "TOU": {
+      "description": "Canicule et pénurie d'eau : fréquentation − 20 %, charges + 10 %",
+      "baisseRecettes": 0.2,
+      "hausseCharges": 0.1
+    },
+    "MIN": {
+      "description": "Sécheresse : restrictions d'eau (production − 15 %), charges + 10 %",
+      "baisseRecettes": 0.15,
+      "hausseCharges": 0.1
+    }
+  },
+  "seuils": {
+    "emissionsQuantification": 25000,
+    "emissionsAlternatives": 100000,
+    "macfSignificatif": 0.2
+  },
+  "lot2": {
+    "lot2Actif": false,
+    "poidsD9": [
+      0.25,
+      0.25,
+      0.1,
+      0.25
+    ],
+    "poidsTransition": 0.15
+  },
+  "plafonds": {
+    "C16": {
+      "libelle": "Risque de transition élevé sans plan de transition crédible (volet climatique, lot 2)",
+      "niveau": 6
+    },
+    "C17": {
+      "libelle": "Au moins deux aléas climatiques pertinents élevés sans adaptation financée (volet climatique, lot 2)",
+      "niveau": 5
+    }
+  },
+  "fiches": {
+    "C1": {
+      "localisation": "Région de Drâa-Tafilalet",
+      "aleas": {
+        "chaleur": {
+          "niveau": "Élevé",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), § 4.2",
+          "adaptation": "Oui"
+        },
+        "vents": {
+          "niveau": "Moyen",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), § 4.3",
+          "adaptation": "Oui"
+        },
+        "feux": {
+          "niveau": "Faible",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 1500,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.06,
+      "descriptionClimatique": "Canicule prolongée et vents de sable : production − 5 %, nettoyage + 5 %"
+    },
+    "C2": {
+      "localisation": "Littoral de Souss-Massa",
+      "aleas": {
+        "submersion": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive), ch. 6",
+          "adaptation": "Oui"
+        },
+        "vents": {
+          "niveau": "Élevé",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), § 3.1",
+          "adaptation": "Oui"
+        },
+        "chaleur": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 90000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": "Oui",
+      "chocClimatique": 0.1,
+      "descriptionClimatique": "Tempête : prise d'eau indisponible un mois, réparations"
+    },
+    "C3": {
+      "localisation": "Marrakech",
+      "aleas": {
+        "chaleur": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive), ch. 5",
+          "adaptation": "Non"
+        },
+        "secheresse": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive), ch. 5",
+          "adaptation": "Non"
+        },
+        "submersion": {
+          "niveau": "Faible",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        },
+        "feux": {
+          "niveau": "Faible",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 3000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.25,
+      "descriptionClimatique": "Canicule et pénurie d'eau : fréquentation − 20 %, charges + 10 %"
+    },
+    "C4A": {
+      "localisation": "Région de Doukkala-Abda",
+      "aleas": {
+        "secheresse": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive), ch. 4",
+          "adaptation": "Non"
+        },
+        "chaleur": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 2500,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.3,
+      "descriptionClimatique": "Sécheresse sur deux campagnes : récolte − 35 %"
+    },
+    "C4B": {
+      "localisation": "Région de Doukkala-Abda",
+      "aleas": {
+        "secheresse": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive), ch. 4",
+          "adaptation": "Non"
+        },
+        "chaleur": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 2500,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.3,
+      "descriptionClimatique": "Sécheresse sur deux campagnes : récolte − 35 %"
+    },
+    "C5": {
+      "localisation": "Zone industrielle de Kénitra",
+      "aleas": {
+        "chaleur": {
+          "niveau": "Moyen",
+          "source": "Rapport du conseiller technique des prêteurs (fictif)",
+          "adaptation": null
+        },
+        "vents": {
+          "niveau": "Faible",
+          "source": "Rapport du conseiller technique des prêteurs (fictif)",
+          "adaptation": null
+        },
+        "feux": {
+          "niveau": "Faible",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 200,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.05,
+      "descriptionClimatique": "Canicule : production − 4 %"
+    },
+    "ENR": {
+      "localisation": "Province côtière du Nord",
+      "aleas": {
+        "vents": {
+          "niveau": "Moyen",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), classe IEC des turbines",
+          "adaptation": "Oui"
+        },
+        "feux": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": "Oui"
+        },
+        "chaleur": {
+          "niveau": "Faible",
+          "source": "Rapport du conseiller technique des prêteurs (fictif)",
+          "adaptation": null
+        }
+      },
+      "emissions": 800,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.05,
+      "descriptionClimatique": "Tempête : arrêt de sécurité des turbines deux semaines"
+    },
+    "EAU": {
+      "localisation": "Littoral du Sud",
+      "aleas": {
+        "submersion": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive), ch. 6",
+          "adaptation": "Oui"
+        },
+        "vents": {
+          "niveau": "Élevé",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), § 3.1",
+          "adaptation": "Oui"
+        },
+        "chaleur": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 110000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": "Oui",
+      "chocClimatique": 0.08,
+      "descriptionClimatique": "Tempête : prise d'eau indisponible trois semaines"
+    },
+    "TEL": {
+      "localisation": "Zone industrielle périurbaine",
+      "aleas": {
+        "chaleur": {
+          "niveau": "Élevé",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), refroidissement dimensionné pour 48 °C",
+          "adaptation": "Oui"
+        },
+        "inondation": {
+          "niveau": "Faible",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 140000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": "Non",
+      "chocClimatique": 0.08,
+      "descriptionClimatique": "Canicule : surcoût de refroidissement (charges + 15 %)"
+    },
+    "TRA": {
+      "localisation": "Corridor interurbain",
+      "aleas": {
+        "inondation": {
+          "niveau": "Élevé",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), ouvrages hydrauliques centennaux",
+          "adaptation": "Oui"
+        },
+        "feux": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 1500,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.12,
+      "descriptionClimatique": "Crue : section coupée deux mois, réparations"
+    },
+    "POR": {
+      "localisation": "Port en eau profonde",
+      "aleas": {
+        "submersion": {
+          "niveau": "Moyen",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), cote des quais",
+          "adaptation": "Oui"
+        },
+        "vents": {
+          "niveau": "Moyen",
+          "source": "Rapport du conseiller technique des prêteurs (fictif)",
+          "adaptation": "Oui"
+        }
+      },
+      "emissions": 18000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.08,
+      "descriptionClimatique": "Tempête : quais arrêtés trois semaines"
+    },
+    "SAN": {
+      "localisation": "Capitale régionale",
+      "aleas": {
+        "inondation": {
+          "niveau": "Faible",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        },
+        "chaleur": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": "Oui"
+        }
+      },
+      "emissions": 9000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.06,
+      "descriptionClimatique": "Inondation : remise en état et pénalités"
+    },
+    "ETH": {
+      "localisation": "Zone portuaire",
+      "aleas": {
+        "chaleur": {
+          "niveau": "Élevé",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), perte de puissance prise en compte",
+          "adaptation": "Oui"
+        },
+        "secheresse": {
+          "niveau": "Moyen",
+          "source": "Rapport du conseiller technique des prêteurs (fictif), refroidissement à l'eau de mer",
+          "adaptation": "Oui"
+        }
+      },
+      "emissions": 1100000,
+      "exportMacf": 0,
+      "actifFossile": "Oui",
+      "planTransition": "Non",
+      "chocClimatique": 0.15,
+      "descriptionClimatique": "Canicule et prix du carbone : puissance − 8 %, charges + 15 %"
+    },
+    "IMMO": {
+      "localisation": "Quartier d'affaires",
+      "aleas": {
+        "inondation": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": "Oui"
+        },
+        "chaleur": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 4000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.1,
+      "descriptionClimatique": "Inondation : locaux indisponibles deux mois"
+    },
+    "IND": {
+      "localisation": "Plateforme industrielle",
+      "aleas": {
+        "secheresse": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": "Oui"
+        },
+        "inondation": {
+          "niveau": "Faible",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 130000,
+      "exportMacf": 0,
+      "actifFossile": "Oui",
+      "planTransition": "Non",
+      "chocClimatique": 0.12,
+      "descriptionClimatique": "Sécheresse et coût du carbone : volumes − 10 %, charges + 10 %"
+    },
+    "AGR": {
+      "localisation": "Région oléicole de l'intérieur",
+      "aleas": {
+        "secheresse": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive), ch. 4 ; historique des campagnes",
+          "adaptation": "Non"
+        },
+        "chaleur": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 2000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.2,
+      "descriptionClimatique": "Sécheresse sur deux campagnes : récolte − 35 %, en partie compensée par le prix et l'assurance récolte"
+    },
+    "TOU": {
+      "localisation": "Littoral atlantique",
+      "aleas": {
+        "chaleur": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": "Non"
+        },
+        "secheresse": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": "Non"
+        },
+        "submersion": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive), ch. 6",
+          "adaptation": "Non"
+        },
+        "feux": {
+          "niveau": "Faible",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": null
+        }
+      },
+      "emissions": 6000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.25,
+      "descriptionClimatique": "Canicule et pénurie d'eau : fréquentation − 20 %, charges + 10 %"
+    },
+    "MIN": {
+      "localisation": "Massif montagneux",
+      "aleas": {
+        "secheresse": {
+          "niveau": "Élevé",
+          "source": "Étude d'impact environnemental et social (fictive), bilan hydrique",
+          "adaptation": "Oui"
+        },
+        "inondation": {
+          "niveau": "Moyen",
+          "source": "Étude d'impact environnemental et social (fictive)",
+          "adaptation": "Oui"
+        }
+      },
+      "emissions": 60000,
+      "exportMacf": 0,
+      "actifFossile": "Non",
+      "planTransition": null,
+      "chocClimatique": 0.15,
+      "descriptionClimatique": "Sécheresse : restrictions d'eau (production − 15 %)"
+    }
+  }
+}

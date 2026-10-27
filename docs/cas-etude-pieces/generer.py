@@ -23,7 +23,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 F = "/usr/share/fonts/truetype/dejavu/"
 pdfmetrics.registerFont(TTFont("DV", F + "DejaVuSans.ttf"))
@@ -75,6 +75,14 @@ def nbx(x, maxdec=4):
     return t.replace(",", " ").replace(".", ",")
 
 
+def nbf(x, maxdec=1):
+    """Nombre au format français des fiches climat : espace fine pour les milliers, virgule décimale."""
+    s = f"{x:,.{maxdec}f}"
+    if "." in s:
+        s = s.rstrip("0").rstrip(".")
+    return s.replace(",", "\u202f").replace(".", ",")
+
+
 def pct(x, dec=0):
     return "—" if x is None else f"{nb(x * 100, dec)} %"
 
@@ -120,23 +128,33 @@ def pdf(chemin, titre, sous_titre, blocs, entete):
     doc = SimpleDocTemplate(chemin, pagesize=A4, leftMargin=2 * cm, rightMargin=2 * cm, topMargin=1.8 * cm,
                             bottomMargin=1.8 * cm, title=titre, author="Cas d'étude PF Scoring (fictif)")
     flux = [Paragraph(esc(titre), S["t"]), Paragraph(esc(sous_titre), S["st"])]
-    for b in blocs:
+
+    def ajouter(b, dest):
         if b is None:
-            continue
-        if isinstance(b, str):
+            return
+        if isinstance(b, list):
+            # Section insécable : titre et tableaux restent sur la même page.
+            groupe = []
+            for x in b:
+                ajouter(x, groupe)
+            dest.append(KeepTogether(groupe))
+        elif isinstance(b, str):
             if b == "---":
-                flux.append(PageBreak())
+                dest.append(PageBreak())
             elif b.startswith("# "):
-                flux.append(Paragraph(esc(b[2:]), S["h"]))
+                dest.append(Paragraph(esc(b[2:]), S["h"]))
             elif b.startswith("! "):
-                flux.append(Paragraph(esc(b[2:]), S["enc"]))
+                dest.append(Paragraph(esc(b[2:]), S["enc"]))
             elif b.startswith("!! "):
-                flux.append(Paragraph(esc(b[3:]), S["alerte"]))
+                dest.append(Paragraph(esc(b[3:]), S["alerte"]))
             else:
-                flux.append(Paragraph(esc(b), S["p"]))
+                dest.append(Paragraph(esc(b), S["p"]))
         else:
-            flux.append(b)
-            flux.append(Spacer(1, 6))
+            dest.append(b)
+            dest.append(Spacer(1, 6))
+
+    for b in blocs:
+        ajouter(b, flux)
     doc.build(flux, onFirstPage=cadre, onLaterPages=cadre)
 
 
@@ -202,6 +220,88 @@ def section_criteres(dom, saisie, manquants, intro=None):
 
 def oui(v):
     return v == "Oui"
+
+
+# ─── Volet climatique (bloc 14 de l'outil) ─────────────────────────────────────
+
+ALEAS = ["chaleur", "secheresse", "inondation", "submersion", "feux", "vents"]
+LIBELLES_ALEAS = {
+    "chaleur": "Chaleur extrême",
+    "secheresse": "Stress hydrique et sécheresse",
+    "inondation": "Inondation et crue",
+    "submersion": "Submersion marine et élévation du niveau de la mer",
+    "feux": "Feux de forêt",
+    "vents": "Tempêtes, vents violents, vents de sable",
+}
+ND = "non documenté"
+CT = "Rapport du conseiller technique des prêteurs (fictif)"
+
+
+def aleas_evalues(cl):
+    return [(a, cl["aleas"][a]) for a in ALEAS if (cl.get("aleas") or {}).get(a, {}).get("niveau")]
+
+
+def tableau_aleas(lignes, largeurs):
+    """Tableau des aléas : niveau d'exposition coloré pour la lecture rapide."""
+    t = tableau(lignes, largeurs)
+    teintes = {"Élevé": "#F6D5D1", "Moyen": "#FCEBC7", "Faible": "#DCEFDC"}
+    styles = []
+    for i, l in enumerate(lignes[1:], 1):
+        if l[1] in teintes:
+            styles.append(("BACKGROUND", (1, i), (1, i), colors.HexColor(teintes[l[1]])))
+    t.setStyle(TableStyle(styles))
+    return t
+
+
+def sections_climat(cl):
+    """Sections climat de la synthèse EIES : aléas physiques, transition, scénario."""
+    if not cl:
+        return []
+    lignes = [["Aléa", "Niveau d'exposition", "Source / étude", "Adaptation financée"]]
+    for a, x in aleas_evalues(cl):
+        lignes.append([LIBELLES_ALEAS[a], x["niveau"], x.get("source") or ND, x.get("adaptation") or ND])
+    physiques = [
+        "# Risques climatiques physiques",
+        "Exposition du site aux aléas climatiques physiques, établie d'après l'étude d'impact et le rapport du conseiller "
+        "technique des prêteurs. « Adaptation financée » : mesures d'adaptation prévues et financées dans le budget du projet.",
+        fiche([("Localisation du site", cl.get("localisation") or ND)]),
+    ]
+    physiques.append(tableau_aleas(lignes, [4.6 * cm, 2.7 * cm, W - 10.3 * cm, 3 * cm]) if len(lignes) > 1
+                     else "Aucun aléa climatique physique n'est analysé dans les pièces remises.")
+    em, macf = cl.get("emissions"), cl.get("exportMacf")
+    transition = [
+        "# Risque de transition",
+        fiche([
+            ("Émissions de gaz à effet de serre, scopes 1 et 2", f"{nbf(em, 0)} tCO₂e par an" if em is not None else ND),
+            ("Exportations vers l'UE soumises au MACF", f"{nbf(macf * 100)} % du chiffre d'affaires" if macf is not None else ND),
+            ("Dépendance aux énergies fossiles", cl.get("actifFossile") or ND),
+            ("Plan de transition crédible et financé", cl.get("planTransition") or ND),
+        ]),
+    ]
+    choc, desc = cl.get("chocClimatique"), (cl.get("descriptionClimatique") or "").strip()
+    scenario = [
+        "# Scénario climatique",
+        fiche([
+            ("Scénario climatique retenu", desc or ND),
+            ("Baisse du CFADS sous le scénario climatique", f"{nbf(choc * 100)} %" if choc is not None else ND),
+        ]),
+    ]
+    return [physiques, transition, scenario]
+
+
+def section_climat_ingenieur(cl):
+    """Aléas analysés par l'ingénieur indépendant (conseiller technique des prêteurs)."""
+    lignes = [["Aléa", "Niveau d'exposition", "Analyse", "Adaptation financée"]]
+    for a, x in aleas_evalues(cl or {}):
+        if (x.get("source") or "").startswith(CT):
+            reste = x["source"][len(CT):].lstrip(", ")
+            precision = f"Revue technique, {reste}" if reste else "Revue technique"
+            lignes.append([LIBELLES_ALEAS[a], x["niveau"], precision, x.get("adaptation") or ND])
+    if len(lignes) == 1:
+        return []
+    return [["# Résilience du site aux aléas climatiques",
+             "Aléas examinés dans le cadre de la revue technique (repris dans la synthèse environnementale, sociale et climat).",
+             tableau_aleas(lignes, [4.6 * cm, 2.7 * cm, W - 10.3 * cm, 3 * cm])]]
 
 
 # ─── Pièces ────────────────────────────────────────────────────────────────────
@@ -378,6 +478,7 @@ def generer_cas(i, c):
     if oui(v.get("B2")):
         blocs.append("!! Le contrat de construction (EPC) n'est pas signé à la date du rapport : prix et délai restent ouverts.")
     blocs += section_criteres("D5", s, manquants)
+    blocs += section_climat_ingenieur(s.get("climat"))
     rempl = pl.get("operateurRemplacable")
     if rempl:
         blocs.append(f"Opérateur remplaçable sans rupture d'exploitation : {rempl}."
@@ -427,6 +528,7 @@ def generer_cas(i, c):
                  else "L'acceptabilité environnementale est obtenue au stade requis.")
     blocs.append(f"Risque climatique physique élevé au site : {s.get('climatEleve') or '—'}."
                  + (f" Plan d'adaptation financé : {pl.get('planClimat')}." if pl.get("planClimat") else ""))
+    blocs += sections_climat(s.get("climat"))
     pdf(chemin("08_Synthese_EIES_et_climat"), "Synthèse environnementale, sociale et climat", f"{d['titre']} · {d['lieu']}", blocs, entete)
 
     # 00 — Bordereau (écrit en dernier : il recense les pièces manquantes)
@@ -436,10 +538,10 @@ def generer_cas(i, c):
         "02": "Blocs 1 à 5 (secteur, phase, régime, données sectorielles, hypothèses), proportionnalité",
         "03": "Bloc 3 (sources et emplois), crédits, N4 à N6, plafonds C6 à C9, B3",
         "04": "Bloc 6 (échéancier), N1 à N3, scénario défavorable, LLCR, B6",
-        "05": "D2, D3, D5, B2, C13",
+        "05": "D2, D3, D5, B2, C13, aléas climatiques (bloc 14)",
         "06": "D1.1, D1.2, D4, D6, C5, C10, C12, C14, X3, X4",
         "07": "D8, B1, B4, B5, X2",
-        "08": "D9, B8, C11",
+        "08": "D9, B8, C11, fiche climat (bloc 14 : aléas, transition, scénario climatique)",
     }
     titres = {
         "01": "Fiche signalétique et KYC", "02": "Mémorandum de présentation", "03": "Plan de financement et term sheet",
@@ -479,7 +581,8 @@ def index(resumes):
             "Chaque dossier contient un bordereau et huit pièces. Les constats des rapports reprennent exactement la saisie "
             "du cas dans l'outil : déposées dans l'onglet « Pièces et IA », elles doivent conduire aux mêmes situations, "
             "verrous et plafonds. Les informations volontairement absentes d'un cas (« Info. insuffisante ») figurent au "
-            "bordereau comme pièces attendues non remises.",
+            "bordereau comme pièces attendues non remises. La synthèse environnementale, sociale et climat porte aussi la "
+            "fiche climat du cas (aléas physiques, risque de transition, scénario climatique), fictive comme le reste du dossier.",
             "# Résultats attendus dans l'outil",
             tableau(lignes, [2.2 * cm, 5.4 * cm, 3.2 * cm, 3.4 * cm, W - 14.2 * cm]),
             "! C4A et C4B portent sur le même projet : C4B est la structure restructurée (amortissement sculpté, "

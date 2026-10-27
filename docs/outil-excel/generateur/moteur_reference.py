@@ -1,8 +1,24 @@
 # -*- coding: utf-8 -*-
 """Moteur de référence V8.1 — reproduction en Python des formules des onglets de dossier
-(sections 1 à 12 de l'outil Excel). Sert à fixer les notes de référence des dix-huit cas
-(onglet Concordance) et à vérifier, après recalcul du classeur, que l'Excel donne le même
-résultat."""
+(sections 1 à 12 et volet climatique, section 14, de l'outil Excel). Sert à fixer les notes
+de référence des dix-huit cas (onglet Concordance) et à vérifier, après recalcul du classeur,
+que l'Excel donne le même résultat.
+
+Volet climatique : `evaluer(d, lot2=True)` applique les règles du lot 2 (paramètre
+« Lot 2 actif » de l'onglet Paramètres), identiques à celles de l'outil web
+(lib/modele-pf/moteur.ts et climat.ts)."""
+import json
+import os
+
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "cas_climat.json"), encoding="utf-8") as _f:
+    _CLIMAT = json.load(_f)
+ALEAS = [a["code"] for a in _CLIMAT["aleas"]]
+ALEAS_PAR_SECTEUR = _CLIMAT["aleasParSecteur"]
+EMIS_QUANT = _CLIMAT["seuils"]["emissionsQuantification"]
+EMIS_ALT = _CLIMAT["seuils"]["emissionsAlternatives"]
+MACF_SIGNIF = _CLIMAT["seuils"]["macfSignificatif"]
+POIDS_D9_L2 = _CLIMAT["lot2"]["poidsD9"]
+POIDS_D95 = _CLIMAT["lot2"]["poidsTransition"]
 
 ANCRES = {'TF': 100, 'F': 80, 'V': 50, 'C': 20}
 INFO_INSUFF = 20
@@ -53,6 +69,8 @@ PLAFONDS = {
     'C13': ('Opérateur non remplaçable et contrat O&M expirant plus de 5 ans avant la dette', 7),
     'C14': ('Exposition du groupe bancaire sur un facteur commun au-delà de la limite interne', 6),
     'C15': ("Note issue d'une évaluation partielle (statut provisoire)", 6),
+    'C16': ('Risque de transition élevé sans plan de transition crédible (volet climatique, lot 2)', 6),
+    'C17': ('Au moins deux aléas climatiques pertinents élevés sans adaptation financée (volet climatique, lot 2)', 5),
 }
 VERROUS = [('X1', "Activité interdite par la loi marocaine ou par la politique de la banque", 'Aucune note'),
            ('X2', 'Autorisation légalement indispensable juridiquement impossible à obtenir', 'Aucune note'),
@@ -82,7 +100,30 @@ def classe(v, s):
     return 'TF'
 
 
-def evaluer(d):
+def evaluer_climat(c, sec, lignes):
+    """Indicateurs de la fiche climat (section 14), comme evaluerClimat de l'outil web."""
+    aleas = c.get('aleas') or {}
+    base = ALEAS_PAR_SECTEUR.get(sec, []) if sec else []
+    evalues = [a for a in ALEAS if (aleas.get(a) or {}).get('niveau')]
+    pertinents = base + [a for a in evalues if a not in base]
+    eleves = [a for a in pertinents if (aleas.get(a) or {}).get('niveau') == 'Élevé']
+    sans_adapt = [a for a in eleves if (aleas.get(a) or {}).get('adaptation') != 'Oui']
+    expo = (len(eleves) > 0) if evalues else None
+    em, macf, foss, plan = c.get('emissions'), c.get('exportMacf'), c.get('actifFossile'), c.get('planTransition')
+    niveau = None
+    if em is not None and macf is not None and foss is not None:
+        eleve = (em is not None and em > EMIS_ALT) or (macf is not None and macf >= MACF_SIGNIF) or (foss == 'Oui' and plan != 'Oui')
+        moyen = (em is not None and em > EMIS_QUANT) or (macf is not None and macf > 0) or (foss == 'Oui' and plan == 'Oui')
+        niveau = 'Élevé' if eleve else 'Moyen' if moyen else 'Faible'
+    choc = c.get('chocClimatique')
+    dclim = None
+    if choc is not None:
+        v = [l['cfads'] * (1 - choc) / l['service'] for l in lignes if l['service'] > 0]
+        dclim = min(v) if v else None
+    return dict(eleves=eleves, sans_adapt=sans_adapt, expo_deduite=expo, niveau_transition=niveau, dscr_climatique=dclim)
+
+
+def evaluer(d, lot2=False):
     r = {}
     reg, sec, ph = d['regime'], d['secteur'], d['phase']
     # 3 · sources et emplois
@@ -112,6 +153,19 @@ def evaluer(d):
     dscrs = [l['dscr'] for l in lignes if l['dscr'] is not None]
     negatifs = sum(1 for l in lignes if l['cfads'] < 0)
     dmin = min(dscrs); dmin_s = min(l['dscr_s'] for l in lignes if l['dscr_s'] is not None)
+    # 14 · volet climatique, lot 2 (inactif par défaut)
+    climat_eleve = d.get('climat_eleve')
+    ec = evaluer_climat(d['climat'], sec, lignes) if lot2 and d.get('climat') is not None else None
+    note_d95 = None
+    if ec:
+        if ec['expo_deduite'] is not None:
+            climat_eleve = 'Oui' if ec['expo_deduite'] else 'Non'
+        if climat_eleve == 'Oui' and ec['dscr_climatique'] is not None and ec['dscr_climatique'] < dmin_s:
+            dmin_s = ec['dscr_climatique']
+        nt = ec['niveau_transition']
+        note_d95 = (None if nt is None else ANCRES['TF'] if nt == 'Faible' else ANCRES['F'] if nt == 'Moyen'
+                    else ANCRES['V'] if d['climat'].get('planTransition') == 'Oui' else ANCRES['C'])
+    r.update(climat=ec, climat_eleve_retenu=climat_eleve, note_d95=note_d95)
     r.update(dscr_min=dmin, dscr_min_s=dmin_s, negatifs=negatifs,
              differes=sum(1 for l in lignes if l['classe'] == 'Différé'))
     # 7 · noyau
@@ -135,14 +189,19 @@ def evaluer(d):
     for code, scs in SC.items():
         notes = d['grille'][code]
         w = pw[code]
-        sc_score = sum((n if num(n) else 0) * p for n, (_, _, p) in zip(notes, scs)) + \
-            INFO_INSUFF * sum(p for n, (_, _, p) in zip(notes, scs) if not num(n))
+        # Lot 2 : D9 prend ses poids du volet climatique et le sous-critère calculé D9.5.
+        trans = code == 'D9' and ec is not None
+        poids = [POIDS_D9_L2[j] for j in range(len(scs))] if trans else [p for _, _, p in scs]
+        sc_score = sum((n if num(n) else INFO_INSUFF) * p for n, p in zip(notes, poids))
+        if trans:
+            sc_score += (note_d95 if num(note_d95) else INFO_INSUFF) * POIDS_D95
         dom[code] = sc_score if w > 0 else None
-        detail[code] = [(k, lib, p, n) for (k, lib, p), n in zip(scs, notes)]
-        couv_num += w * sum(p for n, (_, _, p) in zip(notes, scs) if num(n))
+        detail[code] = [(k, lib, p, n) for (k, lib, _), p, n in zip(scs, poids, notes)]
+        couv_num += w * (sum(p for n, p in zip(notes, poids) if num(n)) + (POIDS_D95 if trans and num(note_d95) else 0))
         couv_den += w
         if w > 0:
-            nb_req += len(scs); nb_req_num += sum(1 for n in notes if num(n))
+            nb_req += len(scs) + (1 if trans else 0)
+            nb_req_num += sum(1 for n in notes if num(n)) + (1 if trans and num(note_d95) else 0)
     couverture_grille = couv_num / couv_den
     completude = (sum(1 for n in N if num(n)) + nb_req_num) / (6 + nb_req)
     r.update(domaines=dom, grille_detail=detail, couverture_grille=couverture_grille, completude=completude)
@@ -179,11 +238,20 @@ def evaluer(d):
     pl['C9'] = 'Oui' if qp > P_C9 else 'Non'
     pl['C10'] = oui_non(not vide('part_acheteur') and not vide('qualite_acheteur'),
                         (p.get('part_acheteur') or 0) > P_C10 and p.get('qualite_acheteur') != '≥ BBB−')
-    pl['C11'] = oui_non(d.get('climat_eleve') not in (None, ''), d.get('climat_eleve') == 'Oui' and p.get('plan_climat') != 'Oui')
+    if ec and ec['eleves']:
+        pl['C11'] = 'Oui' if ec['sans_adapt'] else 'Non'
+    else:
+        pl['C11'] = oui_non(climat_eleve not in (None, ''), climat_eleve == 'Oui' and p.get('plan_climat') != 'Oui')
     pl['C12'] = oui_non(not vide('capacite_sponsor'), p.get('capacite_sponsor') == 'Non')
     pl['C13'] = oui_non(not vide('operateur_remplacable'), p.get('operateur_remplacable') == 'Non' and (p.get('ecart_om') or 0) > P_C13)
     pl['C14'] = oui_non(not vide('expo_groupe'), p.get('expo_groupe') == 'Oui')
     pl['C15'] = 'Oui' if (couverture_grille < P_COUV or completude < 1) else 'Non'
+    if ec is None:
+        pl['C16'] = pl['C17'] = 'n.a.'
+    else:
+        pl['C16'] = 'n.r.' if ec['niveau_transition'] is None else (
+            'Oui' if ec['niveau_transition'] == 'Élevé' and d['climat'].get('planTransition') != 'Oui' else 'Non')
+        pl['C17'] = 'n.r.' if ec['expo_deduite'] is None else ('Oui' if len(ec['sans_adapt']) >= 2 else 'Non')
     r['plafonds'] = pl
     actifs_c = [c for c, e in pl.items() if e == 'Oui']
     plafond = min([PLAFONDS[c][1] for c in actifs_c], default=10)
@@ -198,7 +266,7 @@ def evaluer(d):
     if (p.get('fx') or 0) > 0: motifs_l.append('exposition en devises non couverte')
     if pr['consortium'] == 'Oui': motifs_l.append('opération consortiale (directive 3/W/2025)')
     if pr['contrat_20'] == 'Oui': motifs_l.append('concession ou contrat de revenus > 20 ans')
-    if d['climat_eleve'] == 'Oui': motifs_l.append('site à risque climatique élevé')
+    if climat_eleve == 'Oui': motifs_l.append('site à risque climatique élevé')
     if (pr.get('nb_cp') or 0) > L_NBCP: motifs_l.append(f'plus de {L_NBCP} contreparties clés')
     if motifs_l: calc = 'L'
     elif (capex <= S_CAPEX and pr['expo'] <= S_EXPO and reg in ('R1', 'R2') and pr['tech_refs'] == 'Oui'

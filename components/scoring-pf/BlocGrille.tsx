@@ -55,15 +55,23 @@ export function BlocGrille({ s, modifier, r, P, lecture, voirScores, manquants, 
             {estOuvert && (
               <div className="space-y-3 border-t border-border p-4">
                 <div className="grid gap-3 xl:grid-cols-2">
-                  {scs.map((sc) => (
+                  {scs.map((sc, i) => (
                     <ChoixSituation key={sc.cle} cle={sc.cle}
-                      libelle={`${sc.libelle} (${fmtPct(sc.poids, 0)})${estSectoriel(sc.cle) && s.secteur ? " · secteur" : ""}`}
+                      libelle={`${dom === "D9" && i === 3 && r.climat ? "Risques physiques résiduels" : sc.libelle} (${fmtPct(dom === "D9" && r.climat ? P.climat.poidsD9[i] : sc.poids, 0)})${estSectoriel(sc.cle) && s.secteur ? " · secteur" : ""}`}
                       secteur={s.secteur} niveau={s.grille[sc.cle]?.niveau} commentaire={s.grille[sc.cle]?.commentaire ?? ""}
                       lecture={lecture} manquant={manquants.has(sc.cle)}
                       onNiveau={(n) => modifier((x) => { x.grille[sc.cle] = { niveau: n, commentaire: x.grille[sc.cle]?.commentaire ?? "" }; })}
                       onCommentaire={(t) => modifier((x) => { x.grille[sc.cle] = { niveau: x.grille[sc.cle]?.niveau ?? null, commentaire: t }; })} />
                   ))}
                 </div>
+                {dom === "D9" && r.climat && (
+                  <p className="rounded border border-border bg-surface px-3 py-2 text-[12.5px] text-muted-foreground">
+                    <span className="font-mono text-foreground">D9.5</span> Risque de transition ({fmtPct(P.climat.poidsTransition, 0)}) : calculé depuis l&apos;onglet Climat —
+                    niveau <strong className="text-foreground">{r.climat.niveauTransition ?? "non renseigné"}</strong>
+                    {voirScores && <>, note {typeof r.climat.noteTransition === "number" ? fmtNombre(r.climat.noteTransition, 0) : "Info. insuffisante"}</>}.
+                    {" "}D9.4 porte sur les risques physiques résiduels ; les poids de D9.1 à D9.4 sont ceux du volet climatique.
+                  </p>
+                )}
                 <div>
                   <label htmlFor={`pf-champ-comm-${dom}`} className="mb-1 block text-[12px] font-medium text-foreground">Commentaire du domaine</label>
                   <Texte cible={`comm-${dom}`} valeur={s.commentairesDomaines[dom] ?? ""} lecture={lecture} lignes={2}

@@ -257,7 +257,9 @@ COMPLEMENTS = {
         bloc13=dict(
             forces="Contrat d'achat de 100 % de la production sur 10 ans ; 1 400 producteurs sous contrat ; tout en MAD.",
             faiblesses="Récolte d'olives sensible aux campagnes déficitaires.",
-            justification="",
+            justification=("Volet climatique (lot 2) : la sécheresse est un aléa élevé sans adaptation financée ; C11 limite "
+                           "la note à 6. Mitigants proposés : diversification des bassins d'approvisionnement, irrigation "
+                           "d'appoint des producteurs, réserve de service de la dette portée à 9 mois."),
             avis="Favorable", avis_txt="Régime simplifié ; conditions standard.",
         ),
     ),

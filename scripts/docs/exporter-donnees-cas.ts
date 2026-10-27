@@ -1,7 +1,9 @@
 /**
  * Exporte, pour le générateur des pièces des 18 cas d'étude (docs/cas-etude-pieces/generer.py),
  * les données de chaque cas, la fiche client/projet et le résultat calculé par le moteur :
- * les pièces décrivent ainsi exactement le dossier saisi dans l'outil.
+ * les pièces décrivent ainsi exactement le dossier saisi dans l'outil. La fiche climat fictive
+ * du cas (lib/modele-pf/cas-climat.ts, bloc 14) est ajoutée à la saisie : les pièces la portent
+ * aussi (synthèse EIES et climat, rapport de l'ingénieur indépendant).
  *
  *   npx tsx scripts/docs/exporter-donnees-cas.ts > docs/cas-etude-pieces/donnees.json
  */
@@ -9,6 +11,8 @@ import cas from "../../lib/modele-pf/cas-etude.json";
 import { REFERENTIEL } from "../../lib/modele-pf/referentiel-donnees";
 import { PARAMETRES_DEFAUT } from "../../lib/modele-pf/parametres";
 import { saisieDepuisCasExcel } from "../../lib/modele-pf/conversion";
+import { relireSaisie } from "../../lib/modele-pf/saisie";
+import { FICHES_CLIMAT_CAS } from "../../lib/modele-pf/cas-climat";
 import { calculerEvaluation } from "../../lib/modele-pf/serveur";
 import { FICHES_CAS } from "../db/fiches-cas-pf-donnees";
 
@@ -16,6 +20,8 @@ type Dossier = Record<string, any>; // eslint-disable-line @typescript-eslint/no
 
 const sortie = (cas as { dossier: Dossier }[]).map(({ dossier: d }) => {
   const saisie = saisieDepuisCasExcel(d);
+  const climat = FICHES_CLIMAT_CAS[d.onglet];
+  if (climat) saisie.climat = relireSaisie({ ...saisie, climat: { ...saisie.climat, ...climat } }).climat;
   const { resultat } = calculerEvaluation(saisie, PARAMETRES_DEFAUT, { codeClientT24: d.code_client, radical: d.radical, codeProjet: d.code_projet });
   return { dossier: d, fiche: FICHES_CAS[d.code_projet], saisie, resultat };
 });

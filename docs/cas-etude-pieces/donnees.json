@@ -613,7 +613,34 @@
      "avisMotif": "Profil très solide ; conditions standard de construction.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "chaleur": {
+       "niveau": "Élevé",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), § 4.2",
+       "adaptation": "Oui"
+      },
+      "vents": {
+       "niveau": "Moyen",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), § 4.3",
+       "adaptation": "Oui"
+      },
+      "feux": {
+       "niveau": "Faible",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Région de Drâa-Tafilalet",
+     "emissions": 1500,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.06,
+     "descriptionClimatique": "Canicule prolongée et vents de sable : production − 5 %, nettoyage + 5 %"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 707,
@@ -740,7 +767,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [],
     "plafond": 10,
@@ -751,6 +780,7 @@
     ],
     "noteApprouvee": 9,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Très solide",
     "orientation": "Conditions minimales",
     "manquants": []
@@ -1332,7 +1362,34 @@
      "avisMotif": "Note 6 : conditions et mitigants à formaliser.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "submersion": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive), ch. 6",
+       "adaptation": "Oui"
+      },
+      "vents": {
+       "niveau": "Élevé",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), § 3.1",
+       "adaptation": "Oui"
+      },
+      "chaleur": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Littoral de Souss-Massa",
+     "emissions": 90000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": "Oui",
+     "chocClimatique": 0.1,
+     "descriptionClimatique": "Tempête : prise d'eau indisponible un mois, réparations"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 2400,
@@ -1443,7 +1500,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [],
     "plafond": 10,
@@ -1458,6 +1517,7 @@
     ],
     "noteApprouvee": 6,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Acceptable",
     "orientation": "Conditions et mitigants",
     "manquants": []
@@ -2029,7 +2089,39 @@
      "avisMotif": "Restructuration du service de la dette à examiner avant tout accord.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "chaleur": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive), ch. 5",
+       "adaptation": "Non"
+      },
+      "secheresse": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive), ch. 5",
+       "adaptation": "Non"
+      },
+      "submersion": {
+       "niveau": "Faible",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      },
+      "feux": {
+       "niveau": "Faible",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Marrakech",
+     "emissions": 3000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.25,
+     "descriptionClimatique": "Canicule et pénurie d'eau : fréquentation − 20 %, charges + 10 %"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 480,
@@ -2140,7 +2232,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C2",
@@ -2154,6 +2248,7 @@
     ],
     "noteApprouvee": 4,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Fragile",
     "orientation": "Restructuration à examiner",
     "manquants": []
@@ -2693,7 +2788,29 @@
      "avisMotif": "Refus en l'état ; voir la structure restructurée (onglet C4B).",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "secheresse": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive), ch. 4",
+       "adaptation": "Non"
+      },
+      "chaleur": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Région de Doukkala-Abda",
+     "emissions": 2500,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.3,
+     "descriptionClimatique": "Sécheresse sur deux campagnes : récolte − 35 %"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 420,
@@ -2804,7 +2921,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C1",
@@ -2820,6 +2939,7 @@
     ],
     "noteApprouvee": 3,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Préoccupant",
     "orientation": "Révision de fond",
     "manquants": []
@@ -3354,7 +3474,29 @@
      "avisMotif": "Accord possible sur la structure restructurée.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "secheresse": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive), ch. 4",
+       "adaptation": "Non"
+      },
+      "chaleur": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Région de Doukkala-Abda",
+     "emissions": 2500,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.3,
+     "descriptionClimatique": "Sécheresse sur deux campagnes : récolte − 35 %"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 420,
@@ -3465,7 +3607,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [],
     "plafond": 10,
@@ -3476,6 +3620,7 @@
     ],
     "noteApprouvee": 6,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Acceptable",
     "orientation": "Conditions et mitigants",
     "manquants": []
@@ -4025,7 +4170,34 @@
      "avisMotif": "La garantie de paiement lèverait le plafond C10.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "chaleur": {
+       "niveau": "Moyen",
+       "source": "Rapport du conseiller technique des prêteurs (fictif)",
+       "adaptation": null
+      },
+      "vents": {
+       "niveau": "Faible",
+       "source": "Rapport du conseiller technique des prêteurs (fictif)",
+       "adaptation": null
+      },
+      "feux": {
+       "niveau": "Faible",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Zone industrielle de Kénitra",
+     "emissions": 200,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.05,
+     "descriptionClimatique": "Canicule : production − 4 %"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 105.6,
@@ -4136,7 +4308,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C10"
@@ -4147,6 +4321,7 @@
     "motifsEscalade": [],
     "noteApprouvee": 6,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Acceptable",
     "orientation": "Conditions et mitigants",
     "manquants": []
@@ -4818,7 +4993,34 @@
      "avisMotif": "Profil de référence.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "vents": {
+       "niveau": "Moyen",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), classe IEC des turbines",
+       "adaptation": "Oui"
+      },
+      "feux": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": "Oui"
+      },
+      "chaleur": {
+       "niveau": "Faible",
+       "source": "Rapport du conseiller technique des prêteurs (fictif)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Province côtière du Nord",
+     "emissions": 800,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.05,
+     "descriptionClimatique": "Tempête : arrêt de sécurité des turbines deux semaines"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 1450,
@@ -4977,7 +5179,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [],
     "plafond": 10,
@@ -4986,6 +5190,7 @@
     "motifsEscalade": [],
     "noteApprouvee": 10,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Excellent",
     "orientation": "Profil de référence",
     "manquants": []
@@ -5625,7 +5830,34 @@
      "avisMotif": "Suivi de la disponibilité et de la couverture de change.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "submersion": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive), ch. 6",
+       "adaptation": "Oui"
+      },
+      "vents": {
+       "niveau": "Élevé",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), § 3.1",
+       "adaptation": "Oui"
+      },
+      "chaleur": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Littoral du Sud",
+     "emissions": 110000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": "Oui",
+     "chocClimatique": 0.08,
+     "descriptionClimatique": "Tempête : prise d'eau indisponible trois semaines"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 1430,
@@ -5784,7 +6016,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [],
     "plafond": 10,
@@ -5800,6 +6034,7 @@
     ],
     "noteApprouvee": 7,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Satisfaisant",
     "orientation": "Conditions légères",
     "manquants": []
@@ -6405,7 +6640,29 @@
      "avisMotif": "Accord envisageable avec réserve complémentaire et tirages conditionnés.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "chaleur": {
+       "niveau": "Élevé",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), refroidissement dimensionné pour 48 °C",
+       "adaptation": "Oui"
+      },
+      "inondation": {
+       "niveau": "Faible",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Zone industrielle périurbaine",
+     "emissions": 140000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": "Non",
+     "chocClimatique": 0.08,
+     "descriptionClimatique": "Canicule : surcoût de refroidissement (charges + 15 %)"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 925,
@@ -6548,7 +6805,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C3"
@@ -6559,6 +6818,7 @@
     "motifsEscalade": [],
     "noteApprouvee": 4,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Fragile",
     "orientation": "Restructuration à examiner",
     "manquants": []
@@ -7154,7 +7414,29 @@
      "avisMotif": "Note 5 : sous surveillance, clauses de trafic à suivre.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "inondation": {
+       "niveau": "Élevé",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), ouvrages hydrauliques centennaux",
+       "adaptation": "Oui"
+      },
+      "feux": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Corridor interurbain",
+     "emissions": 1500,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.12,
+     "descriptionClimatique": "Crue : section coupée deux mois, réparations"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 2750,
@@ -7313,7 +7595,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C2"
@@ -7330,6 +7614,7 @@
     ],
     "noteApprouvee": 5,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Moyen",
     "orientation": "Sous surveillance",
     "manquants": []
@@ -7928,7 +8213,29 @@
      "avisMotif": "Pas d'octroi avant la signature de l'EPC.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "submersion": {
+       "niveau": "Moyen",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), cote des quais",
+       "adaptation": "Oui"
+      },
+      "vents": {
+       "niveau": "Moyen",
+       "source": "Rapport du conseiller technique des prêteurs (fictif)",
+       "adaptation": "Oui"
+      }
+     },
+     "localisation": "Port en eau profonde",
+     "emissions": 18000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.08,
+     "descriptionClimatique": "Tempête : quais arrêtés trois semaines"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 2500,
@@ -8073,7 +8380,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Oui",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C10",
@@ -8091,6 +8400,7 @@
     ],
     "noteApprouvee": 6,
     "statut": "Note provisoire — stade bloqué : B2 (Octroi)",
+    "climat": null,
     "libelle": "Acceptable",
     "orientation": "Conditions et mitigants",
     "manquants": []
@@ -8688,7 +8998,29 @@
      "avisMotif": "Compléter le dossier avant présentation pour une note validée.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "inondation": {
+       "niveau": "Faible",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      },
+      "chaleur": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": "Oui"
+      }
+     },
+     "localisation": "Capitale régionale",
+     "emissions": 9000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.06,
+     "descriptionClimatique": "Inondation : remise en état et pénalités"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 1345,
@@ -8833,7 +9165,9 @@
      "C12": "Non",
      "C13": "Oui",
      "C14": "Non",
-     "C15": "Oui"
+     "C15": "Oui",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C13",
@@ -8845,6 +9179,7 @@
     "motifsEscalade": [],
     "noteApprouvee": 6,
     "statut": "Note provisoire — stade bloqué : B7 (Notation validée)",
+    "climat": null,
     "libelle": "Acceptable",
     "orientation": "Conditions et mitigants",
     "manquants": []
@@ -9402,7 +9737,29 @@
      "avisMotif": "Une stratégie de refinancement approuvée lèverait C8 ; C4 demande de réduire le ballon.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "chaleur": {
+       "niveau": "Élevé",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), perte de puissance prise en compte",
+       "adaptation": "Oui"
+      },
+      "secheresse": {
+       "niveau": "Moyen",
+       "source": "Rapport du conseiller technique des prêteurs (fictif), refroidissement à l'eau de mer",
+       "adaptation": "Oui"
+      }
+     },
+     "localisation": "Zone portuaire",
+     "emissions": 1100000,
+     "exportMacf": 0,
+     "actifFossile": "Oui",
+     "planTransition": "Non",
+     "chocClimatique": 0.15,
+     "descriptionClimatique": "Canicule et prix du carbone : puissance − 8 %, charges + 15 %"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 1650,
@@ -9545,7 +9902,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C4",
@@ -9561,6 +9920,7 @@
     ],
     "noteApprouvee": 4,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Fragile",
     "orientation": "Restructuration à examiner",
     "manquants": []
@@ -10135,7 +10495,29 @@
      "avisMotif": "Apport de fonds propres et DSRA de 6 mois exigés.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "inondation": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": "Oui"
+      },
+      "chaleur": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Quartier d'affaires",
+     "emissions": 4000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.1,
+     "descriptionClimatique": "Inondation : locaux indisponibles deux mois"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 680,
@@ -10278,7 +10660,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C7",
@@ -10290,6 +10674,7 @@
     "motifsEscalade": [],
     "noteApprouvee": 5,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Moyen",
     "orientation": "Sous surveillance",
     "manquants": []
@@ -10876,7 +11261,29 @@
      "avisMotif": "Levée de la réserve juridique et couverture de change avant décaissement.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "secheresse": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": "Oui"
+      },
+      "inondation": {
+       "niveau": "Faible",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Plateforme industrielle",
+     "emissions": 130000,
+     "exportMacf": 0,
+     "actifFossile": "Oui",
+     "planTransition": "Non",
+     "chocClimatique": 0.12,
+     "descriptionClimatique": "Sécheresse et coût du carbone : volumes − 10 %, charges + 10 %"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 1350,
@@ -11021,7 +11428,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C5",
@@ -11035,6 +11444,7 @@
     ],
     "noteApprouvee": 5,
     "statut": "Note provisoire — stade bloqué : B5 (Décaissement)",
+    "climat": null,
     "libelle": "Moyen",
     "orientation": "Sous surveillance",
     "manquants": []
@@ -11652,7 +12062,29 @@
      "avisMotif": "Régime simplifié ; conditions standard.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "secheresse": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive), ch. 4 ; historique des campagnes",
+       "adaptation": "Non"
+      },
+      "chaleur": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Région oléicole de l'intérieur",
+     "emissions": 2000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.2,
+     "descriptionClimatique": "Sécheresse sur deux campagnes : récolte − 35 %, en partie compensée par le prix et l'assurance récolte"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 150,
@@ -11795,7 +12227,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [],
     "plafond": 10,
@@ -11804,6 +12238,7 @@
     "motifsEscalade": [],
     "noteApprouvee": 8,
     "statut": "Note validable, à soumettre au comité",
+    "climat": null,
     "libelle": "Solide",
     "orientation": "Réserves mineures à documenter",
     "manquants": []
@@ -12406,7 +12841,39 @@
      "avisMotif": "Révision de fond du plan d'affaires et de la structure.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "chaleur": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": "Non"
+      },
+      "secheresse": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": "Non"
+      },
+      "submersion": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive), ch. 6",
+       "adaptation": "Non"
+      },
+      "feux": {
+       "niveau": "Faible",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": null
+      }
+     },
+     "localisation": "Littoral atlantique",
+     "emissions": 6000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.25,
+     "descriptionClimatique": "Canicule et pénurie d'eau : fréquentation − 20 %, charges + 10 %"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 920,
@@ -12551,7 +13018,9 @@
      "C12": "Non",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C1",
@@ -12568,6 +13037,7 @@
     ],
     "noteApprouvee": 3,
     "statut": "Note provisoire — stade bloqué : B4 (Octroi)",
+    "climat": null,
     "libelle": "Préoccupant",
     "orientation": "Révision de fond",
     "manquants": []
@@ -13180,7 +13650,29 @@
      "avisMotif": "Hors périmètre tant que la contrepartie sous sanctions demeure.",
      "decision": null,
      "decisionCommentaire": ""
-    }
+    },
+    "climat": {
+     "aleas": {
+      "secheresse": {
+       "niveau": "Élevé",
+       "source": "Étude d'impact environnemental et social (fictive), bilan hydrique",
+       "adaptation": "Oui"
+      },
+      "inondation": {
+       "niveau": "Moyen",
+       "source": "Étude d'impact environnemental et social (fictive)",
+       "adaptation": "Oui"
+      }
+     },
+     "localisation": "Massif montagneux",
+     "emissions": 60000,
+     "exportMacf": 0,
+     "actifFossile": "Non",
+     "planTransition": null,
+     "chocClimatique": 0.15,
+     "descriptionClimatique": "Sécheresse : restrictions d'eau (production − 15 %)"
+    },
+    "origines": {}
    },
    "resultat": {
     "capex": 3300,
@@ -13327,7 +13819,9 @@
      "C12": "Oui",
      "C13": "Non",
      "C14": "Non",
-     "C15": "Non"
+     "C15": "Non",
+     "C16": "n.a.",
+     "C17": "n.a."
     },
     "plafondsActifs": [
      "C2",
@@ -13348,6 +13842,7 @@
     ],
     "noteApprouvee": "—",
     "statut": "Hors périmètre — aucune note produite",
+    "climat": null,
     "libelle": "—",
     "orientation": "Aucune note : dossier hors périmètre",
     "manquants": []
@@ -14539,6 +15034,14 @@
    "C15": {
     "libelle": "Note issue d'une évaluation partielle (statut provisoire)",
     "niveau": 6
+   },
+   "C16": {
+    "libelle": "Risque de transition élevé sans plan de transition crédible (volet climatique, lot 2)",
+    "niveau": 6
+   },
+   "C17": {
+    "libelle": "Au moins deux aléas climatiques pertinents élevés sans adaptation financée (volet climatique, lot 2)",
+    "niveau": 5
    }
   }
  }

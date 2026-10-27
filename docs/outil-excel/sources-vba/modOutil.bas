@@ -2,7 +2,7 @@ Attribute VB_Name = "modOutil"
 Option Explicit
 
 ' =====================================================================
-'  Outil de scoring Project Finance V8 - version 3 - macros de pilotage
+'  Outil de scoring Project Finance V8 - version 4 - macros de pilotage
 '  Toutes les notes sont calculees par les FORMULES des onglets : les
 '  macros creent, dupliquent, controlent, preparent l'echeancier,
 '  exportent et tracent. Les feuilles sont protegees SANS mot de passe.
@@ -29,7 +29,7 @@ Public Const CELLULE_CODE_PROJET As String = "B17"
 Private Const LIGNE_P1 As Long = 93
 Private Const LIGNE_PN As Long = 152
 Private Const CK_PREMIERE As Long = 14
-Private Const CK_DERNIERE As Long = 63
+Private Const CK_DERNIERE As Long = 67
 Private Const MAX_DOSSIERS As Long = 40
 Private Const MAX_LIGNES_MSG As Long = 12
 
@@ -393,7 +393,7 @@ Public Sub ControlerDossier()
             If nbAtt <= 6 Then attention = attention & "- " & Txt(ws.Cells(r, 1).Value) & " : période de différé, exclue du DSCR." & vbCrLf
         End If
     Next r
-    nr = Application.WorksheetFunction.CountIf(ws.Range("E258:E272"), "n.r.")
+    nr = Application.WorksheetFunction.CountIf(ws.Range("E258:E274"), "n.r.")
     If nr > 0 Then attention = attention & "- " & nr & " plafond(s) non évalué(s) faute de donnée (section 11)." & vbCrLf
 
     If nb = 0 Then

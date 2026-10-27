@@ -12,7 +12,7 @@ import {
 } from "./parametres";
 import { options as optionsReferentiel, NIVEAUX_LIBELLES } from "./referentiel";
 import { originesSchema } from "./origines";
-import { climatSchema } from "./climat";
+import { ALEAS, ALEAS_PAR_SECTEUR, LIBELLES_ALEAS, climatSchema } from "./climat";
 
 /** 1 Très favorable · 2 Favorable · 3 Vigilance · 4 Critique · 5 Info. insuffisante */
 export type Niveau = 1 | 2 | 3 | 4 | 5;
@@ -119,6 +119,7 @@ export function versDossier(s: SaisiePF, P: ParametresModele = PARAMETRES_DEFAUT
     donneesPlafonds: s.donneesPlafonds,
     grille,
     verrous: s.verrous,
+    climat: s.climat,
   };
 }
 
@@ -174,7 +175,8 @@ export function controlesSaisie(s: SaisiePF, r: ResultatPF, P: ParametresModele 
   if ((d.detteARefinancer ?? 0) > P.seuils.c8 && !d.strategieRefinancement) ajoute(7, "Stratégie de refinancement approuvée ?", "strategieRefinancement");
   if (d.dureeContrat !== null && d.dureeDette !== null && d.dureeContrat < d.dureeDette && !d.solutionContrat)
     ajoute(7, "Solution documentée (contrat plus court que la dette) ?", "solutionContrat");
-  if (s.climatEleve === "Oui" && !d.planClimat) ajoute(7, "Plan d'adaptation climatique financé ? (C11)", "planClimat");
+  // Lot 2 du volet climatique : l'adaptation se renseigne par aléa dans la fiche climat.
+  if (s.climatEleve === "Oui" && !d.planClimat && !(r.climat && r.climat.expositionDeduite !== null)) ajoute(7, "Plan d'adaptation climatique financé ? (C11)", "planClimat");
   if (d.operateurRemplacable === "Non" && d.ecartOm === null) ajoute(7, "Écart fin O&M / fin de dette", "ecartOm");
   // Grille : sous-critères requis par la phase
   const pw = s.phase ? P.poidsDomaines[s.phase] : null;
@@ -187,6 +189,21 @@ export function controlesSaisie(s: SaisiePF, r: ResultatPF, P: ParametresModele 
     }
   }
   for (const v of ORDRE_VERROUS) if (s.verrous[v] === undefined || s.verrous[v] === null) { ajoute(10, "Verrous X1 à B8 : répondre Oui ou Non", "verrous"); break; }
+  if (r.climat) {
+    const presel = s.secteur ? ALEAS_PAR_SECTEUR[s.secteur] : [];
+    if (presel.some((a) => !s.climat.aleas[a]?.niveau)) ajoute(14, "Fiche climat : exposition des aléas présélectionnés", "climat.aleas");
+    for (const a of ALEAS) {
+      const x = s.climat.aleas[a];
+      if (x?.niveau === "Élevé" && !x.adaptation) ajoute(14, `Adaptation financée ? (${LIBELLES_ALEAS[a]})`, "climat.aleas");
+    }
+    // Chaque donnée de transition est exigée : le niveau n'est établi que si elles sont toutes connues.
+    if (s.climat.emissions === null) ajoute(14, "Transition : émissions scopes 1 et 2", "climat.emissions");
+    if (s.climat.exportMacf === null) ajoute(14, "Transition : exportations soumises au MACF", "climat.export_macf");
+    if (s.climat.actifFossile === null) ajoute(14, "Transition : actif dépendant des énergies fossiles ?", "climat.actif_fossile");
+    if ((s.climat.actifFossile === "Oui" || r.climat.niveauTransition === "Élevé") && s.climat.planTransition === null)
+      ajoute(14, "Transition : plan de transition crédible et financé ?", "climat.plan_transition");
+    if (r.climat.expositionRetenue === "Oui" && r.climat.dscrMinClimatique === null) ajoute(14, "Scénario climatique : baisse du CFADS (site exposé)", "climat.choc");
+  }
   if (!s.bloc13.synthese.trim()) ajoute(13, "Synthèse de l'analyste", "synthese");
   if (justificationExigee(s, r) && !s.bloc13.justification.trim())
     ajoute(13, "Justification des écarts (plafond, verrou ou info. insuffisante actif)", "justification");

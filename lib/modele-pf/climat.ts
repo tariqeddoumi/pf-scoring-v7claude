@@ -1,11 +1,12 @@
 /**
- * Volet climatique, lot 1 : fiche des risques physiques par aléa, données de transition,
- * scénario climatique indicatif et données de la directive BAM 2/W/2025 (grands
- * emprunteurs). Rien ici ne modifie la note : les indicateurs sont affichés à côté de la
- * case « site à risque climatique élevé » du bloc 2, qui reste la donnée du moteur.
+ * Volet climatique : fiche des risques physiques par aléa, données de transition,
+ * scénario climatique et données de la directive BAM 2/W/2025 (grands emprunteurs).
  *
- * Les règles marquées « lot 2 » (C11 bis, C16) ne sont calculées qu'en aperçu, pour
- * préparer leur calibrage par le comité de validation du modèle.
+ * Lot 1 (toujours actif) : la fiche est collectée et analysée sans effet sur la note.
+ * Lot 2 (paramètre `climat.lot2Actif`, inactif par défaut) : le moteur en tient compte
+ * (exposition déduite des aléas, D9.5 « risque de transition », C11 révisé, C16, C17,
+ * scénario climatique dans N2). Tant qu'il est inactif, `apercuLot2` montre ce que ces
+ * règles donneraient, pour préparer leur calibrage par le comité de validation du modèle.
  *
  * Valeurs candidates (aléas pertinents, seuils, scénarios), à valider par le comité.
  */
@@ -149,7 +150,9 @@ export function evaluerClimat(c: ClimatPF, secteur: CodeSecteur | null, climatEl
 
   const motifsTransition: string[] = [];
   let niveauTransition: NiveauTransition | null = null;
-  const connu = c.emissions !== null || c.exportMacf !== null || c.actifFossile !== null;
+  // Niveau établi seulement quand les trois données sont connues : une donnée manquante pourrait
+  // révéler un risque élevé (sinon une seule émission nulle suffirait à donner « Faible »).
+  const connu = c.emissions !== null && c.exportMacf !== null && c.actifFossile !== null;
   if (connu) {
     const eleve: string[] = [], moyen: string[] = [];
     if (c.emissions !== null) {
@@ -178,7 +181,7 @@ export function evaluerClimat(c: ClimatPF, secteur: CodeSecteur | null, climatEl
 
   const apercuLot2: EvaluationClimat["apercuLot2"] = [];
   if (aleasElevesSansAdaptation.length) apercuLot2.push({ code: "C11", libelle: "Aléa pertinent élevé sans adaptation financée", noteMax: 6 });
-  if (aleasElevesSansAdaptation.length >= 2) apercuLot2.push({ code: "C11 bis", libelle: "Au moins deux aléas élevés sans adaptation", noteMax: 5 });
+  if (aleasElevesSansAdaptation.length >= 2) apercuLot2.push({ code: "C17", libelle: "Au moins deux aléas élevés sans adaptation", noteMax: 5 });
   if (niveauTransition === "Élevé" && c.planTransition !== "Oui") apercuLot2.push({ code: "C16", libelle: "Risque de transition élevé sans plan de transition", noteMax: 6 });
 
   const attendus = base.length + 6;

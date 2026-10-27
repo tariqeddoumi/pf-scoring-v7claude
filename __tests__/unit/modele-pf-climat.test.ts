@@ -51,6 +51,9 @@ describe("indicateurs climatiques", () => {
     expect(evaluerClimat(s.climat, "ETH", null, [], null).niveauTransition).toBeNull();
     s.climat.emissions = 1_000_000;
     s.climat.actifFossile = "Oui";
+    // Une donnée manque encore : pas de niveau (elle pourrait révéler un risque plus élevé).
+    expect(evaluerClimat(s.climat, "ETH", null, [], null).niveauTransition).toBeNull();
+    s.climat.exportMacf = 0;
     const e = evaluerClimat(s.climat, "ETH", null, [], null);
     expect(e.niveauTransition).toBe("Élevé");
     expect(e.apercuLot2.map((p) => p.code)).toContain("C16");
@@ -110,10 +113,12 @@ describe("champs climat pour l'IA", () => {
     expect(tousLesChamps().some((c) => c.cle === "climat.emissions")).toBe(true);
   });
 
-  it("reste hors du fichier d'échange avec l'outil Excel", () => {
+  it("fait partie du fichier d'échange avec l'outil Excel (version 4)", () => {
     const s = saisieVide();
     s.climat.emissions = 1000;
-    expect(valeursDeLaSaisie(s).some((l) => l.cle.startsWith("climat."))).toBe(false);
+    s.climat.aleas.chaleur = { niveau: "Élevé", source: "Étude p. 3", adaptation: "Oui" };
+    const cles = valeursDeLaSaisie(s).map((l) => l.cle);
+    expect(cles).toEqual(expect.arrayContaining(["climat.emissions", "climat.alea.chaleur.niveau", "climat.alea.chaleur.adaptation"]));
   });
 
   it("demande les aléas à l'IA et déduit leur source", () => {

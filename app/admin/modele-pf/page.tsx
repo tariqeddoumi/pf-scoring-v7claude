@@ -62,6 +62,7 @@ export default function ParametresModelePFPage() {
       plafonds: Object.fromEntries(Object.entries(P.plafonds).map(([k, v]) => [k, { niveau: v.niveau }])),
       seuils: P.seuils,
       correspondanceGrades: P.correspondanceGrades,
+      climat: P.climat,
     };
     const r = await apiPut("/api/modele-pf/parametres", surcharge);
     setEnvoi(false);
@@ -242,6 +243,39 @@ export default function ParametresModelePFPage() {
               ))}
             </tbody>
           </table>
+        </SectionCard>
+
+        <SectionCard titre="Volet climatique — lot 2" description="Prise en compte de la fiche climat dans la note." className="xl:col-span-2">
+          <div className="space-y-3 text-[13px]">
+            <label className={cn("flex items-start gap-2 rounded p-1", P.climat.lot2Actif !== defaut.climat.lot2Actif && "bg-warning/10")}>
+              <input type="checkbox" className="mt-0.5" checked={P.climat.lot2Actif} disabled={lecture}
+                onChange={(e) => maj((p) => { p.climat.lot2Actif = e.target.checked; })} />
+              <span>
+                <span className="font-medium text-foreground">Activer le lot 2</span>
+                <span className="block text-muted-foreground">
+                  L&apos;exposition est déduite des aléas de la fiche ; D9.5 « risque de transition » est calculé ; C11 tient compte de
+                  l&apos;adaptation par aléa ; C16 et C17 s&apos;appliquent ; sur un site exposé, le scénario climatique entre dans N2.
+                  À activer seulement après validation par le comité de validation du modèle et alignement de l&apos;outil Excel.
+                  Les scorings déjà soumis ou validés gardent les paramètres de leur calcul.
+                </span>
+              </span>
+            </label>
+            <div className="grid gap-3 sm:grid-cols-5">
+              {(["D9.1", "D9.2", "D9.3", "D9.4"] as const).map((k, i) => (
+                <div key={k} className={cn("rounded p-1", diff(P.climat.poidsD9[i], defaut.climat.poidsD9[i]) && "bg-warning/10")}>
+                  <label htmlFor={`pf-champ-poids-${k}`} className="mb-1 block text-[12px] font-medium">Poids de {k} dans D9</label>
+                  <Nombre cible={`poids-${k}`} valeur={Math.round(P.climat.poidsD9[i] * 1000) / 10} lecture={lecture} suffixe="%" min={0} max={100}
+                    onChange={(v) => maj((p) => { p.climat.poidsD9[i] = v === null ? defaut.climat.poidsD9[i] : v / 100; })} />
+                </div>
+              ))}
+              <div className={cn("rounded p-1", diff(P.climat.poidsTransition, defaut.climat.poidsTransition) && "bg-warning/10")}>
+                <label htmlFor="pf-champ-poids-D9.5" className="mb-1 block text-[12px] font-medium">Poids de D9.5 (transition)</label>
+                <Nombre cible="poids-D9.5" valeur={Math.round(P.climat.poidsTransition * 1000) / 10} lecture={lecture} suffixe="%" min={0} max={100}
+                  onChange={(v) => maj((p) => { p.climat.poidsTransition = v === null ? defaut.climat.poidsTransition : v / 100; })} />
+              </div>
+            </div>
+            <p className="text-[12px] text-muted-foreground">Ces poids remplacent ceux des sous-critères de D9 quand le lot 2 est actif ; leur total doit faire 100 %.</p>
+          </div>
         </SectionCard>
 
         <SectionCard titre="Seuils des règles" description="Proportionnalité S/M/L, classement de N3 en construction, déclenchement des plafonds." className="xl:col-span-2">
