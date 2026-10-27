@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { gradeDeLaNote, ORDRE_DOMAINES, ORDRE_PLAFONDS, ORDRE_VERROUS, type CodeVerrou } from "@/lib/modele-pf/parametres";
 import { AVIS, DECISIONS, justificationExigee } from "@/lib/modele-pf/saisie";
 import { Champ, Liste, OuiNon, Texte, Calcule, fmtNombre, fmtPct, type PropsBloc } from "./champs";
+import { MarqueOrigine } from "./origine";
 
 const AUTO: CodeVerrou[] = ["B3", "B7"];
 
@@ -58,7 +59,7 @@ export function BlocResultat({ s, modifier, r, P, lecture, voirScores, manquants
                 const vide = s.verrous[v] === undefined || s.verrous[v] === null;
                 return (
                   <tr key={v} className="border-t border-border align-top">
-                    <td className="px-3 py-2"><span className="font-mono font-semibold">{v}</span> <span className="text-muted-foreground">{P.verrous[v].libelle}</span></td>
+                    <td className="px-3 py-2"><span className="font-mono font-semibold">{v}</span> <span className="text-muted-foreground">{P.verrous[v].libelle}</span> <MarqueOrigine cles={[`verrou.${v}`]} /></td>
                     <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{P.verrous[v].stade}</td>
                     <td className="px-3 py-2"><OuiNon cible={`verrou-${v}`} valeur={s.verrous[v]} lecture={lecture} manquant={m("verrous") && vide}
                       onChange={(x) => modifier((d) => { d.verrous[v] = x; })} /></td>

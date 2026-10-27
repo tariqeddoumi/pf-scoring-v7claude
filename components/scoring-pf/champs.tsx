@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import type { SaisiePF } from "@/lib/modele-pf/saisie";
 import type { ResultatPF } from "@/lib/modele-pf/moteur";
 import type { ParametresModele } from "@/lib/modele-pf/parametres";
+import { cleDeLaCible } from "@/lib/modele-pf/origines";
+import { OrigineChamp } from "./origine";
 
 /** Ce que chaque bloc reçoit de l'écran : la saisie, sa mise à jour et le calcul en direct. */
 export interface PropsBloc {
@@ -36,6 +38,7 @@ export function Champ({ cible, libelle, manquant, aide, children, className }: {
       </label>
       {children}
       {aide && <p className="mt-1 text-[11.5px] text-muted-foreground">{aide}</p>}
+      <OrigineChamp cle={cleDeLaCible(cible)} />
     </div>
   );
 }

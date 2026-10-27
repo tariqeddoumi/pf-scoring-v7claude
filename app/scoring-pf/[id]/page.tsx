@@ -18,6 +18,7 @@ import { BlocFinancement, type CreditPF } from "@/components/scoring-pf/BlocFina
 import { BlocSecteur } from "@/components/scoring-pf/BlocSecteur";
 import { BlocEcheancier } from "@/components/scoring-pf/BlocEcheancier";
 import { BlocNoyau } from "@/components/scoring-pf/BlocNoyau";
+import { SaisieContexte } from "@/components/scoring-pf/origine";
 import { BlocGrille } from "@/components/scoring-pf/BlocGrille";
 import { BlocResultat } from "@/components/scoring-pf/BlocResultat";
 import { PiecesIA } from "@/components/scoring-pf/PiecesIA";
@@ -349,6 +350,7 @@ export default function ScoringPFPage() {
         })}
       </div>
 
+      <SaisieContexte.Provider value={saisie}>
       <div role="tabpanel">
         {onglet === "identification" && <BlocIdentification {...props} projet={d.projet} />}
         {onglet === "financement" && <BlocFinancement {...props} credits={d.credits} projetId={d.projet.id} />}
@@ -362,6 +364,7 @@ export default function ScoringPFPage() {
             enregistrer={enregistrer} onRecharger={charger} />
         )}
       </div>
+      </SaisieContexte.Provider>
     </div>
   );
 }
