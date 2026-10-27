@@ -40,7 +40,8 @@ export const surchargeSchema = z.object({
   ancres: z.object({ tresFavorable: z.number(), favorable: z.number(), vigilance: z.number(), critique: z.number(), infoInsuffisante: z.number() })
     .partial().optional(),
   correspondanceGrades: z.partialRecord(z.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]), z.enum(GRADES)).optional(),
-  plafonds: z.partialRecord(z.string().regex(/^C(1[0-5]|[1-9])$/), z.object({ niveau: z.number().int().min(1).max(10) })).optional(),
+  plafonds: z.partialRecord(z.string().regex(/^C(1[0-7]|[1-9])$/), z.object({ niveau: z.number().int().min(1).max(10) })).optional(),
+  climat: z.object({ lot2Actif: z.boolean(), poidsD9: z.tuple([poids, poids, poids, poids]), poidsTransition: poids }).partial().optional(),
   seuils: z.object({
     sCapex: z.number(), sExpo: z.number(), sDuree: z.number(), lCapex: z.number(), lExpo: z.number(), lNbContreparties: z.number(),
     n3TresFavorable: z.number(), n3Favorable: z.number(), n3Vigilance: z.number(),

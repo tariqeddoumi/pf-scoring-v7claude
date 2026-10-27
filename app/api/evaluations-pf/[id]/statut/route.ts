@@ -5,7 +5,7 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import prisma from "@/lib/prisma-client";
 import { messagePublic } from "@/lib/erreur-publique";
 import { relireSaisie } from "@/lib/modele-pf/saisie";
-import { gradeDeLaNote, type ParametresModele } from "@/lib/modele-pf/parametres";
+import { fusionnerParametres, gradeDeLaNote } from "@/lib/modele-pf/parametres";
 import { chargerParametres, calculerEvaluation, peutSaisir, peutDecider } from "@/lib/modele-pf/serveur";
 import { getAppConfigKey } from "@/lib/services/app-config-service";
 import { intervenantsScoring } from "@/lib/modele-pf/acces";
@@ -81,7 +81,8 @@ async function changer(req: NextRequest, user: AuthPayload, id: string) {
           return NextResponse.json({ error: `Délégation insuffisante pour ce montant : validation réservée au rôle ${roleRequis} ou supérieur` }, { status: 403 });
         }
         // Note validée : ni exclusion, ni blocage, ni évaluation partielle (paramètres du calcul soumis).
-        const P = (e.parametres as unknown as ParametresModele | null) ?? (await chargerParametres());
+        // Paramètres du calcul, complétés des règles ajoutées depuis (inactives par défaut).
+        const P = e.parametres ? fusionnerParametres(e.parametres as never) : await chargerParametres();
         const calc = calculerEvaluation(relireSaisie(e.saisie), P, { ...e.project.client, codeProjet: e.project.codeProjet });
         if (!calc.resultat.statut.startsWith("Note validable")) {
           return NextResponse.json({ error: `Note non validable : ${calc.resultat.statut}` }, { status: 422 });

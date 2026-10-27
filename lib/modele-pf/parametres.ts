@@ -10,7 +10,7 @@ export type CodeSecteur =
   | "ENR" | "EAU" | "TEL" | "TRA" | "POR" | "SAN" | "ETH" | "IMMO-REND" | "IND" | "AGR" | "TOU" | "MIN";
 export type CodeDomaine = "D1" | "D2" | "D3" | "D4" | "D5" | "D6" | "D7" | "D8" | "D9";
 export type DomaineGrille = Exclude<CodeDomaine, "D7">;
-export type CodePlafond = `C${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15}`;
+export type CodePlafond = `C${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17}`;
 export type CodeVerrou = "X1" | "X2" | "X3" | "X4" | "B1" | "B2" | "B3" | "B4" | "B5" | "B6" | "B7" | "B8";
 
 export const GRADES = ["AAA", "AA", "A", "BBB", "BB", "B", "CCC", "CC", "C", "D"] as const;
@@ -39,6 +39,19 @@ export interface ParametresModele {
     n3TresFavorable: number; n3Favorable: number; n3Vigilance: number;
     c1: number; c3: number; c4: number; c6: number; c7: number; c8: number; c9: number; c10: number; c13: number;
     couvertureGrille: number;
+  };
+  /**
+   * Volet climatique, lot 2 : quand il est actif, la fiche climat entre dans la note
+   * (exposition déduite des aléas, sous-critère D9.5 « risque de transition » calculé,
+   * plafonds C16 et C17, scénario climatique pris dans N2). Inactif par défaut : à activer
+   * après validation par le comité et alignement de l'outil Excel.
+   */
+  climat: {
+    lot2Actif: boolean;
+    /** Poids de D9.1 à D9.4 dans D9 quand le lot 2 est actif (D9.4 devient « risques physiques résiduels »). */
+    poidsD9: [number, number, number, number];
+    /** Poids de D9.5 « risque de transition » dans D9. */
+    poidsTransition: number;
   };
 }
 
@@ -120,6 +133,8 @@ export const PARAMETRES_DEFAUT: ParametresModele = {
     C13: { libelle: "Opérateur non remplaçable et contrat O&M expirant plus de 5 ans avant la dette", niveau: 7 },
     C14: { libelle: "Exposition du groupe bancaire sur un facteur commun au-delà de la limite interne", niveau: 6 },
     C15: { libelle: "Note issue d'une évaluation partielle (statut provisoire)", niveau: 6 },
+    C16: { libelle: "Risque de transition élevé sans plan de transition crédible (volet climatique, lot 2)", niveau: 6 },
+    C17: { libelle: "Au moins deux aléas climatiques pertinents élevés sans adaptation financée (volet climatique, lot 2)", niveau: 5 },
   },
   verrous: {
     X1: { libelle: "Activité interdite par la loi marocaine ou par la politique d'exclusion de la banque", stade: "Aucune note" },
@@ -141,6 +156,7 @@ export const PARAMETRES_DEFAUT: ParametresModele = {
     c1: 1.05, c3: 1.0, c4: 1.1, c6: 0.25, c7: 3, c8: 0.3, c9: 0.85, c10: 0.85, c13: 5,
     couvertureGrille: 0.95,
   },
+  climat: { lot2Actif: false, poidsD9: [0.25, 0.25, 0.1, 0.25], poidsTransition: 0.15 },
 };
 
 export const ORDRE_DOMAINES: CodeDomaine[] = ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9"];
@@ -169,6 +185,10 @@ export function anomaliesParametres(P: ParametresModele): string[] {
   for (const ph of ["P1", "P2", "P3"] as const) {
     const t = Object.values(P.poidsDomaines[ph]).reduce((s, x) => s + x, 0);
     if (Math.abs(t - 1) > 1e-6) a.push(`Poids des domaines en ${ph} : total ${(t * 100).toFixed(1)} % au lieu de 100 %`);
+  }
+  if (P.climat?.lot2Actif) {
+    const td = P.climat.poidsD9.reduce((s, x) => s + x, 0) + P.climat.poidsTransition;
+    if (Math.abs(td - 1) > 1e-6) a.push(`Poids de D9 avec le volet climatique : total ${(td * 100).toFixed(1)} % au lieu de 100 %`);
   }
   const tn = P.poidsNoyau.reduce((s, x) => s + x, 0);
   if (Math.abs(tn - 1) > 1e-6) a.push(`Poids du noyau : total ${(tn * 100).toFixed(1)} % au lieu de 100 %`);

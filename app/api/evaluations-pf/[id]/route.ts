@@ -6,7 +6,7 @@ import { messagePublic } from "@/lib/erreur-publique";
 import { peutVoirScores } from "@/lib/score-visibility";
 import { relireSaisie, saisieSchema } from "@/lib/modele-pf/saisie";
 import { fusionnerOrigines } from "@/lib/modele-pf/origines";
-import { parametresVisibles, type ParametresModele } from "@/lib/modele-pf/parametres";
+import { fusionnerParametres, parametresVisibles } from "@/lib/modele-pf/parametres";
 import { dernierRejet, intervenantsScoring, piecesDe } from "@/lib/modele-pf/acces";
 import { chargerParametres, calculerEvaluation, peutSaisir, peutDecider, resultatVisible } from "@/lib/modele-pf/serveur";
 
@@ -65,7 +65,7 @@ async function lire(_req: NextRequest, user: AuthPayload, id: string) {
   if (!e) return NextResponse.json({ error: "Scoring introuvable" }, { status: 404 });
   // Un scoring soumis ou validé se relit avec les paramètres de son calcul : la note reste
   // reproductible même si le paramétrage change ensuite.
-  const P = e.statut !== "brouillon" && e.parametres ? (e.parametres as unknown as ParametresModele) : await chargerParametres();
+  const P = e.statut !== "brouillon" && e.parametres ? fusionnerParametres(e.parametres as never) : await chargerParametres();
   const [intervenants, rejet] = await Promise.all([intervenantsScoring(e), dernierRejet(id)]);
   return NextResponse.json(reponse(e, user, P, { intervenants, rejet }));
 }

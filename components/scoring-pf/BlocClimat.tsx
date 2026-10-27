@@ -18,12 +18,14 @@ const TON_NIVEAU: Record<string, string> = { Élevé: "text-destructive", Moyen:
  * transition, scénario climatique indicatif et fiche 2/W/2025. Sans effet sur la note :
  * la case « site à risque climatique élevé » du bloc 2 reste la donnée du moteur.
  */
-export function BlocClimat({ s, modifier, r, lecture, projet }: PropsBloc & { projet: { nom: string; codeProjet: string | null } }) {
+export function BlocClimat({ s, modifier, r, P, lecture, projet }: PropsBloc & { projet: { nom: string; codeProjet: string | null } }) {
   const c = s.climat;
   const e = evaluerClimat(c, s.secteur, s.climatEleve, r.periodes.filter((p) => p.service > 0), r.seuils);
   const presel = s.secteur ? ALEAS_PAR_SECTEUR[s.secteur] : [];
   const autres = ALEAS.filter((a) => !presel.includes(a));
   const ref = s.secteur ? SCENARIOS_CLIMAT[s.secteur] : null;
+  // Lot 2 actif : la fiche entre dans la note ; sinon elle est seulement analysée.
+  const lot2 = r.climat;
   const aleaVide = () => ({ niveau: null, source: "", adaptation: null });
   const ecrireAlea = (a: CodeAlea, f: (l: { niveau: NiveauAlea | null; source: string; adaptation: "Oui" | "Non" | null }) => void) =>
     modifier((x) => { f((x.climat.aleas[a] ??= aleaVide())); });
@@ -71,11 +73,19 @@ export function BlocClimat({ s, modifier, r, lecture, projet }: PropsBloc & { pr
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-border bg-surface px-4 py-3 text-[12.5px] text-muted-foreground">
-        Volet climatique, lot 1 : ces données sont collectées et analysées <strong className="text-foreground">sans effet sur la note</strong>.
-        Elles éclairent la case « site à risque climatique élevé » du bloc 2 et constituent la fiche de la directive BAM 2/W/2025 (grands emprunteurs).
-        Seuils et scénarios : valeurs candidates, à valider par le comité de validation du modèle.
-      </div>
+      {lot2 ? (
+        <div className="rounded-md border border-primary/40 bg-primary/5 px-4 py-3 text-[12.5px] text-muted-foreground">
+          Volet climatique, lot 2 actif : la fiche <strong className="text-foreground">entre dans la note</strong>. L&apos;exposition retenue est déduite des aléas
+          (à défaut, la case du bloc 2) ; D9.5 « risque de transition » est calculé ; C11, C16 et C17 s&apos;appliquent ; sur un site exposé,
+          le scénario climatique entre dans le DSCR stressé (N2). La fiche constitue aussi la fiche de la directive BAM 2/W/2025.
+        </div>
+      ) : (
+        <div className="rounded-md border border-border bg-surface px-4 py-3 text-[12.5px] text-muted-foreground">
+          Volet climatique, lot 1 : ces données sont collectées et analysées <strong className="text-foreground">sans effet sur la note</strong>.
+          Elles éclairent la case « site à risque climatique élevé » du bloc 2 et constituent la fiche de la directive BAM 2/W/2025 (grands emprunteurs).
+          Seuils et scénarios : valeurs candidates, à valider par le comité de validation du modèle.
+        </div>
+      )}
 
       <SectionCard titre="Bloc 14 · Risques physiques par aléa"
         description={s.secteur ? `Aléas présélectionnés pour le secteur ${s.secteur} ; évaluez les autres s'ils concernent le site.` : "Choisissez d'abord le secteur (onglet Identification) pour présélectionner les aléas."}
@@ -87,7 +97,7 @@ export function BlocClimat({ s, modifier, r, lecture, projet }: PropsBloc & { pr
               onChange={(ev) => modifier((x) => { x.climat.localisation = ev.target.value; })} className={CLASSE_SAISIE} />
           </Champ>
         </div>
-        <div className="overflow-x-auto">
+        <div id="pf-climat.aleas" className="scroll-mt-40 overflow-x-auto">
           <table className="w-full min-w-[720px] text-[13px]">
             <thead className="bg-surface text-left text-[11.5px] uppercase tracking-wide text-muted-foreground">
               <tr><th className="px-3 py-2">Aléa</th><th className="px-3 py-2">Exposition du site</th><th className="px-3 py-2">Source</th><th className="px-3 py-2">Adaptation financée ?</th></tr>
@@ -105,11 +115,16 @@ export function BlocClimat({ s, modifier, r, lecture, projet }: PropsBloc & { pr
           <div className="grid gap-3 sm:grid-cols-3">
             <Calcule libelle="Exposition déduite de la fiche" valeur={e.expositionDeduite === null ? "—" : e.expositionDeduite ? "Élevée" : "Non élevée"}
               ton={e.expositionDeduite ? "alerte" : e.expositionDeduite === false ? "favorable" : undefined} />
-            <Calcule libelle="Case du bloc 2 (donnée du moteur)" valeur={s.climatEleve === "Oui" ? "Site exposé" : s.climatEleve === "Non" ? "Site non exposé" : "Non renseignée"} />
+            {lot2 ? (
+              <Calcule libelle="Exposition retenue par le moteur" valeur={lot2.expositionRetenue === "Oui" ? "Site exposé" : lot2.expositionRetenue === "Non" ? "Site non exposé" : "Non renseignée"}
+                ton={lot2.expositionRetenue === "Oui" ? "alerte" : undefined} />
+            ) : (
+              <Calcule libelle="Case du bloc 2 (donnée du moteur)" valeur={s.climatEleve === "Oui" ? "Site exposé" : s.climatEleve === "Non" ? "Site non exposé" : "Non renseignée"} />
+            )}
             <Calcule libelle="Aléas élevés sans adaptation" valeur={e.aleasElevesSansAdaptation.length ? e.aleasElevesSansAdaptation.map((a) => LIBELLES_ALEAS[a]).join(", ") : "Aucun"}
               ton={e.aleasElevesSansAdaptation.length ? "alerte" : undefined} />
           </div>
-          {e.incoherence && (
+          {e.incoherence && !lot2 && (
             <p role="alert" className="flex items-start gap-1.5 rounded border border-warning/50 bg-warning/10 px-3 py-2 text-[12.5px] text-foreground">
               <AlertTriangle size={14} className="mt-0.5 shrink-0 text-warning" /> {e.incoherence}
             </p>
@@ -142,7 +157,8 @@ export function BlocClimat({ s, modifier, r, lecture, projet }: PropsBloc & { pr
         </div>
       </SectionCard>
 
-      <SectionCard titre="Bloc 14 · Scénario climatique (indicatif)" description="Un aléa plausible pour ce site, chiffré en baisse du CFADS : le DSCR qui en résulte est affiché, sans effet sur la note.">
+      <SectionCard titre={`Bloc 14 · Scénario climatique${lot2 ? "" : " (indicatif)"}`}
+        description={lot2 ? "Un aléa plausible pour ce site, chiffré en baisse du CFADS : sur un site exposé, le DSCR stressé retenu pour N2 est le plus bas des deux scénarios." : "Un aléa plausible pour ce site, chiffré en baisse du CFADS : le DSCR qui en résulte est affiché, sans effet sur la note."}>
         <div className="space-y-4">
           {ref ? (
             <div className="rounded border border-border bg-surface px-3 py-2.5 text-[12.5px]">
@@ -183,7 +199,8 @@ export function BlocClimat({ s, modifier, r, lecture, projet }: PropsBloc & { pr
             <Calcule libelle="DSCR minimum central" valeur={fmtX(r.dscrMin)} />
             <Calcule libelle="DSCR minimum climatique" valeur={fmtX(e.dscrMinClimatique)}
               ton={e.classeClimatique === "Critique" ? "alerte" : e.classeClimatique === "Vigilance" ? "vigilance" : e.classeClimatique ? "favorable" : undefined} />
-            <Calcule libelle="Classe (seuils du dossier)" valeur={e.classeClimatique ?? (r.periodes.length ? "—" : "Échéancier à saisir")} />
+            <Calcule libelle={lot2 ? "Scénario retenu pour N2" : "Classe (seuils du dossier)"}
+              valeur={lot2 ? (lot2.stressRetenu === "climatique" ? "Climatique" : lot2.stressRetenu === "financier" ? "Financier" : "—") : e.classeClimatique ?? (r.periodes.length ? "—" : "Échéancier à saisir")} />
           </div>
         </div>
       </SectionCard>
@@ -199,6 +216,17 @@ export function BlocClimat({ s, modifier, r, lecture, projet }: PropsBloc & { pr
             Complétude de la fiche : <strong>{e.completude.faits} / {e.completude.attendus}</strong> données
             {e.completude.faits < e.completude.attendus && " — complétez les aléas présélectionnés, les données de transition et le scénario climatique."}
           </p>
+          {lot2 ? (
+            <div>
+              <p className="font-semibold text-foreground">Effet sur la note</p>
+              <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                <li>D9.5 « risque de transition » : niveau {lot2.niveauTransition ?? "non renseigné"} → note {typeof lot2.noteTransition === "number" ? fmtNombre(lot2.noteTransition, 0) : "Info. insuffisante"} ({fmtNombre(P.climat.poidsTransition * 100, 0)} % de D9)</li>
+                {(["C11", "C16", "C17"] as const).map((c) => (
+                  <li key={c}><span className="font-mono font-semibold text-foreground">{c}</span> · {P.plafonds[c].libelle} : {r.plafonds[c] === "Oui" ? <strong className="text-destructive">actif</strong> : r.plafonds[c] === "Non" ? "non" : "donnée manquante"}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
           <div>
             <p className="font-semibold text-foreground">Aperçu des règles proposées au lot 2 (non appliquées)</p>
             {e.apercuLot2.length ? (
@@ -211,6 +239,7 @@ export function BlocClimat({ s, modifier, r, lecture, projet }: PropsBloc & { pr
               <p className="mt-1 text-muted-foreground">Aucun plafond climatique ne serait déclenché avec les données actuelles.</p>
             )}
           </div>
+          )}
         </div>
       </SectionCard>
     </div>

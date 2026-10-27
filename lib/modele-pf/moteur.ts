@@ -9,6 +9,7 @@ import {
   type ParametresModele, type CodeRegime, type CodePhase, type CodeSecteur, type CodeDomaine,
   type DomaineGrille, type CodePlafond, type CodeVerrou,
 } from "./parametres";
+import { evaluerClimat, type ClimatPF, type NiveauTransition } from "./climat";
 
 export const INFO_INSUFFISANTE = "Info. insuffisante" as const;
 /** Note d'un critère : une ancre (100, 80, 50, 20 par défaut), « Info. insuffisante » ou non saisie. */
@@ -49,6 +50,21 @@ export interface DossierPF {
   grille: Partial<Record<DomaineGrille, Note[]>>;
   /** « Oui » = verrou constaté (pour B6 : modèle de flux absent ou non rapproché). */
   verrous: Partial<Record<CodeVerrou, OuiNon>>;
+  /** Fiche climat (outil web) ; n'entre dans la note que si le lot 2 est actif. */
+  climat?: ClimatPF | null;
+}
+
+/** Effet du volet climatique sur le calcul (null quand le lot 2 est inactif). */
+export interface ResultatClimat {
+  /** Exposition retenue : déduite de la fiche des aléas, sinon la case du bloc 2. */
+  expositionRetenue: OuiNon;
+  expositionDeduite: boolean | null;
+  dscrMinClimatique: number | null;
+  /** Scénario qui donne le DSCR stressé retenu pour N2. */
+  stressRetenu: "financier" | "climatique" | null;
+  niveauTransition: NiveauTransition | null;
+  /** Note du sous-critère D9.5 « risque de transition ». */
+  noteTransition: Note;
 }
 
 export type Classe = "Critique" | "Vigilance" | "Favorable" | "Très favorable" | "Différé";
@@ -72,6 +88,7 @@ export interface ResultatPF {
   regimeCalcule: "S" | "M" | "L" | null; regimeRetenu: "S" | "M" | "L" | null; motifsEscalade: string[];
   noteApprouvee: number | "—" | null;
   statut: string; libelle: string; orientation: string;
+  climat: ResultatClimat | null;
   /** Saisies requises encore manquantes (libellés), pour guider l'analyste. */
   manquants: string[];
 }
@@ -118,7 +135,28 @@ export function evaluer(d: DossierPF, P: ParametresModele = PARAMETRES_DEFAUT): 
   const dscrsS = periodes.map((p) => p.dscrStresse).filter(estNombre);
   const cfadsNegatifs = periodes.filter((p) => p.cfads < 0).length;
   const dscrMin = dscrs.length ? Math.min(...dscrs) : null;
-  const dscrMinStresse = dscrsS.length ? Math.min(...dscrsS) : null;
+  let dscrMinStresse = dscrsS.length ? Math.min(...dscrsS) : null;
+
+  // 6 bis · volet climatique, lot 2 (inactif par défaut : le calcul reste celui de l'Excel)
+  let climat: ResultatClimat | null = null;
+  let climatEleve: OuiNon = d.climatEleve;
+  const ec = P.climat?.lot2Actif && d.climat
+    ? evaluerClimat(d.climat, sec, d.climatEleve, periodes.filter((p) => p.service > 0), seuils) : null;
+  if (ec && d.climat) {
+    if (ec.expositionDeduite !== null) climatEleve = ec.expositionDeduite ? "Oui" : "Non";
+    // Site exposé : le DSCR stressé retenu est le plus bas des deux scénarios.
+    let stressRetenu: ResultatClimat["stressRetenu"] = dscrMinStresse === null ? null : "financier";
+    if (climatEleve === "Oui" && ec.dscrMinClimatique !== null && (dscrMinStresse === null || ec.dscrMinClimatique < dscrMinStresse)) {
+      dscrMinStresse = ec.dscrMinClimatique;
+      stressRetenu = "climatique";
+    }
+    const nt = ec.niveauTransition;
+    const noteTransition: Note = nt === null ? INFO_INSUFFISANTE
+      : nt === "Faible" ? A.tresFavorable : nt === "Moyen" ? A.favorable : d.climat.planTransition === "Oui" ? A.vigilance : A.critique;
+    if (nt === null) manquants.push("Données de transition (volet climatique)");
+    if (climatEleve === "Oui" && ec.dscrMinClimatique === null) manquants.push("Scénario climatique (site exposé)");
+    climat = { expositionRetenue: climatEleve, expositionDeduite: ec.expositionDeduite, dscrMinClimatique: ec.dscrMinClimatique, stressRetenu, niveauTransition: nt, noteTransition };
+  }
   if (periodes.length < 2) manquants.push("Échéancier (au moins deux périodes)");
   if (!estNombre(d.choc)) manquants.push("Choc du scénario défavorable");
 
@@ -144,13 +182,19 @@ export function evaluer(d: DossierPF, P: ParametresModele = PARAMETRES_DEFAUT): 
     const scs = P.sousCriteres[dom];
     const notes = d.grille[dom] ?? [];
     const w = pw ? pw[dom] : 0;
+    // Lot 2 du volet climatique : D9 reçoit le sous-critère calculé D9.5 « risque de transition ».
+    const transition = dom === "D9" && climat ? { note: climat.noteTransition, poids: P.climat.poidsTransition } : null;
+    const poidsSc = (j: number) => (transition ? P.climat.poidsD9[j] ?? 0 : scs[j].poids);
     let sc = 0;
-    scs.forEach((s, j) => { const n = notes[j]; sc += estNombre(n) ? n * s.poids : A.infoInsuffisante * s.poids; });
+    scs.forEach((_s, j) => { const n = notes[j]; sc += (estNombre(n) ? n : A.infoInsuffisante) * poidsSc(j); });
+    if (transition) sc += (estNombre(transition.note) ? transition.note : A.infoInsuffisante) * transition.poids;
     domaines[dom] = w > 0 ? sc : null;
-    couvNum += w * scs.reduce((s, x, j) => s + (estNombre(notes[j]) ? x.poids : 0), 0);
+    couvNum += w * (scs.reduce((s, _x, j) => s + (estNombre(notes[j]) ? poidsSc(j) : 0), 0)
+      + (transition && estNombre(transition.note) ? transition.poids : 0));
     couvDen += w;
     if (w > 0) {
-      nbReq += scs.length;
+      nbReq += scs.length + (transition ? 1 : 0);
+      if (transition && estNombre(transition.note)) nbReqNum += 1;
       scs.forEach((x, j) => {
         if (estNombre(notes[j])) nbReqNum += 1;
         else if (notes[j] === null || notes[j] === undefined) manquants.push(`Sous-critère ${x.cle} ${x.libelle}`);
@@ -196,12 +240,18 @@ export function evaluer(d: DossierPF, P: ParametresModele = PARAMETRES_DEFAUT): 
   pl.C8 = ouiNon(!vide(p.detteARefinancer), (p.detteARefinancer ?? 0) > T.c8 && p.strategieRefinancement !== "Oui");
   pl.C9 = ouiNon(quotePart !== null, (quotePart ?? 0) > T.c9);
   pl.C10 = ouiNon(!vide(p.partAcheteur) && !vide(p.qualiteAcheteur), (p.partAcheteur ?? 0) > T.c10 && p.qualiteAcheteur !== "≥ BBB−");
-  pl.C11 = ouiNon(!vide(d.climatEleve), d.climatEleve === "Oui" && p.planClimat !== "Oui");
+  // Lot 2 : un aléa élevé déclenche C11 s'il n'a pas d'adaptation financée ; sans fiche, la
+  // case du bloc 2 et le plan d'adaptation global s'appliquent comme dans l'Excel.
+  pl.C11 = ec && ec.aleasEleves.length
+    ? (ec.aleasElevesSansAdaptation.length ? "Oui" : "Non")
+    : ouiNon(!vide(climatEleve), climatEleve === "Oui" && p.planClimat !== "Oui");
   pl.C12 = ouiNon(!vide(p.capaciteSponsor), p.capaciteSponsor === "Non");
   pl.C13 = ouiNon(!vide(p.operateurRemplacable), p.operateurRemplacable === "Non" && (p.ecartOm ?? 0) > T.c13);
   pl.C14 = ouiNon(!vide(p.expositionGroupe), p.expositionGroupe === "Oui");
   pl.C15 = ouiNon(couvertureGrille !== null && completude !== null,
     (couvertureGrille ?? 1) < T.couvertureGrille || (completude ?? 1) < 1);
+  pl.C16 = !ec ? "n.a." : ouiNon(ec.niveauTransition !== null, ec.niveauTransition === "Élevé" && d.climat?.planTransition !== "Oui");
+  pl.C17 = !ec ? "n.a." : ouiNon(ec.expositionDeduite !== null, ec.aleasElevesSansAdaptation.length >= 2);
   const plafondsActifs = ORDRE_PLAFONDS.filter((c) => pl[c] === "Oui");
   const plafond = Math.min(10, ...plafondsActifs.map((c) => P.plafonds[c].niveau));
 
@@ -215,7 +265,7 @@ export function evaluer(d: DossierPF, P: ParametresModele = PARAMETRES_DEFAUT): 
   if ((p.expositionDevises ?? 0) > 0) motifs.push("exposition en devises non couverte");
   if (pr.consortium === "Oui") motifs.push("opération consortiale (directive 3/W/2025)");
   if (pr.contratPlus20Ans === "Oui") motifs.push("concession ou contrat de revenus > 20 ans");
-  if (d.climatEleve === "Oui") motifs.push("site à risque climatique élevé");
+  if (climatEleve === "Oui") motifs.push("site à risque climatique élevé");
   if ((pr.nbContreparties ?? 0) > T.lNbContreparties) motifs.push(`plus de ${T.lNbContreparties} contreparties clés`);
   let regimeCalcule: "S" | "M" | "L" | null = null;
   if (capex > 0 && reg) {
@@ -248,7 +298,7 @@ export function evaluer(d: DossierPF, P: ParametresModele = PARAMETRES_DEFAUT): 
     capex, ressources, dette, couverture, quotePart, seuils, periodes, dscrMin, dscrMinStresse, cfadsNegatifs,
     noyau: N, d7, domaines, couvertureGrille, completude, contributions, poids: pw, score, noteCalculee,
     verrousActifs, plafonds: pl, plafondsActifs, plafond, regimeCalcule, regimeRetenu, motifsEscalade: motifs,
-    noteApprouvee, statut,
+    noteApprouvee, statut, climat,
     libelle: ligne?.libelle ?? "—",
     orientation: ligne?.orientation ?? (noteApprouvee === "—" ? "Aucune note : dossier hors périmètre" : "—"),
     manquants,
