@@ -12,6 +12,7 @@ import {
 } from "./parametres";
 import { options as optionsReferentiel, NIVEAUX_LIBELLES } from "./referentiel";
 import { originesSchema } from "./origines";
+import { climatSchema } from "./climat";
 
 /** 1 Très favorable · 2 Favorable · 3 Vigilance · 4 Critique · 5 Info. insuffisante */
 export type Niveau = 1 | 2 | 3 | 4 | 5;
@@ -70,7 +71,9 @@ export const saisieSchema = z.object({
     synthese: texte(5000), forces: texte(5000), faiblesses: texte(5000), conditions: texte(5000), justification: texte(5000),
     avis: z.enum(["Favorable", "Favorable sous conditions", "Réservé", "Défavorable"]).nullable().default(null), avisMotif: texte(),
     decision: z.enum(["Accord", "Accord sous conditions", "Ajournement", "Refus"]).nullable().default(null), decisionCommentaire: texte(),
-  }).prefault({}),  // Origine des valeurs non tapées (IA, calcul d'aide, référence, collage), par clé du fichier d'échange
+  }).prefault({}),  // Volet climatique (lot 1, sans effet sur la note) : aléas, transition, scénario climatique
+  climat: climatSchema,
+  // Origine des valeurs non tapées (IA, calcul d'aide, référence, collage), par clé du fichier d'échange
   origines: originesSchema,
 });
 

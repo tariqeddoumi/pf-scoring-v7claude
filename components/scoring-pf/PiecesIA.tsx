@@ -17,7 +17,7 @@ const CONFIANCE: Record<string, { libelle: string; cls: string }> = {
 };
 const BLOCS: Record<number, string> = {
   1: "Identification et routage", 2: "Proportionnalité", 3: "Sources et emplois", 4: "Données sectorielles", 5: "Hypothèses",
-  6: "Échéancier et stress", 7: "Noyau financier et plafonds", 8: "Grille", 10: "Verrous", 13: "Commentaires",
+  6: "Échéancier et stress", 7: "Noyau financier et plafonds", 8: "Grille", 10: "Verrous", 13: "Commentaires", 14: "Climat",
 };
 const taille = (o: number) => (o > 1024 * 1024 ? `${(o / 1024 / 1024).toFixed(1)} Mo` : `${Math.max(1, Math.round(o / 1024))} Ko`);
 

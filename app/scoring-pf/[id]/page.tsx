@@ -18,6 +18,7 @@ import { BlocFinancement, type CreditPF } from "@/components/scoring-pf/BlocFina
 import { BlocSecteur } from "@/components/scoring-pf/BlocSecteur";
 import { BlocEcheancier } from "@/components/scoring-pf/BlocEcheancier";
 import { BlocNoyau } from "@/components/scoring-pf/BlocNoyau";
+import { BlocClimat } from "@/components/scoring-pf/BlocClimat";
 import { SaisieContexte } from "@/components/scoring-pf/origine";
 import { BlocGrille } from "@/components/scoring-pf/BlocGrille";
 import { BlocResultat } from "@/components/scoring-pf/BlocResultat";
@@ -41,6 +42,7 @@ const ONGLETS = [
   { id: "echeancier", libelle: "Échéancier", blocs: [6] },
   { id: "noyau", libelle: "Noyau financier", blocs: [7] },
   { id: "grille", libelle: "Grille", blocs: [8] },
+  { id: "climat", libelle: "Climat", blocs: [14] },
   { id: "resultat", libelle: "Résultat et décision", blocs: [9, 10, 11, 12, 13] },
   { id: "ia", libelle: "Pièces et IA", blocs: [] },
 ] as const;
@@ -358,6 +360,7 @@ export default function ScoringPFPage() {
         {onglet === "echeancier" && <BlocEcheancier {...props} />}
         {onglet === "noyau" && <BlocNoyau {...props} />}
         {onglet === "grille" && <BlocGrille {...props} cible={cible} />}
+        {onglet === "climat" && <BlocClimat {...props} projet={d.projet} />}
         {onglet === "resultat" && <BlocResultat {...props} />}
         {onglet === "ia" && (
           <PiecesIA evaluationId={id} lecture={lecture} analyse={d.analyseIa}
