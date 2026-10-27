@@ -66,13 +66,26 @@ const LISTES: Record<string, { libelle: string; bloc: number; format: string; ma
  * l'analyste), ou champs déduits d'une autre réponse (lignes des listes, commentaire d'un
  * sous-critère, justification de N4 à N6, source d'une donnée sectorielle).
  */
-const EXCLUS = /^(emploi|ressource|hypothese|echeance)\.|^D\d\.\d\.commentaire$|\.justification$|^secteur\.\d+\.source$|^bloc13\.(avis|avis\.motif|justif)$/;
+const EXCLUS = /^(emploi|ressource|hypothese|echeance)\.|^D\d\.\d\.commentaire$|\.justification$|^secteur\.\d+\.source$|^climat\.alea\.[a-z]+\.source$|^bloc13\.(avis|avis\.motif|justif)$/;
 
 /** Consignes propres à certains champs. */
 const CONSIGNES: Record<string, string> = {
   choc: "Baisse du CFADS dans le scénario défavorable, en fraction (0,14 pour 14 %). Si le modèle financier ou le rapport des prêteurs donne un cas défavorable, calcule (CFADS central − CFADS défavorable) ÷ CFADS central sur une année type. Sinon, à partir des hypothèses défavorables documentées (P90 de l'étude de productible, cas bas de l'étude de trafic ou de marché, hausse de charges…) : (recettes perdues + charges supplémentaires) ÷ CFADS central. Indique le calcul et les pièces dans la justification.",
+  "climat.localisation": "Commune, province ou coordonnées géographiques du site du projet.",
+  "climat.emissions": "Émissions annuelles du projet en exploitation, scopes 1 et 2, en tCO₂e par an, telles que l'étude d'impact, le bilan carbone ou le rapport des bailleurs les donne.",
+  "climat.export_macf": "Part du chiffre d'affaires exportée vers l'Union européenne en produits couverts par le mécanisme d'ajustement carbone aux frontières (ciment, fer et acier, aluminium, engrais, hydrogène, électricité), en fraction ; 0 si le projet n'en exporte pas.",
+  "climat.actif_fossile": "Oui si la production, le combustible ou le procédé principal du projet dépend des énergies fossiles (charbon, fioul, gaz).",
+  "climat.plan_transition": "Oui si un plan de réduction des émissions ou de sortie des énergies fossiles est documenté, daté et financé.",
+  "climat.choc": "Baisse du CFADS sous un scénario climatique plausible pour ce site (canicule, sécheresse, crue, tempête, prix du carbone), en fraction. Calcule (recettes perdues + charges supplémentaires) ÷ CFADS central à partir des effets chiffrés dans les pièces ; indique le calcul et les pièces dans la justification.",
+  "climat.choc.description": "Scénario climatique en une phrase : l'aléa retenu et ses effets chiffrés sur les recettes et les charges, tels que les pièces les donnent.",
   "choc.description": "Scénario défavorable en une phrase : le risque principal du projet et les hypothèses chiffrées retenues (ex. « Production P90 (− 8 %) et charges + 10 % »), tels que les pièces les donnent.",
 };
+
+const consigneDe = (cle: string): string | undefined =>
+  CONSIGNES[cle]
+  ?? (/^climat\.alea\.[a-z]+\.niveau$/.test(cle) ? "Niveau d'exposition du site à cet aléa d'après les pièces (étude d'impact, étude climat, rapport du conseiller technique, cartes d'aléas citées) : Faible, Moyen ou Élevé. « absent » si aucune pièce ne l'analyse."
+    : /^climat\.alea\.[a-z]+\.adaptation$/.test(cle) ? "Oui si des mesures d'adaptation à cet aléa sont prévues et financées dans le budget du projet (digue, surélévation, refroidissement, irrigation, stockage d'eau…) ; Non si l'aléa est identifié sans mesure financée."
+    : undefined);
 
 /** Critères transmis à l'IA pour ce dossier. */
 export function criteresIA(s: SaisiePF): CritereGrille[] {
@@ -82,7 +95,8 @@ export function criteresIA(s: SaisiePF): CritereGrille[] {
     if (EXCLUS.test(c.cle)) continue;
     const m = c.cle.match(/^secteur\.(\d+)\.valeur$/);
     if (m && !champsSect[Number(m[1]) - 1]) continue;
-    const base = { id: c.cle, code: c.cle, label: libelleChamp(c.cle, s), ...(CONSIGNES[c.cle] && { description: CONSIGNES[c.cle] }) };
+    const consigne = consigneDe(c.cle);
+    const base = { id: c.cle, code: c.cle, label: libelleChamp(c.cle, s), ...(consigne && { description: consigne }) };
     if (c.type === "situation") {
       const opts = situations(c.cle, s.secteur);
       criteres.push({ ...base, options: opts.map((o) => { const [v, ...d] = o.split(" — "); return { value: v, label: d.join(" — ") || v }; }),
@@ -94,7 +108,7 @@ export function criteresIA(s: SaisiePF): CritereGrille[] {
         ...(c.cle === "n3_llcr" && { description: "Note du LLCR hors phase de construction : celle retenue par l'analyse des prêteurs si une pièce la donne ; sinon 100 si le LLCR dépasse nettement le seuil DSCR favorable du dossier, 80 s'il le dépasse, 50 s'il se situe entre les seuils critique et favorable, 20 s'il est sous le seuil critique. « Info. insuffisante » si le LLCR n'est pas donné." }) });
     } else if (c.type === "nombre" || c.type === "pourcentage") {
       criteres.push({ ...base, answerType: "NUMERIC",
-        description: CONSIGNES[c.cle] ?? (c.type === "pourcentage" ? "Pourcentage exprimé en fraction (0,15 pour 15 %)." : c.libelle.includes("MMAD") ? "Montant en millions de dirhams (MMAD)." : undefined) });
+        description: consigne ?? (c.type === "pourcentage" ? "Pourcentage exprimé en fraction (0,15 pour 15 %)." : c.libelle.includes("MMAD") ? "Montant en millions de dirhams (MMAD)." : undefined) });
     } else if (/^D\d\.commentaire$/.test(c.cle)) {
       criteres.push({ ...base, answerType: "TEXT",
         description: "Commentaire de synthèse du domaine pour le comité : faits constatés dans les pièces, points forts et points de vigilance, pièces citées. Trois à cinq phrases ; « absent » si les pièces ne couvrent pas le domaine." });
@@ -174,6 +188,8 @@ export function construirePropositionsPF(resultat: ResultatAnalyse, s: SaisiePF,
     }
     const sec = g.code.match(/^secteur\.(\d+)\.valeur$/);
     if (sec && sourceDe(e)) proposer(`secteur.${sec[1]}.source`, sourceDe(e), e);
+    const alea = g.code.match(/^climat\.alea\.([a-z]+)\.niveau$/);
+    if (alea && sourceDe(e)) proposer(`climat.alea.${alea[1]}.source`, sourceDe(e), e);
   }
   return { propositions, manquants };
 }

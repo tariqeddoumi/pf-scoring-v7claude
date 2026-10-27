@@ -11,6 +11,7 @@ import { PARAMETRES_DEFAUT, DOMAINES_GRILLE, ORDRE_VERROUS, type CodeVerrou } fr
 import { INFO_INSUFFISANTE } from "./moteur";
 import { AVIS, NIVEAUX_LIBELLES, type Niveau, type SaisiePF } from "./saisie";
 import { champsSecteur } from "./referentiel";
+import { ALEAS, LIBELLES_ALEAS, NIVEAUX_ALEA, type CodeAlea } from "./climat";
 
 export const FORMAT_PROPOSITIONS = "PF-PROPOSITIONS-IA v1";
 
@@ -112,6 +113,20 @@ function bloc13(k: "synthese" | "forces" | "faiblesses" | "conditions" | "justif
 
 const SIMPLES = champsSimples();
 
+/** Fiche climat (bloc 14 de l'outil web ; l'outil Excel ne la connaît pas encore). */
+const CLIMAT_SIMPLES: Record<string, Def> = {
+  "climat.localisation": { libelle: "Climat — localisation du site", bloc: 14, type: "texte", lire: (s) => s.climat.localisation, ecrire: (s, v) => { s.climat.localisation = txt(v).slice(0, 200); } },
+  "climat.emissions": { libelle: "Climat — émissions scopes 1 et 2 (tCO₂e par an)", bloc: 14, type: "nombre", lire: (s) => s.climat.emissions, ecrire: (s, v) => { const n = num(v); s.climat.emissions = n === null ? null : Math.max(0, n); } },
+  "climat.export_macf": { libelle: "Climat — part du CA exportée vers l'UE en produits couverts par le MACF", bloc: 14, type: "pourcentage", lire: (s) => s.climat.exportMacf, ecrire: (s, v) => { s.climat.exportMacf = num(v); } },
+  "climat.actif_fossile": { libelle: "Climat — actif dépendant des énergies fossiles", bloc: 14, type: "ouinon", valeurs: OUI_NON, lire: (s) => s.climat.actifFossile, ecrire: (s, v) => { s.climat.actifFossile = ouiNon(v); } },
+  "climat.plan_transition": { libelle: "Climat — plan de transition crédible et financé", bloc: 14, type: "ouinon", valeurs: OUI_NON, lire: (s) => s.climat.planTransition, ecrire: (s, v) => { s.climat.planTransition = ouiNon(v); } },
+  "climat.choc": { libelle: "Climat — scénario climatique : baisse du CFADS", bloc: 14, type: "pourcentage", lire: (s) => s.climat.chocClimatique, ecrire: (s, v) => { s.climat.chocClimatique = num(v); } },
+  "climat.choc.description": { libelle: "Climat — description du scénario climatique", bloc: 14, type: "texte", lire: (s) => s.climat.descriptionClimatique, ecrire: (s, v) => { s.climat.descriptionClimatique = txt(v).slice(0, 500); } },
+};
+
+/** Champs propres à l'outil web, hors du fichier d'échange avec l'outil Excel. */
+export const estChampWebSeul = (cle: string) => cle.startsWith("climat.");
+
 const niveauLibelle = (n: Niveau | null | undefined) => (n ? NIVEAUX_LIBELLES[n - 1] : null);
 const niveauDe = (v: ValeurChamp | null): Niveau | null => {
   if (v === null) return null;
@@ -196,6 +211,22 @@ function acces(cle: string): (Def & { cle: string }) | null {
       lire: (s) => niveauLibelle(s.grille[sc]?.niveau),
       ecrire: (s, v) => { s.grille[sc] = { niveau: niveauDe(v), commentaire: s.grille[sc]?.commentaire ?? "" }; } };
   }
+  if ((m = cle.match(/^climat\.alea\.([a-z]+)\.(niveau|source|adaptation)$/))) {
+    const a = m[1] as CodeAlea, k = m[2] as "niveau" | "source" | "adaptation";
+    if (!ALEAS.includes(a)) return null;
+    const vide = () => ({ niveau: null, source: "", adaptation: null });
+    const noms = { niveau: "niveau d'exposition du site", source: "source", adaptation: "adaptation financée" };
+    return { cle, libelle: `Climat — ${LIBELLES_ALEAS[a]} : ${noms[k]}`, bloc: 14,
+      type: k === "source" ? "texte" : k === "niveau" ? "liste" : "ouinon", ...(k === "niveau" ? { valeurs: NIVEAUX_ALEA } : k === "adaptation" ? { valeurs: OUI_NON } : {}),
+      lire: (s) => s.climat.aleas[a]?.[k],
+      ecrire: (s, v) => {
+        const l = (s.climat.aleas[a] ??= vide());
+        if (k === "source") l.source = txt(v).slice(0, 300);
+        else if (k === "niveau") l.niveau = (NIVEAUX_ALEA as readonly string[]).includes(String(v)) ? (v as (typeof NIVEAUX_ALEA)[number]) : null;
+        else l.adaptation = ouiNon(v);
+      } };
+  }
+  if (CLIMAT_SIMPLES[cle]) return { cle, ...CLIMAT_SIMPLES[cle] };
   if ((m = cle.match(/^verrou\.([XB]\d)$/))) {
     const v = m[1] as CodeVerrou;
     if (!ORDRE_VERROUS.includes(v)) return null;
@@ -235,6 +266,9 @@ export function tousLesChamps(): ChampIA[] {
     for (const sc of PARAMETRES_DEFAUT.sousCriteres[d]) cles.push(sc.cle, `${sc.cle}.commentaire`);
   }
   for (const v of ORDRE_VERROUS) cles.push(`verrou.${v}`);
+  cles.push("climat.localisation");
+  for (const a of ALEAS) cles.push(`climat.alea.${a}.niveau`, `climat.alea.${a}.source`, `climat.alea.${a}.adaptation`);
+  cles.push(...Object.keys(CLIMAT_SIMPLES).filter((c) => c !== "climat.localisation"));
   cles.push(...simples.slice(simples.indexOf("bloc13.synthese")));
   return cles.map((c) => champ(c)!).filter(Boolean);
 }
@@ -270,7 +304,9 @@ export function normaliser(cle: string, brute: unknown): { ok: true; valeur: Val
     // Une part (recettes, dette à refinancer) ne dépasse pas 100 % ; l'exposition en devises,
     // rapportée au service annuel de la dette, le peut.
     if ((cle === "part_ach" || cle === "refi") && n > 1) return { ok: false, motif: "part supérieure à 100 %" };
-    if (cle === "choc" && n > 0.95) return { ok: false, motif: "choc supérieur à 95 %" };
+    if ((cle === "choc" || cle === "climat.choc") && n > 0.95) return { ok: false, motif: "choc supérieur à 95 %" };
+    if (cle === "climat.export_macf" && n > 1) return { ok: false, motif: "part supérieure à 100 %" };
+    if (cle === "climat.emissions" && n < 0) return { ok: false, motif: "émissions négatives" };
     return { ok: true, valeur: n };
   }
   const t = String(brute).trim();
@@ -306,6 +342,7 @@ export function afficherValeur(cle: string, v: ValeurChamp | null): string {
 export function valeursDeLaSaisie(s: SaisiePF): { cle: string; valeur: ValeurChamp }[] {
   const out: { cle: string; valeur: ValeurChamp }[] = [];
   for (const c of tousLesChamps()) {
+    if (estChampWebSeul(c.cle)) continue;
     const v = lireChamp(s, c.cle);
     if (v !== null) out.push({ cle: c.cle, valeur: c.cle === "n3_llcr" && /^\d+$/.test(String(v)) ? Number(v) : v });
   }

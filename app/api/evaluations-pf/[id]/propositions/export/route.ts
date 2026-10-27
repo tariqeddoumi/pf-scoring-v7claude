@@ -5,7 +5,7 @@ import { withAuth, type AuthPayload } from "@/lib/auth-middleware";
 import { hasPermission } from "@/lib/services/permission-service";
 import type { UserRole } from "@/lib/permissions";
 import { relireSaisie } from "@/lib/modele-pf/saisie";
-import { FORMAT_PROPOSITIONS, libelleChamp, valeursDeLaSaisie, type ValeurChamp } from "@/lib/modele-pf/champs-ia";
+import { FORMAT_PROPOSITIONS, estChampWebSeul, libelleChamp, valeursDeLaSaisie, type ValeurChamp } from "@/lib/modele-pf/champs-ia";
 import type { AnalysePF } from "@/lib/modele-pf/ia";
 import { piecesDe, refus } from "@/lib/modele-pf/acces";
 
@@ -37,7 +37,8 @@ async function exporter(req: NextRequest, user: AuthPayload, id: string) {
     documents = "Saisie de l'outil web";
   } else {
     if (!analyse?.propositions?.length) return refus(409, "Aucune proposition de l'IA : lancez d'abord l'analyse des pièces.");
-    lignes = analyse.propositions.filter((p) => p.decision !== "rejetee").map((p) => ({
+    // La fiche climat n'existe que dans l'outil web : l'outil Excel refuserait ses clés.
+    lignes = analyse.propositions.filter((p) => p.decision !== "rejetee" && !estChampWebSeul(p.cle)).map((p) => ({
       cle: p.cle, valeur: p.cle === "n3_llcr" && /^\d+$/.test(String(p.valeur)) ? Number(p.valeur) : p.valeur,
       source: p.source, confiance: CONFIANCE[p.confiance] ?? "Faible",
     }));
